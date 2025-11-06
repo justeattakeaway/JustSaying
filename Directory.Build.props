@@ -1,12 +1,22 @@
 <Project>
+  <PropertyGroup>
+    <DotNetTestSdkVersion>16.9.4</DotNetTestSdkVersion>
+    <MicrosoftExtensionsDependencyInjectionVersion>5.0.1</MicrosoftExtensionsDependencyInjectionVersion>
+    <NewtonsoftJsonVersion>12.0.3</NewtonsoftJsonVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AwsSdkSnsVersion>3.7.0</AwsSdkSnsVersion>
+    <AwsSdkSqsVersion>3.7.0</AwsSdkSqsVersion>
+  </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="coverlet.msbuild" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
-    <PackageReference Include="ReportGenerator" PrivateAssets="All" />
-    <PackageReference Include="MinVer" PrivateAssets="All" />
+    <PackageReference Include="coverlet.msbuild" Version="3.0.3" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+    <PackageReference Include="ReportGenerator" Version="4.8.7" PrivateAssets="All" />
+    <PackageReference Include="MinVer" Version="2.5.0" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
-    <SourceRoot Include="$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)'))" />
+    <None Include="$(MSBuildThisFileDirectory)package-icon.png" Pack="True" PackagePath="" />
   </ItemGroup>
   <PropertyGroup>
     <!-- Enable at a later point as there's a number of new ones to fix -->
@@ -14,59 +24,46 @@
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     -->
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)justeat-oss.snk</AssemblyOriginatorKeyFile>
-    <JustSayingKey>00240000048000009400000006020000002400005253413100040000010001009d30c64bc42ba5037aec3cf60334df3a4c140ffc1dab19fdd31c9765e4e29afa441396ff9437a764b618c6473a3b350c56d706a0fbe83915f1f250ee23eb548b30306187ac685f65caa48303dc86f08c1c24d99dc84966273c207eaa8570b440004c7f49cef4ec77bc69118610ae2b53db7d8abeb465cbcd4bd190feaf517aad</JustSayingKey>
     <Authors>JUSTEAT_OSS</Authors>
-    <ChecksumAlgorithm>SHA256</ChecksumAlgorithm>
     <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)CodeAnalysisRules.ruleset</CodeAnalysisRuleSet>
     <Company>Just Eat</Company>
     <Copyright>Copyright (c) Just Eat 2015-$([System.DateTime]::Now.ToString(yyyy))</Copyright>
     <Deterministic>true</Deterministic>
     <Description>A light-weight message bus on top of AWS SNS and SQS</Description>
-    <MinVerMinimumMajorMinor>8</MinVerMinimumMajorMinor>
+    <MinVerMinimumMajorMinor>7.0</MinVerMinimumMajorMinor>
     <MinVerTagPrefix>v</MinVerTagPrefix>
     <MinVerSkip Condition=" '$(Configuration)' == 'Debug' ">true</MinVerSkip>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
-    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <NuGetAuditMode>direct</NuGetAuditMode>
+    <EnableSourceControlManagerQueries>$(EnableSourceLink)</EnableSourceControlManagerQueries>
+    <NoWarn>$(NoWarn);CA1062;CA1303</NoWarn>
     <PackageIcon>package-icon.png</PackageIcon>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/justeattakeaway/JustSaying</PackageProjectUrl>
-    <PackageReadmeFile>package-readme.md</PackageReadmeFile>
+    <PackageProjectUrl>https://github.com/justeat/JustSaying</PackageProjectUrl>
     <PackageReleaseNotes>$(PackageProjectUrl)/releases</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageTags>aws,sns,sqs</PackageTags>
-    <PackageValidationBaselineVersion>7.0.0</PackageValidationBaselineVersion>
     <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">false</PublicSign>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <LangVersion>latest</LangVersion>
-    <ImplicitUsings>enable</ImplicitUsings>
     <RepositoryUrl>$(PackageProjectUrl).git</RepositoryUrl>
-    <RestoreEnablePackagePruning>true</RestoreEnablePackagePruning>
     <SignAssembly>true</SignAssembly>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <UseArtifactsOutput>true</UseArtifactsOutput>
     <CLSCompliant>true</CLSCompliant>
     <ComVisible>false</ComVisible>
     <DebugType>embedded</DebugType>
     <EmbedAllSources Condition=" '$(IsTestProject)' != 'true' AND '$(NCrunch)' == '' ">true</EmbedAllSources>
     <!-- HACK Workaround flaky build in CI for Linux -->
     <BuildInParallel Condition=" '$(OS)' != 'Windows_NT' and '$(CI)' != '' ">false</BuildInParallel>
-    <ContinuousIntegrationBuild Condition=" '$(CI)' == 'true' ">true</ContinuousIntegrationBuild>
   </PropertyGroup>
   <PropertyGroup>
     <CollectCoverage Condition=" '$(CollectCoverage)' == '' ">true</CollectCoverage>
+    <CoverletOutput Condition=" '$(OutputPath)' != '' ">$(OutputPath)\</CoverletOutput>
     <CoverletOutputFormat>cobertura,json</CoverletOutputFormat>
     <Exclude>[*.Benchmarks]*,[*Sample*]*,[*Test*]*,[xunit.*]*</Exclude>
+    <ExcludeByAttribute>System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
+    <MergeWith>$(CoverletOutput)coverage.json</MergeWith>
   </PropertyGroup>
-  <!-- Keys used by InternalsVisibleTo attributes. -->
-  <PropertyGroup>
-    <DynamicProxyGenAssembly2PublicKey>0024000004800000940000000602000000240000525341310004000001000100c547cac37abd99c8db225ef2f6c8a3602f3b3606cc9891605d02baa56104f4cfc0734aa39b93bf7852f7d9266654753cc297e7d2edfe0bac1cdcf9f717241550e0a7b191195b7667bb4f64bcb8e2121380fd1d9d46ad2d92d2d15605093924cceaf74c4861eff62abf69b9291ed0a340e113be11e6a7d3113e92484cf7045cc7</DynamicProxyGenAssembly2PublicKey>
-  </PropertyGroup>
-  <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)$(PackageIcon)" Pack="True" PackagePath="" />
-    <None Include="$(MSBuildThisFileDirectory)$(PackageReadmeFile)" Pack="True" PackagePath="" />
-  </ItemGroup>
 </Project>

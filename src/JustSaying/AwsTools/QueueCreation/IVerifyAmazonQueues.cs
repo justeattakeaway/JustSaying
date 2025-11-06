@@ -1,12 +1,16 @@
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging.MessageSerialization;
 
-namespace JustSaying.AwsTools.QueueCreation;
-
-public interface IVerifyAmazonQueues
+namespace JustSaying.AwsTools.QueueCreation
 {
-    QueueWithAsyncStartup EnsureTopicExistsWithQueueSubscribed(
-        string region,
-        SqsReadConfiguration queueConfig);
+    public interface IVerifyAmazonQueues
+    {
+        QueueWithAsyncStartup EnsureTopicExistsWithQueueSubscribed(
+            string region,
+            IMessageSerializationRegister serializationRegister,
+            SqsReadConfiguration queueConfig,
+            IMessageSubjectProvider messageSubjectProvider);
 
-    QueueWithAsyncStartup EnsureQueueExists(string region, SqsReadConfiguration queueConfig);
+        QueueWithAsyncStartup EnsureQueueExists(string region, SqsReadConfiguration queueConfig);
+    }
 }

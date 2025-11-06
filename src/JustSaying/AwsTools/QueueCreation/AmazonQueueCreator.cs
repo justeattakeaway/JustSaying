@@ -1,120 +1,134 @@
+using System;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SimpleNotificationService;
 using Amazon.SQS;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.AwsTools.QueueCreation;
-
-public class AmazonQueueCreator(IAwsClientFactoryProxy awsClientFactory, ILoggerFactory loggerFactory) : IVerifyAmazonQueues
+namespace JustSaying.AwsTools.QueueCreation
 {
-    public QueueWithAsyncStartup EnsureTopicExistsWithQueueSubscribed(
-        string region,
-        SqsReadConfiguration queueConfig)
+    public class AmazonQueueCreator : IVerifyAmazonQueues
     {
-        var regionEndpoint = RegionEndpoint.GetBySystemName(region);
-        var sqsClient = awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
-        var snsClient = awsClientFactory.GetAwsClientFactory().GetSnsClient(regionEndpoint);
+        private readonly IAwsClientFactoryProxy _awsClientFactory;
+        private readonly ILoggerFactory _loggerFactory;
 
-        var queueWithStartup = EnsureQueueExists(region, queueConfig);
+        private const string EmptyFilterPolicy = "{}";
 
-        async Task StartupTask(CancellationToken cancellationToken)
+        public AmazonQueueCreator(IAwsClientFactoryProxy awsClientFactory, ILoggerFactory loggerFactory)
         {
-            await queueWithStartup.StartupTask.Invoke(cancellationToken).ConfigureAwait(false);
-            var queue = queueWithStartup.Queue;
-            if (TopicExistsInAnotherAccount(queueConfig))
-            {
-                var arnProvider = new ForeignTopicArnProvider(regionEndpoint,
-                    queueConfig.TopicSourceAccount,
-                    queueConfig.PublishEndpoint);
-
-                var topicArn = await arnProvider.GetArnAsync().ConfigureAwait(false);
-                await SubscribeQueueAndApplyFilterPolicyAsync(snsClient,
-                    topicArn,
-                    sqsClient,
-                    queue.Uri,
-                    queueConfig.FilterPolicy,
-                    queueConfig.RawMessageDelivery).ConfigureAwait(false);
-            }
-            else
-            {
-#pragma warning disable 618
-                var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsClient, loggerFactory);
-#pragma warning restore 618
-                await eventTopic.CreateAsync(cancellationToken).ConfigureAwait(false);
-
-                await SubscribeQueueAndApplyFilterPolicyAsync(snsClient,
-                    eventTopic.Arn,
-                    sqsClient,
-                    queue.Uri,
-                    queueConfig.FilterPolicy,
-                    queueConfig.RawMessageDelivery).ConfigureAwait(false);
-
-                var sqsDetails = new SqsPolicyDetails
-                {
-                    SourceArn = eventTopic.Arn,
-                    QueueArn = queue.Arn,
-                    QueueUri = queue.Uri
-                };
-                await SqsPolicy
-                    .SaveAsync(sqsDetails, sqsClient)
-                    .ConfigureAwait(false);
-            }
+            _awsClientFactory = awsClientFactory;
+            _loggerFactory = loggerFactory;
         }
 
-        return new QueueWithAsyncStartup(StartupTask, queueWithStartup.Queue);
-    }
+        public QueueWithAsyncStartup EnsureTopicExistsWithQueueSubscribed(
+            string region,
+            IMessageSerializationRegister serializationRegister,
+            SqsReadConfiguration queueConfig,
+            IMessageSubjectProvider messageSubjectProvider)
+        {
+            var regionEndpoint = RegionEndpoint.GetBySystemName(region);
+            var sqsClient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
+            var snsClient = _awsClientFactory.GetAwsClientFactory().GetSnsClient(regionEndpoint);
 
-    private static bool TopicExistsInAnotherAccount(SqsReadConfiguration queueConfig)
-    {
-        return !string.IsNullOrWhiteSpace(queueConfig.TopicSourceAccount);
-    }
+            var queueWithStartup = EnsureQueueExists(region, queueConfig);
 
-    public QueueWithAsyncStartup EnsureQueueExists(
-        string region,
-        SqsReadConfiguration queueConfig)
-    {
-        var regionEndpoint = RegionEndpoint.GetBySystemName(region);
-        var sqsClient = awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
+            async Task StartupTask()
+            {
+                await queueWithStartup.StartupTask.Invoke().ConfigureAwait(false);
+                var queue = queueWithStartup.Queue;
+                if (TopicExistsInAnotherAccount(queueConfig))
+                {
+                    var arnProvider = new ForeignTopicArnProvider(regionEndpoint,
+                        queueConfig.TopicSourceAccount,
+                        queueConfig.PublishEndpoint);
+
+                    var topicArn = await arnProvider.GetArnAsync().ConfigureAwait(false);
+                    await SubscribeQueueAndApplyFilterPolicyAsync(snsClient,
+                        topicArn,
+                        sqsClient,
+                        queue.Uri,
+                        queueConfig.FilterPolicy).ConfigureAwait(false);
+                }
+                else
+                {
+#pragma warning disable 618
+                    var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint,
+                        snsClient,
+                        serializationRegister,
+                        _loggerFactory,
+                        messageSubjectProvider);
+#pragma warning restore 618
+                    await eventTopic.CreateAsync().ConfigureAwait(false);
+
+                    await SubscribeQueueAndApplyFilterPolicyAsync(snsClient,
+                        eventTopic.Arn,
+                        sqsClient,
+                        queue.Uri,
+                        queueConfig.FilterPolicy).ConfigureAwait(false);
+
+                    var sqsDetails = new SqsPolicyDetails
+                    {
+                        SourceArn = eventTopic.Arn,
+                        QueueArn = queue.Arn,
+                        QueueUri = queue.Uri
+                    };
+                    await SqsPolicy
+                        .SaveAsync(sqsDetails, sqsClient)
+                        .ConfigureAwait(false);
+                }
+            }
+
+            return new QueueWithAsyncStartup(StartupTask, queueWithStartup.Queue);
+        }
+
+        private static bool TopicExistsInAnotherAccount(SqsReadConfiguration queueConfig)
+        {
+            return !string.IsNullOrWhiteSpace(queueConfig.TopicSourceAccount);
+        }
+
+        public QueueWithAsyncStartup EnsureQueueExists(
+            string region,
+            SqsReadConfiguration queueConfig)
+        {
+            var regionEndpoint = RegionEndpoint.GetBySystemName(region);
+            var sqsClient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
 
 #pragma warning disable 618
-        var queue = new SqsQueueByName(regionEndpoint,
-            queueConfig.QueueName,
-            sqsClient,
-            queueConfig.RetryCountBeforeSendingToErrorQueue,
-            loggerFactory);
+            var queue = new SqsQueueByName(regionEndpoint,
+                queueConfig.QueueName,
+                sqsClient,
+                queueConfig.RetryCountBeforeSendingToErrorQueue,
+                _loggerFactory);
 #pragma warning restore 618
 
-        var startupTask = new Func<CancellationToken, Task>(ct => queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(
-            queueConfig, ct));
+            var startupTask = new Func<Task>(() => queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(queueConfig));
 
-        return new QueueWithAsyncStartup(startupTask, queue);
-    }
+            return new QueueWithAsyncStartup(startupTask, queue);
+        }
 
-    private static async Task SubscribeQueueAndApplyFilterPolicyAsync(
-        IAmazonSimpleNotificationService amazonSimpleNotificationService,
-        string topicArn,
-        IAmazonSQS amazonSQS,
-        Uri queueUrl,
-        string filterPolicy,
-        bool rawMessageDelivery)
-    {
-        if (amazonSimpleNotificationService == null) throw new ArgumentNullException(nameof(amazonSimpleNotificationService));
-        if (amazonSQS == null) throw new ArgumentNullException(nameof(amazonSQS));
-        if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
-        if (string.IsNullOrEmpty(topicArn)) throw new ArgumentException($"{nameof(topicArn)} cannot be null or empty.", nameof(topicArn));
+        private static async Task SubscribeQueueAndApplyFilterPolicyAsync(
+            IAmazonSimpleNotificationService amazonSimpleNotificationService,
+            string topicArn,
+            IAmazonSQS amazonSQS,
+            Uri queueUrl,
+            string filterPolicy)
+        {
+            if (amazonSimpleNotificationService == null) throw new ArgumentNullException(nameof(amazonSimpleNotificationService));
+            if (amazonSQS == null) throw new ArgumentNullException(nameof(amazonSQS));
+            if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
+            if (string.IsNullOrEmpty(topicArn)) throw new ArgumentException($"{nameof(topicArn)} cannot be null or empty.", nameof(topicArn));
 
-        var subscriptionArn = await amazonSimpleNotificationService
-            .SubscribeQueueAsync(topicArn, amazonSQS, queueUrl.AbsoluteUri)
-            .ConfigureAwait(false);
+            var subscriptionArn = await amazonSimpleNotificationService
+                .SubscribeQueueAsync(topicArn, amazonSQS, queueUrl.AbsoluteUri)
+                .ConfigureAwait(false);
 
-        var actualFilterPolicy =
-            string.IsNullOrWhiteSpace(filterPolicy) ? "{}" : filterPolicy;
-        await amazonSimpleNotificationService
-            .SetSubscriptionAttributesAsync(subscriptionArn, "FilterPolicy", actualFilterPolicy)
-            .ConfigureAwait(false);
-        await amazonSimpleNotificationService
-            .SetSubscriptionAttributesAsync(subscriptionArn, "RawMessageDelivery", rawMessageDelivery.ToString().ToLowerInvariant())
-            .ConfigureAwait(false);
+            var actualFilterPolicy =
+                string.IsNullOrWhiteSpace(filterPolicy) ? EmptyFilterPolicy : filterPolicy;
+            await amazonSimpleNotificationService
+                .SetSubscriptionAttributesAsync(subscriptionArn, "FilterPolicy", actualFilterPolicy)
+                .ConfigureAwait(false);
+        }
     }
 }

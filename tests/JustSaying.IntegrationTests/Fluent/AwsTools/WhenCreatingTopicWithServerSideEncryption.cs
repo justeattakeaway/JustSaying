@@ -1,78 +1,92 @@
+using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using Microsoft.Extensions.Logging;
-
+using Shouldly;
+using Xunit.Abstractions;
 #pragma warning disable 618
 
-namespace JustSaying.IntegrationTests.Fluent.AwsTools;
-
-public class WhenCreatingTopicWithServerSideEncryption(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+namespace JustSaying.IntegrationTests.Fluent.AwsTools
 {
-    [NotSimulatorFact]
-    public async Task Can_Create_Topic_With_Encryption()
+    public class WhenCreatingTopicWithServerSideEncryption : IntegrationTestBase
     {
-        // Arrange
-        ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
-        IAwsClientFactory clientFactory = CreateClientFactory();
+        public WhenCreatingTopicWithServerSideEncryption(ITestOutputHelper outputHelper)
+            : base(outputHelper)
+        {
+        }
 
-        var client = clientFactory.GetSnsClient(Region);
+        [NotSimulatorFact]
+        public async Task Can_Create_Topic_With_Encryption()
+        {
+            // Arrange
+            ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
+            IAwsClientFactory clientFactory = CreateClientFactory();
 
-        var topic = new SnsTopicByName(
-            UniqueName,
-            client,
-            loggerFactory);
+            var client = clientFactory.GetSnsClient(Region);
 
-        // Act
-        await topic.CreateWithEncryptionAsync(new ServerSideEncryption { KmsMasterKeyId = JustSayingConstants.DefaultSnsAttributeEncryptionKeyId }, CancellationToken.None);
+            var topic = new SnsTopicByName(
+                UniqueName,
+                client,
+                null,
+                loggerFactory,
+                null);
 
-        // Assert
-        topic.ServerSideEncryption.KmsMasterKeyId.ShouldBe(JustSayingConstants.DefaultSnsAttributeEncryptionKeyId);
-    }
+            // Act
+            await topic.CreateWithEncryptionAsync(new ServerSideEncryption { KmsMasterKeyId = JustSayingConstants.DefaultSnsAttributeEncryptionKeyId });
 
-    [NotSimulatorFact]
-    public async Task Can_Add_Encryption_To_Existing_Topic()
-    {
-        // Arrange
-        ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
-        IAwsClientFactory clientFactory = CreateClientFactory();
+            // Assert
+            topic.ServerSideEncryption.KmsMasterKeyId.ShouldBe(JustSayingConstants.DefaultSnsAttributeEncryptionKeyId);
+        }
 
-        var client = clientFactory.GetSnsClient(Region);
+        [NotSimulatorFact]
+        public async Task Can_Add_Encryption_To_Existing_Topic()
+        {
+            // Arrange
+            ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
+            IAwsClientFactory clientFactory = CreateClientFactory();
 
-        var topic = new SnsTopicByName(
-            UniqueName,
-            client,
-            loggerFactory);
+            var client = clientFactory.GetSnsClient(Region);
 
-        await topic.CreateAsync(CancellationToken.None);
+            var topic = new SnsTopicByName(
+                UniqueName,
+                client,
+                null,
+                loggerFactory,
+                null);
 
-        // Act
-        await topic.CreateWithEncryptionAsync(new ServerSideEncryption { KmsMasterKeyId = JustSayingConstants.DefaultSnsAttributeEncryptionKeyId }, CancellationToken.None);
+            await topic.CreateAsync();
 
-        // Assert
-        topic.ServerSideEncryption.KmsMasterKeyId.ShouldBe(JustSayingConstants.DefaultSnsAttributeEncryptionKeyId);
-    }
+            // Act
+            await topic.CreateWithEncryptionAsync(new ServerSideEncryption { KmsMasterKeyId = JustSayingConstants.DefaultSnsAttributeEncryptionKeyId });
 
-    [NotSimulatorFact]
-    public async Task Can_Update_Encryption_For_Existing_Topic()
-    {
-        // Arrange
-        ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
-        IAwsClientFactory clientFactory = CreateClientFactory();
+            // Assert
+            topic.ServerSideEncryption.KmsMasterKeyId.ShouldBe(JustSayingConstants.DefaultSnsAttributeEncryptionKeyId);
+        }
 
-        var client = clientFactory.GetSnsClient(Region);
+        [NotSimulatorFact]
+        public async Task Can_Update_Encryption_For_Existing_Topic()
+        {
+            // Arrange
+            ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
+            IAwsClientFactory clientFactory = CreateClientFactory();
 
-        var topic = new SnsTopicByName(
-            UniqueName,
-            client,
-            loggerFactory);
+            var client = clientFactory.GetSnsClient(Region);
 
-        await topic.CreateWithEncryptionAsync(new ServerSideEncryption { KmsMasterKeyId = "previousKeyId" }, CancellationToken.None);
+            var topic = new SnsTopicByName(
+                UniqueName,
+                client,
+                null,
+                loggerFactory,
+                null);
 
-        // Act
-        await topic.CreateWithEncryptionAsync(new ServerSideEncryption { KmsMasterKeyId = JustSayingConstants.DefaultSnsAttributeEncryptionKeyId }, CancellationToken.None);
+            await topic.CreateWithEncryptionAsync(new ServerSideEncryption { KmsMasterKeyId = "previousKeyId" });
 
-        // Assert
-        topic.ServerSideEncryption.KmsMasterKeyId.ShouldBe(JustSayingConstants.DefaultSnsAttributeEncryptionKeyId);
+            // Act
+            await topic.CreateWithEncryptionAsync(new ServerSideEncryption { KmsMasterKeyId = JustSayingConstants.DefaultSnsAttributeEncryptionKeyId });
+
+            // Assert
+            topic.ServerSideEncryption.KmsMasterKeyId.ShouldBe(JustSayingConstants.DefaultSnsAttributeEncryptionKeyId);
+        }
     }
 }

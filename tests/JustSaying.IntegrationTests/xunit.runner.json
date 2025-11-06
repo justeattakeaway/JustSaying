@@ -1,6 +1,6 @@
 {
-  "$schema": "https://xunit.net/schema/current/xunit.runner.schema.json",
   "methodDisplay": "classAndMethod",
   "methodDisplayOptions": "replaceUnderscoreWithSpace",
-  "preEnumerateTheories": true
+  "parallelizeTestCollections": false,
+  "maxParallelThreads": 1 
 }

@@ -1,38 +1,47 @@
+using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
-
+using Shouldly;
+using Xunit.Abstractions;
 #pragma warning disable 618
 
-namespace JustSaying.IntegrationTests.Fluent.AwsTools;
-
-public class WhenRemovingServerSideEncryption(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+namespace JustSaying.IntegrationTests.Fluent.AwsTools
 {
-    [NotSimulatorFact]
-    public async Task Can_Remove_Encryption()
+    public class WhenRemovingServerSideEncryption : IntegrationTestBase
     {
-        // Arrange
-        ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
-        IAwsClientFactory clientFactory = CreateClientFactory();
+        public WhenRemovingServerSideEncryption(ITestOutputHelper outputHelper)
+            : base(outputHelper)
+        {
+        }
 
-        var client = clientFactory.GetSqsClient(Region);
+        [AwsFact]
+        public async Task Can_Remove_Encryption()
+        {
+            // Arrange
+            ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
+            IAwsClientFactory clientFactory = CreateClientFactory();
 
-        var queue = new SqsQueueByName(
-            Region,
-            UniqueName,
-            client,
-            1,
-            loggerFactory);
+            var client = clientFactory.GetSqsClient(Region);
 
-        await queue.CreateAsync(
-            new SqsBasicConfiguration { ServerSideEncryption = new ServerSideEncryption() });
+            var queue = new SqsQueueByName(
+                Region,
+                UniqueName,
+                client,
+                1,
+                loggerFactory);
 
-        // Act
-        await queue.UpdateQueueAttributeAsync(
-            new SqsBasicConfiguration { ServerSideEncryption = null }, CancellationToken.None);
+            await queue.CreateAsync(
+                new SqsBasicConfiguration { ServerSideEncryption = new ServerSideEncryption() });
 
-        // Assert
-        queue.ServerSideEncryption.ShouldBeNull();
+            // Act
+            await queue.UpdateQueueAttributeAsync(
+                new SqsBasicConfiguration { ServerSideEncryption = null });
+
+            // Assert
+            queue.ServerSideEncryption.ShouldBeNull();
+        }
     }
 }

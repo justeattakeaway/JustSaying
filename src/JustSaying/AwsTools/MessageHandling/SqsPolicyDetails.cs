@@ -1,8 +1,11 @@
-﻿namespace JustSaying.AwsTools.MessageHandling;
+﻿using System;
 
-internal class SqsPolicyDetails
+namespace JustSaying.AwsTools.MessageHandling
 {
-    public string SourceArn { get; set; }
-    public string QueueArn { get; set; }
-    public Uri QueueUri { get; set; }
+    internal class SqsPolicyDetails
+    {
+        public string SourceArn { get; set; }
+        public string QueueArn { get; set; }
+        public Uri QueueUri { get; set; }
+    }
 }

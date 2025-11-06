@@ -1,14 +1,18 @@
-namespace JustSaying;
+using System.Threading;
+using System.Threading.Tasks;
 
-/// <summary>
-/// Indicates that a component is asynchronously startable.
-/// </summary>
-public interface IStartable
+namespace JustSaying
 {
     /// <summary>
-    /// Starts running the component and returns a task that completes when the component has started.
+    /// Indicates that a component is asynchronously startable.
     /// </summary>
-    /// <param name="stoppingToken">A <see cref="CancellationToken"/> that cancels the startup.</param>
-    /// <returns>A <see cref="Task"/> that completes when the component has started.</returns>
-    Task StartAsync(CancellationToken stoppingToken);
+    public interface IStartable
+    {
+        /// <summary>
+        /// Starts running the component and returns a task that completes when the component has started.
+        /// </summary>
+        /// <param name="stoppingToken">A <see cref="CancellationToken"/> that cancels the startup.</param>
+        /// <returns>A <see cref="Task"/> that completes when the component has started.</returns>
+        Task StartAsync(CancellationToken stoppingToken);
+    }
 }

@@ -1,54 +1,73 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using Microsoft.Extensions.Logging;
 
 // ReSharper disable once CheckNamespace
-namespace JustSaying.Messaging.Middleware;
-
-public sealed class ExactlyOnceMiddleware<T>(IMessageLockAsync messageLock, TimeSpan timeout, string handlerName, ILogger logger) : MiddlewareBase<HandleMessageContext, bool>
+namespace JustSaying.Messaging.Middleware
 {
-    private readonly string _lockSuffixKeyForHandler = $"{typeof(T).FullName.ToLowerInvariant()}-{handlerName}";
-
-    protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
+    public class ExactlyOnceMiddleware<T> : MiddlewareBase<HandleMessageContext, bool>
     {
-        if (context == null) throw new ArgumentNullException(nameof(context));
-        if (func == null) throw new ArgumentNullException(nameof(func));
+        private readonly IMessageLockAsync _messageLock;
+        private readonly TimeSpan _timeout;
+        private readonly string _lockSuffixKeyForHandler;
+        private readonly ILogger _logger;
 
-        string lockKey = $"{context.Message.UniqueKey()}-{_lockSuffixKeyForHandler}";
+        private const bool RemoveTheMessageFromTheQueue = true;
+        private const bool LeaveItInTheQueue = false;
 
-        MessageLockResponse lockResponse = await messageLock.TryAcquireLockAsync(lockKey, timeout).ConfigureAwait(false);
-
-        if (!lockResponse.DoIHaveExclusiveLock)
+        public ExactlyOnceMiddleware(IMessageLockAsync messageLock, TimeSpan timeout, string handlerName, ILogger logger)
         {
-            if (lockResponse.IsMessagePermanentlyLocked)
-            {
-                logger.LogDebug("Failed to acquire lock for message with key {MessageLockKey} as it is permanently locked.", lockKey);
-                return true;
-            }
+            _messageLock = messageLock;
+            _timeout = timeout;
+            _logger = logger;
 
-            logger.LogDebug("Failed to acquire lock for message with key {MessageLockKey}; returning message to queue.", lockKey);
-            return false;
+            _lockSuffixKeyForHandler = $"{typeof(T).FullName.ToLowerInvariant()}-{handlerName}";
         }
 
-        try
+        protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
         {
-            logger.LogDebug("Acquired lock for message with key {MessageLockKey}.", lockKey);
+            if (context == null) throw new ArgumentNullException(nameof(context));
+            if (func == null) throw new ArgumentNullException(nameof(func));
 
-            bool successfullyHandled = await func(stoppingToken).ConfigureAwait(false);
+            string lockKey = $"{context.Message.UniqueKey()}-{_lockSuffixKeyForHandler}";
 
-            if (successfullyHandled)
+            MessageLockResponse lockResponse = await _messageLock.TryAcquireLockAsync(lockKey, _timeout).ConfigureAwait(false);
+
+            if (!lockResponse.DoIHaveExclusiveLock)
             {
-                await messageLock.TryAcquireLockPermanentlyAsync(lockKey).ConfigureAwait(false);
+                if (lockResponse.IsMessagePermanentlyLocked)
+                {
+                    _logger.LogDebug("Failed to acquire lock for message with key {MessageLockKey} as it is permanently locked.", lockKey);
+                    return RemoveTheMessageFromTheQueue;
+                }
 
-                logger.LogDebug("Acquired permanent lock for message with key {MessageLockKey}.", lockKey);
+                _logger.LogDebug("Failed to acquire lock for message with key {MessageLockKey}; returning message to queue.", lockKey);
+                return LeaveItInTheQueue;
             }
 
-            return successfullyHandled;
-        }
-        catch (Exception)
-        {
-            await messageLock.ReleaseLockAsync(lockKey).ConfigureAwait(false);
-            logger.LogDebug("Released lock for message with key {MessageLockKey}.", lockKey);
-            throw;
+            try
+            {
+                _logger.LogDebug("Acquired lock for message with key {MessageLockKey}.", lockKey);
+
+                bool successfullyHandled = await func(stoppingToken).ConfigureAwait(false);
+
+                if (successfullyHandled)
+                {
+                    await _messageLock.TryAcquireLockPermanentlyAsync(lockKey).ConfigureAwait(false);
+
+                    _logger.LogDebug("Acquired permanent lock for message with key {MessageLockKey}.", lockKey);
+                }
+
+                return successfullyHandled;
+            }
+            catch (Exception)
+            {
+                await _messageLock.ReleaseLockAsync(lockKey).ConfigureAwait(false);
+                _logger.LogDebug("Released lock for message with key {MessageLockKey}.", lockKey);
+                throw;
+            }
         }
     }
 }

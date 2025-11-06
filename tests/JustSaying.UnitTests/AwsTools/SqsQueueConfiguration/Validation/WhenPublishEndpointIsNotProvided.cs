@@ -1,33 +1,37 @@
+using System;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
+using Shouldly;
+using Xunit;
 
-namespace JustSaying.UnitTests.AwsTools.SqsQueueConfiguration.Validation;
-
-public class WhenPublishEndpointIsNotProvided : XBehaviourTest<SqsReadConfiguration>
+namespace JustSaying.UnitTests.AwsTools.SqsQueueConfiguration.Validation
 {
-    protected override void Given()
+    public class WhenPublishEndpointIsNotProvided : XBehaviourTest<SqsReadConfiguration>
     {
-        RecordAnyExceptionsThrown();
-    }
-
-    protected override void WhenAction()
-    {
-        SystemUnderTest.Validate();
-    }
-
-    [Fact]
-    public void ThrowsException()
-    {
-        ThrownException.ShouldNotBeNull();
-    }
-
-    protected override SqsReadConfiguration CreateSystemUnderTest()
-    {
-        return new SqsReadConfiguration(SubscriptionType.ToTopic)
+        protected override void Given()
         {
-            MessageRetention = JustSayingConstants.MinimumRetentionPeriod.Add(TimeSpan.FromSeconds(1)),
-            TopicName = "ATopic",
-            PublishEndpoint = null
-        };
+            RecordAnyExceptionsThrown();
+        }
+
+        protected override void WhenAction()
+        {
+            SystemUnderTest.Validate();
+        }
+
+        [Fact]
+        public void ThrowsException()
+        {
+            ThrownException.ShouldNotBeNull();
+        }
+
+        protected override SqsReadConfiguration CreateSystemUnderTest()
+        {
+            return new SqsReadConfiguration(SubscriptionType.ToTopic)
+            {
+                MessageRetention = JustSayingConstants.MinimumRetentionPeriod.Add(TimeSpan.FromSeconds(1)),
+                TopicName = "ATopic",
+                PublishEndpoint = null
+            };
+        }
     }
 }

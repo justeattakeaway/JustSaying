@@ -1,22 +1,26 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using JustSaying.Messaging.Middleware;
 
-namespace JustSaying.UnitTests.Messaging.Policies.ExamplePolicies;
-
-public class ErrorHandlingMiddleware<TContext, TOut, TException> : MiddlewareBase<TContext, TOut>
-    where TException : Exception
+namespace JustSaying.UnitTests.Messaging.Policies.ExamplePolicies
 {
-    protected override async Task<TOut> RunInnerAsync(
-        TContext context,
-        Func<CancellationToken, Task<TOut>> func,
-        CancellationToken stoppingToken)
+    public class ErrorHandlingMiddleware<TContext, TOut, TException> : MiddlewareBase<TContext, TOut>
+        where TException : Exception
     {
-        try
+        protected override async Task<TOut> RunInnerAsync(
+            TContext context,
+            Func<CancellationToken, Task<TOut>> func,
+            CancellationToken stoppingToken)
         {
-            return await func(stoppingToken);
-        }
-        catch (TException)
-        {
-            return default;
+            try
+            {
+                return await func(stoppingToken);
+            }
+            catch (TException)
+            {
+                return default;
+            }
         }
     }
 }

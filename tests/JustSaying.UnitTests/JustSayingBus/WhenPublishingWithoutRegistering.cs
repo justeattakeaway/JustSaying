@@ -1,25 +1,34 @@
+using System;
+using System.Threading.Tasks;
 using JustSaying.Messaging;
 using JustSaying.Models;
 using NSubstitute;
+using Shouldly;
+using Xunit;
+using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.JustSayingBus;
-
-public class WhenPublishingWithoutRegistering(ITestOutputHelper outputHelper) : GivenAServiceBus(outputHelper)
+namespace JustSaying.UnitTests.JustSayingBus
 {
-    protected override void Given()
+    public class WhenPublishingWithoutRegistering : GivenAServiceBus
     {
-        base.Given();
-        RecordAnyExceptionsThrown();
-    }
+        protected override void Given()
+        {
+            base.Given();
+            RecordAnyExceptionsThrown();
+        }
 
-    protected override async Task WhenAsync()
-    {
-        await SystemUnderTest.PublishAsync(Substitute.For<Message>());
-    }
+        protected override async Task WhenAsync()
+        {
+            await SystemUnderTest.PublishAsync(Substitute.For<Message>());
+        }
 
-    [Fact]
-    public void InvalidOperationIsThrown()
-    {
-        ThrownException.ShouldBeAssignableTo<InvalidOperationException>();
+        [Fact]
+        public void InvalidOperationIsThrown()
+        {
+            ThrownException.ShouldBeAssignableTo<InvalidOperationException>();
+        }
+
+        public WhenPublishingWithoutRegistering(ITestOutputHelper outputHelper) : base(outputHelper)
+        { }
     }
 }

@@ -1,54 +1,66 @@
+using System;
+using System.Threading.Tasks;
 using JustSaying.IntegrationTests.Fluent;
 using JustSaying.IntegrationTests.Fluent.Subscribing;
 using JustSaying.IntegrationTests.TestHandlers;
-using JustSaying.Messaging.Monitoring;
+using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Shouldly;
+using Xunit.Abstractions;
 
-namespace JustSaying.Fluent.Monitoring;
-
-public class WhenUsingAMessageMonitor(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+namespace JustSaying.Fluent.Monitoring
 {
-    [AwsFact]
-    public async Task MonitorShouldBeCalled()
+    public class WhenUsingAMessageMonitor : IntegrationTestBase
     {
-        // Arrange
-        var future = new Future<SimpleMessage>();
+        public WhenUsingAMessageMonitor(ITestOutputHelper outputHelper) : base(outputHelper)
+        { }
 
-        var monitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
-
-        var services = GivenJustSaying()
-            .ConfigureJustSaying(
-                (builder) => builder.WithLoopbackQueue<SimpleMessage>(UniqueName))
-            .AddSingleton(future)
-            .AddSingleton<IMessageMonitor>(monitor)
-            .AddJustSayingHandler<SimpleMessage, HandlerWithMessageContext>();
-
-        string content = Guid.NewGuid().ToString();
-
-        var message = new SimpleMessage
+        [AwsFact]
+        public async Task MonitorShouldBeCalled()
         {
-            Content = content
-        };
+            // Arrange
+            var future = new Future<SimpleMessage>();
 
-        await WhenAsync(
-            services,
-            async (publisher, listener, serviceProvider, cancellationToken) =>
+            var services = GivenJustSaying()
+                .ConfigureJustSaying(
+                    (builder) => builder.WithLoopbackQueue<SimpleMessage>(UniqueName))
+                .ConfigureJustSaying(
+                    (builder) => builder.Services(s =>
+                        s.WithMessageMonitoring(
+                            builder.ServiceResolver.ResolveService<TrackingLoggingMonitor>)))
+                .AddSingleton(future)
+                .AddSingleton<TrackingLoggingMonitor>()
+                .AddJustSayingHandler<SimpleMessage, HandlerWithMessageContext>();
+
+            string content = Guid.NewGuid().ToString();
+
+            var message = new SimpleMessage
             {
-                await listener.StartAsync(cancellationToken);
-                await publisher.StartAsync(cancellationToken);
+                Content = content
+            };
 
-                // Act
-                await publisher.PublishAsync(message, cancellationToken);
+            await WhenAsync(
+                services,
+                async (publisher, listener, serviceProvider, cancellationToken) =>
+                {
+                    await listener.StartAsync(cancellationToken);
+                    await publisher.StartAsync(cancellationToken);
 
-                // Assert
-                await future.DoneSignal;
+                    // Act
+                    await publisher.PublishAsync(message, cancellationToken);
 
-                monitor.HandledTimes.ShouldHaveSingleItem().ShouldBeGreaterThan(TimeSpan.Zero);
-                monitor.PublishMessageTimes.ShouldHaveSingleItem().ShouldBeGreaterThan(TimeSpan.Zero);
-                monitor.ReceiveMessageTimes.ShouldHaveSingleItem().duration
-                    .ShouldBeGreaterThan(TimeSpan.Zero);
-            });
+                    // Assert
+                    await future.DoneSignal;
+
+                    var monitor = serviceProvider.GetService<TrackingLoggingMonitor>();
+
+                    monitor.HandledTimes.ShouldHaveSingleItem().ShouldBeGreaterThan(TimeSpan.Zero);
+                    monitor.PublishMessageTimes.ShouldHaveSingleItem().ShouldBeGreaterThan(TimeSpan.Zero);
+                    monitor.ReceiveMessageTimes.ShouldHaveSingleItem().duration
+                        .ShouldBeGreaterThan(TimeSpan.Zero);
+                });
+        }
     }
 }

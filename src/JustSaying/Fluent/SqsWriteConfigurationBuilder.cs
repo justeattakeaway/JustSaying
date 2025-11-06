@@ -1,47 +1,49 @@
+using System;
 using JustSaying.AwsTools.QueueCreation;
 
-namespace JustSaying.Fluent;
-
-/// <summary>
-/// A class representing a builder for configuring instances of <see cref="SqsWriteConfiguration"/>. This class cannot be inherited.
-/// </summary>
-public sealed class SqsWriteConfigurationBuilder : SqsConfigurationBuilder<SqsWriteConfiguration, SqsWriteConfigurationBuilder>
+namespace JustSaying.Fluent
 {
-    /// <inheritdoc />
-    protected override SqsWriteConfigurationBuilder Self => this;
-
     /// <summary>
-    /// Gets or sets the queue name to use.
+    /// A class representing a builder for configuring instances of <see cref="SqsWriteConfiguration"/>. This class cannot be inherited.
     /// </summary>
-    private string QueueName { get; set; }
-
-    /// <summary>
-    /// Configures the queue name to use.
-    /// </summary>
-    /// <param name="name">The value to use for the queue name.</param>
-    /// <returns>
-    /// The current <see cref="SqsWriteConfigurationBuilder"/>.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">
-    /// <paramref name="name"/> is <see langword="null"/>.
-    /// </exception>
-    public SqsWriteConfigurationBuilder WithQueueName(string name)
+    public sealed class SqsWriteConfigurationBuilder : SqsConfigurationBuilder<SqsWriteConfiguration, SqsWriteConfigurationBuilder>
     {
-        QueueName = name ?? throw new ArgumentNullException(nameof(name));
-        return this;
-    }
+        /// <inheritdoc />
+        protected override SqsWriteConfigurationBuilder Self => this;
 
-    /// <summary>
-    /// Configures the specified <see cref="SqsWriteConfiguration"/>.
-    /// </summary>
-    /// <param name="config">The configuration to configure.</param>
-    internal override void Configure(SqsWriteConfiguration config)
-    {
-        if (QueueName != null)
+        /// <summary>
+        /// Gets or sets the queue name to use.
+        /// </summary>
+        private string QueueName { get; set; }
+
+        /// <summary>
+        /// Configures the queue name to use.
+        /// </summary>
+        /// <param name="name">The value to use for the queue name.</param>
+        /// <returns>
+        /// The current <see cref="SqsWriteConfigurationBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="name"/> is <see langword="null"/>.
+        /// </exception>
+        public SqsWriteConfigurationBuilder WithQueueName(string name)
         {
-            config.QueueName = QueueName;
+            QueueName = name ?? throw new ArgumentNullException(nameof(name));
+            return this;
         }
 
-        base.Configure(config);
+        /// <summary>
+        /// Configures the specified <see cref="SqsWriteConfiguration"/>.
+        /// </summary>
+        /// <param name="config">The configuration to configure.</param>
+        internal override void Configure(SqsWriteConfiguration config)
+        {
+            if (QueueName != null)
+            {
+                config.QueueName = QueueName;
+            }
+
+            base.Configure(config);
+        }
     }
 }

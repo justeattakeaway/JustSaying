@@ -1,12 +1,22 @@
-using System.Collections.Concurrent;
 using System.Text.Json;
 using JustSaying.Models;
 
-namespace JustSaying.Messaging.MessageSerialization;
-
-public sealed class SystemTextJsonSerializationFactory(JsonSerializerOptions options) : IMessageBodySerializationFactory
+namespace JustSaying.Messaging.MessageSerialization
 {
-    private readonly ConcurrentDictionary<Type, IMessageBodySerializer> _cache = new();
+    public class SystemTextJsonSerializationFactory : IMessageSerializationFactory
+    {
+        private readonly SystemTextJsonSerializer _serializer;
 
-    public IMessageBodySerializer GetSerializer<T>() where T : Message => _cache.GetOrAdd(typeof(T), _ => new SystemTextJsonMessageBodySerializer<T>(options));
+        public SystemTextJsonSerializationFactory()
+            : this(null)
+        {
+        }
+
+        public SystemTextJsonSerializationFactory(JsonSerializerOptions options)
+        {
+            _serializer = new SystemTextJsonSerializer(options);
+        }
+
+        public IMessageSerializer GetSerializer<T>() where T : Message => _serializer;
+    }
 }

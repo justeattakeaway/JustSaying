@@ -1,293 +1,316 @@
+using System;
+using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
-using JustSaying.Fluent.ServiceResolver;
 using JustSaying.Messaging;
-using JustSaying.Messaging.Channels.Receive;
+using JustSaying.Messaging.Channels;
+using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
+using JustSaying.Naming;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying;
-
-/// <summary>
-/// A class representing a builder for instances of <see cref="IMessagingBus"/>
-/// and <see cref="IMessagePublisher"/>. This class cannot be inherited.
-/// </summary>
-public sealed class MessagingBusBuilder
+namespace JustSaying
 {
     /// <summary>
-    /// Gets the <see cref="IServiceResolver"/> to use.
+    /// A class representing a builder for instances of <see cref="IMessagingBus"/>
+    /// and <see cref="IMessagePublisher"/>. This class cannot be inherited.
     /// </summary>
-    internal IServiceResolver ServiceResolver { get; private set; }
-
-    /// <summary>
-    /// Gets or sets the builder to use for services.
-    /// </summary>
-    internal ServicesBuilder ServicesBuilder { get; private set; }
-
-    /// <summary>
-    /// Gets or sets the builder to use for creating an AWS client factory.
-    /// </summary>
-    internal AwsClientFactoryBuilder ClientFactoryBuilder { get; set; }
-
-    /// <summary>
-    /// Gets or sets the builder to use to configure messaging.
-    /// </summary>
-    internal MessagingConfigurationBuilder MessagingConfig { get; set; }
-
-    /// <summary>
-    /// Gets or sets the builder to use for publications.
-    /// </summary>
-    private PublicationsBuilder PublicationsBuilder { get; set; }
-
-    /// <summary>
-    /// Gets or sets the builder to use for subscriptions.
-    /// </summary>
-    private SubscriptionsBuilder SubscriptionBuilder { get; set; }
-
-    /// <summary>
-    /// Provides an <see cref="IServiceResolver"/> interface over the <see cref="ServicesBuilder"/> builder
-    /// so that services can be obtained in a consistent way
-    /// </summary>
-    private ServiceBuilderServiceResolver ServiceBuilderServiceResolver { get; set; }
-
-    public MessagingBusBuilder()
+    public sealed class MessagingBusBuilder
     {
-        ServicesBuilder = new ServicesBuilder(this);
-        ServiceBuilderServiceResolver = new ServiceBuilderServiceResolver(ServicesBuilder);
-        ServiceResolver =
-            new CompoundServiceResolver(ServiceBuilderServiceResolver, new DefaultServiceResolver());
-        SubscriptionBuilder = new SubscriptionsBuilder(this);
-        MessagingConfig = new MessagingConfigurationBuilder(this);
-    }
+        /// <summary>
+        /// Gets the <see cref="IServiceResolver"/> to use.
+        /// </summary>
+        internal IServiceResolver ServiceResolver { get; private set; } = new DefaultServiceResolver();
 
-    /// <summary>
-    /// Configures the factory for AWS clients.
-    /// </summary>
-    /// <param name="configure">A delegate to a method to use to configure the AWS clients.</param>
-    /// <returns>
-    /// The current <see cref="MessagingBusBuilder"/>.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">
-    /// <paramref name="configure"/> is <see langword="null"/>.
-    /// </exception>
-    public MessagingBusBuilder Client(Action<AwsClientFactoryBuilder> configure)
-    {
-        if (configure == null)
+        /// <summary>
+        /// Gets or sets the builder to use for services.
+        /// </summary>
+        internal ServicesBuilder ServicesBuilder { get; private set; }
+
+        /// <summary>
+        /// Gets or sets the builder to use for creating an AWS client factory.
+        /// </summary>
+        private AwsClientFactoryBuilder ClientFactoryBuilder { get; set; }
+
+        /// <summary>
+        /// Gets or sets the builder to use to configure messaging.
+        /// </summary>
+        private MessagingConfigurationBuilder MessagingConfig { get; set; }
+
+        /// <summary>
+        /// Gets or sets the builder to use for publications.
+        /// </summary>
+        private PublicationsBuilder PublicationsBuilder { get; set; }
+
+        /// <summary>
+        /// Gets or sets the builder to use for subscriptions.
+        /// </summary>
+        private SubscriptionsBuilder SubscriptionBuilder { get; set; }
+
+        /// <summary>
+        /// Configures the factory for AWS clients.
+        /// </summary>
+        /// <param name="configure">A delegate to a method to use to configure the AWS clients.</param>
+        /// <returns>
+        /// The current <see cref="MessagingBusBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="configure"/> is <see langword="null"/>.
+        /// </exception>
+        public MessagingBusBuilder Client(Action<AwsClientFactoryBuilder> configure)
         {
-            throw new ArgumentNullException(nameof(configure));
+            if (configure == null)
+            {
+                throw new ArgumentNullException(nameof(configure));
+            }
+
+            if (ClientFactoryBuilder == null)
+            {
+                ClientFactoryBuilder = new AwsClientFactoryBuilder(this);
+            }
+
+            configure(ClientFactoryBuilder);
+
+            return this;
         }
 
-        ClientFactoryBuilder ??= new AwsClientFactoryBuilder(this);
-
-        configure(ClientFactoryBuilder);
-
-        return this;
-    }
-
-    /// <summary>
-    /// Configures messaging.
-    /// </summary>
-    /// <param name="configure">A delegate to a method to use to configure messaging.</param>
-    /// <returns>
-    /// The current <see cref="MessagingBusBuilder"/>.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">
-    /// <paramref name="configure"/> is <see langword="null"/>.
-    /// </exception>
-    public MessagingBusBuilder Messaging(Action<MessagingConfigurationBuilder> configure)
-    {
-        if (configure == null)
+        /// <summary>
+        /// Configures messaging.
+        /// </summary>
+        /// <param name="configure">A delegate to a method to use to configure messaging.</param>
+        /// <returns>
+        /// The current <see cref="MessagingBusBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="configure"/> is <see langword="null"/>.
+        /// </exception>
+        public MessagingBusBuilder Messaging(Action<MessagingConfigurationBuilder> configure)
         {
-            throw new ArgumentNullException(nameof(configure));
+            if (configure == null)
+            {
+                throw new ArgumentNullException(nameof(configure));
+            }
+
+            if (MessagingConfig == null)
+            {
+                MessagingConfig = new MessagingConfigurationBuilder(this);
+            }
+
+            configure(MessagingConfig);
+
+            return this;
         }
 
-        MessagingConfig ??= new MessagingConfigurationBuilder(this);
-
-        configure(MessagingConfig);
-
-        return this;
-    }
-
-    /// <summary>
-    /// Configures the publications.
-    /// </summary>
-    /// <param name="configure">A delegate to a method to use to configure publications.</param>
-    /// <returns>
-    /// The current <see cref="MessagingBusBuilder"/>.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">
-    /// <paramref name="configure"/> is <see langword="null"/>.
-    /// </exception>
-    public MessagingBusBuilder Publications(Action<PublicationsBuilder> configure)
-    {
-        if (configure == null)
+        /// <summary>
+        /// Configures the publications.
+        /// </summary>
+        /// <param name="configure">A delegate to a method to use to configure publications.</param>
+        /// <returns>
+        /// The current <see cref="MessagingBusBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="configure"/> is <see langword="null"/>.
+        /// </exception>
+        public MessagingBusBuilder Publications(Action<PublicationsBuilder> configure)
         {
-            throw new ArgumentNullException(nameof(configure));
+            if (configure == null)
+            {
+                throw new ArgumentNullException(nameof(configure));
+            }
+
+            if (PublicationsBuilder == null)
+            {
+                PublicationsBuilder = new PublicationsBuilder(this);
+            }
+
+            configure(PublicationsBuilder);
+
+            return this;
         }
 
-        PublicationsBuilder ??= new PublicationsBuilder(this);
-
-        configure(PublicationsBuilder);
-
-        return this;
-    }
-
-    /// <summary>
-    /// Configures the services.
-    /// </summary>
-    /// <param name="configure">A delegate to a method to use to configure JustSaying services.</param>
-    /// <returns>
-    /// The current <see cref="MessagingBusBuilder"/>.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">
-    /// <paramref name="configure"/> is <see langword="null"/>.
-    /// </exception>
-    public MessagingBusBuilder Services(Action<ServicesBuilder> configure)
-    {
-        if (configure == null)
+        /// <summary>
+        /// Configures the services.
+        /// </summary>
+        /// <param name="configure">A delegate to a method to use to configure JustSaying services.</param>
+        /// <returns>
+        /// The current <see cref="MessagingBusBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="configure"/> is <see langword="null"/>.
+        /// </exception>
+        public MessagingBusBuilder Services(Action<ServicesBuilder> configure)
         {
-            throw new ArgumentNullException(nameof(configure));
+            if (configure == null)
+            {
+                throw new ArgumentNullException(nameof(configure));
+            }
+
+            if (ServicesBuilder == null)
+            {
+                ServicesBuilder = new ServicesBuilder(this);
+            }
+
+            configure(ServicesBuilder);
+
+            return this;
         }
 
-        configure(ServicesBuilder);
-
-        return this;
-    }
-
-    /// <summary>
-    /// Configures the subscriptions.
-    /// </summary>
-    /// <param name="configure">A delegate to a method to use to configure subscriptions.</param>
-    /// <returns>
-    /// The current <see cref="MessagingBusBuilder"/>.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">
-    /// <paramref name="configure"/> is <see langword="null"/>.
-    /// </exception>
-    public MessagingBusBuilder Subscriptions(Action<SubscriptionsBuilder> configure)
-    {
-        if (configure == null)
+        /// <summary>
+        /// Configures the subscriptions.
+        /// </summary>
+        /// <param name="configure">A delegate to a method to use to configure subscriptions.</param>
+        /// <returns>
+        /// The current <see cref="MessagingBusBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="configure"/> is <see langword="null"/>.
+        /// </exception>
+        public MessagingBusBuilder Subscriptions(Action<SubscriptionsBuilder> configure)
         {
-            throw new ArgumentNullException(nameof(configure));
+            if (configure == null)
+            {
+                throw new ArgumentNullException(nameof(configure));
+            }
+
+            if (SubscriptionBuilder == null)
+            {
+                SubscriptionBuilder = new SubscriptionsBuilder(this);
+            }
+
+            configure(SubscriptionBuilder);
+
+            return this;
         }
 
-        configure(SubscriptionBuilder);
+        /// <summary>
+        /// Specifies the <see cref="IServiceResolver"/> to use.
+        /// </summary>
+        /// <param name="serviceResolver">The <see cref="IServiceResolver"/> to use.</param>
+        /// <returns>
+        /// The current <see cref="MessagingBusBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="serviceResolver"/> is <see langword="null"/>.
+        /// </exception>
+        public MessagingBusBuilder WithServiceResolver(IServiceResolver serviceResolver)
+        {
+            ServiceResolver = serviceResolver ?? throw new ArgumentNullException(nameof(serviceResolver));
+            return this;
+        }
 
-        return this;
-    }
+        /// <summary>
+        /// Creates a new instance of <see cref="IAwsClientFactory"/>.
+        /// </summary>
+        /// <returns>
+        /// The created instance of <see cref="IAwsClientFactory"/>
+        /// </returns>
+        public IAwsClientFactory BuildClientFactory()
+        {
+            return ClientFactoryBuilder?.Build() ?? ServiceResolver.ResolveService<IAwsClientFactory>();
+        }
 
-    /// <summary>
-    /// Specifies the <see cref="IServiceResolver"/> to use.
-    /// </summary>
-    /// <param name="serviceResolver">The <see cref="IServiceResolver"/> to use.</param>
-    /// <returns>
-    /// The current <see cref="MessagingBusBuilder"/>.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">
-    /// <paramref name="serviceResolver"/> is <see langword="null"/>.
-    /// </exception>
-    public MessagingBusBuilder WithServiceResolver(IServiceResolver serviceResolver)
-    {
-        if (serviceResolver == null) throw new ArgumentNullException(nameof(serviceResolver));
+        /// <summary>
+        /// Creates a new instance of <see cref="IMessagePublisher"/>.
+        /// </summary>
+        /// <returns>
+        /// The created instance of <see cref="IMessagePublisher"/>
+        /// </returns>
+        public IMessagePublisher BuildPublisher()
+        {
+            IMessagingConfig config = CreateConfig();
 
-        ServiceResolver = new CompoundServiceResolver(ServiceBuilderServiceResolver, serviceResolver);
-        return this;
-    }
+            config.Validate();
 
-    /// <summary>
-    /// Creates a new instance of <see cref="IAwsClientFactory"/>.
-    /// </summary>
-    /// <returns>
-    /// The created instance of <see cref="IAwsClientFactory"/>
-    /// </returns>
-    public IAwsClientFactory BuildClientFactory()
-    {
-        return ClientFactoryBuilder?.Build() ?? ServiceResolver.ResolveService<IAwsClientFactory>();
-    }
+            ILoggerFactory loggerFactory =
+                ServicesBuilder?.LoggerFactory?.Invoke() ?? ServiceResolver.ResolveService<ILoggerFactory>();
 
-    /// <summary>
-    /// Creates a new instance of <see cref="IMessagePublisher"/>.
-    /// </summary>
-    /// <returns>
-    /// The created instance of <see cref="IMessagePublisher"/>
-    /// </returns>
-    public IMessagePublisher BuildPublisher()
-    {
-        IMessagingConfig config = MessagingConfig.Build();
+            JustSayingBus bus = CreateBus(config, loggerFactory);
+            IAwsClientFactoryProxy proxy = CreateFactoryProxy();
 
-        config.Validate();
+            if (PublicationsBuilder != null)
+            {
+                PublicationsBuilder.Configure(bus, proxy, loggerFactory);
+            }
 
-        ILoggerFactory loggerFactory = ServiceResolver.ResolveService<ILoggerFactory>();
+            return bus;
+        }
 
-        JustSayingBus bus = CreateBus(config, loggerFactory);
-        IAwsClientFactoryProxy proxy = CreateFactoryProxy();
+        /// <summary>
+        /// Creates a new instance of <see cref="IMessagingBus"/>.
+        /// </summary>
+        /// <returns>
+        /// The created instance of <see cref="IMessagingBus"/>
+        /// </returns>
+        public IMessagingBus BuildSubscribers()
+        {
+            IMessagingConfig config = CreateConfig();
 
-        PublicationsBuilder?.Configure(bus, proxy, loggerFactory);
+            config.Validate();
 
-        return bus;
-    }
+            ILoggerFactory loggerFactory =
+                ServicesBuilder?.LoggerFactory?.Invoke() ?? ServiceResolver.ResolveService<ILoggerFactory>();
 
-    /// <summary>
-    /// Creates a new instance of <see cref="IMessageBatchPublisher"/>.
-    /// </summary>
-    /// <returns>
-    /// The created instance of <see cref="IMessagePublisher"/>
-    /// </returns>
-    public IMessageBatchPublisher BuildBatchPublisher()
-    {
-        IMessagingConfig config = MessagingConfig.Build();
+            JustSayingBus bus = CreateBus(config, loggerFactory);
+            IVerifyAmazonQueues creator = CreateQueueCreator(loggerFactory);
 
-        config.Validate();
+            if (ServicesBuilder?.MessageContextAccessor != null)
+            {
+                bus.MessageContextAccessor = ServicesBuilder.MessageContextAccessor();
+            }
 
-        var publishBatchConfiguration = MessagingConfig.BuildPublishBatchConfiguration();
-        ILoggerFactory loggerFactory = ServiceResolver.ResolveService<ILoggerFactory>();
+            if (SubscriptionBuilder != null)
+            {
+                SubscriptionBuilder.Configure(bus, ServiceResolver, creator, loggerFactory);
+            }
 
-        JustSayingBus bus = CreateBus(config, loggerFactory, publishBatchConfiguration);
-        IAwsClientFactoryProxy proxy = CreateFactoryProxy();
+            return bus;
+        }
 
-        PublicationsBuilder?.Configure(bus, proxy, loggerFactory);
+        private JustSayingBus CreateBus(IMessagingConfig config, ILoggerFactory loggerFactory)
+        {
+            IMessageSerializationRegister register =
+                ServicesBuilder?.SerializationRegister?.Invoke() ?? ServiceResolver.ResolveService<IMessageSerializationRegister>();
 
-        return bus;
-    }
+            var bus =  new JustSayingBus(config, register, loggerFactory);
 
-    /// <summary>
-    /// Creates a new instance of <see cref="IMessagingBus"/>.
-    /// </summary>
-    /// <returns>
-    /// The created instance of <see cref="IMessagingBus"/>
-    /// </returns>
-    public IMessagingBus BuildSubscribers()
-    {
-        IMessagingConfig config = MessagingConfig.Build();
+            bus.Monitor = CreateMessageMonitor();
+            bus.MessageContextAccessor = CreateMessageContextAccessor();
 
-        config.Validate();
+            return bus;
+        }
 
-        ILoggerFactory loggerFactory = ServiceResolver.ResolveService<ILoggerFactory>();
+        private IMessagingConfig CreateConfig()
+        {
+            return MessagingConfig != null ?
+                MessagingConfig.Build() :
+                ServiceResolver.ResolveService<IMessagingConfig>();
+        }
 
-        JustSayingBus bus = CreateBus(config, loggerFactory);
-        IAwsClientFactoryProxy proxy = CreateFactoryProxy();
-        IVerifyAmazonQueues creator = new AmazonQueueCreator(proxy, loggerFactory);
+        private IAwsClientFactoryProxy CreateFactoryProxy()
+        {
+            return ClientFactoryBuilder != null ?
+                new AwsClientFactoryProxy(new Lazy<IAwsClientFactory>(ClientFactoryBuilder.Build)) :
+                ServiceResolver.ResolveService<IAwsClientFactoryProxy>();
+        }
 
-        SubscriptionBuilder.Configure(bus, ServiceResolver, creator, proxy, loggerFactory);
+        private IMessageMonitor CreateMessageMonitor()
+        {
+            return ServicesBuilder?.MessageMonitoring?.Invoke() ?? ServiceResolver.ResolveService<IMessageMonitor>();
+        }
 
-        return bus;
-    }
+        private IMessageContextAccessor CreateMessageContextAccessor()
+        {
+            return ServicesBuilder?.MessageContextAccessor?.Invoke() ?? ServiceResolver.ResolveService<IMessageContextAccessor>();
+        }
 
-    private JustSayingBus CreateBus(IMessagingConfig config, ILoggerFactory loggerFactory, IPublishBatchConfiguration publishBatchConfiguration = null)
-    {
-        IMessageBodySerializationFactory serializationFactory = ServiceResolver.ResolveService<IMessageBodySerializationFactory>();
-        IMessageReceivePauseSignal messageReceivePauseSignal = ServiceResolver.ResolveService<IMessageReceivePauseSignal>();
-        IMessageMonitor monitor = ServiceResolver.ResolveOptionalService<IMessageMonitor>() ?? new NullOpMessageMonitor();
+        private IVerifyAmazonQueues CreateQueueCreator(ILoggerFactory loggerFactory)
+        {
+            IAwsClientFactoryProxy proxy = CreateFactoryProxy();
+            IVerifyAmazonQueues queueCreator = new AmazonQueueCreator(proxy, loggerFactory);
 
-        return new JustSayingBus(config, serializationFactory, messageReceivePauseSignal, loggerFactory, monitor, publishBatchConfiguration);
-    }
-
-    private IAwsClientFactoryProxy CreateFactoryProxy()
-    {
-        return ClientFactoryBuilder != null ?
-            new AwsClientFactoryProxy(new Lazy<IAwsClientFactory>(ClientFactoryBuilder.Build)) :
-            ServiceResolver.ResolveService<IAwsClientFactoryProxy>();
+            return queueCreator;
+        }
     }
 }

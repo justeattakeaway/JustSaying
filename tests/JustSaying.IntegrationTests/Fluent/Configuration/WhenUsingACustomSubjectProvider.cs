@@ -1,3 +1,6 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using JustSaying.IntegrationTests.Fluent;
 using JustSaying.IntegrationTests.Fluent.Subscribing;
 using JustSaying.Messaging.MessageHandling;
@@ -5,71 +8,82 @@ using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using Shouldly;
+using Xunit.Abstractions;
 
-namespace JustSaying.Fluent.Configuration;
-
-public class WhenUsingACustomSubjectProvider(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+namespace JustSaying.Fluent.Configuration
 {
-    [AwsFact]
-    public async Task ThenItIsUsed()
+    public class WhenUsingACustomSubjectProvider : IntegrationTestBase
     {
-        // Arrange
-        var handler = new InspectableHandler<SimpleMessage>();
-        var accessor = new RecordingMessageContextAccessor(new MessageContextAccessor());
+        public WhenUsingACustomSubjectProvider(ITestOutputHelper outputHelper) : base(outputHelper)
+        { }
 
-        var subject = Guid.NewGuid().ToString();
-        var subjectProvider = new ConstantSubjectProvider(subject);
-
-        var services = GivenJustSaying()
-            .ConfigureJustSaying((builder) =>
-                builder.WithLoopbackTopic<SimpleMessage>(UniqueName))
-            .ConfigureJustSaying(builder =>
-                builder.Services(s => s.WithMessageContextAccessor(() => accessor)))
-            .ConfigureJustSaying((builder) =>
-                builder.Messaging(m =>
-                    m.WithMessageSubjectProvider(subjectProvider)))
-            .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
-
-        var id = Guid.NewGuid();
-        var message = new SimpleMessage()
+        [AwsFact]
+        public async Task ThenItIsUsed()
         {
-            Id = id
-        };
+            // Arrange
+            var handler = new InspectableHandler<SimpleMessage>();
+            var accessor = new RecordingMessageContextAccessor(new MessageContextAccessor());
 
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+            var subject = Guid.NewGuid().ToString();
+            var subjectProvider = new ConstantSubjectProvider(subject);
 
-        await WhenAsync(
-            services,
-            async (publisher, listener, cancellationToken) =>
+            var services = GivenJustSaying()
+                .ConfigureJustSaying((builder) =>
+                    builder.WithLoopbackTopic<SimpleMessage>(UniqueName))
+                .ConfigureJustSaying(builder =>
+                    builder.Services(s => s.WithMessageContextAccessor(() => accessor)))
+                .ConfigureJustSaying((builder) =>
+                    builder.Messaging(m =>
+                        m.WithMessageSubjectProvider(subjectProvider)))
+                .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
+
+            var id = Guid.NewGuid();
+            var message = new SimpleMessage()
             {
-                await listener.StartAsync(cancellationToken);
-                await publisher.StartAsync(cancellationToken);
+                Id = id
+            };
 
-                // Let's send an OrderPlaced, but the subject will be a GUID
-                // because of the custom subject provider
-                await publisher.PublishAsync(message, cancellationToken);
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
 
-                await Patiently.AssertThatAsync(OutputHelper,
-                    () =>
-                    {
-                        var receivedMessage = handler.ReceivedMessages.ShouldHaveSingleItem();
-                        receivedMessage.Id.ShouldBe(id);
+            await WhenAsync(
+                services,
+                async (publisher, listener, cancellationToken) =>
+                {
+                    await listener.StartAsync(cancellationToken);
+                    await publisher.StartAsync(cancellationToken);
 
-                        var context = accessor.ValuesWritten.ShouldHaveSingleItem();
-                        dynamic json = JsonConvert.DeserializeObject(context.Message.Body);
-                        string subject = json.Subject;
-                        subject.ShouldBe(subject);
-                    });
-            });
-    }
+                    // Let's send an OrderPlaced, but the subject will be a GUID
+                    // because of the custom subject provider
+                    await publisher.PublishAsync(message, cancellationToken);
 
-    public class ConstantSubjectProvider(string subject) : IMessageSubjectProvider
-    {
-        private readonly string _subject = subject;
+                    await Patiently.AssertThatAsync(OutputHelper,
+                        () =>
+                        {
+                            var receivedMessage = handler.ReceivedMessages.ShouldHaveSingleItem();
+                            receivedMessage.Id.ShouldBe(id);
 
-        public string GetSubjectForType(Type messageType)
+                            var context = accessor.ValuesWritten.ShouldHaveSingleItem();
+                            dynamic json = JsonConvert.DeserializeObject(context.Message.Body);
+                            string subject = json.Subject;
+                            subject.ShouldBe(subject);
+                        });
+                });
+        }
+
+        public class ConstantSubjectProvider : IMessageSubjectProvider
         {
-            return _subject;
+            private readonly string _subject;
+
+            public ConstantSubjectProvider(string subject)
+            {
+                _subject = subject;
+            }
+
+            public string GetSubjectForType(Type messageType)
+            {
+                return _subject;
+            }
         }
     }
 }

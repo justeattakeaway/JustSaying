@@ -1,34 +1,43 @@
-using System.Collections.Concurrent;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 
-namespace JustSaying.UnitTests.Messaging.Channels.TestHelpers;
-
-public class FakeMessageLock(bool exclusive = true) : IMessageLockAsync
+namespace JustSaying.UnitTests.Messaging.Channels.TestHelpers
 {
-    private readonly ConcurrentBag<(string key, TimeSpan howLong, bool isPermanent)> _messageLockRequests = [];
-
-    public IReadOnlyCollection<(string key, TimeSpan howLong, bool isPermanent)> MessageLockRequests => _messageLockRequests;
-
-    public Task<MessageLockResponse> TryAcquireLockPermanentlyAsync(string key)
+    public class FakeMessageLock : IMessageLockAsync
     {
-        _messageLockRequests.Add((key, TimeSpan.MaxValue, true));
-        return Task.FromResult(new MessageLockResponse
+        private readonly bool _exclusive;
+
+        public FakeMessageLock(bool exclusive = true)
         {
-            DoIHaveExclusiveLock = exclusive
-        });
-    }
+            _exclusive = exclusive;
+            MessageLockRequests = new List<(string key, TimeSpan howLong, bool isPermanent)>();
+        }
 
-    public Task<MessageLockResponse> TryAcquireLockAsync(string key, TimeSpan howLong)
-    {
-        _messageLockRequests.Add((key, howLong, false));
-        return Task.FromResult(new MessageLockResponse
+        public IList<(string key, TimeSpan howLong, bool isPermanent)> MessageLockRequests { get; }
+
+        public Task<MessageLockResponse> TryAcquireLockPermanentlyAsync(string key)
         {
-            DoIHaveExclusiveLock = exclusive
-        });
-    }
+            MessageLockRequests.Add((key, TimeSpan.MaxValue, true));
+            return Task.FromResult(new MessageLockResponse
+            {
+                DoIHaveExclusiveLock = _exclusive
+            });
+        }
 
-    public Task ReleaseLockAsync(string key)
-    {
-        return Task.CompletedTask;
+        public Task<MessageLockResponse> TryAcquireLockAsync(string key, TimeSpan howLong)
+        {
+            MessageLockRequests.Add((key, howLong, false));
+            return Task.FromResult(new MessageLockResponse
+            {
+                DoIHaveExclusiveLock = _exclusive
+            });
+        }
+
+        public Task ReleaseLockAsync(string key)
+        {
+            return Task.CompletedTask;
+        }
     }
 }

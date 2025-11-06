@@ -1,40 +1,55 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.Fakes;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
-using JustSaying.UnitTests.Messaging.Middleware;
+using MartinCostello.Logging.XUnit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using NSubstitute;
+using Shouldly;
+using Xunit;
+using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.MessageHandling;
-
-public class WhenEnsuringMessageIsOnlyHandledExactlyOnce(ITestOutputHelper outputHelper)
+namespace JustSaying.UnitTests.Messaging.MessageHandling
 {
-    [Fact]
-    public async Task WhenMessageIsLockedByAnotherHandler_MessageWillBeLeftInTheQueue()
+    public class WhenEnsuringMessageIsOnlyHandledExactlyOnce
     {
-        var messageLock = new FakeMessageLock(false);
+        private readonly ITestOutputHelper _outputHelper;
 
-        var testResolver = new InMemoryServiceResolver(sc => sc
-            .AddLogging(l =>
-                l.AddXUnit(outputHelper))
-            .AddSingleton<IMessageLockAsync>(messageLock));
+        public WhenEnsuringMessageIsOnlyHandledExactlyOnce(ITestOutputHelper outputHelper)
+        {
+            _outputHelper = outputHelper;
+        }
 
-        var monitor = new TrackingLoggingMonitor(LoggerFactory.Create(lf => lf.AddXUnit().SetMinimumLevel(LogLevel.Information)).CreateLogger<TrackingLoggingMonitor>());
-        var handler = new InspectableHandler<OrderAccepted>();
+        [Fact]
+        public async Task WhenMessageIsLockedByAnotherHandler_MessageWillBeLeftInTheQueue()
+        {
+            var messageLock = new FakeMessageLock(false);
 
-        var middleware = new HandlerMiddlewareBuilder(testResolver, testResolver)
-            .UseExactlyOnce<OrderAccepted>(nameof(InspectableHandler<OrderAccepted>),
-                TimeSpan.FromSeconds(1))
-            .UseHandler(ctx => handler)
-            .Build();
+            var testResolver = new FakeServiceResolver(sc => sc
+                .AddLogging(l =>
+                    l.AddXUnit(_outputHelper))
+                .AddSingleton<IMessageLockAsync>(messageLock));
 
-        var context = TestHandleContexts.From<OrderAccepted>();
+            var handler = new InspectableHandler<OrderAccepted>();
 
-        var result = await middleware.RunAsync(context, null, CancellationToken.None);
+            var middleware = new HandlerMiddlewareBuilder(testResolver, testResolver)
+                .UseExactlyOnce<OrderAccepted>(nameof(InspectableHandler<OrderAccepted>),
+                    TimeSpan.FromSeconds(1))
+                .UseHandler(ctx => handler)
+                .Build();
 
-        handler.ReceivedMessages.ShouldBeEmpty();
-        result.ShouldBeFalse();
+            var context = new HandleMessageContext(new OrderAccepted(), typeof(OrderAccepted),
+                "test-queue");
+            var result = await middleware.RunAsync(context, null, CancellationToken.None);
+
+            handler.ReceivedMessages.ShouldBeEmpty();
+            result.ShouldBeFalse();
+        }
     }
 }

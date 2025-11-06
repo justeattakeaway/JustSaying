@@ -1,140 +1,142 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
-using JustSaying.Messaging;
-using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
-using JustSaying.Messaging.Compression;
-using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.Logging;
+using Shouldly;
+using Xunit;
+using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels;
-
-public class ErrorHandlingTests
+namespace JustSaying.UnitTests.Messaging.Channels
 {
-    private IMessageReceivePauseSignal MessageReceivePauseSignal { get; }
-    private ILoggerFactory LoggerFactory { get; }
-    private IMessageMonitor MessageMonitor { get; }
-    private readonly ITestOutputHelper _outputHelper;
-
-    public ErrorHandlingTests(ITestOutputHelper testOutputHelper)
+    public class ErrorHandlingTests
     {
-        _outputHelper = testOutputHelper;
-        MessageReceivePauseSignal = new MessageReceivePauseSignal();
-        LoggerFactory = testOutputHelper.ToLoggerFactory();
-        MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
-    }
+        public ILoggerFactory LoggerFactory { get; }
+        private IMessageMonitor MessageMonitor { get; }
 
-    [Fact]
-    public async Task Sqs_Client_Throwing_Exceptions_Continues_To_Request_Messages()
-    {
-        // Arrange
-        int messagesRequested = 0;
-        int messagesDispatched = 0;
+        private readonly ITestOutputHelper _outputHelper;
 
-        IEnumerable<Message> GetMessages()
+        public ErrorHandlingTests(ITestOutputHelper testOutputHelper)
         {
-            Interlocked.Increment(ref messagesRequested);
-            throw new Exception();
+            _outputHelper = testOutputHelper;
+            LoggerFactory = testOutputHelper.ToLoggerFactory();
+            MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
         }
-        var queue = new FakeSqsQueue(ct => Task.FromResult(GetMessages()));
 
-        IMessageDispatcher dispatcher =
-            new FakeDispatcher(() =>
-            {
-                Interlocked.Increment(ref messagesDispatched);
-            });
-
-        var defaults = new SubscriptionGroupSettingsBuilder()
-            .WithDefaultConcurrencyLimit(8);
-        var settings = new Dictionary<string, SubscriptionGroupConfigBuilder>
+        [Fact]
+        public async Task Sqs_Client_Throwing_Exceptions_Continues_To_Request_Messages()
         {
-            {
-                "test", new SubscriptionGroupConfigBuilder("test").AddQueue(new SqsSource
+            // Arrange
+            int messagesRequested = 0;
+            int messagesDispatched = 0;
+
+            var sqsQueue1 = TestQueue(() =>
+                GetErrorMessages(() =>
                 {
-                    SqsQueue = queue,
-                    MessageConverter = new InboundMessageConverter(SimpleMessage.Serializer, new MessageCompressionRegistry(), false)
-                })
-            }
-        };
+                    Interlocked.Increment(ref messagesRequested);
+                }));
 
-        var subscriptionGroupFactory = new SubscriptionGroupFactory(
-            dispatcher,
-            MessageReceivePauseSignal,
-            MessageMonitor,
-            LoggerFactory);
+            var queues = new List<ISqsQueue> { sqsQueue1 };
+            IMessageDispatcher dispatcher =
+                new FakeDispatcher(() =>
+                {
+                    Interlocked.Increment(ref messagesDispatched);
+                });
 
-        ISubscriptionGroup collection = subscriptionGroupFactory.Create(defaults, settings);
-
-        var cts = new CancellationTokenSource();
-
-        // Act
-        var runTask = collection.RunAsync(cts.Token);
-
-        await Patiently.AssertThatAsync(_outputHelper,
-            () =>
+            var defaults = new SubscriptionGroupSettingsBuilder()
+                .WithDefaultConcurrencyLimit(8);
+            var settings = new Dictionary<string, SubscriptionGroupConfigBuilder>
             {
-                messagesRequested.ShouldBeGreaterThan(1, $"but was {messagesRequested}");
-                messagesDispatched.ShouldBe(0, $"but was {messagesDispatched}");
-            });
+                { "test", new SubscriptionGroupConfigBuilder("test").AddQueues(queues) },
+            };
 
-        cts.Cancel();
-        await runTask.HandleCancellation();
-    }
+            var subscriptionGroupFactory = new SubscriptionGroupFactory(
+                dispatcher,
+                MessageMonitor,
+                LoggerFactory);
 
-    [Fact]
-    public async Task Message_Processing_Throwing_Exceptions_Continues_To_Request_Messages()
-    {
-        // Arrange
-        int messagesRequested = 0;
-        int messagesDispatched = 0;
+            ISubscriptionGroup collection = subscriptionGroupFactory.Create(defaults, settings);
 
-        IEnumerable<Message> GetMessages()
+            var cts = new CancellationTokenSource();
+
+            // Act
+            var runTask = collection.RunAsync(cts.Token);
+
+            await Patiently.AssertThatAsync(_outputHelper,
+                () =>
+                {
+                    messagesRequested.ShouldBeGreaterThan(1, $"but was {messagesRequested}");
+                    messagesDispatched.ShouldBe(0, $"but was {messagesDispatched}");
+                });
+
+            cts.Cancel();
+            await runTask.HandleCancellation();
+        }
+
+        [Fact]
+        public async Task Message_Processing_Throwing_Exceptions_Continues_To_Request_Messages()
         {
-            Interlocked.Increment(ref messagesRequested);
+            // Arrange
+            int messagesRequested = 0;
+            int messagesDispatched = 0;
+
+            var sqsQueue1 = TestQueue(() => GetErrorMessages(() => messagesRequested++));
+
+            var queues = new List<ISqsQueue> { sqsQueue1 };
+            IMessageDispatcher dispatcher =
+                new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
+
+            var defaults = new SubscriptionGroupSettingsBuilder()
+                .WithDefaultConcurrencyLimit(1);
+            var settings = new Dictionary<string, SubscriptionGroupConfigBuilder>
+            {
+                { "test", new SubscriptionGroupConfigBuilder("test").AddQueues(queues) },
+            };
+
+            var subscriptionGroupFactory = new SubscriptionGroupFactory(
+                dispatcher,
+                MessageMonitor,
+                LoggerFactory);
+
+            ISubscriptionGroup collection = subscriptionGroupFactory.Create(defaults, settings);
+
+            var cts = new CancellationTokenSource();
+
+            // Act
+            var runTask = collection.RunAsync(cts.Token);
+
+            await Patiently.AssertThatAsync(_outputHelper,
+                () =>
+                {
+                    messagesRequested.ShouldBeGreaterThan(1);
+                    messagesDispatched.ShouldBe(0);
+                });
+
+            cts.Cancel();
+            await runTask.HandleCancellation();
+        }
+
+        private static IEnumerable<ReceiveMessageResponse> GetErrorMessages(Action onMessageRequested)
+        {
+            onMessageRequested();
             throw new Exception();
         }
-        var queue = new FakeSqsQueue(ct => Task.FromResult(GetMessages()));
 
-        IMessageDispatcher dispatcher =
-            new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
-
-        var defaults = new SubscriptionGroupSettingsBuilder()
-            .WithDefaultConcurrencyLimit(1);
-        var settings = new Dictionary<string, SubscriptionGroupConfigBuilder>
+        private static ISqsQueue TestQueue(Func<IEnumerable<ReceiveMessageResponse>> getMessages)
         {
-            { "test", new SubscriptionGroupConfigBuilder("test").AddQueue(new SqsSource
-            {
-                SqsQueue = queue,
-                MessageConverter = new InboundMessageConverter(SimpleMessage.Serializer, new MessageCompressionRegistry(), false)
-            }) },
-        };
+            var fakeSqs = new FakeAmazonSqs(getMessages);
+            var fakeQueue =
+                new FakeSqsQueue("test-queue",  fakeSqs);
 
-        var subscriptionGroupFactory = new SubscriptionGroupFactory(
-            dispatcher,
-            MessageReceivePauseSignal,
-            MessageMonitor,
-            LoggerFactory);
-
-        ISubscriptionGroup collection = subscriptionGroupFactory.Create(defaults, settings);
-
-        var cts = new CancellationTokenSource();
-
-        // Act
-        var runTask = collection.RunAsync(cts.Token);
-
-        await Patiently.AssertThatAsync(_outputHelper,
-            () =>
-            {
-                messagesRequested.ShouldBeGreaterThan(1);
-                messagesDispatched.ShouldBe(0);
-            });
-
-        cts.Cancel();
-        await runTask.HandleCancellation();
+            return fakeQueue;
+        }
     }
 }

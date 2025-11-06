@@ -1,21 +1,63 @@
+using System;
+using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 
-namespace JustSaying.AwsTools.MessageHandling;
-
-internal static class SqsPolicy
+namespace JustSaying.AwsTools.MessageHandling
 {
-    internal static async Task SaveAsync(SqsPolicyDetails policyDetails, IAmazonSQS client)
+    internal static class SqsPolicy
     {
-        var policyJson = SqsPolicyBuilder.BuildPolicyJson(policyDetails);
-
-        var setQueueAttributesRequest = new SetQueueAttributesRequest
+        internal static async Task SaveAsync(SqsPolicyDetails policyDetails, IAmazonSQS client)
         {
-            QueueUrl = policyDetails.QueueUri.AbsoluteUri
-        };
-        setQueueAttributesRequest.Attributes ??= [];
-        setQueueAttributesRequest.Attributes["Policy"] = policyJson;
+            var topicArnWildcard = CreateTopicArnWildcard(policyDetails.SourceArn);
 
-        await client.SetQueueAttributesAsync(setQueueAttributesRequest).ConfigureAwait(false);
+            var policyJson = $@"{{
+    ""Version"" : ""2012-10-17"",
+    ""Statement"" : [
+        {{
+            ""Sid"" : ""{Guid.NewGuid().ToString().Replace("-", "")}"",
+            ""Effect"" : ""Allow"",
+            ""Principal"" : {{
+                ""AWS"" : ""*""
+            }},
+            ""Action""    : ""sqs:SendMessage"",
+            ""Resource""  : ""{policyDetails.QueueArn}"",
+            ""Condition"" : {{
+                ""ArnLike"" : {{
+                    ""aws:SourceArn"" : ""{topicArnWildcard}""
+                }}
+            }}
+        }}
+    ]
+}}";
+
+            var setQueueAttributesRequest = new SetQueueAttributesRequest
+            {
+                QueueUrl = policyDetails.QueueUri.AbsoluteUri,
+                Attributes =
+                {
+                    ["Policy"] = policyJson
+                }
+            };
+
+            await client.SetQueueAttributesAsync(setQueueAttributesRequest).ConfigureAwait(false);
+        }
+
+        private static string CreateTopicArnWildcard(string topicArn)
+        {
+            if (string.IsNullOrWhiteSpace(topicArn))
+            {
+                // todo should not get here?
+                return "*";
+            }
+
+            var index = topicArn.LastIndexOf(":", StringComparison.OrdinalIgnoreCase);
+            if (index > 0)
+            {
+                topicArn = topicArn.Substring(0, index + 1);
+            }
+
+            return topicArn + "*";
+        }
     }
 }

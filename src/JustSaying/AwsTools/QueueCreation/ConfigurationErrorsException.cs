@@ -1,29 +1,25 @@
-#if !NET8_0_OR_GREATER
+using System;
 using System.Runtime.Serialization;
-#endif
 
-namespace JustSaying.AwsTools.QueueCreation;
-
-#if !NET8_0_OR_GREATER
-[Serializable]
-#endif
-public class ConfigurationErrorsException : Exception
+namespace JustSaying.AwsTools.QueueCreation
 {
-    public ConfigurationErrorsException() : base("Invalid configuration")
+    [Serializable]
+    public class ConfigurationErrorsException : Exception
     {
-    }
+        public ConfigurationErrorsException() : base("Invalid configuration")
+        {
+        }
 
-    public ConfigurationErrorsException(string message) : base(message)
-    {
-    }
+        public ConfigurationErrorsException(string message) : base(message)
+        {
+        }
 
-    public ConfigurationErrorsException(string message, Exception inner) : base(message, inner)
-    {
-    }
+        public ConfigurationErrorsException(string message, Exception inner) : base(message, inner)
+        {
+        }
 
-#if !NET8_0_OR_GREATER
-    protected ConfigurationErrorsException(SerializationInfo info, StreamingContext context) : base(info, context)
-    {
+        protected ConfigurationErrorsException(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
+        }
     }
-#endif
 }

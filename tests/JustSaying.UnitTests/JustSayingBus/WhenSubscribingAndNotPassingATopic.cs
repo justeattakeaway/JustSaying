@@ -1,22 +1,32 @@
-namespace JustSaying.UnitTests.JustSayingBus;
+using System;
+using System.Threading.Tasks;
+using Shouldly;
+using Xunit;
+using Xunit.Abstractions;
 
-public class WhenSubscribingAndNotPassingATopic(ITestOutputHelper outputHelper) : GivenAServiceBus(outputHelper)
+namespace JustSaying.UnitTests.JustSayingBus
 {
-    protected override void Given()
+    public class WhenSubscribingAndNotPassingATopic : GivenAServiceBus
     {
-        base.Given();
-        RecordAnyExceptionsThrown();
-    }
+        protected override void Given()
+        {
+            base.Given();
+            RecordAnyExceptionsThrown();
+        }
 
-    protected override Task WhenAsync()
-    {
-        SystemUnderTest.AddQueue("test", null);
-        return Task.CompletedTask;
-    }
+        protected override Task WhenAsync()
+        {
+            SystemUnderTest.AddQueue("test", null);
+            return Task.CompletedTask;
+        }
 
-    [Fact]
-    public void ArgExceptionThrown()
-    {
-        ((ArgumentException)ThrownException).ParamName.ShouldBe("queue");
+        [Fact]
+        public void ArgExceptionThrown()
+        {
+            ((ArgumentException)ThrownException).ParamName.ShouldBe("queue");
+        }
+
+        public WhenSubscribingAndNotPassingATopic(ITestOutputHelper outputHelper) : base(outputHelper)
+        { }
     }
 }

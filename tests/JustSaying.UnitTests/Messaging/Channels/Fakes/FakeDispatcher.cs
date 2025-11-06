@@ -1,19 +1,25 @@
-using System.Collections.Concurrent;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
+using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.Channels.Context;
 
-namespace JustSaying.UnitTests.Messaging.Channels.TestHelpers;
-
-internal class FakeDispatcher(Action spy = null) : IMessageDispatcher
+namespace JustSaying.UnitTests.Messaging.Channels.TestHelpers
 {
-    private readonly ConcurrentBag<IQueueMessageContext> _dispatchedMessages = [];
-
-    public Task DispatchMessageAsync(IQueueMessageContext messageContext, CancellationToken cancellationToken)
+    internal class FakeDispatcher : IMessageDispatcher
     {
-        spy?.Invoke();
-        _dispatchedMessages.Add(messageContext);
-        return Task.CompletedTask;
-    }
+        private readonly Action _spy;
 
-    public IReadOnlyCollection<IQueueMessageContext> DispatchedMessages => _dispatchedMessages;
+        public FakeDispatcher(Action spy = null)
+        {
+            _spy = spy;
+        }
+
+        public Task DispatchMessageAsync(IQueueMessageContext messageContext, CancellationToken cancellationToken)
+        {
+            _spy?.Invoke();
+            return Task.CompletedTask;
+        }
+    }
 }

@@ -1,26 +1,37 @@
 using System.Security.Cryptography;
+using System.Threading.Tasks;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Sample.Restaurant.Models;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.Sample.Restaurant.KitchenConsole.Handlers;
-
-public class OrderOnItsWayEventHandler(IMessagePublisher publisher, ILogger<OrderOnItsWayEventHandler> logger) : IHandlerAsync<OrderOnItsWayEvent>
+namespace JustSaying.Sample.Restaurant.KitchenConsole.Handlers
 {
-    public async Task<bool> Handle(OrderOnItsWayEvent message)
+    public class OrderOnItsWayEventHandler : IHandlerAsync<OrderOnItsWayEvent>
     {
-        await Task.Delay(RandomNumberGenerator.GetInt32(50, 100));
+        private readonly IMessagePublisher _publisher;
+        private readonly ILogger<OrderOnItsWayEventHandler> _logger;
 
-        var orderDeliveredEvent = new OrderDeliveredEvent()
+        public OrderOnItsWayEventHandler(IMessagePublisher publisher, ILogger<OrderOnItsWayEventHandler> logger)
         {
-            OrderId = message.OrderId
-        };
+            _publisher = publisher;
+            _logger = logger;
+        }
 
-        logger.LogInformation("Order {OrderId} is on its way!", message.OrderId);
+        public async Task<bool> Handle(OrderOnItsWayEvent message)
+        {
+            await Task.Delay(RandomNumberGenerator.GetInt32(50, 100));
 
-        await publisher.PublishAsync(orderDeliveredEvent);
+            var orderDeliveredEvent = new OrderDeliveredEvent()
+            {
+                OrderId = message.OrderId
+            };
 
-        return true;
+            _logger.LogInformation("Order {OrderId} is on its way!", message.OrderId);
+
+            await _publisher.PublishAsync(orderDeliveredEvent);
+
+            return true;
+        }
     }
 }

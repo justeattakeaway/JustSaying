@@ -1,77 +1,78 @@
-using System.Text.Json;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Amazon.SQS;
 using Amazon.SQS.Model;
-using JustSaying.Messaging;
-using JustSaying.Messaging.Channels.SubscriptionGroups;
-using JustSaying.Messaging.Compression;
+using JustSaying.AwsTools.MessageHandling;
+using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.MessageProcessingStrategies;
-using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
+using NSubstitute;
+using Shouldly;
+using Xunit;
+using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
-
-public class WhenListeningStartsAndStops(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
+namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
-    private int _expectedMaxMessageCount;
-    private bool _running;
-    private FakeSqsQueue _queue;
-
-    protected override void Given()
+    public class WhenListeningStartsAndStops : BaseSubscriptionGroupTests
     {
-        // we expect to get max 10 messages per batch
-        _expectedMaxMessageCount = MessageDefaults.MaxAmazonMessageCap;
+        private const string AttributeMessageContentsRunning = @"Message Contents Running";
+        private const string AttributeMessageContentsAfterStop = @"Message Contents After Stop";
 
-        Logger.LogInformation("Expected max message count is {MaxMessageCount}", _expectedMaxMessageCount);
+        private int _expectedMaxMessageCount;
+        private bool _running;
+        private FakeSqsQueue _queue;
+        private FakeAmazonSqs _client;
 
-        var response1 = new Message { Body = $$"""{ "Subject": "SimpleMessage", "Message": "{{JsonEncodedText.Encode(JsonSerializer.Serialize(new SimpleMessage { Content = "Message Contents Running" }))}}" }""" };
-        var response2 = new Message { Body = $$"""{ "Subject": "SimpleMessage", "Message": "{{JsonEncodedText.Encode(JsonSerializer.Serialize(new SimpleMessage { Content = "Message Contents After Stop" }))}}" }""" };
-        IEnumerable<Message> GetMessages(CancellationToken cancellationToken)
+        public WhenListeningStartsAndStops(ITestOutputHelper testOutputHelper)
+            : base(testOutputHelper)
         {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                if (_running) yield return response1;
-                else yield return response2;
-            }
         }
 
-        var sqsQueue = new FakeSqsQueue(ct => Task.FromResult(GetMessages(ct)), Guid.NewGuid().ToString());
-
-        var sqsSource = new SqsSource
+        protected override void Given()
         {
-            SqsQueue = sqsQueue,
-            MessageConverter = new InboundMessageConverter(new SystemTextJsonMessageBodySerializer<SimpleMessage>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions), new MessageCompressionRegistry(), false)
-        };
+            // we expect to get max 10 messages per batch
+            _expectedMaxMessageCount = MessageDefaults.MaxAmazonMessageCap;
 
-        _queue = sqsSource.SqsQueue as FakeSqsQueue;
+            Logger.LogInformation("Expected max message count is {MaxMessageCount}", _expectedMaxMessageCount);
 
-        Queues.Add(sqsSource);
-    }
+            var response1 = new List<Message> { new Message { Body = AttributeMessageContentsRunning } };
+            var response2 = new List<Message> { new Message { Body = AttributeMessageContentsAfterStop } };
 
-    protected override async Task WhenAsync()
-    {
-        _running = true;
+            _queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), () => _running ? response1 : response2);
+            _client = _queue.FakeClient;
 
-        await base.WhenAsync();
+            Queues.Add(_queue);
+        }
 
-        _running = false;
-    }
+        protected override async Task WhenAsync()
+        {
+            _running = true;
 
-    [Fact]
-    public void MessagesAreReceived()
-    {
-        _queue.ReceiveMessageRequests.ShouldNotBeEmpty();
-    }
+            await base.WhenAsync();
 
-    [Fact]
-    public void TheMaxMessageAllowanceIsGrabbed()
-    {
-        _queue.ReceiveMessageRequests.ShouldAllBe(req => req.MaxNumOfMessages == _expectedMaxMessageCount);
-    }
+            _running = false;
+        }
 
-    [Fact]
-    public void MessageIsProcessed()
-    {
-        Handler.ReceivedMessages.ShouldContain(m => m.Content.Equals("Message Contents Running"));
-        Handler.ReceivedMessages.ShouldNotContain(m => m.Content.Equals("Message Contents After Stop"));
+        [Fact]
+        public void MessagesAreReceived()
+        {
+            _client.ReceiveMessageRequests.ShouldNotBeEmpty();
+        }
+
+        [Fact]
+        public void TheMaxMessageAllowanceIsGrabbed()
+        {
+            _client.ReceiveMessageRequests.ShouldAllBe(req => req.MaxNumberOfMessages == _expectedMaxMessageCount);
+        }
+
+        [Fact]
+        public void MessageIsProcessed()
+        {
+            SerializationRegister.ReceivedDeserializationRequests.ShouldContain(AttributeMessageContentsRunning);
+            SerializationRegister.ReceivedDeserializationRequests.ShouldNotContain(AttributeMessageContentsAfterStop);
+        }
     }
 }

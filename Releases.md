@@ -1,12 +1,11 @@
-# Releases
-
 ## About Versioning
 
 JustSaying adopts [SemVer 2.0](https://semver.org/spec/v2.0.0.html), and uses [MinVer](https://github.com/adamralph/minver) to achieve this. [See here](https://github.com/adamralph/minver#how-it-works) for more information on how it works.
 
 ## Process for Releasing
 
-To create a new release go to the GitHub [releases tab](https://github.com/justeattakeaway/JustSaying/releases) and click `Draft a new release`.
+
+To create a new release go to the GitHub [releases tab](https://github.com/justeat/JustSaying/releases) and click `Draft a new release`.
 
 The tag should be in the format:
 
@@ -14,7 +13,7 @@ The tag should be in the format:
 
 For example `v7.0.0`.
 
-A GitHub Actions build will queue automatically when the tag is created, and publish the packages to NuGet.org.
+Once the AppVeyor build has completed, you can deploy to NuGet via the AppVeyor UI.
 
 ## Example Release Pattern
 

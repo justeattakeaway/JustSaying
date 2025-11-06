@@ -1,50 +1,50 @@
-using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 
-namespace JustSaying.TestingFramework;
-
-public class Order : Message
+namespace JustSaying.TestingFramework
 {
-}
-
-public class OrderAccepted : Message
-{
-}
-
-public class OrderRejected : Message
-{
-}
-
-public class SimpleMessage : Message
-{
-    public string Content { get; set; }
-
-    public static IMessageBodySerializer Serializer { get; } = new SystemTextJsonMessageBodySerializer<SimpleMessage>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions);
-}
-
-public class AnotherSimpleMessage : Message
-{
-    public string Content { get; set; }
-}
-
-public class MessageWithEnum : Message
-{
-    public MessageWithEnum()
+    public class Order : Message
     {
     }
 
-    public Value EnumVal { get; set; }
-}
+    public class OrderAccepted : Message
+    {
+    }
 
-public enum Value
-{
-    One,
-    Two
-}
+    public class OrderRejected : Message
+    {
+    }
 
-public class GenericMessage<T> : Message
-{
-    public T Contents { get; set; }
-}
+    public class SimpleMessage : Message
+    {
+        public string Content { get; set; }
+    }
 
-public class MyMessage;
+    public class AnotherSimpleMessage : Message
+    {
+        public string Content { get; set; }
+    }
+
+    public class MessageWithEnum : Message
+    {
+        public MessageWithEnum()
+        {
+        }
+
+        public Value EnumVal { get; set; }
+    }
+
+    public enum Value
+    {
+        One,
+        Two
+    }
+
+    public class GenericMessage<T> : Message
+    {
+        public T Contents { get; set; }
+    }
+
+    public class MyMessage
+    {
+    }
+}

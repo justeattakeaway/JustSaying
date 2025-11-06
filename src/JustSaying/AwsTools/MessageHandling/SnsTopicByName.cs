@@ -1,185 +1,212 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.Interrogation;
+using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.AwsTools.MessageHandling;
-
-[Obsolete("SnsTopicByName is not intended for general usage and may be removed in a future major release")]
-public sealed class SnsTopicByName(
-    string topicName,
-    IAmazonSimpleNotificationService client,
-    ILoggerFactory loggerFactory) : IInterrogable
+namespace JustSaying.AwsTools.MessageHandling
 {
-    private readonly ILogger _logger = loggerFactory.CreateLogger("JustSaying");
-
-    public string TopicName { get; } = topicName;
-    public string Arn { get; private set; }
-    internal ServerSideEncryption ServerSideEncryption { get; set; }
-    public IDictionary<string, string> Tags { get; set; }
-
-    public async Task EnsurePolicyIsUpdatedAsync(IReadOnlyCollection<string> additionalSubscriberAccounts)
+    [Obsolete("SnsTopicBase and related classes are not intended for general usage and may be removed in a future major release")]
+    public class SnsTopicByName : SnsTopicBase
     {
-        if (additionalSubscriberAccounts.Count != 0)
+        private readonly ILogger _logger;
+
+        public string TopicName { get; }
+        public IDictionary<string, string> Tags { get; set; }
+
+        public SnsTopicByName(
+            string topicName,
+            IAmazonSimpleNotificationService client,
+            IMessageSerializationRegister serializationRegister,
+            ILoggerFactory loggerFactory,
+            IMessageSubjectProvider messageSubjectProvider)
+            : base(serializationRegister, loggerFactory, messageSubjectProvider)
         {
-            var policyDetails = new SnsPolicyDetails
+            TopicName = topicName;
+            Client = client;
+            _logger = loggerFactory.CreateLogger("JustSaying");
+        }
+
+        public SnsTopicByName(
+            string topicName,
+            IAmazonSimpleNotificationService client,
+            IMessageSerializationRegister serializationRegister,
+            ILoggerFactory loggerFactory,
+            SnsWriteConfiguration snsWriteConfiguration,
+            IMessageSubjectProvider messageSubjectProvider)
+            : base(serializationRegister, loggerFactory, snsWriteConfiguration, messageSubjectProvider)
+        {
+            TopicName = topicName;
+            Client = client;
+            _logger = loggerFactory.CreateLogger("JustSaying");
+        }
+
+        public override InterrogationResult Interrogate()
+        {
+            return new InterrogationResult(new
             {
-                AccountIds = additionalSubscriberAccounts,
-                SourceArn = Arn
-            };
-            await SnsPolicy.SaveAsync(policyDetails, client).ConfigureAwait(false);
-        }
-    }
-
-    public async Task ApplyTagsAsync(CancellationToken cancellationToken)
-    {
-        if (Tags.Count < 1)
-        {
-            return;
+                Arn,
+                TopicName
+            });
         }
 
-        static Tag CreateTag(KeyValuePair<string, string> tag) => new() { Key = tag.Key, Value = tag.Value };
-
-        var tagRequest = new TagResourceRequest
+        public async Task EnsurePolicyIsUpdatedAsync(IReadOnlyCollection<string> additionalSubscriberAccounts)
         {
-            ResourceArn = Arn,
-            Tags = Tags.Select(CreateTag).ToList()
-        };
-
-        await client.TagResourceAsync(tagRequest, cancellationToken).ConfigureAwait(false);
-
-        _logger.LogInformation("Added {TagCount} tags to topic {TopicName}", tagRequest.Tags.Count, TopicName);
-    }
-
-    public async Task<bool> ExistsAsync(CancellationToken cancellationToken)
-    {
-        if (!string.IsNullOrWhiteSpace(Arn))
-        {
-            return true;
-        }
-
-        _logger.LogInformation("Checking for existence of the topic '{TopicName}'.", TopicName);
-        var topic = await client.FindTopicAsync(TopicName).ConfigureAwait(false);
-
-        if (topic != null)
-        {
-            Arn = topic.TopicArn;
-            return true;
-        }
-
-        return false;
-    }
-
-    public async Task CreateAsync(CancellationToken cancellationToken)
-    {
-        try
-        {
-            var response = await client.CreateTopicAsync(new CreateTopicRequest(TopicName), cancellationToken)
-                .ConfigureAwait(false);
-
-            if (string.IsNullOrEmpty(response.TopicArn))
+            if (additionalSubscriberAccounts.Any())
             {
-                var requestId = response.ResponseMetadata.RequestId;
-                _logger.LogError("Failed to create or obtain ARN for topic {TopicName}. RequestId: {RequestId}.",
-                    TopicName, requestId);
-                throw new InvalidOperationException($"Failed to create or obtain ARN for topic '{TopicName}'. RequestId: {requestId}.");
-            }
-
-            Arn = response.TopicArn;
-            _logger.LogDebug("Created topic '{TopicName}' with ARN '{Arn}'.", TopicName, Arn);
-        }
-        catch (AuthorizationErrorException ex)
-        {
-            _logger.LogWarning(0, ex, "Not authorized to create topic '{TopicName}'.", TopicName);
-            if (!await ExistsAsync(cancellationToken).ConfigureAwait(false))
-            {
-                throw new InvalidOperationException(
-                    $"Topic '{TopicName}' does not exist, and no permission to create it.");
+                var policyDetails = new SnsPolicyDetails
+                {
+                    AccountIds = additionalSubscriberAccounts,
+                    SourceArn = Arn
+                };
+                await SnsPolicy.SaveAsync(policyDetails, Client).ConfigureAwait(false);
             }
         }
-    }
 
-    public async Task CreateWithEncryptionAsync(ServerSideEncryption config, CancellationToken cancellationToken)
-    {
-        await CreateAsync(cancellationToken).ConfigureAwait(false);
-
-        ServerSideEncryption =
-            await ExtractServerSideEncryptionFromTopicAttributes().ConfigureAwait(false);
-
-        await EnsureServerSideEncryptionIsUpdatedAsync(config).ConfigureAwait(false);
-    }
-
-    private async Task<ServerSideEncryption> ExtractServerSideEncryptionFromTopicAttributes()
-    {
-        var attributesResponse = await client.GetTopicAttributesAsync(Arn).ConfigureAwait(false);
-
-        if (!attributesResponse.Attributes.TryGetValue(
-                JustSayingConstants.AttributeEncryptionKeyId,
-                out var encryptionKeyId))
+        public async Task ApplyTagsAsync()
         {
-            return null;
-        }
-
-        return new ServerSideEncryption
-        {
-            KmsMasterKeyId = encryptionKeyId
-        };
-    }
-
-    private async Task EnsureServerSideEncryptionIsUpdatedAsync(ServerSideEncryption config)
-    {
-        if (ServerSideEncryptionNeedsUpdating(config))
-        {
-            var request = new SetTopicAttributesRequest
+            if (!Tags.Any())
             {
-                TopicArn = Arn,
-                AttributeName = JustSayingConstants.AttributeEncryptionKeyId,
-                AttributeValue = config?.KmsMasterKeyId ?? string.Empty
+                return;
+            }
+
+            Tag CreateTag(KeyValuePair<string, string> tag) => new() { Key = tag.Key, Value = tag.Value };
+
+            var tagRequest = new TagResourceRequest
+            {
+                ResourceArn = Arn,
+                Tags = Tags.Select(CreateTag).ToList()
             };
 
-            var response = await client.SetTopicAttributesAsync(request).ConfigureAwait(false);
+            await Client.TagResourceAsync(tagRequest).ConfigureAwait(false);
 
-            if (response.HttpStatusCode == HttpStatusCode.OK)
-            {
-                ServerSideEncryption = string.IsNullOrEmpty(config?.KmsMasterKeyId)
-                    ? null
-                    : config;
-            }
-            else
-            {
-                _logger.LogWarning(
-                    "Request to set topic attribute '{TopicAttributeName}' to '{TopicAttributeValue}' failed with status code '{HttpStatusCode}'.",
-                    request.AttributeName,
-                    request.AttributeValue,
-                    response.HttpStatusCode);
-            }
+            _logger.LogInformation("Added {TagCount} tags to topic {TopicName}", tagRequest.Tags.Count, TopicName);
         }
-    }
 
-    private bool ServerSideEncryptionNeedsUpdating(ServerSideEncryption config)
-    {
-        if (ServerSideEncryption == config)
+        public override async Task<bool> ExistsAsync()
         {
+            if (!string.IsNullOrWhiteSpace(Arn))
+            {
+                return true;
+            }
+
+            _logger.LogInformation("Checking for existence of the topic '{TopicName}'.", TopicName);
+            var topic = await Client.FindTopicAsync(TopicName).ConfigureAwait(false);
+
+            if (topic != null)
+            {
+                Arn = topic.TopicArn;
+                return true;
+            }
+
             return false;
         }
 
-        if (ServerSideEncryption != null && config != null)
+        public async Task CreateAsync()
         {
-            return ServerSideEncryption.KmsMasterKeyId != config.KmsMasterKeyId;
+            try
+            {
+                var response = await Client.CreateTopicAsync(new CreateTopicRequest(TopicName))
+                    .ConfigureAwait(false);
+
+                if (string.IsNullOrEmpty(response.TopicArn))
+                {
+                    var requestId = response.ResponseMetadata.RequestId;
+                    _logger.LogError("Failed to create or obtain ARN for topic {TopicName}. RequestId: {RequestId}.",
+                        TopicName, requestId);
+                    throw new InvalidOperationException($"Failed to create or obtain ARN for topic '{TopicName}'. RequestId: {requestId}.");
+                }
+
+                Arn = response.TopicArn;
+                _logger.LogDebug("Created topic '{TopicName}' with ARN '{Arn}'.", TopicName, Arn);
+            }
+            catch (AuthorizationErrorException ex)
+            {
+                _logger.LogWarning(0, ex, "Not authorized to create topic '{TopicName}'.", TopicName);
+                if (!await ExistsAsync().ConfigureAwait(false))
+                {
+                    throw new InvalidOperationException(
+                        $"Topic '{TopicName}' does not exist, and no permission to create it.");
+                }
+            }
         }
 
-        return true;
-    }
-
-    public InterrogationResult Interrogate()
-    {
-        return new InterrogationResult(new
+        public async Task CreateWithEncryptionAsync(ServerSideEncryption config)
         {
-            Arn,
-            TopicName
-        });
-    }
+            await CreateAsync().ConfigureAwait(false);
 
+            ServerSideEncryption =
+                await ExtractServerSideEncryptionFromTopicAttributes().ConfigureAwait(false);
+
+            await EnsureServerSideEncryptionIsUpdatedAsync(config).ConfigureAwait(false);
+        }
+
+        private async Task<ServerSideEncryption> ExtractServerSideEncryptionFromTopicAttributes()
+        {
+            var attributesResponse = await Client.GetTopicAttributesAsync(Arn).ConfigureAwait(false);
+
+            if (!attributesResponse.Attributes.TryGetValue(
+                    JustSayingConstants.AttributeEncryptionKeyId,
+                    out var encryptionKeyId))
+            {
+                return null;
+            }
+
+            return new ServerSideEncryption
+            {
+                KmsMasterKeyId = encryptionKeyId
+            };
+        }
+
+        private async Task EnsureServerSideEncryptionIsUpdatedAsync(ServerSideEncryption config)
+        {
+            if (ServerSideEncryptionNeedsUpdating(config))
+            {
+                var request = new SetTopicAttributesRequest
+                {
+                    TopicArn = Arn,
+                    AttributeName = JustSayingConstants.AttributeEncryptionKeyId,
+                    AttributeValue = config?.KmsMasterKeyId ?? string.Empty
+                };
+
+                var response = await Client.SetTopicAttributesAsync(request).ConfigureAwait(false);
+
+                if (response.HttpStatusCode == HttpStatusCode.OK)
+                {
+                    ServerSideEncryption = string.IsNullOrEmpty(config?.KmsMasterKeyId)
+                        ? null
+                        : config;
+                }
+                else
+                {
+                    _logger.LogWarning(
+                        "Request to set topic attribute '{TopicAttributeName}' to '{TopicAttributeValue}' failed with status code '{HttpStatusCode}'.",
+                        request.AttributeName,
+                        request.AttributeValue,
+                        response.HttpStatusCode);
+                }
+            }
+        }
+
+        private bool ServerSideEncryptionNeedsUpdating(ServerSideEncryption config)
+        {
+            if (ServerSideEncryption == config)
+            {
+                return false;
+            }
+
+            if (ServerSideEncryption != null && config != null)
+            {
+                return ServerSideEncryption.KmsMasterKeyId != config.KmsMasterKeyId;
+            }
+
+            return true;
+        }
+    }
 }

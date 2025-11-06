@@ -1,82 +1,32 @@
-using System.Collections.Concurrent;
-using Amazon.SQS.Model;
+using System;
+using Amazon.SQS;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.Interrogation;
 
-namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
-
-public class FakeSqsQueue(Func<CancellationToken, Task<IEnumerable<Message>>> messageProducer, string queueName = "fake-queue-name") : ISqsQueue
+namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
-    private readonly Func<CancellationToken, Task<IEnumerable<Message>>> _messageProducer = messageProducer;
-    private readonly TaskCompletionSource _receivedAllMessages = new(TaskCreationOptions.RunContinuationsAsynchronously);
-    private int _messageReceived;
-    private readonly ConcurrentBag<FakeDeleteMessageRequest> _deleteMessageRequests = [];
-    private readonly ConcurrentBag<FakeChangeMessageVisibilityRequest> _changeMessageVisibilityRequests = [];
-    private readonly ConcurrentBag<FakeTagQueueRequest> _tagQueueRequests = [];
-    private readonly ConcurrentBag<FakeReceiveMessagesRequest> _receiveMessageRequests = [];
-    private readonly object _messageLock = new();
-
-    public InterrogationResult Interrogate()
+    public class FakeSqsQueue : ISqsQueue
     {
-        return InterrogationResult.Empty;
-    }
-
-    public string QueueName { get; } = queueName;
-    public string RegionSystemName { get; } = "fake-region";
-    public Uri Uri { get; set; } = new Uri("http://test.com");
-    public string Arn { get; } = $"arn:aws:fake-region:123456789012:{queueName}";
-    public int? MaxNumberOfMessagesToReceive { get; set; } = 100;
-    public Task ReceivedAllMessages => _receivedAllMessages.Task;
-
-    public IReadOnlyCollection<FakeDeleteMessageRequest> DeleteMessageRequests => _deleteMessageRequests;
-    public IReadOnlyCollection<FakeChangeMessageVisibilityRequest> ChangeMessageVisibilityRequests => _changeMessageVisibilityRequests;
-    public IReadOnlyCollection<FakeTagQueueRequest> TagQueueRequests => _tagQueueRequests;
-    public IReadOnlyCollection<FakeReceiveMessagesRequest> ReceiveMessageRequests => _receiveMessageRequests;
-
-    public Task DeleteMessageAsync(string queueUrl, string receiptHandle, CancellationToken cancellationToken)
-    {
-        _deleteMessageRequests.Add(new FakeDeleteMessageRequest(queueUrl, receiptHandle));
-        return Task.CompletedTask;
-    }
-
-    public Task TagQueueAsync(string queueUrl, Dictionary<string, string> tags, CancellationToken cancellationToken)
-    {
-        _tagQueueRequests.Add(new FakeTagQueueRequest(queueUrl, tags));
-        return Task.CompletedTask;
-    }
-
-    public async Task<IList<Message>> ReceiveMessagesAsync(string queueUrl, int maxNumOfMessages, int secondsWaitTime, IList<string> attributesToLoad, CancellationToken cancellationToken)
-    {
-        await Task.Yield();
-        var messages = await _messageProducer(cancellationToken);
-        List<Message> result;
-
-        lock (_messageLock)
+        public FakeSqsQueue(string queueName, IAmazonSQS client)
         {
-            var countToTake = MaxNumberOfMessagesToReceive is null ? maxNumOfMessages : Math.Min(maxNumOfMessages, MaxNumberOfMessagesToReceive.Value - _messageReceived);
-            result = messages.Take(countToTake).ToList();
-            _messageReceived += result.Count;
-
-            _receiveMessageRequests.Add(new FakeReceiveMessagesRequest(queueUrl, maxNumOfMessages, secondsWaitTime, attributesToLoad, result.Count));
-
-            if (_messageReceived >= MaxNumberOfMessagesToReceive)
-            {
-                _receivedAllMessages.TrySetResult();
-            }
+            QueueName = queueName;
+            RegionSystemName = "fake-region";
+            Uri = new Uri("http://test.com");
+            Arn = $"arn:aws:fake-region:123456789012:{queueName}";
+            Client = client;
         }
 
-        // If empty, wait for a bit to avoid spinning in a tight loop
-        if (result.Count == 0)
+        public InterrogationResult Interrogate()
         {
-            await Task.Delay(TimeSpan.FromMilliseconds(20), cancellationToken);
+            return InterrogationResult.Empty;
         }
 
-        return result;
-    }
+        public string QueueName { get; }
+        public string RegionSystemName { get; }
+        public Uri Uri { get; }
+        public string Arn { get; }
+        public IAmazonSQS Client { get; }
 
-    public Task ChangeMessageVisibilityAsync(string queueUrl, string receiptHandle, int visibilityTimeoutInSeconds, CancellationToken cancellationToken)
-    {
-        _changeMessageVisibilityRequests.Add(new FakeChangeMessageVisibilityRequest(queueUrl, receiptHandle, visibilityTimeoutInSeconds));
-        return Task.CompletedTask;
+        public FakeAmazonSqs FakeClient => Client as FakeAmazonSqs;
     }
 }

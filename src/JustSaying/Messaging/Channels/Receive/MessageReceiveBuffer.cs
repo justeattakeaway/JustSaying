@@ -1,179 +1,176 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
-using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.Channels.Context;
-using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Interrogation;
+using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Middleware.Receive;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.Messaging.Channels.Receive;
-
-internal class MessageReceiveBuffer : IMessageReceiveBuffer
+namespace JustSaying.Messaging.Channels.Receive
 {
-    private static readonly TimeSpan PauseReceivingBusyWaitDelay = TimeSpan.FromMilliseconds(100);
-
-    private readonly Channel<IQueueMessageContext> _channel;
-    private readonly int _prefetch;
-    private readonly int _bufferSize;
-    private readonly TimeSpan _readTimeout;
-    private readonly TimeSpan _sqsWaitTime;
-    private readonly SqsQueueReader _sqsQueueReader;
-    private readonly MiddlewareBase<ReceiveMessagesContext, IList<Message>> _sqsMiddleware;
-    private readonly IMessageReceivePauseSignal _messageReceivePauseSignal;
-    private readonly IMessageMonitor _monitor;
-    private readonly ILogger _logger;
-
-    private readonly HashSet<string> _requestMessageAttributeNames = new();
-
-    public ChannelReader<IQueueMessageContext> Reader => _channel.Reader;
-
-    public string QueueName => _sqsQueueReader.QueueName;
-
-    public MessageReceiveBuffer(
-        int prefetch,
-        int bufferSize,
-        TimeSpan readTimeout,
-        TimeSpan sqsWaitTime,
-        SqsSource sqsSource,
-        MiddlewareBase<ReceiveMessagesContext, IList<Message>> sqsMiddleware,
-        IMessageReceivePauseSignal messageReceivePauseSignal,
-        IMessageMonitor monitor,
-        ILogger<IMessageReceiveBuffer> logger)
+    internal class MessageReceiveBuffer : IMessageReceiveBuffer
     {
-        _prefetch = prefetch;
-        _bufferSize = bufferSize;
-        _readTimeout = readTimeout;
-        _sqsWaitTime = sqsWaitTime;
-        if (sqsSource == null) throw new ArgumentNullException(nameof(sqsSource));
-        _sqsQueueReader = new SqsQueueReader(sqsSource.SqsQueue, sqsSource.MessageConverter);
-        _sqsMiddleware = sqsMiddleware ?? throw new ArgumentNullException(nameof(sqsMiddleware));
-        _messageReceivePauseSignal = messageReceivePauseSignal;
-        _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        private readonly Channel<IQueueMessageContext> _channel;
+        private readonly int _prefetch;
+        private readonly int _bufferSize;
+        private readonly TimeSpan _readTimeout;
+        private readonly TimeSpan _sqsWaitTime;
+        private readonly SqsQueueReader _sqsQueueReader;
+        private readonly MiddlewareBase<ReceiveMessagesContext, IList<Message>> _sqsMiddleware;
+        private readonly IMessageMonitor _monitor;
+        private readonly ILogger _logger;
 
-        _channel = Channel.CreateBounded<IQueueMessageContext>(bufferSize);
+        private readonly HashSet<string> _requestMessageAttributeNames = new HashSet<string>();
+        private readonly string _backoffStrategyName;
 
-        _requestMessageAttributeNames.Add(MessageSystemAttributeName.ApproximateReceiveCount);
-    }
+        public ChannelReader<IQueueMessageContext> Reader => _channel.Reader;
 
-    /// <summary>
-    /// Starts the receive buffer until it's cancelled by the stopping token.
-    /// </summary>
-    /// <param name="stoppingToken">A <see cref="CancellationToken"/> that will stop the buffer when signalled.</param>
-    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation to receive the messages.</returns>
-    public async Task RunAsync(CancellationToken stoppingToken)
-    {
-        await Task.Yield();
+        public string QueueName => _sqsQueueReader.QueueName;
 
-        ChannelWriter<IQueueMessageContext> writer = _channel.Writer;
-        try
+        public MessageReceiveBuffer(
+            int prefetch,
+            int bufferSize,
+            TimeSpan readTimeout,
+            TimeSpan sqsWaitTime,
+            ISqsQueue sqsQueue,
+            MiddlewareBase<ReceiveMessagesContext, IList<Message>> sqsMiddleware,
+            IMessageMonitor monitor,
+            ILogger<IMessageReceiveBuffer> logger,
+            IMessageBackoffStrategy messageBackoffStrategy = null)
         {
-            while (true)
+            _prefetch = prefetch;
+            _bufferSize = bufferSize;
+            _readTimeout = readTimeout;
+            _sqsWaitTime = sqsWaitTime;
+            if (sqsQueue == null) throw new ArgumentNullException(nameof(sqsQueue));
+            _sqsQueueReader = new SqsQueueReader(sqsQueue);
+            _sqsMiddleware = sqsMiddleware ?? throw new ArgumentNullException(nameof(sqsMiddleware));
+            _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _backoffStrategyName = messageBackoffStrategy?.GetType()?.Name;
+
+            _channel = Channel.CreateBounded<IQueueMessageContext>(bufferSize);
+
+            if (messageBackoffStrategy != null)
             {
-                stoppingToken.ThrowIfCancellationRequested();
+                _requestMessageAttributeNames.Add(MessageSystemAttributeName.ApproximateReceiveCount);
+            }
+        }
 
-                if (_messageReceivePauseSignal?.IsPaused == true)
+        /// <summary>
+        /// Starts the receive buffer until it's cancelled by the stopping token.
+        /// </summary>
+        /// <param name="stoppingToken">A <see cref="CancellationToken"/> that will stop the buffer when signalled.</param>
+        /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation to receive the messages.</returns>
+        public async Task RunAsync(CancellationToken stoppingToken)
+        {
+            await Task.Yield();
+
+            ChannelWriter<IQueueMessageContext> writer = _channel.Writer;
+            try
+            {
+                while (true)
                 {
-                    await Task.Delay(PauseReceivingBusyWaitDelay, stoppingToken);
+                    stoppingToken.ThrowIfCancellationRequested();
 
-                    continue;
-                }
-
-                using (_monitor.MeasureThrottle())
-                {
-                    bool canWrite = await writer.WaitToWriteAsync(stoppingToken).ConfigureAwait(false);
-                    if (!canWrite)
+                    using (_monitor.MeasureThrottle())
                     {
-                        break;
+                        bool canWrite = await writer.WaitToWriteAsync(stoppingToken).ConfigureAwait(false);
+                        if (!canWrite)
+                        {
+                            break;
+                        }
+                    }
+
+                    IList<Message> messages;
+                    using (_monitor.MeasureReceive(_sqsQueueReader.QueueName, _sqsQueueReader.RegionSystemName))
+                    {
+                        messages = await GetMessagesAsync(_prefetch, stoppingToken).ConfigureAwait(false);
+
+                        if (messages == null)
+                        {
+                            continue;
+                        }
+                    }
+
+                    foreach (Message message in messages)
+                    {
+                        IQueueMessageContext messageContext = _sqsQueueReader.ToMessageContext(message);
+
+                        // Complete all messages in the batch, rather than observing the CancellationToken to stop
+                        await writer.WriteAsync(messageContext, CancellationToken.None).ConfigureAwait(false);
                     }
                 }
-
-                IList<Message> messages;
-                using (_monitor.MeasureReceive(_sqsQueueReader.QueueName, _sqsQueueReader.RegionSystemName))
-                {
-                    messages = await GetMessagesAsync(_prefetch, stoppingToken).ConfigureAwait(false);
-                }
-
-                if (_logger.IsEnabled(LogLevel.Trace))
-                {
-                    _logger.LogTrace("Downloaded {MessageCount} messages from queue {QueueName}.", messages?.Count ?? 0, _sqsQueueReader.QueueName);
-                }
-
-                if (messages is null)
-                {
-                    continue;
-                }
-
-                foreach (Message message in messages)
-                {
-                    IQueueMessageContext messageContext = _sqsQueueReader.ToMessageContext(message);
-
-                    await writer.WriteAsync(messageContext, stoppingToken).ConfigureAwait(false);
-                }
             }
-        }
-        finally
-        {
-            _logger.LogInformation("Receive buffer for queue {QueueName} has completed, shutting down channel",
-                _sqsQueueReader.Uri);
-            writer.Complete();
-        }
-    }
-
-    private async Task<IList<Message>> GetMessagesAsync(int count, CancellationToken stoppingToken)
-    {
-        stoppingToken.ThrowIfCancellationRequested();
-
-        using var receiveTimeout = new CancellationTokenSource(_readTimeout);
-        IList<Message> messages;
-
-        try
-        {
-            using var linkedCts =
-                CancellationTokenSource.CreateLinkedTokenSource(stoppingToken, receiveTimeout.Token);
-
-            var context = new ReceiveMessagesContext
+            finally
             {
-                Count = count,
-                QueueName = _sqsQueueReader.QueueName,
-                RegionName = _sqsQueueReader.RegionSystemName,
-            };
-
-            messages = await _sqsMiddleware.RunAsync(context,
-                    async ct =>
-                        await _sqsQueueReader
-                            .GetMessagesAsync(count, _sqsWaitTime, _requestMessageAttributeNames.ToList(), ct)
-                            .ConfigureAwait(false),
-                    linkedCts.Token)
-                .ConfigureAwait(false);
-        }
-        finally
-        {
-            if (receiveTimeout.Token.IsCancellationRequested)
-            {
-                _logger.LogInformation(
-                    "Timed out while receiving messages from queue '{QueueName}' in region '{Region}'.",
-                    _sqsQueueReader.QueueName,
-                    _sqsQueueReader.RegionSystemName);
+                _logger.LogInformation("Receive buffer for queue {QueueName} has completed, shutting down channel",
+                    _sqsQueueReader.Uri);
+                writer.Complete();
             }
         }
 
-        return messages;
-    }
-
-    public InterrogationResult Interrogate()
-    {
-        return new InterrogationResult(new
+        private async Task<IList<Message>> GetMessagesAsync(int count, CancellationToken stoppingToken)
         {
-            BufferSize = _bufferSize,
-            _sqsQueueReader.QueueName,
-            Region = _sqsQueueReader.RegionSystemName,
-            Prefetch = _prefetch,
-        });
+            stoppingToken.ThrowIfCancellationRequested();
+
+            using var receiveTimeout = new CancellationTokenSource(_readTimeout);
+            IList<Message> messages;
+
+            try
+            {
+                using var linkedCts =
+                    CancellationTokenSource.CreateLinkedTokenSource(stoppingToken, receiveTimeout.Token);
+
+                var context = new ReceiveMessagesContext
+                {
+                    Count = count,
+                    QueueName = _sqsQueueReader.QueueName,
+                    RegionName = _sqsQueueReader.RegionSystemName,
+                };
+
+                _requestMessageAttributeNames.Add("content");
+
+                messages = await _sqsMiddleware.RunAsync(context,
+                        async ct =>
+                            await _sqsQueueReader
+                                .GetMessagesAsync(count, _sqsWaitTime, _requestMessageAttributeNames, ct)
+                                .ConfigureAwait(false),
+                        linkedCts.Token)
+                    .ConfigureAwait(false);
+            }
+            finally
+            {
+                if (receiveTimeout.Token.IsCancellationRequested)
+                {
+                    _logger.LogInformation(
+                        "Timed out while receiving messages from queue '{QueueName}' in region '{Region}'.",
+                        _sqsQueueReader.QueueName,
+                        _sqsQueueReader.RegionSystemName);
+                }
+            }
+
+            return messages;
+        }
+
+        public InterrogationResult Interrogate()
+        {
+            return new InterrogationResult(new
+            {
+                BufferSize = _bufferSize,
+                _sqsQueueReader.QueueName,
+                Region = _sqsQueueReader.RegionSystemName,
+                Prefetch = _prefetch,
+                BackoffStrategyName = _backoffStrategyName,
+            });
+        }
     }
 }

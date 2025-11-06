@@ -1,50 +1,56 @@
+using System.Threading.Tasks;
+using JustSaying.IntegrationTests.TestHandlers;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
+using Xunit.Abstractions;
 
-namespace JustSaying.IntegrationTests.Fluent.Subscribing;
-
-public class WhenTwoDifferentHandlersHandleAnExactlyOnceMessage(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+namespace JustSaying.IntegrationTests.Fluent.Subscribing
 {
-    [AwsFact]
-    public async Task Then_Both_Handlers_Receive_The_Message()
+    public class WhenTwoDifferentHandlersHandleAnExactlyOnceMessage : IntegrationTestBase
     {
-        var messageLock = new MessageLockStore();
+        public WhenTwoDifferentHandlersHandleAnExactlyOnceMessage(ITestOutputHelper outputHelper)
+            : base(outputHelper)
+        {
+        }
 
-        var handler1 = new InspectableHandler<SimpleMessage>();
-        var handler2 = new InspectableHandler<SimpleMessage>();
+        [AwsFact]
+        public async Task Then_Both_Handlers_Receive_The_Message()
+        {
+            var messageLock = new MessageLockStore();
 
-        var services = GivenJustSaying()
-            .AddSingleton<IMessageLockAsync>(messageLock)
-            .ConfigureJustSaying((builder) =>
-                builder.WithLoopbackTopic<SimpleMessage>(UniqueName,
-                    t => t.WithMiddlewareConfiguration(m =>
-                    {
-                        m.UseExactlyOnce<SimpleMessage>("some-key");
-                        m.UseDefaults<SimpleMessage>(handler1.GetType());
-                    })))
-            .AddJustSayingHandlers(new[] { handler1, handler2 });
+            var handler1 = new InspectableHandler<SimpleMessage>();
+            var handler2 = new InspectableHandler<SimpleMessage>();
 
-        await WhenAsync(
-            services,
-            async (publisher, listener, serviceProvider, cancellationToken) =>
-            {
-                await listener.StartAsync(cancellationToken);
-                await publisher.StartAsync(cancellationToken);
+            var services = GivenJustSaying()
+                .AddSingleton<IMessageLockAsync>(messageLock)
+                .ConfigureJustSaying((builder) =>
+                    builder.WithLoopbackTopic<SimpleMessage>(UniqueName,
+                        t => t.WithReadConfiguration(rc =>
+                            rc.WithMiddlewareConfiguration(m =>
+                                m.UseExactlyOnce<SimpleMessage>("some-key")))))
+                .AddJustSayingHandlers(new[] { handler1, handler2 });
 
-                var message = new SimpleMessage();
+            await WhenAsync(
+                services,
+                async (publisher, listener, serviceProvider, cancellationToken) =>
+                {
+                    await listener.StartAsync(cancellationToken);
+                    await publisher.StartAsync(cancellationToken);
 
-                // Act
-                await publisher.PublishAsync(message, cancellationToken);
+                    var message = new SimpleMessage();
 
-                // Assert
-                await Patiently.AssertThatAsync(OutputHelper,
-                    () =>
-                    {
-                        handler1.ReceivedMessages.ShouldHaveSingleItem().Id.ShouldBe(message.Id);
-                        handler2.ReceivedMessages.ShouldHaveSingleItem().Id.ShouldBe(message.Id);
-                    });
-            });
+                    // Act
+                    await publisher.PublishAsync(message, cancellationToken);
+                    await Task.Delay(1.Seconds(), cancellationToken);
+
+                    // Assert
+                    handler1.ReceivedMessages.ShouldHaveSingleItem().Id.ShouldBe(message.Id);
+                    handler2.ReceivedMessages.ShouldHaveSingleItem().Id.ShouldBe(message.Id);
+                });
+        }
     }
 }

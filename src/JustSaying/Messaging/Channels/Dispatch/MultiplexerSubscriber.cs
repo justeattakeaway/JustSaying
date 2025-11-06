@@ -1,36 +1,51 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels.Context;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.Messaging.Channels.Dispatch;
-
-internal class MultiplexerSubscriber(
-    IMessageDispatcher dispatcher,
-    string subscriberId,
-    ILogger<MultiplexerSubscriber> logger) : IMultiplexerSubscriber
+namespace JustSaying.Messaging.Channels.Dispatch
 {
-    private IAsyncEnumerable<IQueueMessageContext> _messageSource;
-
-    public void Subscribe(IAsyncEnumerable<IQueueMessageContext> messageSource)
+    internal class MultiplexerSubscriber : IMultiplexerSubscriber
     {
-        _messageSource = messageSource;
-    }
+        private IAsyncEnumerable<IQueueMessageContext> _messageSource;
+        private readonly IMessageDispatcher _dispatcher;
+        private readonly string _subscriberId;
+        private readonly ILogger<MultiplexerSubscriber> _logger;
 
-    public async Task RunAsync(CancellationToken stoppingToken)
-    {
-        await Task.Yield();
-
-        logger.LogTrace("Starting up {StartupType} with Id {SubscriberId}",
-            nameof(MultiplexerSubscriber),
-            subscriberId);
-
-        await foreach (IQueueMessageContext messageContext in _messageSource.WithCancellation(
-                           stoppingToken))
+        public MultiplexerSubscriber(
+            IMessageDispatcher dispatcher,
+            string subscriberId,
+            ILogger<MultiplexerSubscriber> logger)
         {
-            stoppingToken.ThrowIfCancellationRequested();
+            _dispatcher = dispatcher;
+            _subscriberId = subscriberId;
+            _logger = logger;
+        }
 
-            await dispatcher.DispatchMessageAsync(messageContext, stoppingToken)
-                .ConfigureAwait(false);
+        public void Subscribe(IAsyncEnumerable<IQueueMessageContext> messageSource)
+        {
+            _messageSource = messageSource;
+        }
+
+        public async Task RunAsync(CancellationToken stoppingToken)
+        {
+            await Task.Yield();
+
+            _logger.LogTrace("Starting up {StartupType} with Id {SubscriberId}",
+                nameof(MultiplexerSubscriber),
+                _subscriberId);
+
+            await foreach (IQueueMessageContext messageContext in _messageSource.WithCancellation(
+                stoppingToken))
+            {
+                stoppingToken.ThrowIfCancellationRequested();
+
+                await _dispatcher.DispatchMessageAsync(messageContext, stoppingToken)
+                    .ConfigureAwait(false);
+            }
         }
     }
 }

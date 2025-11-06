@@ -1,53 +1,64 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
+using Xunit.Abstractions;
 
-namespace JustSaying.IntegrationTests.Fluent.Subscribing;
-
-public class WhenUsingMultipleMiddlewares(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+namespace JustSaying.IntegrationTests.Fluent.Subscribing
 {
-    [AwsFact]
-    public async Task Then_The_Middlewares_Are_Called()
+    public class WhenUsingMultipleMiddlewares : IntegrationTestBase
     {
-        var handler = new InspectableHandler<SimpleMessage>();
+        public WhenUsingMultipleMiddlewares(ITestOutputHelper outputHelper) : base(outputHelper)
+        { }
 
-        var callRecord = new List<string>();
+        [AwsFact]
+        public async Task Then_The_Middlewares_Are_Called()
+        {
+            var handler = new InspectableHandler<SimpleMessage>();
 
-        void Before(string id) => callRecord.Add($"Before_{id}");
-        void After(string id) => callRecord.Add($"After_{id}");
+            var callRecord = new List<string>();
 
-        var outerMiddleware = new TrackingMiddleware("outer", Before, After);
-        var middleMiddleware = new TrackingMiddleware("middle", Before, After);
-        var innerMiddleware = new TrackingMiddleware("inner", Before, After);
+            void Before(string id) => callRecord.Add($"Before_{id}");
+            void After(string id) => callRecord.Add($"After_{id}");
 
-        var services = GivenJustSaying()
-            .AddSingleton(outerMiddleware)
-            .AddSingleton<IHandlerAsync<SimpleMessage>>(handler)
-            .ConfigureJustSaying(builder =>
-                builder.WithLoopbackTopic<SimpleMessage>(UniqueName,
-                    topic => topic.WithMiddlewareConfiguration(
-                        pipe =>
-                        {
-                            pipe.Use<TrackingMiddleware>(); // from DI
-                            pipe.Use(() => middleMiddleware); // provide a Func<MiddlewareBase<HandleMessageContext, bool>
-                            pipe.Use(innerMiddleware); // Existing instance
-                        })));
+            var outerMiddleware = new TrackingMiddleware("outer", Before, After);
+            var middleMiddleware = new TrackingMiddleware("middle", Before, After);
+            var innerMiddleware = new TrackingMiddleware("inner", Before, After);
 
-        await WhenAsync(services,
-            async (publisher, listener, serviceProvider, cancellationToken) =>
-            {
-                await listener.StartAsync(cancellationToken);
-                await publisher.StartAsync(cancellationToken);
+            var services = GivenJustSaying()
+                .AddSingleton(outerMiddleware)
+                .AddSingleton<IHandlerAsync<SimpleMessage>>(handler)
+                .ConfigureJustSaying(builder =>
+                    builder.WithLoopbackTopic<SimpleMessage>(UniqueName,
+                        topic => topic.WithReadConfiguration(rc =>
+                            rc.WithMiddlewareConfiguration(
+                                pipe =>
+                                {
+                                    pipe.Use<TrackingMiddleware>(); // from DI
+                                    pipe.Use(() => middleMiddleware); // provide a Func<MiddlewareBase<HandleMessageContext, bool>
+                                    pipe.Use(innerMiddleware); // Existing instance
+                                }))));
 
-                // Act
-                await publisher.PublishAsync(new SimpleMessage(), cancellationToken);
+            await WhenAsync(services,
+                async (publisher, listener, serviceProvider, cancellationToken) =>
+                {
+                    await listener.StartAsync(cancellationToken);
+                    await publisher.StartAsync(cancellationToken);
 
-                await Patiently.AssertThatAsync(OutputHelper,
-                    () => callRecord.Count.ShouldBe(6));
-            });
+                    // Act
+                    await publisher.PublishAsync(new SimpleMessage(), cancellationToken);
 
-        string.Join(Environment.NewLine, callRecord)
-            .ShouldMatchApproved(c => c.SubFolder("Approvals"));
+                    await Patiently.AssertThatAsync(OutputHelper,
+                        () => handler.ReceivedMessages.Any());
+                });
 
+            string.Join(Environment.NewLine, callRecord)
+                .ShouldMatchApproved(c => c.SubFolder("Approvals"));
+
+        }
     }
 }

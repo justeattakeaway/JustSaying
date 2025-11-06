@@ -1,51 +1,61 @@
-using System.Collections.Concurrent;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
 
-namespace JustSaying.IntegrationTests.TestHandlers;
-
-public class Future<TMessage>(Func<Task> action)
-    where TMessage : Message
+namespace JustSaying.IntegrationTests.TestHandlers
 {
-    private readonly TaskCompletionSource<object> _doneSignal = new();
-    private readonly Func<Task> _action = action;
-    private readonly ConcurrentBag<TMessage> _messages = new();
-
-    public Future()
-        : this(null)
+    public class Future<TMessage>
+        where TMessage : Message
     {
-    }
+        private readonly TaskCompletionSource<object> _doneSignal = new TaskCompletionSource<object>();
+        private readonly Func<Task> _action;
+        private readonly List<TMessage> _messages = new List<TMessage>();
 
-    public async Task Complete(TMessage message)
-    {
-        try
+        public Future()
+            : this(null)
         {
-            _messages.Add(message);
+        }
 
-            if (_action != null)
+        public Future(Func<Task> action)
+        {
+            _action = action;
+            ExpectedMessageCount = 1;
+        }
+
+        public async Task Complete(TMessage message)
+        {
+            try
             {
-                await _action();
+                _messages.Add(message);
+
+                if (_action != null)
+                {
+                    await _action();
+                }
+            }
+            finally
+            {
+                if (ReceivedMessageCount >= ExpectedMessageCount)
+                {
+                    TaskHelpers.DelaySendDone(_doneSignal);
+                }
             }
         }
-        finally
+
+        public Task DoneSignal => _doneSignal.Task;
+
+        public int ExpectedMessageCount { get; set; }
+
+        public int ReceivedMessageCount => _messages.Count;
+
+        public Exception RecordedException { get; set; }
+
+        public bool HasReceived(TMessage message)
         {
-            if (ReceivedMessageCount >= ExpectedMessageCount)
-            {
-                TaskHelpers.DelaySendDone(_doneSignal);
-            }
+            return _messages.Any(m => m.Id == message.Id);
         }
-    }
-
-    public Task DoneSignal => _doneSignal.Task;
-
-    public int ExpectedMessageCount { get; set; } = 1;
-
-    public int ReceivedMessageCount => _messages.Count;
-
-    public Exception RecordedException { get; set; }
-
-    public bool HasReceived(TMessage message)
-    {
-        return _messages.Any(m => m.Id == message.Id);
     }
 }

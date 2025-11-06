@@ -1,42 +1,51 @@
+using System;
+using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
-
+using Shouldly;
+using Xunit.Abstractions;
 #pragma warning disable 618
 
-namespace JustSaying.IntegrationTests.Fluent.AwsTools;
-
-public class WhenUpdatingRetentionPeriod(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+namespace JustSaying.IntegrationTests.Fluent.AwsTools
 {
-    [AwsFact]
-    public async Task Can_Update_Retention_Period()
+    public class WhenUpdatingRetentionPeriod : IntegrationTestBase
     {
-        // Arrange
-        var oldRetentionPeriod = TimeSpan.FromSeconds(600);
-        var newRetentionPeriod = TimeSpan.FromSeconds(700);
+        public WhenUpdatingRetentionPeriod(ITestOutputHelper outputHelper)
+            : base(outputHelper)
+        {
+        }
 
-        ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
-        IAwsClientFactory clientFactory = CreateClientFactory();
+        [AwsFact]
+        public async Task Can_Update_Retention_Period()
+        {
+            // Arrange
+            var oldRetentionPeriod = TimeSpan.FromSeconds(600);
+            var newRetentionPeriod = TimeSpan.FromSeconds(700);
 
-        var client = clientFactory.GetSqsClient(Region);
+            ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
+            IAwsClientFactory clientFactory = CreateClientFactory();
 
-        var queue = new SqsQueueByName(
-            Region,
-            UniqueName,
-            client,
-            1,
-            loggerFactory);
+            var client = clientFactory.GetSqsClient(Region);
 
-        await queue.CreateAsync(
-            new SqsBasicConfiguration { MessageRetention = oldRetentionPeriod });
+            var queue = new SqsQueueByName(
+                Region,
+                UniqueName,
+                client,
+                1,
+                loggerFactory);
 
-        // Act
-        await queue.UpdateQueueAttributeAsync(
-            new SqsBasicConfiguration { MessageRetention = newRetentionPeriod }, CancellationToken.None);
+            await queue.CreateAsync(
+                new SqsBasicConfiguration { MessageRetention = oldRetentionPeriod });
 
-        // Assert
-        queue.MessageRetentionPeriod.ShouldBe(newRetentionPeriod);
+            // Act
+            await queue.UpdateQueueAttributeAsync(
+                new SqsBasicConfiguration { MessageRetention = newRetentionPeriod });
+
+            // Assert
+            queue.MessageRetentionPeriod.ShouldBe(newRetentionPeriod);
+        }
     }
 }

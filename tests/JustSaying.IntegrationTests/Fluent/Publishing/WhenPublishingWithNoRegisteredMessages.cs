@@ -1,31 +1,35 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
+using Xunit;
+using Xunit.Abstractions;
 
-namespace JustSaying.IntegrationTests.Fluent.Publishing;
-
-public class WhenPublishingWithNoRegisteredMessages(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+namespace JustSaying.IntegrationTests.Fluent.Publishing
 {
-    [AwsFact]
-    public async Task Then_An_Exception_Is_Thrown()
+    public class WhenPublishingWithNoRegisteredMessages : IntegrationTestBase
     {
-        // Arrange
-        var serviceProvider = GivenJustSaying()
-            .BuildServiceProvider();
+        public WhenPublishingWithNoRegisteredMessages(ITestOutputHelper outputHelper)
+            : base(outputHelper)
+        {
+        }
 
-        var publisher = serviceProvider.GetService<IMessagePublisher>();
-        await publisher.StartAsync(CancellationToken.None);
+        [AwsFact]
+        public async Task Then_An_Exception_Is_Thrown()
+        {
+            // Arrange
+            var serviceProvider = GivenJustSaying()
+                .BuildServiceProvider();
 
-        // Act and Assert
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => publisher.PublishAsync(new SimpleMessage()));
-        exception.Message.ShouldBe("Error publishing message, no publishers registered. Has the bus been started?");
+            var publisher = serviceProvider.GetService<IMessagePublisher>();
+            await publisher.StartAsync(CancellationToken.None);
 
-
-        var batchPublisher = serviceProvider.GetService<IMessageBatchPublisher>();
-        await batchPublisher.StartAsync(CancellationToken.None);
-
-        // Act and Assert
-        exception = await Assert.ThrowsAsync<InvalidOperationException>(() => batchPublisher.PublishAsync([new SimpleMessage()], CancellationToken.None));
-        exception.Message.ShouldBe("Error publishing message batch, no publishers registered. Has the bus been started?");
+            // Act and Assert
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => publisher.PublishAsync(new SimpleMessage()));
+            exception.Message.ShouldBe("Error publishing message, no publishers registered. Has the bus been started?");
+        }
     }
 }

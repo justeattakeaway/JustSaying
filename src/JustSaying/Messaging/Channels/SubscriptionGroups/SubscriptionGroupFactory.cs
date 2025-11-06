@@ -1,8 +1,13 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels.Dispatch;
 using JustSaying.Messaging.Channels.Multiplexer;
 using JustSaying.Messaging.Channels.Receive;
+using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Middleware.Receive;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
@@ -10,142 +15,123 @@ using ReceiveMiddleware =
     JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.Receive.ReceiveMessagesContext,
         System.Collections.Generic.IList<Amazon.SQS.Model.Message>>;
 
-namespace JustSaying.Messaging.Channels.SubscriptionGroups;
-
-/// <summary>
-/// Builds <see cref="ISubscriptionGroup"/>'s from the various components required.
-/// </summary>
-internal sealed class SubscriptionGroupFactory : ISubscriptionGroupFactory
+namespace JustSaying.Messaging.Channels.SubscriptionGroups
 {
-    private readonly IMessageDispatcher _messageDispatcher;
-    private readonly IMessageReceivePauseSignal _messageReceivePauseSignal;
-    private readonly IMessageMonitor _monitor;
-    private readonly ILoggerFactory _loggerFactory;
-    private readonly ReceiveMiddleware _defaultSqsMiddleware;
-
     /// <summary>
-    /// Creates an instance of <see cref="SubscriptionGroupFactory"/>.
+    /// Builds <see cref="ISubscriptionGroup"/>'s from the various components required.
     /// </summary>
-    /// <param name="messageDispatcher">The <see cref="IMessageDispatcher"/> to use to dispatch messages.</param>
-    /// <param name="monitor">The <see cref="IMessageMonitor"/> used by the <see cref="IMessageReceiveBuffer"/>.</param>
-    /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> to use.</param>
-    private SubscriptionGroupFactory(
-        IMessageDispatcher messageDispatcher,
-        IMessageMonitor monitor,
-        ILoggerFactory loggerFactory)
+    public class SubscriptionGroupFactory : ISubscriptionGroupFactory
     {
-        _messageDispatcher = messageDispatcher;
-        _monitor = monitor;
-        _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
-        _defaultSqsMiddleware =
-            new DefaultReceiveMessagesMiddleware(_loggerFactory.CreateLogger<DefaultReceiveMessagesMiddleware>());
-    }
+        private readonly IMessageDispatcher _messageDispatcher;
+        private readonly IMessageMonitor _monitor;
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly ReceiveMiddleware _defaultSqsMiddleware;
 
-    /// <summary>
-    /// Creates an instance of <see cref="SubscriptionGroupFactory"/>.
-    /// </summary>
-    /// <param name="messageDispatcher">The <see cref="IMessageDispatcher"/> to use to dispatch messages.</param>
-    /// <param name="messageReceivePauseSignal">The <see cref="IMessageReceivePauseSignal"/> used by the <see cref="IMessageReceiveBuffer"/>.</param>
-    /// <param name="monitor">The <see cref="IMessageMonitor"/> used by the <see cref="IMessageReceiveBuffer"/>.</param>
-    /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> to use.</param>
-    public SubscriptionGroupFactory(
-        IMessageDispatcher messageDispatcher,
-        IMessageReceivePauseSignal messageReceivePauseSignal,
-        IMessageMonitor monitor,
-        ILoggerFactory loggerFactory) : this(messageDispatcher, monitor, loggerFactory)
-    {
-        _messageReceivePauseSignal = messageReceivePauseSignal;
-    }
-
-    /// <summary>
-    /// Creates a <see cref="ISubscriptionGroup"/> for the given configuration.
-    /// </summary>
-    /// <param name="defaults">The default values to use while building each <see cref="SubscriptionGroup"/>.</param>
-    /// <param name="subscriptionGroupSettings"></param>
-    /// <returns>An <see cref="ISubscriptionGroup"/> to run.</returns>
-    public ISubscriptionGroup Create(
-        SubscriptionGroupSettingsBuilder defaults,
-        IDictionary<string, SubscriptionGroupConfigBuilder> subscriptionGroupSettings)
-    {
-        ReceiveMiddleware receiveMiddleware = defaults.SqsMiddleware ?? _defaultSqsMiddleware;
-
-        var groups = subscriptionGroupSettings
-            .Values
-            .Select(builder => Create(receiveMiddleware, builder.Build(defaults)))
-            .ToList();
-
-        return new SubscriptionGroupCollection(
-            groups,
-            _loggerFactory.CreateLogger<SubscriptionGroupCollection>());
-    }
-
-    private ISubscriptionGroup Create(ReceiveMiddleware receiveMiddleware, SubscriptionGroupSettings settings)
-    {
-        var multiplexer = CreateMultiplexer(settings.MultiplexerCapacity);
-        ICollection<IMessageReceiveBuffer> receiveBuffers = CreateBuffers(receiveMiddleware, settings);
-        ICollection<IMultiplexerSubscriber> subscribers = CreateSubscribers(settings);
-
-        foreach (IMessageReceiveBuffer receiveBuffer in receiveBuffers)
+        /// <summary>
+        /// Creates an instance of <see cref="SubscriptionGroupFactory"/>.
+        /// </summary>
+        /// <param name="messageDispatcher">The <see cref="IMessageDispatcher"/> to use to dispatch messages.</param>
+        /// <param name="monitor">The <see cref="IMessageMonitor"/> used by the <see cref="IMessageReceiveBuffer"/>.</param>
+        /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> to use.</param>
+        public SubscriptionGroupFactory(
+            IMessageDispatcher messageDispatcher,
+            IMessageMonitor monitor,
+            ILoggerFactory loggerFactory)
         {
-            multiplexer.ReadFrom(receiveBuffer.Reader);
+            _messageDispatcher = messageDispatcher;
+            _monitor = monitor;
+            _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+            _defaultSqsMiddleware =
+                new DefaultReceiveMessagesMiddleware(_loggerFactory.CreateLogger<DefaultReceiveMessagesMiddleware>());
         }
 
-        foreach (IMultiplexerSubscriber subscriber in subscribers)
+        /// <summary>
+        /// Creates a <see cref="ISubscriptionGroup"/> for the given configuration.
+        /// </summary>
+        /// <param name="defaults">The default values to use while building each <see cref="SubscriptionGroup"/>.</param>
+        /// <param name="subscriptionGroupSettings"></param>
+        /// <returns>An <see cref="ISubscriptionGroup"/> to run.</returns>
+        public ISubscriptionGroup Create(
+            SubscriptionGroupSettingsBuilder defaults,
+            IDictionary<string, SubscriptionGroupConfigBuilder> subscriptionGroupSettings)
         {
-            subscriber.Subscribe(multiplexer.GetMessagesAsync());
+            ReceiveMiddleware receiveMiddleware = defaults.SqsMiddleware ?? _defaultSqsMiddleware;
+
+            List<ISubscriptionGroup> groups = subscriptionGroupSettings
+                .Values
+                .Select(builder => Create(receiveMiddleware, builder.Build(defaults)))
+                .ToList();
+
+            return new SubscriptionGroupCollection(
+                groups,
+                _loggerFactory.CreateLogger<SubscriptionGroupCollection>());
         }
 
-        return new SubscriptionGroup(
-            settings,
-            receiveBuffers,
-            multiplexer,
-            subscribers,
-            _loggerFactory.CreateLogger<SubscriptionGroup>());
-    }
-
-    private List<IMessageReceiveBuffer> CreateBuffers(
-        ReceiveMiddleware receiveMiddleware,
-        SubscriptionGroupSettings subscriptionGroupSettings)
-    {
-        List<IMessageReceiveBuffer> buffers = [];
-
-        var logger = _loggerFactory.CreateLogger<MessageReceiveBuffer>();
-
-        foreach (SqsSource queue in subscriptionGroupSettings.QueueSources)
+        private ISubscriptionGroup Create(ReceiveMiddleware receiveMiddleware, SubscriptionGroupSettings settings)
         {
-            var buffer = new MessageReceiveBuffer(
-                subscriptionGroupSettings.Prefetch,
-                subscriptionGroupSettings.BufferSize,
-                subscriptionGroupSettings.ReceiveBufferReadTimeout,
-                subscriptionGroupSettings.ReceiveMessagesWaitTime,
-                queue,
-                receiveMiddleware,
-                _messageReceivePauseSignal,
-                _monitor,
-                logger);
+            IMultiplexer multiplexer = CreateMultiplexer(settings.MultiplexerCapacity);
+            ICollection<IMessageReceiveBuffer> receiveBuffers = CreateBuffers(receiveMiddleware, settings);
+            ICollection<IMultiplexerSubscriber> subscribers = CreateSubscribers(settings);
 
-            buffers.Add(buffer);
+            foreach (IMessageReceiveBuffer receiveBuffer in receiveBuffers)
+            {
+                multiplexer.ReadFrom(receiveBuffer.Reader);
+            }
+
+            foreach (IMultiplexerSubscriber subscriber in subscribers)
+            {
+                subscriber.Subscribe(multiplexer.GetMessagesAsync());
+            }
+
+            return new SubscriptionGroup(
+                settings,
+                receiveBuffers,
+                multiplexer,
+                subscribers,
+                _loggerFactory.CreateLogger<SubscriptionGroup>());
         }
 
-        return buffers;
-    }
+        private ICollection<IMessageReceiveBuffer> CreateBuffers(
+            ReceiveMiddleware receiveMiddleware,
+            SubscriptionGroupSettings subscriptionGroupSettings)
+        {
+            var buffers = new List<IMessageReceiveBuffer>();
 
-    private MergingMultiplexer CreateMultiplexer(int channelCapacity)
-    {
-        return new MergingMultiplexer(
-            channelCapacity,
-            _loggerFactory.CreateLogger<MergingMultiplexer>());
-    }
+            foreach (ISqsQueue queue in subscriptionGroupSettings.Queues)
+            {
+                var buffer = new MessageReceiveBuffer(
+                    subscriptionGroupSettings.Prefetch,
+                    subscriptionGroupSettings.BufferSize,
+                    subscriptionGroupSettings.ReceiveBufferReadTimeout,
+                    subscriptionGroupSettings.ReceiveMessagesWaitTime,
+                    queue,
+                    receiveMiddleware,
+                    _monitor,
+                    _loggerFactory.CreateLogger<MessageReceiveBuffer>());
 
-    private List<IMultiplexerSubscriber> CreateSubscribers(SubscriptionGroupSettings settings)
-    {
-        var logger = _loggerFactory.CreateLogger<MultiplexerSubscriber>();
+                buffers.Add(buffer);
+            }
 
-        return Enumerable.Range(0, settings.ConcurrencyLimit)
-            .Select(index => (IMultiplexerSubscriber) new MultiplexerSubscriber(
-                _messageDispatcher,
-                $"{settings.Name}-subscriber-{index}",
-                logger))
-            .ToList();
+            return buffers;
+        }
+
+        private IMultiplexer CreateMultiplexer(int channelCapacity)
+        {
+            return new MergingMultiplexer(
+                channelCapacity,
+                _loggerFactory.CreateLogger<MergingMultiplexer>());
+        }
+
+        private ICollection<IMultiplexerSubscriber> CreateSubscribers(SubscriptionGroupSettings settings)
+        {
+            var logger = _loggerFactory.CreateLogger<MultiplexerSubscriber>();
+
+            return Enumerable.Range(0, settings.ConcurrencyLimit)
+                .Select(index => (IMultiplexerSubscriber) new MultiplexerSubscriber(
+                    _messageDispatcher,
+                    $"{settings.Name}-subscriber-{index}",
+                    logger))
+                .ToList();
+        }
     }
 }

@@ -1,12 +1,22 @@
-using System.Collections.Concurrent;
 using JustSaying.Models;
 using Newtonsoft.Json;
 
-namespace JustSaying.Messaging.MessageSerialization;
-
-public sealed class NewtonsoftSerializationFactory(JsonSerializerSettings settings = null) : IMessageBodySerializationFactory
+namespace JustSaying.Messaging.MessageSerialization
 {
-    private readonly ConcurrentDictionary<Type, IMessageBodySerializer> _cache = new();
+    public class NewtonsoftSerializationFactory : IMessageSerializationFactory
+    {
+        private readonly NewtonsoftSerializer _serializer;
 
-    public IMessageBodySerializer GetSerializer<T>() where T : Message => _cache.GetOrAdd(typeof(T), _ => new NewtonsoftMessageBodySerializer<T>(settings));
+        public NewtonsoftSerializationFactory()
+            : this(null)
+        {
+        }
+
+        public NewtonsoftSerializationFactory(JsonSerializerSettings settings)
+        {
+            _serializer = new NewtonsoftSerializer(settings);
+        }
+
+        public IMessageSerializer GetSerializer<T>() where T : Message => _serializer;
+    }
 }

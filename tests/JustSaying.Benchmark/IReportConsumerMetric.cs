@@ -1,9 +1,13 @@
-namespace JustSaying.Benchmark;
+using System;
+using System.Threading.Tasks;
 
-public interface IReportConsumerMetric
+namespace JustSaying.Benchmark
 {
-    Task Consumed<T>(Guid messageId)
-        where T : class;
+    public interface IReportConsumerMetric
+    {
+        Task Consumed<T>(Guid messageId)
+            where T : class;
 
-    Task Sent(Guid messageId, Task sendTask);
+        Task Sent(Guid messageId, Task sendTask);
+    }
 }

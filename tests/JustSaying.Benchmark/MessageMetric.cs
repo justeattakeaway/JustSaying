@@ -1,8 +1,18 @@
-namespace JustSaying.Benchmark;
+using System;
 
-public class MessageMetric(Guid messageId, long ackLatency, long consumeLatency)
+namespace JustSaying.Benchmark
 {
-    public Guid MessageId { get; } = messageId;
-    public long AckLatency { get; set; } = ackLatency;
-    public long ConsumeLatency { get; set; } = consumeLatency;
+    public class MessageMetric
+    {
+        public MessageMetric(Guid messageId, long ackLatency, long consumeLatency)
+        {
+            MessageId = messageId;
+            AckLatency = ackLatency;
+            ConsumeLatency = consumeLatency;
+        }
+
+        public Guid MessageId { get; }
+        public long AckLatency { get; set; }
+        public long ConsumeLatency { get; set; }
+    }
 }

@@ -1,95 +1,115 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Amazon.SQS;
 using Amazon.SQS.Model;
-using JustSaying.Messaging;
-using JustSaying.Messaging.Channels.SubscriptionGroups;
-using JustSaying.Messaging.Compression;
-using JustSaying.Messaging.MessageSerialization;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 using Newtonsoft.Json;
+using NSubstitute;
+using Shouldly;
+using Xunit;
+using Xunit.Abstractions;
+using Message = Amazon.SQS.Model.Message;
 
-namespace JustSaying.UnitTests.JustSayingBus;
-
-public sealed class WhenRegisteringSubscribers(ITestOutputHelper outputHelper) : GivenAServiceBus(outputHelper), IDisposable
+namespace JustSaying.UnitTests.JustSayingBus
 {
-    private FakeSqsQueue _queue1;
-    private FakeSqsQueue _queue2;
-    private CancellationTokenSource _cts;
-
-    protected override void Given()
+    public sealed class WhenRegisteringSubscribers : GivenAServiceBus, IDisposable
     {
-        base.Given();
+        private ISqsQueue _queue1;
+        private ISqsQueue _queue2;
+        private FakeAmazonSqs _client1;
+        private FakeAmazonSqs _client2;
+        private CancellationTokenSource _cts;
 
-        static IEnumerable<Message> GetMessages(CancellationToken cancellationToken)
+        protected override void Given()
         {
-            while (!cancellationToken.IsCancellationRequested)
+            base.Given();
+
+            _client1 = CreateSubstituteClient();
+            _client2 = CreateSubstituteClient();
+
+            _queue1 = Substitute.For<ISqsQueue>();
+            _queue1.QueueName.Returns("queue1");
+            _queue1.Uri.Returns(new Uri("http://test.com"));
+
+            _queue1.Client.Returns(_client1);
+
+            _queue2 = Substitute.For<ISqsQueue>();
+            _queue2.QueueName.Returns("queue2");
+            _queue2.Uri.Returns(new Uri("http://test.com"));
+            _queue2.Client.Returns(_client2);
+        }
+
+        protected override async Task WhenAsync()
+        {
+            SystemUnderTest.AddMessageMiddleware<OrderAccepted>(_queue1.QueueName,
+                new InspectableMiddleware<OrderAccepted>());
+            SystemUnderTest.AddMessageMiddleware<OrderRejected>(_queue1.QueueName,
+                new InspectableMiddleware<OrderRejected>());
+            SystemUnderTest.AddMessageMiddleware<SimpleMessage>(_queue1.QueueName,
+                new InspectableMiddleware<SimpleMessage>());
+
+            SystemUnderTest.AddQueue("groupA", _queue1);
+            SystemUnderTest.AddQueue("groupB", _queue2);
+
+            _cts = new CancellationTokenSource();
+            _cts.CancelAfter(TimeSpan.FromSeconds(5));
+
+            await SystemUnderTest.StartAsync(_cts.Token);
+        }
+
+        [Fact]
+        public async Task SubscribersStartedUp()
+        {
+            await Patiently.AssertThatAsync(OutputHelper,
+                () =>
+                {
+                    _client1.ReceiveMessageRequests.Count.ShouldBeGreaterThan(0);
+                    _client2.ReceiveMessageRequests.Count.ShouldBeGreaterThan(0);
+                });
+        }
+
+        [Fact]
+        public void AndInterrogationShowsSubscribersHaveBeenSet()
+        {
+            dynamic response = SystemUnderTest.Interrogate();
+
+            string json = JsonConvert.SerializeObject(response.Data.Middleware.Data.Middlewares, Formatting.Indented);
+
+            json.ShouldMatchApproved(c => c.SubFolder("Approvals"));
+        }
+
+        private static FakeAmazonSqs CreateSubstituteClient()
+        {
+            return new FakeAmazonSqs(() =>
+                new ReceiveMessageResponse()
+                {
+                    Messages = new List<Message>()
+                    {
+                        new TestMessage()
+                    }
+                }.Infinite());
+        }
+
+        private class TestMessage : Message
+        {
+            public TestMessage()
             {
-                yield return new TestMessage();
+                Body = "TestMesage";
             }
         }
 
-        _queue1 = new FakeSqsQueue(ct =>Task.FromResult(GetMessages(ct)), "queue1");
-        _queue2 = new FakeSqsQueue(ct => Task.FromResult(GetMessages(ct)), "queue2");
-    }
-
-    protected override async Task WhenAsync()
-    {
-        SystemUnderTest.AddMessageMiddleware<OrderAccepted>(_queue1.QueueName,
-            new InspectableMiddleware<OrderAccepted>());
-        SystemUnderTest.AddMessageMiddleware<OrderRejected>(_queue1.QueueName,
-            new InspectableMiddleware<OrderRejected>());
-        SystemUnderTest.AddMessageMiddleware<SimpleMessage>(_queue1.QueueName,
-            new InspectableMiddleware<SimpleMessage>());
-
-        var messageConverter1 = new InboundMessageConverter(new SystemTextJsonMessageBodySerializer<OrderAccepted>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions), new MessageCompressionRegistry(), false);
-        var messageConverter2 = new InboundMessageConverter(new SystemTextJsonMessageBodySerializer<OrderRejected>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions), new MessageCompressionRegistry(), false);
-        SystemUnderTest.AddQueue("groupA", new SqsSource
+        public void Dispose()
         {
-            SqsQueue = _queue1,
-            MessageConverter = messageConverter1
-        });
-        SystemUnderTest.AddQueue("groupB", new SqsSource
-        {
-            SqsQueue = _queue2,
-            MessageConverter = messageConverter2
-        });
-
-        _cts = new CancellationTokenSource();
-        _cts.CancelAfter(TimeSpan.FromSeconds(5));
-
-        await SystemUnderTest.StartAsync(_cts.Token);
-    }
-
-    [Fact]
-    public async Task SubscribersStartedUp()
-    {
-        await Patiently.AssertThatAsync(OutputHelper,
-            () =>
-            {
-                _queue1.ReceiveMessageRequests.Count.ShouldBeGreaterThan(0);
-                _queue2.ReceiveMessageRequests.Count.ShouldBeGreaterThan(0);
-            });
-    }
-
-    [Fact]
-    public void AndInterrogationShowsSubscribersHaveBeenSet()
-    {
-        dynamic response = SystemUnderTest.Interrogate();
-
-        string json = JsonConvert.SerializeObject(response.Data.Middleware.Data.Middlewares, Formatting.Indented);
-
-        json.ShouldMatchApproved(c => c.SubFolder("Approvals"));
-    }
-
-    private class TestMessage : Message
-    {
-        public TestMessage()
-        {
-            Body = "TestMessage";
+            _client1?.Dispose();
+            _client2?.Dispose();
+            _cts?.Dispose();
         }
-    }
 
-    public void Dispose()
-    {
-        _cts?.Dispose();
+        public WhenRegisteringSubscribers(ITestOutputHelper outputHelper) : base(outputHelper)
+        { }
     }
 }

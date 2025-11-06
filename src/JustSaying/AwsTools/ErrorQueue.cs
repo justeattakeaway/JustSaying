@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using System.Net;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
@@ -8,50 +11,53 @@ using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Extensions;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.AwsTools;
-
-[Obsolete("SqsQueueBase and related classes are not intended for general usage and may be removed in a future major release")]
-public class ErrorQueue(
-    RegionEndpoint region,
-    string sourceQueueName,
-    IAmazonSQS client,
-    ILoggerFactory loggerFactory) : SqsQueueByNameBase(region, sourceQueueName + "_error", client, loggerFactory)
+namespace JustSaying.AwsTools
 {
-    protected override Dictionary<string, string> GetCreateQueueAttributes(SqsBasicConfiguration queueConfig)
+    [Obsolete("SqsQueueBase and related classes are not intended for general usage and may be removed in a future major release")]
+    public class ErrorQueue : SqsQueueByNameBase
     {
-        return new Dictionary<string, string>
+        public ErrorQueue(RegionEndpoint region, string sourceQueueName, IAmazonSQS client, ILoggerFactory loggerFactory)
+            : base(region, sourceQueueName + "_error", client, loggerFactory)
         {
-            { SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD, queueConfig.ErrorQueueRetentionPeriod.AsSecondsString() },
-            { SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT, JustSayingConstants.DefaultVisibilityTimeout.AsSecondsString() },
-        };
-    }
-
-    public override async Task UpdateQueueAttributeAsync(SqsBasicConfiguration queueConfig, CancellationToken cancellationToken)
-    {
-        if (!QueueNeedsUpdating(queueConfig))
-        {
-            return;
+            ErrorQueue = null;
         }
 
-        var request = new SetQueueAttributesRequest
+        protected override Dictionary<string, string> GetCreateQueueAttributes(SqsBasicConfiguration queueConfig)
         {
-            QueueUrl = Uri.AbsoluteUri,
-            Attributes = new Dictionary<string, string>
+            return new Dictionary<string, string>
             {
-                {
-                    JustSayingConstants.AttributeRetentionPeriod, queueConfig.ErrorQueueRetentionPeriod.AsSecondsString()
-                }
-            }
-        };
-
-        var response = await Client.SetQueueAttributesAsync(request, cancellationToken).ConfigureAwait(false);
-
-        if (response.HttpStatusCode == HttpStatusCode.OK)
-        {
-            MessageRetentionPeriod = queueConfig.ErrorQueueRetentionPeriod;
+                { SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD, queueConfig.ErrorQueueRetentionPeriod.AsSecondsString() },
+                { SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT, JustSayingConstants.DefaultVisibilityTimeout.AsSecondsString() },
+            };
         }
-    }
 
-    protected override bool QueueNeedsUpdating(SqsBasicConfiguration queueConfig)
-        => MessageRetentionPeriod != queueConfig.ErrorQueueRetentionPeriod;
+        public override async Task UpdateQueueAttributeAsync(SqsBasicConfiguration queueConfig)
+        {
+            if (!QueueNeedsUpdating(queueConfig))
+            {
+                return;
+            }
+
+            var request = new SetQueueAttributesRequest
+            {
+                QueueUrl = Uri.AbsoluteUri,
+                Attributes = new Dictionary<string, string>
+                {
+                    {
+                        JustSayingConstants.AttributeRetentionPeriod, queueConfig.ErrorQueueRetentionPeriod.AsSecondsString()
+                    }
+                }
+            };
+
+            var response = await Client.SetQueueAttributesAsync(request).ConfigureAwait(false);
+
+            if (response.HttpStatusCode == HttpStatusCode.OK)
+            {
+                MessageRetentionPeriod = queueConfig.ErrorQueueRetentionPeriod;
+            }
+        }
+
+        protected override bool QueueNeedsUpdating(SqsBasicConfiguration queueConfig)
+            => MessageRetentionPeriod != queueConfig.ErrorQueueRetentionPeriod;
+    }
 }

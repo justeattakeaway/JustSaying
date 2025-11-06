@@ -1,79 +1,63 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using JustSaying.Fluent;
 using JustSaying.Messaging.Middleware;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.Fakes;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Shouldly;
+using Xunit;
+using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Middleware;
-
-public class HandlerMiddlewareBuilderTests
+namespace JustSaying.UnitTests.Messaging.Middleware
 {
-    private readonly InMemoryServiceResolver _resolver;
-
-    public HandlerMiddlewareBuilderTests()
+    public class HandlerMiddlewareBuilderTests
     {
-        _resolver = new InMemoryServiceResolver();
-    }
+        private readonly FakeServiceResolver _resolver;
 
-    [Fact]
-    public async Task ThreeMiddlewares_ShouldExecuteInCorrectOrder()
-    {
-        var callRecord = new List<string>();
+        public HandlerMiddlewareBuilderTests()
+        {
+            _resolver = new FakeServiceResolver();
+        }
 
-        void Before(string id) => callRecord.Add($"Before_{id}");
-        void After(string id) => callRecord.Add($"After_{id}");
+        [Fact]
+        public async Task ThreeMiddlewares_ShouldExecuteInCorrectOrder()
+        {
+            var callRecord = new List<string>();
 
-        var outer = new TrackingMiddleware("outer", Before, After);
-        var middle = new TrackingMiddleware("middle", Before, After);
-        var inner = new TrackingMiddleware("inner", Before, After);
+            void Before(string id) => callRecord.Add($"Before_{id}");
+            void After(string id) => callRecord.Add($"After_{id}");
 
-        var middleware = new HandlerMiddlewareBuilder(_resolver, _resolver)
-            .Configure(pipe =>
-            {
-                pipe.Use(outer);
-                pipe.Use(middle);
-                pipe.Use(inner);
-            }).Build();
+            var outer = new TrackingMiddleware("outer", Before, After);
+            var middle = new TrackingMiddleware("middle", Before, After);
+            var inner = new TrackingMiddleware("inner", Before, After);
 
-        var context = TestHandleContexts.From<SimpleMessage>();
+            var middleware = new HandlerMiddlewareBuilder(_resolver, _resolver)
+                .Configure(pipe =>
+                {
+                    pipe.Use(outer);
+                    pipe.Use(middle);
+                    pipe.Use(inner);
+                }).Build();
 
-        await middleware.RunAsync(context,
-            ct =>
-            {
-                callRecord.Add("HandledMessage");
-                return Task.FromResult(true);
-            },
-            CancellationToken.None);
+            var context = new HandleMessageContext(new SimpleMessage(),
+                typeof(SimpleMessage),
+                "a-fake-queue");
 
-        var record = string.Join(Environment.NewLine, callRecord);
+            await middleware.RunAsync(context,
+                ct =>
+                {
+                    callRecord.Add("HandledMessage");
+                    return Task.FromResult(true);
+                },
+                CancellationToken.None);
 
-        record.ShouldMatchApproved(c => c.SubFolder("Approvals"));
-    }
+            var record = string.Join(Environment.NewLine, callRecord);
 
-    [Fact]
-    public async Task MiddlewareBuilder_WithoutDefaults_ShouldExecute()
-    {
-        var callRecord = new List<string>();
-
-        void Before(string id) => callRecord.Add($"Before_{id}");
-        void After(string id) => callRecord.Add($"After_{id}");
-
-        var outer = new TrackingMiddleware("outer", Before, After);
-        var inner = new TrackingMiddleware("inner", Before, After);
-
-        var handler = new InspectableHandler<SimpleMessage>();
-
-        var middlewareBuilder = new HandlerMiddlewareBuilder(_resolver, _resolver)
-            .Configure(hmb =>
-                hmb.Use(outer)
-                    .Use(inner)
-                    .UseHandler(ctx => handler));
-
-        var handlerMiddleware = middlewareBuilder.Build();
-
-        var context = TestHandleContexts.From<SimpleMessage>();
-
-        await handlerMiddleware.RunAsync(context, null, CancellationToken.None);
-
-        callRecord.ShouldBe(new[] { "Before_outer", "Before_inner", "After_inner", "After_outer" });
-        handler.ReceivedMessages.ShouldHaveSingleItem();
+            record.ShouldMatchApproved(c => c.SubFolder("Approvals"));
+        }
     }
 }

@@ -1,33 +1,43 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using JustSaying.Messaging;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
 using NSubstitute;
+using Shouldly;
+using Xunit;
+using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.JustSayingBus;
-
-public class WhenPublishingMessages(ITestOutputHelper outputHelper) : GivenAServiceBus(outputHelper)
+namespace JustSaying.UnitTests.JustSayingBus
 {
-    private readonly IMessagePublisher _publisher = Substitute.For<IMessagePublisher>();
-
-    protected override async Task WhenAsync()
+    public class WhenPublishingMessages : GivenAServiceBus
     {
-        SystemUnderTest.AddMessagePublisher<SimpleMessage>(_publisher);
+        private readonly IMessagePublisher _publisher = Substitute.For<IMessagePublisher>();
 
-        var cts = new CancellationTokenSource(TimeoutPeriod);
-        await SystemUnderTest.StartAsync(cts.Token);
+        protected override async Task WhenAsync()
+        {
+            SystemUnderTest.AddMessagePublisher<SimpleMessage>(_publisher);
 
-        await SystemUnderTest.PublishAsync(new SimpleMessage());
-    }
+            var cts = new CancellationTokenSource(TimeoutPeriod);
+            await SystemUnderTest.StartAsync(cts.Token);
 
-    [Fact]
-    public void PublisherIsCalledToPublish()
-    {
-        _publisher.Received().PublishAsync(Arg.Any<Message>(),
-            Arg.Any<PublishMetadata>(), Arg.Any<CancellationToken>());
-    }
-    [Fact]
-    public void PublishMessageTimeStatsSent()
-    {
-        Monitor.PublishMessageTimes.ShouldHaveSingleItem();
+            await SystemUnderTest.PublishAsync(new SimpleMessage());
+        }
+
+        [Fact]
+        public void PublisherIsCalledToPublish()
+        {
+            _publisher.Received().PublishAsync(Arg.Any<Message>(),
+                Arg.Any<PublishMetadata>(), Arg.Any<CancellationToken>());
+        }
+        [Fact]
+        public void PublishMessageTimeStatsSent()
+        {
+            Monitor.Received(1).PublishMessageTime(Arg.Any<TimeSpan>());
+        }
+
+        public WhenPublishingMessages(ITestOutputHelper outputHelper) : base(outputHelper)
+        { }
     }
 }

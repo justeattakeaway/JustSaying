@@ -1,68 +1,75 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Amazon.SQS;
 using Amazon.SQS.Model;
-using JustSaying.Messaging;
+using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.Channels.Receive;
-using JustSaying.Messaging.Channels.SubscriptionGroups;
-using JustSaying.Messaging.Compression;
-using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Middleware.Receive;
+using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
-using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 using Microsoft.Extensions.Logging;
+using NSubstitute;
+using Shouldly;
+using Xunit;
+using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests;
-
-public class WhenThereAreNoSubscribers
+namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
 {
-    protected class TestMessage : Message
-    { }
-
-    private int _callCount;
-    private readonly MessageReceiveBuffer _messageReceiveBuffer;
-    private readonly ITestOutputHelper _outputHelper;
-
-    public WhenThereAreNoSubscribers(ITestOutputHelper testOutputHelper)
+    public class WhenThereAreNoSubscribers
     {
-        _outputHelper = testOutputHelper;
-        var loggerFactory = testOutputHelper.ToLoggerFactory();
+        protected class TestMessage : Message
+        { }
 
-        MiddlewareBase<ReceiveMessagesContext, IList<Message>> sqsMiddleware =
-            new DelegateMiddleware<ReceiveMessagesContext, IList<Message>>();
+        private int _callCount;
+        private readonly MessageReceiveBuffer _messageReceiveBuffer;
+        private readonly ITestOutputHelper _outputHelper;
 
-        var messages = new List<Message> { new TestMessage() };
-        var queue = new SqsSource
+        public WhenThereAreNoSubscribers(ITestOutputHelper testOutputHelper)
         {
-            SqsQueue = new FakeSqsQueue(ct =>
-            {
-                Interlocked.Increment(ref _callCount);
-                return Task.FromResult(messages.AsEnumerable());
-            }),
-            MessageConverter = new InboundMessageConverter(SimpleMessage.Serializer, new MessageCompressionRegistry(), false)
-        };
+            _outputHelper = testOutputHelper;
+            var loggerFactory = testOutputHelper.ToLoggerFactory();
 
-        var monitor = new TrackingLoggingMonitor(
-            loggerFactory.CreateLogger<TrackingLoggingMonitor>());
+            MiddlewareBase<ReceiveMessagesContext, IList<Message>> sqsMiddleware =
+                new DelegateMiddleware<ReceiveMessagesContext, IList<Message>>();
+            var sqsClient = Substitute.For<IAmazonSQS>();
+            var queue = Substitute.For<ISqsQueue>();
+            queue.Uri.Returns(new Uri("http://test.com"));
+            queue.Client.Returns(sqsClient);
+            var monitor = new TestingFramework.TrackingLoggingMonitor(
+                loggerFactory.CreateLogger<TrackingLoggingMonitor>());
 
-        _messageReceiveBuffer = new MessageReceiveBuffer(
-            10,
-            10,
-            TimeSpan.FromSeconds(1),
-            TimeSpan.FromSeconds(1),
-            queue,
-            sqsMiddleware,
-            null,
-            monitor,
-            loggerFactory.CreateLogger<IMessageReceiveBuffer>());
-    }
+            sqsClient.ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>())
+                .Returns(_ =>
+                {
+                    Interlocked.Increment(ref _callCount);
+                    var messages = new List<Message> { new TestMessage() };
+                    return new ReceiveMessageResponse { Messages = messages };
+                });
 
-    [Fact]
-    public async Task Buffer_Is_Filled()
-    {
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
-        _ = _messageReceiveBuffer.RunAsync(cts.Token);
+            _messageReceiveBuffer = new MessageReceiveBuffer(
+                10,
+                10,
+                TimeSpan.FromSeconds(1),
+                TimeSpan.FromSeconds(1),
+                queue,
+                sqsMiddleware,
+                monitor,
+                loggerFactory.CreateLogger<IMessageReceiveBuffer>());
+        }
 
-        await Patiently.AssertThatAsync(_outputHelper, () => _callCount > 0);
+        [Fact]
+        public async Task Buffer_Is_Filled()
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+            var _ = _messageReceiveBuffer.RunAsync(cts.Token);
 
-        _callCount.ShouldBeGreaterThan(0);
+            await Patiently.AssertThatAsync(_outputHelper, () => _callCount > 0);
+
+            _callCount.ShouldBeGreaterThan(0);
+        }
     }
 }

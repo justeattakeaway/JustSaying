@@ -1,34 +1,45 @@
+using System;
+using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using Microsoft.Extensions.Logging;
-
+using Shouldly;
+using Xunit.Abstractions;
 #pragma warning disable 618
 
-namespace JustSaying.IntegrationTests.Fluent.AwsTools;
-
-public class WhenRemovingSnsServerSideEncryption(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+namespace JustSaying.IntegrationTests.Fluent.AwsTools
 {
-    [NotSimulatorFact]
-    public async Task Can_Remove_Encryption()
+    public class WhenRemovingSnsServerSideEncryption : IntegrationTestBase
     {
-        // Arrange
-        ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
-        IAwsClientFactory clientFactory = CreateClientFactory();
+        public WhenRemovingSnsServerSideEncryption(ITestOutputHelper outputHelper)
+            : base(outputHelper)
+        {
+        }
 
-        var client = clientFactory.GetSnsClient(Region);
+        [NotSimulatorFact]
+        public async Task Can_Remove_Encryption()
+        {
+            // Arrange
+            ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
+            IAwsClientFactory clientFactory = CreateClientFactory();
 
-        var topic = new SnsTopicByName(
-            UniqueName,
-            client,
-            loggerFactory);
+            var client = clientFactory.GetSnsClient(Region);
 
-        await topic.CreateWithEncryptionAsync(new ServerSideEncryption { KmsMasterKeyId = JustSayingConstants.DefaultSnsAttributeEncryptionKeyId }, CancellationToken.None);
+            var topic = new SnsTopicByName(
+                UniqueName,
+                client,
+                null,
+                loggerFactory,
+                null);
 
-        // Act
-        await topic.CreateWithEncryptionAsync(new ServerSideEncryption { KmsMasterKeyId = string.Empty }, CancellationToken.None);
+            await topic.CreateWithEncryptionAsync(new ServerSideEncryption { KmsMasterKeyId = JustSayingConstants.DefaultSnsAttributeEncryptionKeyId });
 
-        // Assert
-        topic.ServerSideEncryption.ShouldBeNull();
+            // Act
+            await topic.CreateWithEncryptionAsync(new ServerSideEncryption { KmsMasterKeyId = String.Empty });
+
+            // Assert
+            topic.ServerSideEncryption.ShouldBeNull();
+        }
     }
 }

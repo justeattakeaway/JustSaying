@@ -1,62 +1,67 @@
-using System.Diagnostics.CodeAnalysis;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using Amazon.SQS;
 using Amazon.SQS.Model;
-using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.TestingFramework;
+using NSubstitute;
+using Shouldly;
+using Xunit;
+using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
-
-public class WhenMessageHandlingSucceeds : BaseSubscriptionGroupTests
+namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
-    [StringSyntax(StringSyntaxAttribute.Json)]
-    private const string MessageBody = """
-                                       {
-                                         "Subject": "TestMessage",
-                                         "Message": "Expected Message Body"
-                                       }
-                                       """;
-    private FakeSqsQueue _queue;
-
-    public WhenMessageHandlingSucceeds(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
+    public class WhenMessageHandlingSucceeds : BaseSubscriptionGroupTests
     {
-        MessagesToWaitFor = 10;
-    }
+        private FakeAmazonSqs _sqsClient;
+        private string _messageBody = "Expected Message Body";
 
-    protected override void Given()
-    {
-        var sqsSource = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), new TestMessage { Body = MessageBody });
-        _queue = sqsSource.SqsQueue as FakeSqsQueue;
-        _queue!.MaxNumberOfMessagesToReceive = MessagesToWaitFor;
+        public WhenMessageHandlingSucceeds(ITestOutputHelper testOutputHelper)
+            : base(testOutputHelper)
+        { }
 
-        Queues.Add(sqsSource);
-    }
+        protected override void Given()
+        {
+            var queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(),
+                () => new List<Message> { new TestMessage { Body = _messageBody } });
+            _sqsClient = queue.FakeClient;
 
-    [Fact]
-    public void ProcessingIsPassedToTheHandlerForCorrectMessage()
-    {
-        Handler.ReceivedMessages.ShouldContain(SetupMessage);
-    }
+            Queues.Add(queue);
+        }
 
-    [Fact]
-    public async Task AllMessagesAreClearedFromQueue()
-    {
-        await _queue.ReceivedAllMessages.WaitAsync(TimeSpan.FromSeconds(5));
-        await CompletionMiddleware.Complete.WaitAsync(TimeSpan.FromSeconds(5));
+        [Fact]
+        public void MessagesGetDeserializedByCorrectHandler()
+        {
+            SerializationRegister.ReceivedDeserializationRequests.ShouldAllBe(
+                msg => msg == _messageBody);
+        }
 
-        await Patiently.AssertThatAsync(OutputHelper, () => _queue.DeleteMessageRequests.Count.ShouldBe(Handler.ReceivedMessages.Count));
-    }
+        [Fact]
+        public void ProcessingIsPassedToTheHandlerForCorrectMessage()
+        {
+            Handler.ReceivedMessages.ShouldContain(SerializationRegister.DefaultDeserializedMessage());
+        }
 
-    [Fact]
-    public void ReceiveMessageTimeStatsSent()
-    {
-        var numberOfMessagesHandled = Handler.ReceivedMessages.Count;
+        [Fact]
+        public void AllMessagesAreClearedFromQueue()
+        {
+            var numberOfMessagesHandled = Handler.ReceivedMessages.Count;
+            _sqsClient.DeleteMessageRequests.Count.ShouldBe(numberOfMessagesHandled);
+        }
 
-        // The receive buffer might receive messages that aren't handled before shutdown
-        Monitor.ReceiveMessageTimes.Count.ShouldBeGreaterThanOrEqualTo(numberOfMessagesHandled);
-    }
+        [Fact]
+        public void ReceiveMessageTimeStatsSent()
+        {
+            var numberOfMessagesHandled = Handler.ReceivedMessages.Count;
 
-    [Fact]
-    public void ExceptionIsNotLoggedToMonitor()
-    {
-        Monitor.HandledExceptions.ShouldBeEmpty();
+            // The receive buffer might receive messages that aren't handled before shutdown
+            Monitor.ReceiveMessageTimes.Count.ShouldBeGreaterThanOrEqualTo(numberOfMessagesHandled);
+        }
+
+        [Fact]
+        public void ExceptionIsNotLoggedToMonitor()
+        {
+            Monitor.HandledExceptions.ShouldBeEmpty();
+        }
     }
 }

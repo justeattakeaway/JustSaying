@@ -1,61 +1,67 @@
+using System;
+using System.Threading.Tasks;
 using Amazon.SimpleNotificationService.Model;
-using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
-using JustSaying.Messaging.Compression;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
-using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
-using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
+using Xunit;
+#pragma warning disable 618
 
-namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName;
-
-public class WhenPublishingAsyncWithGenericMessageSubjectProvider : WhenPublishingTestBase
+namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 {
-    public class MessageWithTypeParameters<TA, TB> : Message;
-
-    private const string Message = "the_message_in_json";
-    private const string TopicArn = "topicarn";
-
-    private protected override Task<SnsMessagePublisher> CreateSystemUnderTestAsync()
+    public class WhenPublishingAsyncWithGenericMessageSubjectProvider : WhenPublishingTestBase
     {
-        var subject = new GenericMessageSubjectProvider().GetSubjectForType(typeof(MessageWithTypeParameters<int, string>));
-        var messageConverter = CreateConverter(new FakeBodySerializer(Message), subject);
-        var topic = new SnsMessagePublisher(TopicArn, Sns, messageConverter, NullLoggerFactory.Instance, null, null);
-        return Task.FromResult(topic);
-    }
+        public class MessageWithTypeParameters<TA, TB> : Message
+        {
+        }
 
-    protected override void Given()
-    {
-        Sns.FindTopicAsync("TopicName")
-            .Returns(new Topic { TopicArn = TopicArn });
-    }
+        private const string Message = "the_message_in_json";
+        private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
+        private const string TopicArn = "topicarn";
 
-    protected override async Task WhenAsync()
-    {
-        await SystemUnderTest.PublishAsync(new MessageWithTypeParameters<int, string>());
-    }
+        private protected override async Task<SnsTopicByName> CreateSystemUnderTestAsync()
+        {
+            var topic = new SnsTopicByName("TopicName", Sns, _serializationRegister, Substitute.For<ILoggerFactory>(), new GenericMessageSubjectProvider());
+            await topic.ExistsAsync();
+            return topic;
+        }
 
-    [Fact]
-    public void MessageIsPublishedToSnsTopic()
-    {
-        Sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => B(x)));
-    }
+        protected override void Given()
+        {
+            _serializationRegister.Serialize(Arg.Any<Message>(), Arg.Is(true)).Returns(Message);
+            Sns.FindTopicAsync("TopicName")
+                .Returns(new Topic { TopicArn = TopicArn });
+        }
 
-    private static bool B(PublishRequest x)
-    {
-        return x.Message.Equals(Message, StringComparison.Ordinal);
-    }
+        protected override async Task WhenAsync()
+        {
+            await SystemUnderTest.PublishAsync(new MessageWithTypeParameters<int, string>());
+        }
 
-    [Fact]
-    public void MessageSubjectIsObjectType()
-    {
-        Sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.Subject == new GenericMessageSubjectProvider().GetSubjectForType(typeof(MessageWithTypeParameters<int, string>))));
-    }
+        [Fact]
+        public void MessageIsPublishedToSnsTopic()
+        {
+            Sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => B(x)));
+        }
 
-    [Fact]
-    public void MessageIsPublishedToCorrectLocation()
-    {
-        Sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.TopicArn == TopicArn));
+        private static bool B(PublishRequest x)
+        {
+            return x.Message.Equals(Message, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        public void MessageSubjectIsObjectType()
+        {
+            Sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.Subject == new GenericMessageSubjectProvider().GetSubjectForType(typeof(MessageWithTypeParameters<int, string>))));
+        }
+
+        [Fact]
+        public void MessageIsPublishedToCorrectLocation()
+        {
+            Sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.TopicArn == TopicArn));
+        }
     }
 }

@@ -1,22 +1,25 @@
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 
-namespace JustSaying.TestingFramework;
-
-public static class SnsClientExtensions
+namespace JustSaying.TestingFramework
 {
-    public static async Task<List<Topic>> GetAllTopics(this IAmazonSimpleNotificationService client)
+    public static class SnsClientExtensions
     {
-        var topics = new List<Topic>();
-        string nextToken = null;
-
-        do
+        public static async Task<List<Topic>> GetAllTopics(this IAmazonSimpleNotificationService client)
         {
-            var topicsResponse = await client.ListTopicsAsync(nextToken).ConfigureAwait(false);
-            nextToken = topicsResponse.NextToken;
-            topics.AddRange(topicsResponse.Topics);
-        } while (nextToken != null);
+            var topics = new List<Topic>();
+            string nextToken = null;
 
-        return topics;
+            do
+            {
+                var topicsResponse = await client.ListTopicsAsync(nextToken).ConfigureAwait(false);
+                nextToken = topicsResponse.NextToken;
+                topics.AddRange(topicsResponse.Topics);
+            } while (nextToken != null);
+
+            return topics;
+        }
     }
 }

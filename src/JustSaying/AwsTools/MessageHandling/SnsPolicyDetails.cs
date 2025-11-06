@@ -1,7 +1,10 @@
-﻿namespace JustSaying.AwsTools.MessageHandling;
+﻿using System.Collections.Generic;
 
-internal class SnsPolicyDetails
+namespace JustSaying.AwsTools.MessageHandling
 {
-    public IReadOnlyCollection<string> AccountIds { get; set; }
-    public string SourceArn { get; set; }
+    internal class SnsPolicyDetails
+    {
+        public IReadOnlyCollection<string> AccountIds { get; set; }
+        public string SourceArn { get; set; }
+    }
 }

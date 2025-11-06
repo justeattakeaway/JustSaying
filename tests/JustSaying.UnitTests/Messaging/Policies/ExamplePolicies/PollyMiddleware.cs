@@ -1,27 +1,26 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using JustSaying.Messaging.Middleware;
 using Polly;
 
-namespace JustSaying.UnitTests.Messaging.Policies.ExamplePolicies;
-
-public class PollyMiddleware<TContext, TOut>(ResiliencePipeline pipeline) : MiddlewareBase<TContext, TOut>
+namespace JustSaying.UnitTests.Messaging.Policies.ExamplePolicies
 {
-    protected override async Task<TOut> RunInnerAsync(
-        TContext context,
-        Func<CancellationToken, Task<TOut>> func,
-        CancellationToken stoppingToken)
+    public class PollyMiddleware<TContext, TOut> : MiddlewareBase<TContext, TOut>
     {
-        var pool = ResilienceContextPool.Shared;
-        var resilienceContext = pool.Get(stoppingToken);
+        private readonly IAsyncPolicy _policy;
 
-        try
+        public PollyMiddleware(IAsyncPolicy policy)
         {
-            return await pipeline.ExecuteAsync(
-                static async (context, func) =>
-                    await func(context.CancellationToken), resilienceContext, func);
+            _policy = policy;
         }
-        finally
+
+        protected override async Task<TOut> RunInnerAsync(
+            TContext context,
+            Func<CancellationToken, Task<TOut>> func,
+            CancellationToken stoppingToken)
         {
-            pool.Return(resilienceContext);
+            return await _policy.ExecuteAsync(() => func(stoppingToken));
         }
     }
 }

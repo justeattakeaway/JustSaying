@@ -1,34 +1,51 @@
+using System;
+using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
-
+using Shouldly;
+using Xunit;
+using Xunit.Abstractions;
 #pragma warning disable 618
 
-namespace JustSaying.IntegrationTests.Fluent.AwsTools;
-
-public class WhenCreatingQueueTwice(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+namespace JustSaying.IntegrationTests.Fluent.AwsTools
 {
-    [AwsFact]
-    public async Task Then_An_Exception_Is_Not_Thrown()
+    public class WhenCreatingQueueTwice : IntegrationTestBase
     {
-        // Arrange
-        string topicName = Guid.NewGuid().ToString();
-        ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
-        IAwsClientFactory clientFactory = CreateClientFactory();
+        public WhenCreatingQueueTwice(ITestOutputHelper outputHelper)
+            : base(outputHelper)
+        {
+        }
 
-        var client = clientFactory.GetSnsClient(Region);
+        [AwsFact]
+        public async Task Then_An_Exception_Is_Not_Thrown()
+        {
+            // Arrange
+            string topicName = Guid.NewGuid().ToString();
+            ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
+            IAwsClientFactory clientFactory = CreateClientFactory();
 
-        var topic = new SnsTopicByName(
-            topicName,
-            client,
-            loggerFactory);
+            var subjectProvider = new NonGenericMessageSubjectProvider();
+            var serializerFactor = new NewtonsoftSerializationFactory();
+            var serializationRegister = new MessageSerializationRegister(subjectProvider, serializerFactor);
 
-        // Shouldn't throw
-        await topic.CreateAsync(CancellationToken.None);
-        await topic.CreateAsync(CancellationToken.None);
+            var client = clientFactory.GetSnsClient(Region);
 
-        topic.Arn.ShouldNotBeNull();
-        topic.Arn.ShouldEndWith(topic.TopicName);
+            var topic = new SnsTopicByName(
+                topicName,
+                client,
+                serializationRegister,
+                loggerFactory,
+                subjectProvider);
+
+            // Shouldn't throw
+            await topic.CreateAsync();
+            await topic.CreateAsync();
+
+            topic.Arn.ShouldNotBeNull();
+            topic.Arn.ShouldEndWith(topic.TopicName);
+        }
     }
 }

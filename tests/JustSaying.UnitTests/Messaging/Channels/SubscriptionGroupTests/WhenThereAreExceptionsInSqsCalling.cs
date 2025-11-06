@@ -1,42 +1,56 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.TestingFramework;
+using NSubstitute;
+using Shouldly;
+using Xunit;
+using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
-
-public class WhenThereAreExceptionsInSqsCalling(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
+namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
-    private ISqsQueue _queue;
-    private int _callCount;
-
-    protected override void Given()
+    public class WhenThereAreExceptionsInSqsCalling : BaseSubscriptionGroupTests
     {
-        var sqsSource = CreateSuccessfulTestQueue("TestQueue", ExceptionOnFirstCall());
-        _queue = sqsSource.SqsQueue as FakeSqsQueue;
-        Queues.Add(sqsSource);
+        private ISqsQueue _queue;
+        private int _callCount;
 
-        // setup deserializer failure
-    }
-
-    private IEnumerable<Message> ExceptionOnFirstCall()
-    {
-        _callCount++;
-        if (_callCount == 1)
+        public WhenThereAreExceptionsInSqsCalling(ITestOutputHelper testOutputHelper)
+            : base(testOutputHelper)
         {
-            throw new TestException("testing the failure on first call");
         }
 
-        yield break;
-    }
+        protected override void Given()
+        {
+            _queue = CreateSuccessfulTestQueue("TestQueue", ExceptionOnFirstCall);
+            Queues.Add(_queue);
 
-    protected override Task<bool> UntilAsync()
-    {
-        return Task.FromResult(_callCount > 1);
-    }
+            SerializationRegister.DefaultDeserializedMessage =
+                () => throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing");
+        }
 
-    [Fact]
-    public void QueueIsPolledMoreThanOnce()
-    {
-        _callCount.ShouldBeGreaterThan(1);
+        private IEnumerable<Message> ExceptionOnFirstCall()
+        {
+            _callCount++;
+            if (_callCount == 1)
+            {
+                throw new TestException("testing the failure on first call");
+            }
+
+            return new List<Message>();
+        }
+
+        protected override bool Until()
+        {
+            return _callCount > 1;
+        }
+
+        [Fact]
+        public void QueueIsPolledMoreThanOnce()
+        {
+            _callCount.ShouldBeGreaterThan(1);
+        }
     }
 }

@@ -1,60 +1,64 @@
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-
+using Shouldly;
+using Xunit;
 #pragma warning disable 618
 
-namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs;
-
-public class WhenFetchingQueueByName
+namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 {
-    private readonly IAmazonSQS _client;
-    private readonly ILoggerFactory _log;
-    private const int RetryCount = 3;
-
-    public WhenFetchingQueueByName()
+    public class WhenFetchingQueueByName
     {
-        _client = Substitute.For<IAmazonSQS>();
+        private readonly IAmazonSQS _client;
+        private readonly ILoggerFactory _log;
+        private const int RetryCount = 3;
 
-        _client.GetQueueUrlAsync(Arg.Any<string>())
-            .Returns(x =>
-            {
-                if (x.Arg<string>() == "some-queue-name")
-                    return new GetQueueUrlResponse
-                    {
-                        QueueUrl = "https://testqueues.com/some-queue-name"
-                    };
-                throw new QueueDoesNotExistException("some-queue-name not found");
-            });
-        _client.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>())
-            .Returns(new GetQueueAttributesResponse()
-            {
-                Attributes = new Dictionary<string, string> { { "QueueArn", "something:some-queue-name" } }
-            });
-        _log = Substitute.For<ILoggerFactory>();
-    }
+        public WhenFetchingQueueByName()
+        {
+            _client = Substitute.For<IAmazonSQS>();
 
-    [Fact]
-    public async Task IncorrectQueueNameDoNotMatch()
-    {
-        var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue-name1", _client, RetryCount, _log);
-        (await sqsQueueByName.ExistsAsync(CancellationToken.None)).ShouldBeFalse();
-    }
+            _client.GetQueueUrlAsync(Arg.Any<string>())
+                .Returns(x =>
+                {
+                    if (x.Arg<string>() == "some-queue-name")
+                        return new GetQueueUrlResponse
+                        {
+                            QueueUrl = "https://testqueues.com/some-queue-name"
+                        };
+                    throw new QueueDoesNotExistException("some-queue-name not found");
+                });
+            _client.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>())
+                .Returns(new GetQueueAttributesResponse()
+                {
+                    Attributes = new Dictionary<string, string> { { "QueueArn", "something:some-queue-name" } }
+                });
+            _log = Substitute.For<ILoggerFactory>();
+        }
 
-    [Fact]
-    public async Task IncorrectPartialQueueNameDoNotMatch()
-    {
-        var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue", _client, RetryCount, _log);
-        (await sqsQueueByName.ExistsAsync(CancellationToken.None)).ShouldBeFalse();
-    }
+        [Fact]
+        public async Task IncorrectQueueNameDoNotMatch()
+        {
+            var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue-name1", _client, RetryCount, _log);
+            (await sqsQueueByName.ExistsAsync()).ShouldBeFalse();
+        }
 
-    [Fact]
-    public async Task CorrectQueueNameShouldMatch()
-    {
-        var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue-name", _client, RetryCount, _log);
-        (await sqsQueueByName.ExistsAsync(CancellationToken.None)).ShouldBeTrue();
+        [Fact]
+        public async Task IncorrectPartialQueueNameDoNotMatch()
+        {
+            var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue", _client, RetryCount, _log);
+            (await sqsQueueByName.ExistsAsync()).ShouldBeFalse();
+        }
+
+        [Fact]
+        public async Task CorrectQueueNameShouldMatch()
+        {
+            var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue-name", _client, RetryCount, _log);
+            (await sqsQueueByName.ExistsAsync()).ShouldBeTrue();
+        }
     }
 }

@@ -1,8 +1,9 @@
 using JustSaying.Models;
 
-namespace JustSaying.Sample.Restaurant.Models;
-
-public class OrderOnItsWayEvent : Message
+namespace JustSaying.Sample.Restaurant.Models
 {
-    public int OrderId { get; set; }
+    public class OrderOnItsWayEvent : Message
+    {
+        public int OrderId { get; set; }
+    }
 }

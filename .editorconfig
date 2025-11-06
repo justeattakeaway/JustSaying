@@ -32,7 +32,7 @@ csharp_new_line_before_members_in_object_initializers=false
 csharp_new_line_before_open_brace=all
 csharp_preferred_modifier_order=public, private, protected, internal, new, abstract, virtual, sealed, override, static, readonly, extern, unsafe, volatile, async:suggestion
 csharp_space_after_keywords_in_control_flow_statements=true
-csharp_style_namespace_declarations = file_scoped:warning
+csharp_style_var_elsewhere=false:suggestion
 csharp_style_var_for_built_in_types=false:suggestion
 csharp_style_var_when_type_is_apparent=true:suggestion
 dotnet_naming_rule.private_constants_rule.severity=warning
@@ -43,7 +43,6 @@ dotnet_naming_style.attribute_upper_camel_case_style.required_prefix=Attribute
 dotnet_naming_symbols.private_constants_symbols.applicable_accessibilities=private
 dotnet_naming_symbols.private_constants_symbols.applicable_kinds=field
 dotnet_naming_symbols.private_constants_symbols.required_modifiers=const
-dotnet_style_namespace_match_folder=false
 dotnet_style_parentheses_in_arithmetic_binary_operators=never_if_unnecessary:none
 dotnet_style_parentheses_in_other_binary_operators=never_if_unnecessary:none
 dotnet_style_parentheses_in_relational_binary_operators=never_if_unnecessary:none
@@ -75,9 +74,6 @@ resharper_web_config_wrong_module_highlighting=warning
 
 [*.cs]
 indent_size=4
-
-[*.{csproj,json,props,ruleset,targets}]
-indent_size = 2
 
 [*.ps1]
 indent_size=4

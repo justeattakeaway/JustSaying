@@ -1,50 +1,61 @@
+using System;
+using System.Threading.Tasks;
+using Amazon.SQS.Model;
 using JustSaying.IntegrationTests.TestHandlers;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
+using Shouldly;
+using Xunit;
+using Xunit.Abstractions;
 
-namespace JustSaying.IntegrationTests.Fluent.Subscribing;
-
-public class WhenAHandlerThrowsAnExceptionWithNoMonitor(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+namespace JustSaying.IntegrationTests.Fluent.Subscribing
 {
-    [AwsFact]
-    public async Task Then_The_Message_Is_Handled()
+    public class WhenAHandlerThrowsAnExceptionWithNoMonitor : IntegrationTestBase
     {
-        // Arrange
-        var monitor = new TrackingLoggingMonitor(NullLogger<TrackingLoggingMonitor>.Instance);
+        public WhenAHandlerThrowsAnExceptionWithNoMonitor(ITestOutputHelper outputHelper)
+            : base(outputHelper)
+        {
+        }
 
-        var handler = new ThrowingHandler();
+        [AwsFact]
+        public async Task Then_The_Message_Is_Handled()
+        {
+            // Arrange
+            var monitor = new TrackingLoggingMonitor(NullLogger<TrackingLoggingMonitor>.Instance);
 
-        var services = GivenJustSaying()
-            .ConfigureJustSaying((builder) => builder.Publications((options) =>
-                options.WithQueue<SimpleMessage>(qo => qo.WithQueueName(UniqueName))))
-            .ConfigureJustSaying(
-                (builder) => builder.Subscriptions(
+            var handler = new ThrowingHandler();
+
+            var services = GivenJustSaying()
+                .ConfigureJustSaying((builder) => builder.Publications((options) =>
+                    options.WithQueue<SimpleMessage>(UniqueName)))
+                .ConfigureJustSaying(
+                    (builder) => builder.Subscriptions(
                         (options) => options.ForQueue<SimpleMessage>(
-                            (queue) => queue.WithQueueName(UniqueName)))
-                    .Services(c => c.WithMessageMonitoring(() => monitor)))
-            .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
+                            (queue) => queue.WithName(UniqueName)))
+                        .Services(c => c.WithMessageMonitoring(() => monitor)))
+                .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 
-        var message = new SimpleMessage();
+            var message = new SimpleMessage();
 
-        await WhenAsync(
-            services,
-            async (publisher, listener, cancellationToken) =>
-            {
-                await listener.StartAsync(cancellationToken);
-                await publisher.StartAsync(cancellationToken);
-
-                // Act
-                await publisher.PublishAsync(message, cancellationToken);
-
-                // Assert
-                await Patiently.AssertThatAsync(() =>
+            await WhenAsync(
+                services,
+                async (publisher, listener, cancellationToken) =>
                 {
+                    await listener.StartAsync(cancellationToken);
+                    await publisher.StartAsync(cancellationToken);
+
+                    // Act
+                    await publisher.PublishAsync(message, cancellationToken);
+                    await handler.DoneSignal.Task;
+
+                    // Assert
                     handler.MessageReceived.ShouldNotBeNull();
                     monitor.HandledErrors.Count.ShouldBe(1);
                 });
-
-            });
+        }
     }
 }

@@ -1,14 +1,24 @@
+using System;
+using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 
-namespace JustSaying.UnitTests.Messaging.Channels.TestHelpers;
-
-public class TestHandler<T>(Action<T> spy) : IHandlerAsync<T>
+namespace JustSaying.UnitTests.Messaging.Channels.TestHelpers
 {
-    public async Task<bool> Handle(T testMessage)
+    public class TestHandler<T> : IHandlerAsync<T>
     {
-        spy?.Invoke(testMessage);
+        private readonly Action<T> _spy;
 
-        await Task.Delay(100);
-        return true;
+        public TestHandler(Action<T> spy)
+        {
+            _spy = spy;
+        }
+
+        public async Task<bool> Handle(T testMessage)
+        {
+            _spy?.Invoke(testMessage);
+
+            await Task.Delay(100);
+            return true;
+        }
     }
 }

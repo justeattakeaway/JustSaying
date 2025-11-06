@@ -1,308 +1,271 @@
+using System;
+using System.Collections.Concurrent;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using JustSaying.Fluent;
-using JustSaying.IntegrationTests.Fluent;
 using JustSaying.Messaging;
+using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
-using LocalSqsSnsMessaging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Shouldly;
+using Xunit.Abstractions;
 
-namespace JustSaying.IntegrationTests;
-
-public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
+namespace JustSaying.IntegrationTests
 {
-    private ITestOutputHelper OutputHelper { get; } = outputHelper;
-
-    private class QueueStore(ILogger<TestMessageStore<QueueMessage>> logger) : TestMessageStore<QueueMessage>(logger)
+    public class MessagingBusBuilderTests
     {
-    }
+        public MessagingBusBuilderTests(ITestOutputHelper outputHelper)
+        {
+            OutputHelper = outputHelper;
+        }
 
-    [AwsFact]
-    public async Task Can_Create_Messaging_Bus_Fluently_For_A_Queue()
-    {
-        var queueName = Guid.NewGuid().ToString();
+        private ITestOutputHelper OutputHelper { get; }
 
-        // Arrange
-        var bus = new InMemoryAwsBus();
-        var services = new ServiceCollection()
-            .AddLogging((p) => p.AddXUnit(OutputHelper))
-            .AddJustSaying(
-                (builder) =>
-                {
-                    builder.Client((options) =>
-                            options.WithClientFactory(() => new LocalAwsClientFactory(bus))
-                            // TODO Add back LocalStack config for running in CI
-                            // options.WithBasicCredentials("accessKey", "secretKey")
-                            //     .WithServiceUri(TestEnvironment.SimulatorUrl)
-                            )
-                        .Messaging((options) => options.WithRegion("eu-west-1"))
-                        .Publications((options) => options.WithQueue<QueueMessage>(o => o.WithQueueName(queueName)))
-                        .Subscriptions((options) => options.ForQueue<QueueMessage>(o => o.WithQueueName(queueName)))
-                        .Services((options) => options.WithMessageMonitoring(() => new MyMonitor()));
-                })
-            .AddSingleton<IMessageStore<QueueMessage>, QueueStore>()
-            .AddJustSayingHandler<QueueMessage, MessageStoringHandler<QueueMessage>>();
+        private class QueueStore : TestMessageStore<QueueMessage>
+        {
+            public QueueStore(ILogger<TestMessageStore<QueueMessage>> logger) : base(logger)
+            { }
+        }
 
-        IServiceProvider serviceProvider = services.BuildServiceProvider();
+        [AwsFact]
+        public async Task Can_Create_Messaging_Bus_Fluently_For_A_Queue()
+        {
+            var queueName = Guid.NewGuid().ToString();
 
-        IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
-        IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
+            // Arrange
+            var services = new ServiceCollection()
+                .AddLogging((p) => p.AddXUnit(OutputHelper))
+                .AddJustSaying(
+                    (builder) =>
+                    {
+                        builder.Client((options) =>
+                                options.WithBasicCredentials("accessKey", "secretKey")
+                                    .WithServiceUri(TestEnvironment.SimulatorUrl))
+                            .Messaging((options) => options.WithRegion("eu-west-1"))
+                            .Publications((options) => options.WithQueue<QueueMessage>(queueName))
+                            .Subscriptions((options) => options.ForQueue<QueueMessage>(queueName))
+                            .Services((options) => options.WithMessageMonitoring(() => new MyMonitor()));
+                    })
+                .AddSingleton<IMessageStore<QueueMessage>, QueueStore>()
+                .AddJustSayingHandler<QueueMessage, MessageStoringHandler<QueueMessage>>();
 
-        using var source = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+            IServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        // Act
-        await listener.StartAsync(source.Token);
-        await publisher.StartAsync(source.Token);
+            IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
+            IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
 
-        var message = new QueueMessage();
+            using var source = new CancellationTokenSource(TimeSpan.FromSeconds(20));
 
-        await publisher.PublishAsync(message, source.Token);
+            // Act
+            await listener.StartAsync(source.Token);
+            await publisher.StartAsync(source.Token);
 
-        var store = serviceProvider.GetRequiredService<IMessageStore<QueueMessage>>();
+            var message = new QueueMessage();
 
-        // Assert
-        await Patiently.AssertThatAsync(OutputHelper,
-            () => store.Messages.Any(msg => msg.Id == message.Id));
-    }
+            await publisher.PublishAsync(message, source.Token);
 
-    [AwsFact]
-    public async Task Can_Create_Messaging_Bus_Fluently_For_A_Topic()
-    {
-        var topicName = Guid.NewGuid().ToString();
+            var store = serviceProvider.GetRequiredService<IMessageStore<QueueMessage>>();
 
-        // Arrange
-        var bus = new InMemoryAwsBus();
-        var services = new ServiceCollection()
-            .AddLogging((p) => p.AddXUnit(OutputHelper))
-            .AddJustSaying(
-                (builder) =>
-                {
-                    builder
-                        .Client((options) =>
-                                options.WithClientFactory(() => new LocalAwsClientFactory(bus))
-                            // TODO Add back LocalStack config for running in CI
-                            // options.WithBasicCredentials("accessKey", "secretKey")
-                            //     .WithServiceUri(TestEnvironment.SimulatorUrl)
-                            )
-                        .Messaging((options) => options.WithRegion("eu-west-1"))
-                        .Publications((options) => options.WithTopic<TopicMessage>())
-                        .Subscriptions((options) => options.ForTopic<TopicMessage>(cfg => cfg.WithQueueName(topicName)));
-                })
-            .AddSingleton<IMessageStore<TopicMessage>, TestMessageStore<TopicMessage>>()
-            .AddJustSayingHandler<TopicMessage, MessageStoringHandler<TopicMessage>>();
+            // Assert
+            await Patiently.AssertThatAsync(OutputHelper,
+                () => store.Messages.Any(msg => msg.Id == message.Id));
+        }
 
-        IServiceProvider serviceProvider = services.BuildServiceProvider();
+        [AwsFact]
+        public async Task Can_Create_Messaging_Bus_Fluently_For_A_Topic()
+        {
+            var topicName = Guid.NewGuid().ToString();
 
-        IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
-        IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
+            // Arrange
+            var services = new ServiceCollection()
+                .AddLogging((p) => p.AddXUnit(OutputHelper))
+                .AddJustSaying(
+                    (builder) =>
+                    {
+                        builder
+                            .Client((options) =>
+                                options.WithBasicCredentials("accessKey", "secretKey")
+                                    .WithServiceUri(TestEnvironment.SimulatorUrl))
+                            .Messaging((options) => options.WithRegion("eu-west-1"))
+                            .Publications((options) => options.WithTopic<TopicMessage>())
+                            .Subscriptions((options) => options.ForTopic<TopicMessage>(topicName));
+                    })
+                .AddSingleton<IMessageStore<TopicMessage>, TestMessageStore<TopicMessage>>()
+                .AddJustSayingHandler<TopicMessage, MessageStoringHandler<TopicMessage>>();
 
-        using var source = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+            IServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        // Act
-        await listener.StartAsync(source.Token);
-        await publisher.StartAsync(source.Token);
+            IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
+            IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
 
-        var message = new TopicMessage();
-
-        await publisher.PublishAsync(message, source.Token);
-
-        var store = serviceProvider.GetService<IMessageStore<TopicMessage>>();
-
-        await Patiently.AssertThatAsync(OutputHelper,
-            () => store.Messages.Any(msg => msg.Id == message.Id));
-    }
-
-    [AwsFact]
-    public async Task Can_Create_Messaging_Bus_Fluently_For_A_Topic_Address()
-    {
-        var topicName = Guid.NewGuid().ToString();
-
-        // Arrange
-        var bus = new InMemoryAwsBus();
-        var services = new ServiceCollection()
-            .AddLogging((p) => p.AddXUnit(OutputHelper))
-            .AddJustSaying(
-                (builder) =>
-                {
-                    builder
-                        .Client((options) =>
-                            options.WithClientFactory(() => new LocalAwsClientFactory(bus)))
-                            // TODO Add back LocalStack config for running in CI
-                            // options.WithBasicCredentials("accessKey", "secretKey")
-                            //     .WithServiceUri(TestEnvironment.SimulatorUrl))
-                        .Messaging((options) => options.WithRegion("eu-west-1"))
-                        .Publications((options) => options.WithTopic<TopicMessage>())
-                        .Subscriptions((options) => options.ForTopic<TopicMessage>(cfg => cfg.WithQueueName(topicName)));
-                })
-            .AddSingleton<IMessageStore<TopicMessage>, TestMessageStore<TopicMessage>>()
-            .AddJustSayingHandler<TopicMessage, MessageStoringHandler<TopicMessage>>();
-
-        IServiceProvider serviceProvider = services.BuildServiceProvider();
-
-        IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
-        IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
-
-        using var source = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-
-        // Act
-        await listener.StartAsync(source.Token);
-        await publisher.StartAsync(source.Token);
-
-        var message = new TopicMessage();
-
-        await publisher.PublishAsync(message, source.Token);
-
-        var store = serviceProvider.GetService<IMessageStore<TopicMessage>>();
-
-        await Patiently.AssertThatAsync(OutputHelper,
-            () => store.Messages.Any(msg => msg.Id == message.Id));
-    }
-
-    [AwsFact]
-    public async Task Can_Create_Messaging_Bus()
-    {
-        // Arrange
-        var services = new ServiceCollection()
-            .AddLogging((p) => p.AddXUnit(OutputHelper))
-            .AddJustSaying("eu-west-1")
-            .AddJustSayingHandler<QueueMessage, InspectableHandler<QueueMessage>>();
-
-        IServiceProvider serviceProvider = services.BuildServiceProvider();
-
-        IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
-        IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
-
-        using var source = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-
-        // Act
-        await listener.StartAsync(source.Token);
-        await publisher.StartAsync(source.Token);
-    }
-
-    [AwsFact]
-    public async Task Can_Create_Messaging_Bus_With_Contributors()
-    {
-        // Arrange
-        var services = new ServiceCollection()
-            .AddLogging((p) => p.AddXUnit(OutputHelper))
-            .AddJustSaying()
-            .AddSingleton<IMessageBusConfigurationContributor, AwsContributor>()
-            .AddSingleton<IMessageBusConfigurationContributor, MessagingContributor>()
-            .AddSingleton<IMessageBusConfigurationContributor, QueueContributor>()
-            .AddSingleton<IMessageBusConfigurationContributor, RegionContributor>()
-            .AddJustSayingHandler<QueueMessage, MessageStoringHandler<QueueMessage>>()
-            .AddSingleton<IMessageStore<QueueMessage>, TestMessageStore<QueueMessage>>()
-            .AddSingleton<MyMonitor>();
-
-        IServiceProvider serviceProvider = services.BuildServiceProvider();
-
-        IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
-        IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
-
-        using var source = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-
-        // Act
-        await listener.StartAsync(source.Token);
-        await publisher.StartAsync(source.Token);
-
-        var message = new QueueMessage();
-
-        await publisher.PublishAsync(message, source.Token);
-
-        // Assert
-        var messageStore = serviceProvider.GetService<IMessageStore<QueueMessage>>();
-
-        await Patiently.AssertThatAsync(OutputHelper,
-            () =>
+            using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
             {
-                messageStore.Messages.ShouldContain(msg =>
-                    msg.Id.Equals(message.Id));
-            });
-    }
+                // Act
+                await listener.StartAsync(source.Token);
+                await publisher.StartAsync(source.Token);
 
-    private sealed class AwsContributor : IMessageBusConfigurationContributor
-    {
-        public void Configure(MessagingBusBuilder builder)
-        {
-            var bus = new InMemoryAwsBus();
-            builder.Client(
-                (options) =>
-                    options.WithClientFactory(() => new LocalAwsClientFactory(bus))
-                    // TODO Add back LocalStack config for running in CI
-                    // options.WithSessionCredentials("accessKeyId", "secretKeyId", "token")
-                    // .WithServiceUri(TestEnvironment.SimulatorUrl)
-                );
+                var message = new TopicMessage();
+
+                await publisher.PublishAsync(message, source.Token);
+
+                var store = serviceProvider.GetService<IMessageStore<TopicMessage>>();
+
+                await Patiently.AssertThatAsync(OutputHelper,
+                    () => store.Messages.Any(msg => msg.Id == message.Id));
+            }
         }
-    }
 
-    private sealed class MessagingContributor(IServiceProvider serviceProvider) : IMessageBusConfigurationContributor
-    {
-        private IServiceProvider ServiceProvider { get; } = serviceProvider;
-
-        public void Configure(MessagingBusBuilder builder)
+        [AwsFact]
+        public async Task Can_Create_Messaging_Bus()
         {
-            builder.Services(
-                (p) => p.WithMessageMonitoring(ServiceProvider.GetRequiredService<MyMonitor>));
+            // Arrange
+            var services = new ServiceCollection()
+                .AddLogging((p) => p.AddXUnit(OutputHelper))
+                .AddJustSaying("eu-west-1")
+                .AddJustSayingHandler<QueueMessage, InspectableHandler<QueueMessage>>();
+
+            IServiceProvider serviceProvider = services.BuildServiceProvider();
+
+            IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
+            IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
+
+            using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
+            {
+                // Act
+                await listener.StartAsync(source.Token);
+                await publisher.StartAsync(source.Token);
+            }
         }
-    }
 
-    private sealed class QueueContributor : IMessageBusConfigurationContributor
-    {
-        public string QueueName { get; } = Guid.NewGuid().ToString();
-
-        public void Configure(MessagingBusBuilder builder)
+        [AwsFact]
+        public async Task Can_Create_Messaging_Bus_With_Contributors()
         {
-            builder.Publications((p) => p.WithQueue<QueueMessage>(options => options.WithQueueName(QueueName)))
-                .Subscriptions((p) => p.ForQueue<QueueMessage>(cfg => cfg.WithQueueName(QueueName)));
-        }
-    }
+            // Arrange
+            var services = new ServiceCollection()
+                .AddLogging((p) => p.AddXUnit(OutputHelper))
+                .AddJustSaying()
+                .AddSingleton<IMessageBusConfigurationContributor, AwsContributor>()
+                .AddSingleton<IMessageBusConfigurationContributor, MessagingContributor>()
+                .AddSingleton<IMessageBusConfigurationContributor, QueueContributor>()
+                .AddSingleton<IMessageBusConfigurationContributor, RegionContributor>()
+                .AddJustSayingHandler<QueueMessage, MessageStoringHandler<QueueMessage>>()
+                .AddSingleton<IMessageStore<QueueMessage>, TestMessageStore<QueueMessage>>()
+                .AddSingleton<MyMonitor>();
 
-    private sealed class RegionContributor : IMessageBusConfigurationContributor
-    {
-        public void Configure(MessagingBusBuilder builder)
+            IServiceProvider serviceProvider = services.BuildServiceProvider();
+
+            IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
+            IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
+
+            using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
+            {
+                // Act
+                await listener.StartAsync(source.Token);
+                await publisher.StartAsync(source.Token);
+
+                var message = new QueueMessage();
+
+                await publisher.PublishAsync(message, source.Token);
+
+                // Assert
+                var messageStore = serviceProvider.GetService<IMessageStore<QueueMessage>>();
+
+                await Patiently.AssertThatAsync(OutputHelper,
+                    () =>
+                    {
+                        messageStore.Messages.ShouldContain(msg =>
+                            msg.Id.Equals(message.Id));
+                    });
+            }
+        }
+
+        private sealed class AwsContributor : IMessageBusConfigurationContributor
         {
-            builder.Messaging((p) => p.WithRegion("eu-west-1"));
+            public void Configure(MessagingBusBuilder builder)
+            {
+                builder.Client(
+                    (options) => options.WithSessionCredentials("accessKeyId", "secretKeyId", "token")
+                        .WithServiceUri(TestEnvironment.SimulatorUrl));
+            }
         }
-    }
 
-    private sealed class QueueMessage : Message
-    { }
+        private sealed class MessagingContributor : IMessageBusConfigurationContributor
+        {
+            public MessagingContributor(IServiceProvider serviceProvider)
+            {
+                ServiceProvider = serviceProvider;
+            }
 
-    private sealed class TopicMessage : Message
-    { }
+            private IServiceProvider ServiceProvider { get; }
 
+            public void Configure(MessagingBusBuilder builder)
+            {
+                builder.Services(
+                    (p) => p.WithMessageMonitoring(ServiceProvider.GetRequiredService<MyMonitor>));
+            }
+        }
 
-    private sealed class MyMonitor : IMessageMonitor
-    {
-        public void HandleException(Type messageType)
+        private sealed class QueueContributor : IMessageBusConfigurationContributor
+        {
+            public string QueueName { get; } = Guid.NewGuid().ToString();
+
+            public void Configure(MessagingBusBuilder builder)
+            {
+                builder.Publications((p) => p.WithQueue<QueueMessage>(QueueName))
+                    .Subscriptions((p) => p.ForQueue<QueueMessage>(QueueName));
+            }
+        }
+
+        private sealed class RegionContributor : IMessageBusConfigurationContributor
+        {
+            public void Configure(MessagingBusBuilder builder)
+            {
+                builder.Messaging((p) => p.WithRegion("eu-west-1"));
+            }
+        }
+
+        private sealed class QueueMessage : Message
         { }
 
-        public void HandleError(Exception ex, Amazon.SQS.Model.Message message)
+        private sealed class TopicMessage : Message
         { }
 
-        public void HandleThrottlingTime(TimeSpan duration)
-        { }
 
-        public void HandleTime(TimeSpan duration)
-        { }
+        private sealed class MyMonitor : IMessageMonitor
+        {
+            public void HandleException(Type messageType)
+            { }
 
-        public void Handled(Message message)
-        { }
+            public void HandleError(Exception ex, Amazon.SQS.Model.Message message)
+            { }
 
-        public void IncrementThrottlingStatistic()
-        { }
+            public void HandleThrottlingTime(TimeSpan duration)
+            { }
 
-        public void IssuePublishingMessage()
-        { }
+            public void HandleTime(TimeSpan duration)
+            { }
 
-        public void PublishMessageTime(TimeSpan duration)
-        { }
+            public void Handled(Message message)
+            { }
 
-        public void ReceiveMessageTime(TimeSpan duration, string queueName, string region)
-        { }
+            public void IncrementThrottlingStatistic()
+            { }
 
-        public void HandlerExecutionTime(Type handlerType, Type messageType, TimeSpan duration)
-        { }
+            public void IssuePublishingMessage()
+            { }
+
+            public void PublishMessageTime(TimeSpan duration)
+            { }
+
+            public void ReceiveMessageTime(TimeSpan duration, string queueName, string region)
+            { }
+
+            public void HandlerExecutionTime(Type handlerType, Type messageType, TimeSpan duration)
+            { }
+        }
     }
 }

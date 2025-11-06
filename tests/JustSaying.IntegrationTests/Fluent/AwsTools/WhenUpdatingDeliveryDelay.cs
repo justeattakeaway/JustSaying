@@ -1,42 +1,51 @@
+using System;
+using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
-
+using Shouldly;
+using Xunit.Abstractions;
 #pragma warning disable 618
 
-namespace JustSaying.IntegrationTests.Fluent.AwsTools;
-
-public class WhenUpdatingDeliveryDelay(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+namespace JustSaying.IntegrationTests.Fluent.AwsTools
 {
-    [AwsFact]
-    public async Task Can_Update_Delivery_Delay()
+    public class WhenUpdatingDeliveryDelay : IntegrationTestBase
     {
-        // Arrange
-        var oldDeliveryDelay = TimeSpan.FromMinutes(2);
-        var newDeliveryDelay = TimeSpan.FromMinutes(5);
+        public WhenUpdatingDeliveryDelay(ITestOutputHelper outputHelper)
+            : base(outputHelper)
+        {
+        }
 
-        ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
-        IAwsClientFactory clientFactory = CreateClientFactory();
+        [AwsFact]
+        public async Task Can_Update_Delivery_Delay()
+        {
+            // Arrange
+            var oldDeliveryDelay = TimeSpan.FromMinutes(2);
+            var newDeliveryDelay = TimeSpan.FromMinutes(5);
 
-        var client = clientFactory.GetSqsClient(Region);
+            ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
+            IAwsClientFactory clientFactory = CreateClientFactory();
 
-        var queue = new SqsQueueByName(
-            Region,
-            UniqueName,
-            client,
-            1,
-            loggerFactory);
+            var client = clientFactory.GetSqsClient(Region);
 
-        await queue.CreateAsync(
-            new SqsBasicConfiguration() { DeliveryDelay = oldDeliveryDelay });
+            var queue = new SqsQueueByName(
+                Region,
+                UniqueName,
+                client,
+                1,
+                loggerFactory);
 
-        // Act
-        await queue.UpdateQueueAttributeAsync(
-            new SqsBasicConfiguration() { DeliveryDelay = newDeliveryDelay }, CancellationToken.None);
+            await queue.CreateAsync(
+                new SqsBasicConfiguration() { DeliveryDelay = oldDeliveryDelay });
 
-        // Assert
-        queue.DeliveryDelay.ShouldBe(newDeliveryDelay);
+            // Act
+            await queue.UpdateQueueAttributeAsync(
+                new SqsBasicConfiguration() { DeliveryDelay = newDeliveryDelay });
+
+            // Assert
+            queue.DeliveryDelay.ShouldBe(newDeliveryDelay);
+        }
     }
 }

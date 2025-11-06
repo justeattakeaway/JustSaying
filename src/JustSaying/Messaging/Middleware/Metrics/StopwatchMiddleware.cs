@@ -1,35 +1,43 @@
+using System;
 using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 using JustSaying.Messaging.Monitoring;
 
 // ReSharper disable once CheckNamespace
-namespace JustSaying.Messaging.Middleware;
-
-/// <summary>
-/// This middleware measures the handler's execution duration and reports the results to an <see cref="IMessageMonitor"/>.
-/// </summary>
-/// <remarks>
-/// Creates an instance of a <see cref="StopwatchMiddleware"/> that will report results to an
-/// <see cref="IMessageMonitor"/>.
-/// </remarks>
-/// <param name="monitor">An <see cref="IMessageMonitor"/> to report results to.</param>
-/// <param name="handlerType">The type of the handler that results should be reported against.</param>
-public sealed class StopwatchMiddleware(IMessageMonitor monitor, Type handlerType) : MiddlewareBase<HandleMessageContext, bool>
+namespace JustSaying.Messaging.Middleware
 {
-    protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
+    /// <summary>
+    /// This middleware measures the handler's execution duration and reports the results to an <see cref="IMessageMonitor"/>.
+    /// </summary>
+    public class StopwatchMiddleware : MiddlewareBase<HandleMessageContext, bool>
     {
-        var watch = Stopwatch.StartNew();
+        private readonly IMessageMonitor _monitor;
+        private readonly Type _handlerType;
 
-        try
+        /// <summary>
+        /// Creates an instance of a <see cref="StopwatchMiddleware"/> that will report results to an
+        /// <see cref="IMessageMonitor"/>.
+        /// </summary>
+        /// <param name="monitor">An <see cref="IMessageMonitor"/> to report results to.</param>
+        /// <param name="handlerType">The type of the handler that results should be reported against.</param>
+        public StopwatchMiddleware(IMessageMonitor monitor, Type handlerType)
         {
-            using (monitor.MeasureDispatch())
-            {
-                return await func(stoppingToken).ConfigureAwait(false);
-            }
+            _monitor = monitor;
+            _handlerType = handlerType;
         }
-        finally
+
+        protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
         {
+            var watch = Stopwatch.StartNew();
+
+            bool result = await func(stoppingToken).ConfigureAwait(false);
+
             watch.Stop();
-            monitor.HandlerExecutionTime(handlerType, context.MessageType, watch.Elapsed);
+
+            _monitor.HandlerExecutionTime(_handlerType, context.MessageType, watch.Elapsed);
+
+            return result;
         }
     }
 }

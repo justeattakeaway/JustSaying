@@ -1,36 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <IsShipping>true</IsShipping>
-    <TargetFrameworks>netstandard2.0;net462;net8.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\JustSaying.Models\JustSaying.Models.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <InternalsVisibleTo Include="JustSaying.IntegrationTests" Key="$(JustSayingKey)" />
-    <InternalsVisibleTo Include="JustSaying.UnitTests" Key="$(JustSayingKey)" />
-    <InternalsVisibleTo Include="JustSaying.Extensions.DependencyInjection.Microsoft" Key="$(JustSayingKey)" />
-    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" Key="$(DynamicProxyGenAssembly2PublicKey)" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="AWSSDK.SimpleNotificationService" />
-    <PackageReference Include="AWSSDK.SQS" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
-    <PackageReference Include="Newtonsoft.Json" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net462' Or '$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="System.Text.Json" />
-    <PackageReference Include="System.Threading.Channels" />
-  </ItemGroup>
-  <ItemGroup>
-    <Using Remove="System.Net.Http" />
-  </ItemGroup>
-  <ItemGroup>
-    <AdditionalFiles Include="PublicAPI\PublicAPI.Shipped.txt" />
-    <AdditionalFiles Include="PublicAPI\PublicAPI.Unshipped.txt" />
-  </ItemGroup>
-  <ItemGroup Condition="Exists('PublicAPI\$(TargetFramework)')">
-    <AdditionalFiles Include="PublicAPI\$(TargetFramework)\PublicAPI.Shipped.txt" />
-    <AdditionalFiles Include="PublicAPI\$(TargetFramework)\PublicAPI.Unshipped.txt" />
+    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.7.0" />
+    <PackageReference Include="AWSSDK.SQS" Version="3.7.0" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+    <PackageReference Include="System.Text.Json" Version="4.6.0" />
+    <PackageReference Include="System.Threading.Channels" Version="4.5.0" />
   </ItemGroup>
 </Project>

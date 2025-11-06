@@ -1,55 +1,55 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging;
-using JustSaying.Messaging.Channels.SubscriptionGroups;
-using JustSaying.Messaging.Compression;
-using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
+using NSubstitute;
+using Shouldly;
+using Xunit;
+using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
-
-public class WhenThereAreExceptionsInMessageProcessing(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
+namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
-    private ISqsQueue _queue;
-    private int _callCount;
-
-    protected override void Given()
+    public class WhenThereAreExceptionsInMessageProcessing : BaseSubscriptionGroupTests
     {
-        ConcurrencyLimit = 1;
+        private ISqsQueue _queue;
+        private int _callCount;
 
-        IEnumerable<Message> GetMessages(CancellationToken cancellationToken)
+        public WhenThereAreExceptionsInMessageProcessing(ITestOutputHelper testOutputHelper)
+            : base(testOutputHelper)
+        { }
+
+        protected override void Given()
         {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                Interlocked.Increment(ref _callCount);
-                yield return new TestMessage();
-            }
+            ConcurrencyLimit = 1;
+            _queue = CreateSuccessfulTestQueue("TestQueue",
+                EnumerableExtensions.GenerateInfinite(() =>
+                {
+                    Interlocked.Increment(ref _callCount);
+                    return new ReceiveMessageResponse()
+                    {
+                        Messages = new List<Message> { new TestMessage() }
+                    };
+                }));
+
+            Queues.Add(_queue);
+
+            SerializationRegister.DefaultDeserializedMessage = () =>
+                throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing");
         }
 
-        _queue = new FakeSqsQueue(ct => Task.FromResult(GetMessages(ct)));
-        var sqsSource = new SqsSource
+        protected override bool Until()
         {
-            SqsQueue = _queue,
-            MessageConverter = new InboundMessageConverter(new ThrowingMessageBodySerializer(), new MessageCompressionRegistry(), false)
-        };
+            return _callCount > 1;
+        }
 
-        Queues.Add(sqsSource);
-    }
-
-    protected override Task<bool> UntilAsync()
-    {
-        return Task.FromResult(_callCount > 1);
-    }
-
-    [Fact]
-    public void TheListenerDoesNotDie()
-    {
-        _callCount.ShouldBeGreaterThan(1);
-    }
-
-    private sealed class ThrowingMessageBodySerializer : IMessageBodySerializer
-    {
-        public string Serialize(Models.Message message) => throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing");
-        public Models.Message Deserialize(string message) => throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing");
+        [Fact]
+        public async Task TheListenerDoesNotDie()
+        {
+            await Patiently.AssertThatAsync(OutputHelper,
+                () => _callCount.ShouldBeGreaterThan(1));
+        }
     }
 }

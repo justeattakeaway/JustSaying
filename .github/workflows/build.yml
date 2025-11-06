@@ -5,32 +5,13 @@ on:
     branches: [main]
     tags: [v*]
   pull_request:
-    branches: [main, dotnet-vnext]
+    branches: [main]
   workflow_dispatch:
-
-permissions:
-  contents: read
-  packages: read
-
-env:
-  DOTNET_CLI_TELEMETRY_OPTOUT: true
-  DOTNET_NOLOGO: true
-  DOTNET_SYSTEM_CONSOLE_ALLOW_ANSI_COLOR_REDIRECTION: 1
-  NUGET_XMLDOC_MODE: skip
-  TERM: xterm
 
 jobs:
   build:
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-
-    outputs:
-      dotnet-sdk-version: ${{ steps.setup-dotnet.outputs.dotnet-version }}
-
-    permissions:
-      attestations: write
-      contents: write
-      id-token: write
 
     strategy:
       fail-fast: false
@@ -38,158 +19,64 @@ jobs:
         os: [macos-latest, ubuntu-latest, windows-latest]
         include:
           - os: macos-latest
-            os-name: macos
+            os_name: macos
           - os: ubuntu-latest
-            os-name: linux
+            os_name: linux
           - os: windows-latest
-            os-name: windows
+            os_name: windows
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@v2
         with:
           fetch-depth: 0
 
-      - name: Setup .NET SDK
-        uses: actions/setup-dotnet@d4c94342e560b34958eacfc5d055d21461ed1c5d # v5.0.0
-        id: setup-dotnet
-
-      - name: Setup NuGet cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.props') }}
-          restore-keys: ${{ runner.os }}-nuget-
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v1
 
       - name: Build, Test and Package
         if: ${{ runner.os != 'linux' }}
         shell: pwsh
-        run: ./build.ps1
+        run: ./Build.ps1
+        env:
+          DOTNET_CLI_TELEMETRY_OPTOUT: true
+          DOTNET_NOLOGO: true
+          DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+          NUGET_XMLDOC_MODE: skip
 
       - name: Build, Test, IntegrationTest and Package
         if: ${{ runner.os == 'linux' }}
         shell: pwsh
-        run: ./build.ps1 -EnableIntegrationTests
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
+        run: ./Build.ps1 -EnableIntegrationTests
         env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        with:
-          flags: ${{ matrix.os-name }}
+          DOTNET_CLI_TELEMETRY_OPTOUT: true
+          DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+          NUGET_XMLDOC_MODE: skip
 
-      - name: Upload test results to Codecov
-        if: ${{ !cancelled() }}
-        uses:  codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1.1.1
+      - uses: codecov/codecov-action@v1
+        name: Upload coverage to Codecov
         with:
-          files: ./test-results/**/*.xml
-          flags: ${{ matrix.os-name }}
-          token: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Generate SBOM
-        uses: anchore/sbom-action@8e94d75ddd33f69f691467e42275782e4bfefe84 # v0.20.9
-        with:
-          artifact-name: build-${{ matrix.os-name }}.spdx.json
-          output-file: ./artifacts/build.spdx.json
-          path: ./artifacts/bin
-          upload-release-assets: ${{ runner.os == 'Windows' }}
-
-      - name: Attest artifacts
-        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3.0.0
-        if: |
-          runner.os == 'Windows' &&
-          github.event.repository.fork == false &&
-          (github.ref_name == github.event.repository.default_branch ||
-           startsWith(github.ref, 'refs/tags/v'))
-        with:
-          subject-path: |
-            ./artifacts/bin/JustSaying/release*/JustSaying.dll
-            ./artifacts/bin/JustSaying.Extensions.Aws/release*/JustSaying.Extensions.Aws.dll
-            ./artifacts/bin/JustSaying.Extensions.DependencyInjection.Microsoft/release*/JustSaying.Extensions.DependencyInjection.Microsoft.dll
-            ./artifacts/bin/JustSaying.Extensions.DependencyInjection.StructureMap/release*/JustSaying.Extensions.DependencyInjection.StructureMap.dll
-            ./artifacts/bin/JustSaying.Models/release*/JustSaying.Models.dll
-            ./artifacts/package/release/*
+          file: ./artifacts/coverage.cobertura.xml
+          flags: ${{ matrix.os_name }}
 
       - name: Publish NuGet packages
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        uses: actions/upload-artifact@v1
         with:
-          name: packages-${{ matrix.os-name }}
-          path: ./artifacts/package/release
-          if-no-files-found: error
+          name: packages-${{ matrix.os_name }}
+          path: ./artifacts/packages
 
-  validate-packages:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
+      - name: Authenticate with GitHub Packages
+        uses: actions/setup-dotnet@v1
+        if: ${{ github.repository_owner == 'justeat' && github.ref == 'refs/heads/main' && runner.os == 'Windows' }}
+        with:
+          source-url: https://nuget.pkg.github.com/justeat/index.json
+        env:
+          NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
-    - name: Download packages
-      uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
-      with:
-        name: packages-windows
+      - name: Publish pre-release NuGet packages to GitHub Packages
+        run: dotnet nuget push "artifacts\packages\*.nupkg" --skip-duplicate --no-symbols true
+        if: ${{ github.repository_owner == 'justeat' && github.ref == 'refs/heads/main' && runner.os == 'Windows' }}
 
-    - name: Setup .NET SDK
-      uses: actions/setup-dotnet@d4c94342e560b34958eacfc5d055d21461ed1c5d # v5.0.0
-      with:
-        dotnet-version: ${{ needs.build.outputs.dotnet-sdk-version }}
-
-    - name: Validate NuGet packages
-      shell: pwsh
-      run: |
-        dotnet tool install --global dotnet-validate --version 0.0.1-preview.304 --allow-roll-forward
-        $packages = Get-ChildItem -Filter "*.nupkg" | ForEach-Object { $_.FullName }
-        $invalidPackages = 0
-        foreach ($package in $packages) {
-          dotnet validate package local $package
-          if ($LASTEXITCODE -ne 0) {
-            $invalidPackages++
-          }
-        }
-        if ($invalidPackages -gt 0) {
-          Write-Output "::error::$invalidPackages NuGet package(s) failed validation."
-          exit 1
-        }
-
-  publish-github:
-    needs: [ build, validate-packages ]
-    permissions:
-      packages: write
-    runs-on: ubuntu-latest
-    if: |
-      github.event.repository.fork == false &&
-      (github.ref_name == github.event.repository.default_branch ||
-       startsWith(github.ref, 'refs/tags/v'))
-    steps:
-
-    - name: Download packages
-      uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
-      with:
-        name: packages-windows
-
-    - name: Setup .NET SDK
-      uses: actions/setup-dotnet@d4c94342e560b34958eacfc5d055d21461ed1c5d # v5.0.0
-      with:
-        dotnet-version: ${{ needs.build.outputs.dotnet-sdk-version }}
-
-    - name: Publish NuGet packages to GitHub Packages
-      run: dotnet nuget push "*.nupkg" --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate --no-symbols --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
-
-  publish-nuget:
-    needs: [ build, validate-packages ]
-    runs-on: ubuntu-latest
-    if: |
-      github.event.repository.fork == false &&
-      startsWith(github.ref, 'refs/tags/v')
-    steps:
-
-    - name: Download packages
-      uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
-      with:
-        name: packages-windows
-
-    - name: Setup .NET SDK
-      uses: actions/setup-dotnet@d4c94342e560b34958eacfc5d055d21461ed1c5d # v5.0.0
-      with:
-        dotnet-version: ${{ needs.build.outputs.dotnet-sdk-version }}
-
-    - name: Push NuGet packages to NuGet.org
-      run: dotnet nuget push "*.nupkg" --api-key ${{ secrets.NUGET_TOKEN }} --skip-duplicate --source https://api.nuget.org/v3/index.json
+      - name: Push NuGet packages to NuGet.org
+        run: dotnet nuget push "artifacts\packages\*.nupkg" --api-key ${{ secrets.NUGET_TOKEN }} --skip-duplicate --source https://api.nuget.org/v3/index.json
+        if: ${{ github.repository_owner == 'justeat' && startsWith(github.ref, 'refs/tags/v') && runner.os == 'Windows' }}

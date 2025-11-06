@@ -1,26 +1,43 @@
+using System;
 using Amazon;
+using Amazon.Runtime;
 using Amazon.SimpleNotificationService;
 using Amazon.SQS;
 using JustSaying.AwsTools;
-using LocalSqsSnsMessaging;
 
-namespace JustSaying.TestingFramework;
-
-public sealed class LocalAwsClientFactory : IAwsClientFactory
+namespace JustSaying.TestingFramework
 {
-    private readonly InMemoryAwsBus _bus;
+    public class LocalAwsClientFactory : IAwsClientFactory
+    {
+        public LocalAwsClientFactory(Uri serviceUrl)
+        {
+            ServiceUrl = serviceUrl;
+        }
 
-    public LocalAwsClientFactory(InMemoryAwsBus bus)
-    {
-        _bus = bus;
-    }
-    public IAmazonSimpleNotificationService GetSnsClient(RegionEndpoint region)
-    {
-        return _bus.CreateSnsClient();
-    }
+        private Uri ServiceUrl { get; }
 
-    public IAmazonSQS GetSqsClient(RegionEndpoint region)
-    {
-        return _bus.CreateSqsClient();
+        public IAmazonSimpleNotificationService GetSnsClient(RegionEndpoint region)
+        {
+            var credentials = new AnonymousAWSCredentials();
+            var clientConfig = new AmazonSimpleNotificationServiceConfig
+            {
+                RegionEndpoint = region,
+                ServiceURL = ServiceUrl.ToString()
+            };
+
+            return new AmazonSimpleNotificationServiceClient(credentials, clientConfig);
+        }
+
+        public IAmazonSQS GetSqsClient(RegionEndpoint region)
+        {
+            var credentials = new AnonymousAWSCredentials();
+            var clientConfig = new AmazonSQSConfig
+            {
+                RegionEndpoint = region,
+                ServiceURL = ServiceUrl.ToString()
+            };
+
+            return new AmazonSQSClient(credentials, clientConfig);
+        }
     }
 }

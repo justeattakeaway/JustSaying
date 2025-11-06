@@ -1,36 +1,49 @@
-using JustSaying.Messaging.Channels.SubscriptionGroups;
+using System;
+using System.Threading;
+using Amazon.SQS;
+using Amazon.SQS.Model;
 using JustSaying.TestingFramework;
+using NSubstitute;
+using Shouldly;
+using Xunit;
+using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
-
-public class WhenMessageHandlingFails(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
+namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
-    private FakeSqsQueue _queue;
-
-    protected override void Given()
+    public class WhenMessageHandlingFails : BaseSubscriptionGroupTests
     {
-        var sqsSource = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), new TestMessage());
-        _queue = sqsSource.SqsQueue as FakeSqsQueue;
+        private FakeAmazonSqs _sqsClient;
 
-        Queues.Add(sqsSource);
-        Handler.ShouldSucceed = false;
-    }
+        public WhenMessageHandlingFails(ITestOutputHelper testOutputHelper)
+            : base(testOutputHelper)
+        {
+        }
 
-    [Fact]
-    public void MessageHandlerWasCalled()
-    {
-        Handler.ReceivedMessages.ShouldNotBeEmpty();
-    }
+        protected override void Given()
+        {
+            var queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), new TestMessage());
+            _sqsClient = queue.FakeClient;
 
-    [Fact]
-    public void FailedMessageIsNotRemovedFromQueue()
-    {
-        _queue.DeleteMessageRequests.ShouldBeEmpty();
-    }
+            Queues.Add(queue);
+            Handler.ShouldSucceed = false;
+        }
 
-    [Fact]
-    public void ExceptionIsNotLoggedToMonitor()
-    {
-        Monitor.HandledExceptions.ShouldBeEmpty();
+        [Fact]
+        public void MessageHandlerWasCalled()
+        {
+            Handler.ReceivedMessages.ShouldNotBeEmpty();
+        }
+
+        [Fact]
+        public void FailedMessageIsNotRemovedFromQueue()
+        {
+            _sqsClient.DeleteMessageRequests.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public void ExceptionIsNotLoggedToMonitor()
+        {
+            Monitor.HandledExceptions.ShouldBeEmpty();
+        }
     }
 }

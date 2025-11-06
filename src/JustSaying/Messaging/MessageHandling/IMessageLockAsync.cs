@@ -1,8 +1,12 @@
-namespace JustSaying.Messaging.MessageHandling;
+using System;
+using System.Threading.Tasks;
 
-public interface IMessageLockAsync
+namespace JustSaying.Messaging.MessageHandling
 {
-    Task<MessageLockResponse> TryAcquireLockPermanentlyAsync(string key);
-    Task<MessageLockResponse> TryAcquireLockAsync(string key, TimeSpan howLong);
-    Task ReleaseLockAsync(string key);
+    public interface IMessageLockAsync
+    {
+        Task<MessageLockResponse> TryAcquireLockPermanentlyAsync(string key);
+        Task<MessageLockResponse> TryAcquireLockAsync(string key, TimeSpan howLong);
+        Task ReleaseLockAsync(string key);
+    }
 }

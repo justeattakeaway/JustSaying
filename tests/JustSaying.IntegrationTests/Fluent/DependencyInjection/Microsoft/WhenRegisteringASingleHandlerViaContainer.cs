@@ -1,75 +1,49 @@
+using System;
+using System.Threading.Tasks;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Models;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
+using Xunit.Abstractions;
 
-namespace JustSaying.IntegrationTests.Fluent.DependencyInjection.Microsoft;
-
-public class WhenRegisteringASingleHandlerViaContainer(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+namespace JustSaying.IntegrationTests.Fluent.DependencyInjection.Microsoft
 {
-    [AwsFact]
-    public async Task Then_The_Handler_Is_Resolved()
+    public class WhenRegisteringASingleHandlerViaContainer : IntegrationTestBase
     {
-        // Arrange
-        var future = new Future<OrderPlaced>();
+        public WhenRegisteringASingleHandlerViaContainer(ITestOutputHelper outputHelper)
+            : base(outputHelper)
+        {
+        }
 
-        var services = GivenJustSaying()
-            .ConfigureJustSaying((builder) => builder.WithLoopbackQueue<OrderPlaced>(UniqueName))
-            .AddTransient<IHandlerAsync<OrderPlaced>, OrderProcessor>()
-            .AddSingleton(future);
+        [AwsFact]
+        public async Task Then_The_Handler_Is_Resolved()
+        {
+            // Arrange
+            var future = new Future<OrderPlaced>();
 
-        await WhenAsync(
-            services,
-            async (publisher, listener, cancellationToken) =>
-            {
-                await listener.StartAsync(cancellationToken);
-                await publisher.StartAsync(cancellationToken);
+            var services = GivenJustSaying()
+                .ConfigureJustSaying((builder) => builder.WithLoopbackQueue<OrderPlaced>(UniqueName))
+                .AddTransient<IHandlerAsync<OrderPlaced>, OrderProcessor>()
+                .AddSingleton(future);
 
-                var message = new OrderPlaced(Guid.NewGuid().ToString());
-
-                // Act
-                await publisher.PublishAsync(message, cancellationToken);
-
-                //Assert
-                await future.DoneSignal;
-                future.ReceivedMessageCount.ShouldBeGreaterThan(0);
-            });
-    }
-
-    [AwsFact]
-    public async Task Then_The_Handler_Is_Resolved_ForMultiMessage()
-    {
-        // Arrange
-        var future = new Future<OrderPlaced>();
-
-        var services = GivenJustSaying()
-            .ConfigureJustSaying((builder) => builder.WithLoopbackQueue<OrderPlaced>(UniqueName))
-            .AddTransient<IHandlerAsync<OrderPlaced>, OrderProcessor>()
-            .AddSingleton(future);
-
-        await WhenBatchAsync(
-            services,
-            async (publisher, listener, cancellationToken) =>
-            {
-                await listener.StartAsync(cancellationToken);
-                await publisher.StartAsync(cancellationToken);
-
-                future.ExpectedMessageCount = 10;
-                var messages = new List<Message>();
-
-                for (int i = 0; i < future.ExpectedMessageCount; i++)
+            await WhenAsync(
+                services,
+                async (publisher, listener, cancellationToken) =>
                 {
-                    messages.Add(new OrderPlaced(Guid.NewGuid().ToString()));
-                }
+                    await listener.StartAsync(cancellationToken);
+                    await publisher.StartAsync(cancellationToken);
 
-                // Act
-                await publisher.PublishAsync(messages, cancellationToken);
+                    var message = new OrderPlaced(Guid.NewGuid().ToString());
 
-                //Assert
-                await future.DoneSignal;
-                future.ReceivedMessageCount.ShouldBeGreaterThan(2);
-            });
+                    // Act
+                    await publisher.PublishAsync(message, cancellationToken);
+
+                    //Assert
+                    await future.DoneSignal;
+                    future.ReceivedMessageCount.ShouldBeGreaterThan(0);
+                });
+        }
     }
 }

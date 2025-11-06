@@ -1,8 +1,10 @@
-﻿using JustSaying.Models;
+﻿using System;
+using JustSaying.Models;
 
-namespace JustSaying.Messaging.MessageProcessingStrategies;
-
-public interface IMessageBackoffStrategy
+namespace JustSaying.Messaging.MessageProcessingStrategies
 {
-    TimeSpan GetBackoffDuration(Message message, int approximateReceiveCount, Exception lastException = null);
+    public interface IMessageBackoffStrategy
+    {
+        TimeSpan GetBackoffDuration(Message message, int approximateReceiveCount, Exception lastException = null);
+    }
 }

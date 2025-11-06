@@ -1,51 +1,60 @@
+using System;
+using System.Collections.Generic;
 using System.Globalization;
 
-namespace JustSaying.Messaging;
-
-public class PublishMetadata
+namespace JustSaying.Messaging
 {
-    public TimeSpan? Delay { get; set; }
-
-    public IDictionary<string, MessageAttributeValue> MessageAttributes { get; private set; }
-
-    public PublishMetadata AddMessageAttribute(string key, IReadOnlyCollection<byte> data)
+    public class PublishMetadata
     {
-        var mav = new MessageAttributeValue
+        public TimeSpan? Delay { get; set; }
+
+        public IDictionary<string, MessageAttributeValue> MessageAttributes { get; private set; }
+
+        public PublishMetadata AddMessageAttribute(string key, IReadOnlyCollection<byte> data)
         {
-            BinaryValue = data ?? throw new ArgumentNullException(nameof(data)),
-            DataType = "Binary"
-        };
+            if (data == null)
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
 
-        AddMessageAttribute(key, mav);
+            var mav = new MessageAttributeValue();
+            mav.BinaryValue = data;
+            mav.DataType = "Binary";
 
-        return this;
-    }
+            MessageAttributes[key] = mav;
 
-    public PublishMetadata AddMessageAttribute(string key, MessageAttributeValue value)
-    {
-        MessageAttributes ??= new Dictionary<string, MessageAttributeValue>(StringComparer.Ordinal);
+            return this;
+        }
 
-        MessageAttributes[key] = value;
-
-        return this;
-    }
-
-    public PublishMetadata AddMessageAttribute(string key, string value)
-    {
-        return AddMessageAttribute(key, new MessageAttributeValue
+        public PublishMetadata AddMessageAttribute(string key, MessageAttributeValue value)
         {
-            StringValue = value,
-            DataType = "String"
-        });
-    }
+            if (MessageAttributes == null)
+            {
+                MessageAttributes = new Dictionary<string, MessageAttributeValue>(StringComparer.Ordinal);
+            }
 
-    public PublishMetadata AddMessageAttribute(string key, double value)
-    {
-        return AddMessageAttribute(key, new MessageAttributeValue
+            MessageAttributes[key] = value;
+
+            return this;
+        }
+
+        public PublishMetadata AddMessageAttribute(string key, string value)
         {
-            StringValue = value.ToString(CultureInfo.InvariantCulture),
-            DataType = "Number"
-        });
-    }
+            return AddMessageAttribute(key, new MessageAttributeValue
+            {
+                StringValue = value,
+                DataType = "String"
+            });
+        }
 
+        public PublishMetadata AddMessageAttribute(string key, double value)
+        {
+            return AddMessageAttribute(key, new MessageAttributeValue
+            {
+                StringValue = value.ToString(CultureInfo.InvariantCulture),
+                DataType = "Number"
+            });
+        }
+
+    }
 }

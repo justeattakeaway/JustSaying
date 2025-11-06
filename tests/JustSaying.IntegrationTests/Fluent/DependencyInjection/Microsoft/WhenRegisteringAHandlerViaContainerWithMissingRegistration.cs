@@ -1,23 +1,34 @@
+using System;
+using System.Diagnostics;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
+using Xunit;
+using Xunit.Abstractions;
 
-namespace JustSaying.IntegrationTests.Fluent.DependencyInjection.Microsoft;
-
-public class WhenRegisteringAHandlerViaContainerWithMissingRegistration(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+namespace JustSaying.IntegrationTests.Fluent.DependencyInjection.Microsoft
 {
-    [AwsFact]
-    public void Then_An_Exception_Is_Thrown()
+    public class WhenRegisteringAHandlerViaContainerWithMissingRegistration : IntegrationTestBase
     {
-        // Arrange
-        var future = new Future<OrderPlaced>();
+        public WhenRegisteringAHandlerViaContainerWithMissingRegistration(ITestOutputHelper outputHelper)
+            : base(outputHelper)
+        {
+        }
 
-        var serviceProvider = GivenJustSaying()
-            .ConfigureJustSaying((builder) => builder.WithLoopbackQueue<OrderPlaced>(UniqueName))
-            .BuildServiceProvider();
+        [AwsFact]
+        public void Then_An_Exception_Is_Thrown()
+        {
+            // Arrange
+            var future = new Future<OrderPlaced>();
 
-        // Act and Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => serviceProvider.GetService<IMessagingBus>());
-        exception.Message.ShouldBe("No handler for message type JustSaying.IntegrationTests.TestHandlers.OrderPlaced is registered.");
+            var serviceProvider = GivenJustSaying()
+                .ConfigureJustSaying((builder) => builder.WithLoopbackQueue<OrderPlaced>(UniqueName))
+                .BuildServiceProvider();
+
+            // Act and Assert
+            var exception = Assert.Throws<InvalidOperationException>(() => serviceProvider.GetService<IMessagingBus>());
+            exception.Message.ShouldBe("No handler for message type JustSaying.IntegrationTests.TestHandlers.OrderPlaced is registered.");
+        }
     }
 }

@@ -1,9 +1,17 @@
+using System;
 using JustSaying.Models;
 
-namespace JustSaying.Benchmark;
-
-public class BenchmarkMessage(TimeSpan sentAtOffset, int sequenceId) : Message
+namespace JustSaying.Benchmark
 {
-    public TimeSpan SentAtOffset { get; } = sentAtOffset;
-    public int SequenceId { get; } = sequenceId;
+    public class BenchmarkMessage : Message
+    {
+        public BenchmarkMessage(TimeSpan sentAtOffset, int sequenceId)
+        {
+            SentAtOffset = sentAtOffset;
+            SequenceId = sequenceId;
+        }
+
+        public TimeSpan SentAtOffset { get; }
+        public int SequenceId { get; }
+    }
 }

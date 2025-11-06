@@ -1,33 +1,42 @@
+using System.Threading.Tasks;
+using JustSaying.Messaging;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
+using Xunit.Abstractions;
 
-namespace JustSaying.IntegrationTests.Fluent.Subscribing;
-
-public class WhenRegisteringATopicForAGenericMessage(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+namespace JustSaying.IntegrationTests.Fluent.Subscribing
 {
-    [AwsFact]
-    public async Task Then_The_Message_Is_Handled()
+    public class WhenRegisteringATopicForAGenericMessage : IntegrationTestBase
     {
-        // Arrange
-        var completionSource = new TaskCompletionSource<object>();
-        var handler = CreateHandler<GenericMessage<MyMessage>>(completionSource);
+        public WhenRegisteringATopicForAGenericMessage(ITestOutputHelper outputHelper)
+            : base(outputHelper)
+        {
+        }
 
-        var services = GivenJustSaying()
-            .ConfigureJustSaying((builder) => builder.WithLoopbackTopic<GenericMessage<MyMessage>>(UniqueName))
-            .AddSingleton(handler);
+        [AwsFact]
+        public async Task Then_The_Message_Is_Handled()
+        {
+            // Arrange
+            var completionSource = new TaskCompletionSource<object>();
+            var handler = CreateHandler<GenericMessage<MyMessage>>(completionSource);
 
-        await WhenAsync(
-            services,
-            async (publisher, listener, serviceProvider, cancellationToken) =>
-            {
-                await listener.StartAsync(cancellationToken);
-                await publisher.StartAsync(cancellationToken);
+            var services = GivenJustSaying()
+                .ConfigureJustSaying((builder) => builder.WithLoopbackTopic<GenericMessage<MyMessage>>(UniqueName))
+                .AddSingleton(handler);
 
-                // Act
-                await publisher.PublishAsync(new GenericMessage<MyMessage>(), cancellationToken);
+            await WhenAsync(
+                services,
+                async (publisher, listener, serviceProvider, cancellationToken) =>
+                {
+                    await listener.StartAsync(cancellationToken);
+                    await publisher.StartAsync(cancellationToken);
 
-                // Assert
-                completionSource.Task.Wait(cancellationToken);
-            });
+                    // Act
+                    await publisher.PublishAsync(new GenericMessage<MyMessage>(), cancellationToken);
+
+                    // Assert
+                    completionSource.Task.Wait(cancellationToken);
+                });
+        }
     }
 }

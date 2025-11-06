@@ -1,71 +1,53 @@
+using System.Linq;
 using JustSaying.TestingFramework;
+using Shouldly;
+using Xunit;
+using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
-
-public class WhenMessageHandlingThrows : BaseSubscriptionGroupTests
+namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
-    private bool _firstTime = true;
-    private readonly object _firstTimeLock = new();
-    private FakeSqsQueue _queue;
-
-    public WhenMessageHandlingThrows(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
+    public class WhenMessageHandlingThrows : BaseSubscriptionGroupTests
     {
-        MessagesToWaitFor = 10;
-    }
+        private bool _firstTime = true;
+        private FakeAmazonSqs _sqsClient;
 
-    protected override void Given()
-    {
-        var sqsSource = CreateSuccessfulTestQueue("TestQueue", new TestMessage());
-        _queue = (FakeSqsQueue)sqsSource.SqsQueue;
-        _queue.MaxNumberOfMessagesToReceive = MessagesToWaitFor;
+        public WhenMessageHandlingThrows(ITestOutputHelper testOutputHelper)
+            : base(testOutputHelper)
+        { }
 
-        Queues.Add(sqsSource);
-
-        Handler.OnHandle = (msg) =>
+        protected override void Given()
         {
-            if (!_firstTime) return;
+            var queue = CreateSuccessfulTestQueue("TestQueue", new TestMessage());
+            _sqsClient = queue.FakeClient;
 
-            lock (_firstTimeLock)
+            Queues.Add(queue);
+
+            Handler.OnHandle = (msg) =>
             {
                 if (!_firstTime) return;
 
                 _firstTime = false;
                 throw new TestException("Thrown by test handler");
-            }
-        };
-    }
+            };
+        }
 
-    protected override async Task<bool> UntilAsync()
-    {
-        await _queue.ReceivedAllMessages.WaitAsync(TimeSpan.FromSeconds(5));
-        await CompletionMiddleware.Complete.WaitAsync(TimeSpan.FromSeconds(5));
-        return await base.UntilAsync();
-    }
-
-    [Fact]
-    public void MessageHandlerWasCalled()
-    {
-        Handler.ReceivedMessages.Any(msg => msg.GetType() == typeof(SimpleMessage)).ShouldBeTrue();
-    }
-
-    [Fact]
-    public async Task FailedMessageIsNotRemovedFromQueue()
-    {
-        await Patiently.AssertThatAsync(() =>
+        [Fact]
+        public void MessageHandlerWasCalled()
         {
-            OutputHelper.WriteLine($"HandledErrors: {Monitor.HandledErrors.Count}");
-            OutputHelper.WriteLine($"ReceivedMessages: {Handler.ReceivedMessages.Count}");
-            OutputHelper.WriteLine($"DeleteMessageRequests: {_queue.DeleteMessageRequests.Count}");
+            Handler.ReceivedMessages.Any(msg => msg.GetType() == typeof(SimpleMessage)).ShouldBeTrue();
+        }
 
-            Monitor.HandledErrors.Count.ShouldBe(1);
-            Handler.ReceivedMessages.Count.ShouldBe(10);
-            _queue.DeleteMessageRequests.Count.ShouldBe(9);
-        });
-    }
+        [Fact]
+        public void FailedMessageIsNotRemovedFromQueue()
+        {
+            var numberHandled = Handler.ReceivedMessages.Count;
+            _sqsClient.DeleteMessageRequests.Count.ShouldBe(numberHandled - 1);
+        }
 
-    [Fact]
-    public void ExceptionIsLoggedToMonitor()
-    {
-        Monitor.HandledExceptions.ShouldNotBeEmpty();
+        [Fact]
+        public void ExceptionIsLoggedToMonitor()
+        {
+            Monitor.HandledExceptions.ShouldNotBeEmpty();
+        }
     }
 }

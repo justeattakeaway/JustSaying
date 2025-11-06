@@ -1,26 +1,34 @@
+using System.Threading.Tasks;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
 using NSubstitute;
+using Shouldly;
+using Xunit;
+using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.JustSayingBus;
-
-public class WhenAddingAPublisherWithNoTopic(ITestOutputHelper outputHelper) : GivenAServiceBus(outputHelper)
+namespace JustSaying.UnitTests.JustSayingBus
 {
-    protected override void Given()
+    public class WhenAddingAPublisherWithNoTopic : GivenAServiceBus
     {
-        RecordAnyExceptionsThrown();
-    }
+        protected override void Given()
+        {
+            RecordAnyExceptionsThrown();
+        }
 
-    protected override Task WhenAsync()
-    {
-        SystemUnderTest.AddMessagePublisher<SimpleMessage>(Substitute.For<IMessagePublisher>());
+        protected override Task WhenAsync()
+        {
+            SystemUnderTest.AddMessagePublisher<SimpleMessage>(Substitute.For<IMessagePublisher>());
 
-        return Task.CompletedTask;
-    }
+            return Task.CompletedTask;
+        }
 
-    [Fact]
-    public void ExceptionThrown()
-    {
-        ThrownException.ShouldNotBeNull();
+        [Fact]
+        public void ExceptionThrown()
+        {
+            ThrownException.ShouldNotBeNull();
+        }
+
+        public WhenAddingAPublisherWithNoTopic(ITestOutputHelper outputHelper) : base(outputHelper)
+        { }
     }
 }

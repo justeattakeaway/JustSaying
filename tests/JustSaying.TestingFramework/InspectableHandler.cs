@@ -1,27 +1,32 @@
-using System.Collections.Concurrent;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 
-namespace JustSaying.TestingFramework;
-
-public class InspectableHandler<T> : IHandlerAsync<T>
+namespace JustSaying.TestingFramework
 {
-    public InspectableHandler()
+
+
+    public class InspectableHandler<T> : IHandlerAsync<T>
     {
-        ReceivedMessages = [];
-        ShouldSucceed = true;
-    }
+        public InspectableHandler()
+        {
+            ReceivedMessages = new List<T>();
+            ShouldSucceed = true;
+        }
 
-    public Action<T> OnHandle { get; set; }
-    public ConcurrentQueue<T> ReceivedMessages { get; }
+        public Action<T> OnHandle { get; set; }
+        public IList<T> ReceivedMessages { get; }
 
-    public bool ShouldSucceed { get; set; }
+        public bool ShouldSucceed { get; set; }
 
-    public virtual Task<bool> Handle(T message)
-    {
-        ReceivedMessages.Enqueue(message);
+        public virtual Task<bool> Handle(T message)
+        {
+            ReceivedMessages.Add(message);
 
-        OnHandle?.Invoke(message);
+            OnHandle?.Invoke(message);
 
-        return Task.FromResult(ShouldSucceed);
+            return Task.FromResult(ShouldSucceed);
+        }
     }
 }

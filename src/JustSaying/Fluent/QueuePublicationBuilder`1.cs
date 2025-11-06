@@ -1,154 +1,127 @@
+using System;
+using System.Threading.Tasks;
 using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
-using JustSaying.Messaging;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.Fluent;
-
-/// <summary>
-/// A class representing a builder for a queue publication. This class cannot be inherited.
-/// </summary>
-/// <typeparam name="T">
-/// The type of the message published to the queue.
-/// </typeparam>
-public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
-    where T : Message
+namespace JustSaying.Fluent
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="QueuePublicationBuilder{T}"/> class.
+    /// A class representing a builder for a queue publication. This class cannot be inherited.
     /// </summary>
-    internal QueuePublicationBuilder()
-    { }
-
-    /// <summary>
-    /// Gets or sets a delegate to a method to use to configure SQS writes.
-    /// </summary>
-    private Action<SqsWriteConfiguration> ConfigureWrites { get; set; }
-
-    private string QueueName { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Configures the SQS write configuration.
-    /// </summary>
-    /// <param name="configure">A delegate to a method to use to configure SQS writes.</param>
-    /// <returns>
-    /// The current <see cref="QueuePublicationBuilder{T}"/>.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">
-    /// <paramref name="configure"/> is <see langword="null"/>.
-    /// </exception>
-    public QueuePublicationBuilder<T> WithWriteConfiguration(
-        Action<SqsWriteConfigurationBuilder> configure)
+    /// <typeparam name="T">
+    /// The type of the message published to the queue.
+    /// </typeparam>
+    public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
+        where T : Message
     {
-        if (configure == null)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="QueuePublicationBuilder{T}"/> class.
+        /// </summary>
+        internal QueuePublicationBuilder()
+        { }
+
+        /// <summary>
+        /// Gets or sets a delegate to a method to use to configure SQS writes.
+        /// </summary>
+        private Action<SqsWriteConfiguration> ConfigureWrites { get; set; }
+
+        /// <summary>
+        /// Configures the SQS write configuration.
+        /// </summary>
+        /// <param name="configure">A delegate to a method to use to configure SQS writes.</param>
+        /// <returns>
+        /// The current <see cref="QueuePublicationBuilder{T}"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="configure"/> is <see langword="null"/>.
+        /// </exception>
+        public QueuePublicationBuilder<T> WithWriteConfiguration(
+            Action<SqsWriteConfigurationBuilder> configure)
         {
-            throw new ArgumentNullException(nameof(configure));
-        }
-
-        var builder = new SqsWriteConfigurationBuilder();
-
-        configure(builder);
-
-        ConfigureWrites = builder.Configure;
-        return this;
-    }
-
-    /// <summary>
-    /// Configures the SQS write configuration.
-    /// </summary>
-    /// <param name="configure">A delegate to a method to use to configure SQS writes.</param>
-    /// <returns>
-    /// The current <see cref="QueuePublicationBuilder{T}"/>.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">
-    /// <paramref name="configure"/> is <see langword="null"/>.
-    /// </exception>
-    public QueuePublicationBuilder<T> WithWriteConfiguration(Action<SqsWriteConfiguration> configure)
-    {
-        ConfigureWrites = configure ?? throw new ArgumentNullException(nameof(configure));
-        return this;
-    }
-
-    /// <summary>
-    /// Configures the SQS Queue name, rather than using the naming convention.
-    /// </summary>
-    /// <param name="name">The name of the queue to subscribe to.</param>
-    /// <returns>
-    /// The current <see cref="QueuePublicationBuilder{T}"/>.
-    /// </returns>
-    public QueuePublicationBuilder<T> WithQueueName(string name)
-    {
-        QueueName = name ?? throw new ArgumentNullException(nameof(name));
-        return this;
-    }
-
-    /// <inheritdoc />
-    void IPublicationBuilder<T>.Configure(
-        JustSayingBus bus,
-        IAwsClientFactoryProxy proxy,
-        ILoggerFactory loggerFactory)
-    {
-        var logger = loggerFactory.CreateLogger<QueuePublicationBuilder<T>>();
-
-        logger.LogInformation("Adding SQS publisher for message type '{MessageType}'.",
-            typeof(T));
-
-        var config = bus.Config;
-        var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
-
-        var writeConfiguration = new SqsWriteConfiguration
-        {
-            QueueName = QueueName
-        };
-        ConfigureWrites?.Invoke(writeConfiguration);
-        writeConfiguration.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
-
-        var regionEndpoint = RegionEndpoint.GetBySystemName(region);
-        var sqsClient = proxy.GetAwsClientFactory().GetSqsClient(regionEndpoint);
-
-        var compressionRegistry = bus.CompressionRegistry;
-        var compressionOptions = writeConfiguration.CompressionOptions;
-        var subjectProvider = bus.Config.MessageSubjectProvider;
-        var subject = subjectProvider.GetSubjectForType(typeof(T));
-
-        var eventPublisher = new SqsMessagePublisher(
-            sqsClient,
-            new OutboundMessageConverter(PublishDestinationType.Queue, bus.MessageBodySerializerFactory.GetSerializer<T>(), compressionRegistry, compressionOptions, subject, writeConfiguration.IsRawMessage),
-            loggerFactory)
-        {
-            MessageResponseLogger = config.MessageResponseLogger,
-            MessageBatchResponseLogger = bus.PublishBatchConfiguration?.MessageBatchResponseLogger
-        };
-
-#pragma warning disable 618
-        var sqsQueue = new SqsQueueByName(
-            regionEndpoint,
-            writeConfiguration.QueueName,
-            sqsClient,
-            writeConfiguration.RetryCountBeforeSendingToErrorQueue,
-            loggerFactory);
-#pragma warning restore 618
-
-        async Task StartupTask(CancellationToken cancellationToken)
-        {
-            if (!await sqsQueue.ExistsAsync(cancellationToken).ConfigureAwait(false))
+            if (configure == null)
             {
-                await sqsQueue.CreateAsync(writeConfiguration, cancellationToken: cancellationToken).ConfigureAwait(false);
+                throw new ArgumentNullException(nameof(configure));
             }
 
-            eventPublisher.QueueUrl = sqsQueue.Uri;
+            var builder = new SqsWriteConfigurationBuilder();
+
+            configure(builder);
+
+            ConfigureWrites = builder.Configure;
+            return this;
         }
 
-        bus.AddStartupTask(StartupTask);
+        /// <summary>
+        /// Configures the SQS write configuration.
+        /// </summary>
+        /// <param name="configure">A delegate to a method to use to configure SQS writes.</param>
+        /// <returns>
+        /// The current <see cref="QueuePublicationBuilder{T}"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="configure"/> is <see langword="null"/>.
+        /// </exception>
+        public QueuePublicationBuilder<T> WithWriteConfiguration(Action<SqsWriteConfiguration> configure)
+        {
+            ConfigureWrites = configure ?? throw new ArgumentNullException(nameof(configure));
+            return this;
+        }
 
-        bus.AddMessagePublisher<T>(eventPublisher);
+        /// <inheritdoc />
+        void IPublicationBuilder<T>.Configure(
+            JustSayingBus bus,
+            IAwsClientFactoryProxy proxy,
+            ILoggerFactory loggerFactory)
+        {
+            var logger = loggerFactory.CreateLogger<QueuePublicationBuilder<T>>();
 
-        logger.LogInformation(
-            "Created SQS publisher for message type '{MessageType}' on queue '{QueueName}'.",
-            typeof(T),
-            writeConfiguration.QueueName);
+            logger.LogInformation("Adding SQS publisher for message type '{MessageType}'.",
+                typeof(T));
+
+            var config = bus.Config;
+
+            var writeConfiguration = new SqsWriteConfiguration();
+            ConfigureWrites?.Invoke(writeConfiguration);
+            writeConfiguration.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
+
+            bus.SerializationRegister.AddSerializer<T>();
+
+            var regionEndpoint = RegionEndpoint.GetBySystemName(config.Region);
+            var sqsClient = proxy.GetAwsClientFactory().GetSqsClient(regionEndpoint);
+
+#pragma warning disable 618
+            var eventPublisher = new SqsPublisher(
+                regionEndpoint,
+                writeConfiguration.QueueName,
+                sqsClient,
+                writeConfiguration.RetryCountBeforeSendingToErrorQueue,
+                bus.SerializationRegister,
+                loggerFactory)
+            {
+                MessageResponseLogger = config.MessageResponseLogger
+            };
+#pragma warning restore 618
+
+            async Task StartupTask()
+            {
+                if (!await eventPublisher.ExistsAsync().ConfigureAwait(false))
+                {
+                    await eventPublisher.CreateAsync(writeConfiguration).ConfigureAwait(false);
+                }
+            }
+
+            bus.AddStartupTask(StartupTask);
+
+            bus.AddMessagePublisher<T>(eventPublisher);
+
+            logger.LogInformation(
+                "Created SQS publisher for message type '{MessageType}' on queue '{QueueName}'.",
+                typeof(T),
+                writeConfiguration.QueueName);
+        }
     }
 }

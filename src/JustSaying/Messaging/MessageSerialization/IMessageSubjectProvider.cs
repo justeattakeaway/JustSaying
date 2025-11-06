@@ -1,6 +1,9 @@
-namespace JustSaying.Messaging.MessageSerialization;
+using System;
 
-public interface IMessageSubjectProvider
+namespace JustSaying.Messaging.MessageSerialization
 {
-    string GetSubjectForType(Type messageType);
+    public interface IMessageSubjectProvider
+    {
+        string GetSubjectForType(Type messageType);
+    }
 }

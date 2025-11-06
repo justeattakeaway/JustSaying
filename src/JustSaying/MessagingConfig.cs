@@ -1,40 +1,48 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging.Channels;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using JustSaying.Naming;
 
-namespace JustSaying;
-
-public class MessagingConfig : IMessagingConfig, IPublishBatchConfiguration
+namespace JustSaying
 {
-    public MessagingConfig()
+    public class MessagingConfig : IMessagingConfig
     {
-        PublishFailureReAttempts = JustSayingConstants.DefaultPublisherRetryCount;
-        PublishFailureBackoff = JustSayingConstants.DefaultPublisherRetryInterval;
-        AdditionalSubscriberAccounts = new List<string>();
-        MessageSubjectProvider = new NonGenericMessageSubjectProvider();
-        TopicNamingConvention = new DefaultNamingConventions();
-        QueueNamingConvention = new DefaultNamingConventions();
-        DefaultCompressionOptions = new PublishCompressionOptions();
-    }
-
-    public int PublishFailureReAttempts { get; set; }
-    public TimeSpan PublishFailureBackoff { get; set; }
-    public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
-    public Action<MessageBatchResponse, IReadOnlyCollection<Message>> MessageBatchResponseLogger { get; set; }
-    public IReadOnlyCollection<string> AdditionalSubscriberAccounts { get; set; }
-    public string Region { get; set; }
-    public IMessageSubjectProvider MessageSubjectProvider { get; set; }
-    public ITopicNamingConvention TopicNamingConvention { get; set; }
-    public IQueueNamingConvention QueueNamingConvention { get; set; }
-    public PublishCompressionOptions DefaultCompressionOptions { get; set; }
-
-    public virtual void Validate()
-    {
-        if (MessageSubjectProvider == null)
+        public MessagingConfig()
         {
-            throw new InvalidOperationException($"Config cannot have a null for the {nameof(MessageSubjectProvider)} property.");
+            PublishFailureReAttempts = JustSayingConstants.DefaultPublisherRetryCount;
+            PublishFailureBackoff = JustSayingConstants.DefaultPublisherRetryInterval;
+            AdditionalSubscriberAccounts = new List<string>();
+            MessageSubjectProvider = new NonGenericMessageSubjectProvider();
+            TopicNamingConvention = new DefaultNamingConventions();
+            QueueNamingConvention = new DefaultNamingConventions();
+        }
+
+        public int PublishFailureReAttempts { get; set; }
+        public TimeSpan PublishFailureBackoff { get; set; }
+        public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
+        public IReadOnlyCollection<string> AdditionalSubscriberAccounts { get; set; }
+        public string Region { get; set; }
+        public IMessageSubjectProvider MessageSubjectProvider { get; set; }
+        public ITopicNamingConvention TopicNamingConvention { get; set; }
+        public IQueueNamingConvention QueueNamingConvention { get; set; }
+
+        public virtual void Validate()
+        {
+            if (string.IsNullOrWhiteSpace(Region))
+            {
+                throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(Region)} property.");
+            }
+
+            if (MessageSubjectProvider == null)
+            {
+                throw new InvalidOperationException($"Config cannot have a null for the {nameof(MessageSubjectProvider)} property.");
+            }
         }
     }
 }

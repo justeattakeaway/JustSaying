@@ -1,74 +1,75 @@
+using System;
 using Amazon;
 using Amazon.Runtime;
-using Amazon.Runtime.Credentials;
 using Amazon.SimpleNotificationService;
 using Amazon.SQS;
 
-namespace JustSaying.AwsTools;
-
-public class DefaultAwsClientFactory : IAwsClientFactory
+namespace JustSaying.AwsTools
 {
-    private readonly AWSCredentials _credentials;
-
-    public DefaultAwsClientFactory()
+    public class DefaultAwsClientFactory : IAwsClientFactory
     {
-        _credentials = DefaultAWSCredentialsIdentityResolver.GetCredentials();
-    }
+        private readonly AWSCredentials _credentials;
 
-    public DefaultAwsClientFactory(AWSCredentials customCredentials)
-    {
-        _credentials = customCredentials;
-    }
-
-    public Uri ServiceUri { get; set; }
-
-    public IAmazonSimpleNotificationService GetSnsClient(RegionEndpoint region)
-        => new AmazonSimpleNotificationServiceClient(_credentials, CreateSNSConfig(region));
-
-    public IAmazonSQS GetSqsClient(RegionEndpoint region)
-        => new AmazonSQSClient(_credentials, CreateSQSConfig(region));
-
-    protected virtual void Configure(AmazonSimpleNotificationServiceConfig config)
-    {
-        // For derived classes to override and customise
-    }
-
-    protected virtual void Configure(AmazonSQSConfig config)
-    {
-        // For derived classes to override and customise
-    }
-
-    private AmazonSimpleNotificationServiceConfig CreateSNSConfig(RegionEndpoint region)
-    {
-        var config = new AmazonSimpleNotificationServiceConfig()
+        public DefaultAwsClientFactory()
         {
-            RegionEndpoint = region,
-        };
-
-        if (ServiceUri != null)
-        {
-            config.ServiceURL = ServiceUri.ToString();
+            _credentials = FallbackCredentialsFactory.GetCredentials();
         }
 
-        Configure(config);
-
-        return config;
-    }
-
-    private AmazonSQSConfig CreateSQSConfig(RegionEndpoint region)
-    {
-        var config = new AmazonSQSConfig()
+        public DefaultAwsClientFactory(AWSCredentials customCredentials)
         {
-            RegionEndpoint = region,
-        };
-
-        if (ServiceUri != null)
-        {
-            config.ServiceURL = ServiceUri.ToString();
+            _credentials = customCredentials;
         }
 
-        Configure(config);
+        public Uri ServiceUri { get; set; }
 
-        return config;
+        public IAmazonSimpleNotificationService GetSnsClient(RegionEndpoint region)
+            => new AmazonSimpleNotificationServiceClient(_credentials, CreateSNSConfig(region));
+
+        public IAmazonSQS GetSqsClient(RegionEndpoint region)
+            => new AmazonSQSClient(_credentials, CreateSQSConfig(region));
+
+        protected virtual void Configure(AmazonSimpleNotificationServiceConfig config)
+        {
+            // For derived classes to override and customise
+        }
+
+        protected virtual void Configure(AmazonSQSConfig config)
+        {
+            // For derived classes to override and customise
+        }
+
+        private AmazonSimpleNotificationServiceConfig CreateSNSConfig(RegionEndpoint region)
+        {
+            var config = new AmazonSimpleNotificationServiceConfig()
+            {
+                RegionEndpoint = region,
+            };
+
+            if (ServiceUri != null)
+            {
+                config.ServiceURL = ServiceUri.ToString();
+            }
+
+            Configure(config);
+
+            return config;
+        }
+
+        private AmazonSQSConfig CreateSQSConfig(RegionEndpoint region)
+        {
+            var config = new AmazonSQSConfig()
+            {
+                RegionEndpoint = region,
+            };
+
+            if (ServiceUri != null)
+            {
+                config.ServiceURL = ServiceUri.ToString();
+            }
+
+            Configure(config);
+
+            return config;
+        }
     }
 }

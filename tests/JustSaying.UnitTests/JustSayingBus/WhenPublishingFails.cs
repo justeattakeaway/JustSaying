@@ -1,44 +1,53 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using JustSaying.Messaging;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
 using NSubstitute;
+using Xunit;
+using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.JustSayingBus;
-
-public class WhenPublishingFails(ITestOutputHelper outputHelper) : GivenAServiceBus(outputHelper)
+namespace JustSaying.UnitTests.JustSayingBus
 {
-    private readonly IMessagePublisher _publisher = Substitute.For<IMessagePublisher>();
-    private const int PublishAttempts = 2;
-
-    protected override void Given()
+    public class WhenPublishingFails : GivenAServiceBus
     {
-        base.Given();
+        private readonly IMessagePublisher _publisher = Substitute.For<IMessagePublisher>();
+        private const int PublishAttempts = 2;
 
-        Config.PublishFailureReAttempts.Returns(PublishAttempts);
-        Config.PublishFailureBackoff.Returns(TimeSpan.Zero);
-        RecordAnyExceptionsThrown();
+        protected override void Given()
+        {
+            base.Given();
 
-        _publisher.When(x => x.PublishAsync(Arg.Any<Message>(),
-                Arg.Any<PublishMetadata>(),
-                Arg.Any<CancellationToken>()))
-            .Do(x => { throw new TestException("Thrown by test WhenPublishingFails"); });
-    }
+            Config.PublishFailureReAttempts.Returns(PublishAttempts);
+            Config.PublishFailureBackoff.Returns(TimeSpan.Zero);
+            RecordAnyExceptionsThrown();
 
-    protected override async Task WhenAsync()
-    {
-        SystemUnderTest.AddMessagePublisher<SimpleMessage>(_publisher);
+            _publisher.When(x => x.PublishAsync(Arg.Any<Message>(),
+                    Arg.Any<PublishMetadata>(),
+                    Arg.Any<CancellationToken>()))
+                .Do(x => { throw new TestException("Thrown by test WhenPublishingFails"); });
+        }
 
-        var cts = new CancellationTokenSource(TimeoutPeriod);
-        await SystemUnderTest.StartAsync(cts.Token);
+        protected override async Task WhenAsync()
+        {
+            SystemUnderTest.AddMessagePublisher<SimpleMessage>(_publisher);
 
-        await SystemUnderTest.PublishAsync(new SimpleMessage(), cts.Token);
-    }
+            var cts = new CancellationTokenSource(TimeoutPeriod);
+            await SystemUnderTest.StartAsync(cts.Token);
 
-    [Fact]
-    public void EventPublicationWasAttemptedTheConfiguredNumberOfTimes()
-    {
-        _publisher
-            .Received(PublishAttempts)
-            .PublishAsync(Arg.Any<Message>(), Arg.Any<PublishMetadata>(), Arg.Any<CancellationToken>());
+            await SystemUnderTest.PublishAsync(new SimpleMessage(), cts.Token);
+        }
+
+        [Fact]
+        public void EventPublicationWasAttemptedTheConfiguredNumberOfTimes()
+        {
+            _publisher
+                .Received(PublishAttempts)
+                .PublishAsync(Arg.Any<Message>(), Arg.Any<PublishMetadata>(), Arg.Any<CancellationToken>());
+        }
+
+        public WhenPublishingFails(ITestOutputHelper outputHelper) : base(outputHelper)
+        { }
     }
 }

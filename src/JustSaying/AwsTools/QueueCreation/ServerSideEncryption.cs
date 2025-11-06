@@ -1,13 +1,21 @@
-namespace JustSaying.AwsTools.QueueCreation;
+using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
-public class ServerSideEncryption
+namespace JustSaying.AwsTools.QueueCreation
 {
-    public ServerSideEncryption()
+    public class ServerSideEncryption
     {
-        KmsDataKeyReusePeriod = JustSayingConstants.DefaultAttributeEncryptionKeyReusePeriod;
+        public ServerSideEncryption()
+        {
+            KmsDataKeyReusePeriodSeconds = JustSayingConstants.DefaultAttributeEncryptionKeyReusePeriodSecond;
+        }
+
+        [JsonProperty("kmsMasterKeyId")]
+        [JsonPropertyName("kmsMasterKeyId")]
+        public string KmsMasterKeyId { get; set; }
+
+        [JsonProperty("kmsDataKeyReusePeriodSeconds")]
+        [JsonPropertyName("kmsDataKeyReusePeriodSeconds")]
+        public string KmsDataKeyReusePeriodSeconds { get; set; }
     }
-
-    public string KmsMasterKeyId { get; set; }
-
-    public TimeSpan KmsDataKeyReusePeriod { get; set; }
 }

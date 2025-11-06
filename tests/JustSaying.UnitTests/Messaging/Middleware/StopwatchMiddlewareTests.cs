@@ -1,3 +1,6 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Monitoring;
@@ -5,54 +8,60 @@ using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.Fakes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Shouldly;
+using Xunit;
+using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Middleware;
-
-public class StopwatchMiddlewareTests
+namespace JustSaying.UnitTests.Messaging.Middleware
 {
-    private readonly InspectableHandler<OrderAccepted> _handler;
-    private readonly TrackingLoggingMonitor _monitor;
-    private readonly MiddlewareBase<HandleMessageContext, bool> _middleware;
-
-    public StopwatchMiddlewareTests(ITestOutputHelper outputHelper)
+    public class StopwatchMiddlewareTests
     {
-        var loggerFactory = LoggerFactory.Create(lf => lf.AddXUnit(outputHelper).SetMinimumLevel(LogLevel.Information));
+        private readonly InspectableHandler<OrderAccepted> _handler;
+        private readonly TrackingLoggingMonitor _monitor;
+        private readonly MiddlewareBase<HandleMessageContext, bool> _middleware;
 
-        _handler = new InspectableHandler<OrderAccepted>();
-        _monitor = new TrackingLoggingMonitor(loggerFactory.CreateLogger<TrackingLoggingMonitor>());
-        var serviceResolver = new InMemoryServiceResolver(c =>
-            c.AddSingleton<IHandlerAsync<OrderAccepted>>(_handler)
-                .AddSingleton<IMessageMonitor>(_monitor));
+        public StopwatchMiddlewareTests(ITestOutputHelper outputHelper)
+        {
+            var loggerFactory = LoggerFactory.Create(lf => lf.AddXUnit(outputHelper));
 
-        _middleware = new HandlerMiddlewareBuilder(serviceResolver, serviceResolver)
-            .UseHandler<OrderAccepted>()
-            .UseStopwatch(_handler.GetType())
-            .Build();
-    }
+            _handler = new InspectableHandler<OrderAccepted>();
+            _monitor = new TrackingLoggingMonitor(loggerFactory.CreateLogger<TrackingLoggingMonitor>());
+            var serviceResolver = new FakeServiceResolver(c =>
+                c.AddSingleton<IHandlerAsync<OrderAccepted>>(_handler)
+                    .AddSingleton<IMessageMonitor>(_monitor));
 
-    [Fact]
-    public async Task WhenMiddlewareIsWrappedinStopWatch_InnerMiddlewareIsCalled()
-    {
-        var context = TestHandleContexts.From<OrderAccepted>();
-        var result = await _middleware.RunAsync(context, null, CancellationToken.None);
+            _middleware = new HandlerMiddlewareBuilder(serviceResolver, serviceResolver)
+                .UseHandler<OrderAccepted>()
+                .UseStopwatch(_handler.GetType())
+                .Build();
+        }
 
-        result.ShouldBeTrue();
+        [Fact]
+        public async Task WhenMiddlewareIsWrappedinStopWatch_InnerMiddlewareIsCalled()
+        {
+            var context = new HandleMessageContext(new OrderAccepted(), typeof(OrderAccepted), "test-queue");
 
-        _handler.ReceivedMessages.ShouldHaveSingleItem().ShouldBeOfType<OrderAccepted>();
-    }
+            var result = await _middleware.RunAsync(context, null, CancellationToken.None);
 
-    [Fact]
-    public async Task WhenMiddlewareIsWrappedinStopWatch_MonitoringIsCalled()
-    {
-        var context = TestHandleContexts.From<OrderAccepted>();
+            result.ShouldBeTrue();
 
-        var result = await _middleware.RunAsync(context, null, CancellationToken.None);
+            _handler.ReceivedMessages.ShouldHaveSingleItem().ShouldBeOfType<OrderAccepted>();
+        }
 
-        result.ShouldBeTrue();
+        [Fact]
+        public async Task WhenMiddlewareIsWrappedinStopWatch_MonitoringIsCalled()
+        {
+            var context = new HandleMessageContext(new OrderAccepted(), typeof(OrderAccepted), "test-queue");
 
-        var handled = _monitor.HandlerExecutionTimes.ShouldHaveSingleItem();
-        handled.duration.ShouldBeGreaterThan(TimeSpan.Zero);
-        handled.handlerType.ShouldBe(typeof(InspectableHandler<OrderAccepted>));
-        handled.messageType.ShouldBe(typeof(OrderAccepted));
+            var result = await _middleware.RunAsync(context, null, CancellationToken.None);
+
+            result.ShouldBeTrue();
+
+            var handled = _monitor.HandlerExecutionTimes.ShouldHaveSingleItem();
+            handled.duration.ShouldBeGreaterThan(TimeSpan.Zero);
+            handled.handlerType.ShouldBe(typeof(InspectableHandler<OrderAccepted>));
+            handled.messageType.ShouldBe(typeof(OrderAccepted));
+        }
     }
 }

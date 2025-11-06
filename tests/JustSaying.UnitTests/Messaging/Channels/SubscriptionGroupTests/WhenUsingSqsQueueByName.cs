@@ -1,92 +1,89 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Amazon;
+using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging;
-using JustSaying.Messaging.Channels.SubscriptionGroups;
-using JustSaying.Messaging.Compression;
-using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
-using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
-
+using Shouldly;
+using Xunit;
+using Xunit.Abstractions;
 #pragma warning disable 618
 
-namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
-
-public sealed class WhenUsingSqsQueueByName(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper), IDisposable
+namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
-    private ISqsQueue _queue;
-    private FakeAmazonSqs _client;
-    readonly string MessageTypeString = nameof(SimpleMessage);
-    const string MessageBody = "object";
-
-    private readonly SimpleMessage _message = new()
+    public sealed class WhenUsingSqsQueueByName : BaseSubscriptionGroupTests, IDisposable
     {
-        RaisingComponent = "Component",
-        Id = Guid.NewGuid()
-    };
+        private ISqsQueue _queue;
+        private IAmazonSQS _client;
+        readonly string MessageTypeString = typeof(SimpleMessage).ToString();
+        const string MessageBody = "object";
 
-    protected override void Given()
-    {
-        int retryCount = 1;
+        public WhenUsingSqsQueueByName(ITestOutputHelper testOutputHelper)
+            : base(testOutputHelper)
+        { }
 
-        _client = new FakeAmazonSqs(() =>
+        protected override void Given()
         {
-            return new[] { GenerateResponseMessages(MessageTypeString, Guid.NewGuid()) }
-                .Concat(new ReceiveMessageResponse().Infinite());
-        });
+            int retryCount = 1;
 
-        var queue = new SqsQueueByName(RegionEndpoint.EUWest1,
-            "some-queue-name",
-            _client,
-            retryCount,
-            LoggerFactory);
-        queue.ExistsAsync(CancellationToken.None).Wait();
+            _client = new FakeAmazonSqs(() =>
+            {
+                return new[] { GenerateResponseMessages(MessageTypeString, Guid.NewGuid()) }
+                    .Concat(new ReceiveMessageResponse().Infinite());
+            });
 
-        _queue = queue;
+            var queue = new SqsQueueByName(RegionEndpoint.EUWest1,
+                "some-queue-name",
+                _client,
+                retryCount,
+                LoggerFactory);
+            queue.ExistsAsync().Wait();
 
-        Queues.Add(new SqsSource
+            _queue = queue;
+
+            Queues.Add(_queue);
+        }
+
+        [Fact]
+        public void HandlerReceivesMessage()
         {
-            SqsQueue = queue,
-            MessageConverter = new InboundMessageConverter(new FakeBodyDeserializer(_message), new MessageCompressionRegistry(), false)
-        });
-    }
+            Handler.ReceivedMessages.Contains(SerializationRegister.DefaultDeserializedMessage())
+                .ShouldBeTrue();
+        }
 
-    [Fact]
-    public void HandlerReceivesMessage()
-    {
-        Handler.ReceivedMessages.Contains(_message)
-            .ShouldBeTrue();
-    }
-
-    private static ReceiveMessageResponse GenerateResponseMessages(
-        string messageType,
-        Guid messageId)
-    {
-        return new ReceiveMessageResponse
+        private static ReceiveMessageResponse GenerateResponseMessages(
+            string messageType,
+            Guid messageId)
         {
-            Messages =
-            [
-                new Message
+            return new ReceiveMessageResponse
+            {
+                Messages = new List<Message>
                 {
-                    MessageId = messageId.ToString(),
-                    Body = SqsMessageBody(messageType)
-                },
-                new Message
-                {
-                    MessageId = messageId.ToString(),
-                    Body = """{"Subject":"SOME_UNKNOWN_MESSAGE","Message":"SOME_RANDOM_MESSAGE"}"""
+                    new Message
+                    {
+                        MessageId = messageId.ToString(),
+                        Body = SqsMessageBody(messageType)
+                    },
+                    new Message
+                    {
+                        MessageId = messageId.ToString(),
+                        Body = "{\"Subject\":\"SOME_UNKNOWN_MESSAGE\"," +
+                            "\"Message\":\"SOME_RANDOM_MESSAGE\"}"
+                    }
                 }
-            ]
-        };
-    }
+            };
+        }
 
-    private static string SqsMessageBody(string messageType)
-    {
-        return $$"""{"Subject":"{{messageType}}","Message":"{{MessageBody}}"}""";
-    }
+        private static string SqsMessageBody(string messageType)
+        {
+            return "{\"Subject\":\"" + messageType + "\"," + "\"Message\":\"" + MessageBody + "\"}";
+        }
 
-    public void Dispose()
-    {
-        _client.Dispose();
+        public void Dispose()
+        {
+            _client.Dispose();
+        }
     }
 }

@@ -1,9 +1,8 @@
+version: "2"
 services:
-  localstack:
+  goaws:
     container_name: localstack
     restart: unless-stopped
-    image: localstack/localstack:3.7
+    image: localstack/localstack
     ports:
-      - "4566:4566"
-    environment:
-      LS_LOG: debug
+      - 4566:4566

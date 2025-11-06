@@ -1,45 +1,40 @@
+using System.Threading.Tasks;
 using Amazon.SQS;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging;
-using JustSaying.Messaging.Compression;
-using JustSaying.Messaging.MessageSerialization;
-using JustSaying.TestingFramework;
 using NSubstitute;
+using Xunit;
+#pragma warning disable 618
 
-namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs;
-
-public abstract class WhenPublishingTestBase : IAsyncLifetime
+namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 {
-    private protected SqsMessagePublisher SystemUnderTest { get; private set; }
-    public IAmazonSQS Sqs { get; private set; } = Substitute.For<IAmazonSQS>();
-
-    public virtual async ValueTask InitializeAsync()
+    public abstract class WhenPublishingTestBase : IAsyncLifetime
     {
-        Given();
+        private protected SqsPublisher SystemUnderTest { get; private set; }
+        public IAmazonSQS Sqs { get; private set; } = Substitute.For<IAmazonSQS>();
 
-        SystemUnderTest = await CreateSystemUnderTestAsync();
+        public virtual async Task InitializeAsync()
+        {
+            Given();
 
-        await WhenAsync().ConfigureAwait(false);
+            SystemUnderTest = await CreateSystemUnderTestAsync();
+
+            await WhenAsync().ConfigureAwait(false);
+        }
+
+        public virtual Task DisposeAsync()
+        {
+            if (Sqs != null)
+            {
+                Sqs.Dispose();
+                Sqs = null;
+            }
+
+            return Task.CompletedTask;
+        }
+
+        protected abstract void Given();
+        private protected abstract Task<SqsPublisher> CreateSystemUnderTestAsync();
+
+        protected abstract Task WhenAsync();
     }
-
-    public virtual ValueTask DisposeAsync()
-    {
-        Sqs?.Dispose();
-        return ValueTask.CompletedTask;
-    }
-
-    protected abstract void Given();
-    private protected abstract Task<SqsMessagePublisher> CreateSystemUnderTestAsync();
-
-    internal static OutboundMessageConverter CreateConverter(bool isRawMessage = false)
-    {
-        return new OutboundMessageConverter(PublishDestinationType.Queue,
-            SimpleMessage.Serializer,
-            new MessageCompressionRegistry(),
-            new PublishCompressionOptions(),
-            nameof(SimpleMessage),
-            isRawMessage);
-    }
-
-    protected abstract Task WhenAsync();
 }

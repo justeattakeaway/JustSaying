@@ -1,33 +1,35 @@
 version: 2
 updates:
-- package-ecosystem: "github-actions"
-  directory: "/"
-  schedule:
-    interval: daily
-    timezone: Europe/London
 - package-ecosystem: nuget
   directory: "/"
   schedule:
     interval: daily
     timezone: Europe/London
+  reviewers:
+    - "justeat/justsaying"
   open-pull-requests-limit: 10
   ignore:
-    - dependency-name: AWSSDK.Extensions.NETCore.Setup
-    - dependency-name: AWSSDK.SimpleNotificationService
-    - dependency-name: AWSSDK.SQS
-    - dependency-name: Microsoft.Bcl.AsyncInterfaces
-    - dependency-name: Microsoft.Extensions.Configuration
-    - dependency-name: Microsoft.Extensions.Configuration.EnvironmentVariables
-    - dependency-name: Microsoft.Extensions.Configuration.Json
-    - dependency-name: Microsoft.Extensions.DependencyInjection
-    - dependency-name: Microsoft.Extensions.DependencyInjection.Abstractions
-    - dependency-name: Microsoft.Extensions.Logging.Abstractions
-    - dependency-name: Microsoft.Extensions.Logging.Console
-    - dependency-name: Newtonsoft.Json
-    - dependency-name: structuremap
-    - dependency-name: System.Text.Json
-    - dependency-name: System.Threading.Channels
-  groups:
-    xunit:
-      patterns:
-        - xunit*
+  - dependency-name: AWSSDK.SimpleNotificationService
+    versions:
+    - "> 3.3.100.1, < 3.8"
+  - dependency-name: AWSSDK.SQS
+    versions:
+    - "> 3.3.100.1, < 3.8"
+  - dependency-name: Microsoft.Extensions.DependencyInjection.Abstractions
+    versions:
+    - "> 1.1.0"
+  - dependency-name: Microsoft.Extensions.Logging.Abstractions
+    versions:
+    - "> 2.0.0"
+  - dependency-name: Newtonsoft.Json
+    versions:
+    - "> 9.0.1"
+  - dependency-name: structuremap
+    versions:
+    - "> 4.6.0, < 5"
+  - dependency-name: structuremap
+    versions:
+    - ">= 4.7.a, < 4.8"
+  - dependency-name: System.Text.Json
+    versions:
+    - ">= 4.7.a, < 6"

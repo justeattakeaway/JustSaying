@@ -1,13 +1,25 @@
-namespace JustSaying.Messaging.MessageHandling;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
-public class ListHandler<T>(IEnumerable<IHandlerAsync<T>> handlers) : IHandlerAsync<T>
+namespace JustSaying.Messaging.MessageHandling
 {
-    public async Task<bool> Handle(T message)
+    public class ListHandler<T> : IHandlerAsync<T>
     {
-        var handlerTasks = handlers.Select(h => h.Handle(message));
-        var handlerResults = await Task.WhenAll(handlerTasks)
-            .ConfigureAwait(false);
+        private readonly IEnumerable<IHandlerAsync<T>> _handlers;
 
-        return handlerResults.All(x => x);
+        public ListHandler(IEnumerable<IHandlerAsync<T>> handlers)
+        {
+            _handlers = handlers;
+        }
+
+        public async Task<bool> Handle(T message)
+        {
+            var handlerTasks = _handlers.Select(h => h.Handle(message));
+            var handlerResults = await Task.WhenAll(handlerTasks)
+                .ConfigureAwait(false);
+
+            return handlerResults.All(x => x);
+        }
     }
 }

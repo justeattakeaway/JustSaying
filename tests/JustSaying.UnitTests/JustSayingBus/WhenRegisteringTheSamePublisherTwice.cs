@@ -1,43 +1,52 @@
+using System.Linq;
+using System.Threading.Tasks;
 using JustSaying.Messaging;
-using JustSaying.Messaging.Interrogation;
 using JustSaying.Models;
+using Newtonsoft.Json;
 using NSubstitute;
+using Shouldly;
+using Xunit;
+using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.JustSayingBus;
-
-public class WhenRegisteringTheSamePublisherTwice(ITestOutputHelper outputHelper) : GivenAServiceBus(outputHelper)
+namespace JustSaying.UnitTests.JustSayingBus
 {
-    private IMessagePublisher _publisher;
-
-    protected override void Given()
+    public class WhenRegisteringTheSamePublisherTwice : GivenAServiceBus
     {
-        base.Given();
-        _publisher = Substitute.For<IMessagePublisher>();
-        RecordAnyExceptionsThrown();
-    }
+        private IMessagePublisher _publisher;
 
-    protected override Task WhenAsync()
-    {
-        SystemUnderTest.AddMessagePublisher<Message>(_publisher);
-        SystemUnderTest.AddMessagePublisher<Message>(_publisher);
+        protected override void Given()
+        {
+            base.Given();
+            _publisher = Substitute.For<IMessagePublisher>();
+            RecordAnyExceptionsThrown();
+        }
 
-        return Task.CompletedTask;
-    }
+        protected override Task WhenAsync()
+        {
+            SystemUnderTest.AddMessagePublisher<Message>(_publisher);
+            SystemUnderTest.AddMessagePublisher<Message>(_publisher);
 
-    [Fact]
-    public void NoExceptionIsThrown()
-    {
-        // Specifying failover regions mean that messages can be registered more than once.
-        ThrownException.ShouldBeNull();
-    }
+            return Task.CompletedTask;
+        }
 
-    [Fact]
-    public void AndInterrogationShowsNonDuplicatedPublishers()
-    {
-        dynamic response = SystemUnderTest.Interrogate();
+        [Fact]
+        public void NoExceptionIsThrown()
+        {
+            // Specifying failover regions mean that messages can be registered more than once.
+            ThrownException.ShouldBeNull();
+        }
 
-        Dictionary<string, InterrogationResult> publishedTypes = response.Data.PublishedMessageTypes;
+        [Fact]
+        public void AndInterrogationShowsNonDuplicatedPublishers()
+        {
+            dynamic response = SystemUnderTest.Interrogate();
 
-        publishedTypes.ShouldContainKey(nameof(Message));
+            string[] publishedTypes = response.Data.PublishedMessageTypes;
+
+            publishedTypes.ShouldContain(nameof(Message));
+        }
+
+        public WhenRegisteringTheSamePublisherTwice(ITestOutputHelper outputHelper) : base(outputHelper)
+        { }
     }
 }

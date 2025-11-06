@@ -1,43 +1,52 @@
+using System;
+using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
-
+using Shouldly;
+using Xunit.Abstractions;
 #pragma warning disable 618
 
-namespace JustSaying.IntegrationTests.Fluent.AwsTools;
-
-public class WhenCreatingErrorQueue(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+namespace JustSaying.IntegrationTests.Fluent.AwsTools
 {
-    [AwsFact]
-    public async Task Then_The_Message_Retention_Period_Is_Updated()
+    public class WhenCreatingErrorQueue : IntegrationTestBase
     {
-        // Arrange
-        ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
-        IAwsClientFactory clientFactory = CreateClientFactory();
-
-        var client = clientFactory.GetSqsClient(Region);
-
-        var queue = new ErrorQueue(
-            Region,
-            UniqueName,
-            client,
-            loggerFactory);
-
-        var queueConfig = new SqsBasicConfiguration()
+        public WhenCreatingErrorQueue(ITestOutputHelper outputHelper)
+            : base(outputHelper)
         {
-            ErrorQueueRetentionPeriod = JustSayingConstants.MaximumRetentionPeriod,
-            ErrorQueueOptOut = true,
-        };
+        }
 
-        // Act
-        await queue.CreateAsync(queueConfig);
+        [AwsFact]
+        public async Task Then_The_Message_Retention_Period_Is_Updated()
+        {
+            // Arrange
+            ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
+            IAwsClientFactory clientFactory = CreateClientFactory();
 
-        queueConfig.ErrorQueueRetentionPeriod = TimeSpan.FromSeconds(100);
+            var client = clientFactory.GetSqsClient(Region);
 
-        await queue.UpdateQueueAttributeAsync(queueConfig, CancellationToken.None);
+            var queue = new ErrorQueue(
+                Region,
+                UniqueName,
+                client,
+                loggerFactory);
 
-        // Assert
-        queue.MessageRetentionPeriod.ShouldBe(TimeSpan.FromSeconds(100));
+            var queueConfig = new SqsBasicConfiguration()
+            {
+                ErrorQueueRetentionPeriod = JustSayingConstants.MaximumRetentionPeriod,
+                ErrorQueueOptOut = true,
+            };
+
+            // Act
+            await queue.CreateAsync(queueConfig);
+
+            queueConfig.ErrorQueueRetentionPeriod = TimeSpan.FromSeconds(100);
+
+            await queue.UpdateQueueAttributeAsync(queueConfig);
+
+            // Assert
+            queue.MessageRetentionPeriod.ShouldBe(TimeSpan.FromSeconds(100));
+        }
     }
 }

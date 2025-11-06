@@ -1,14 +1,21 @@
+using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 
-namespace JustSaying.IntegrationTests.TestHandlers;
-
-public class OrderDispatcher(Future<OrderPlaced> future) : IHandlerAsync<OrderPlaced>
+namespace JustSaying.IntegrationTests.TestHandlers
 {
-    public async Task<bool> Handle(OrderPlaced message)
+    public class OrderDispatcher : IHandlerAsync<OrderPlaced>
     {
-        await Future.Complete(message);
-        return true;
-    }
+        public OrderDispatcher(Future<OrderPlaced> future)
+        {
+            Future = future;
+        }
 
-    public Future<OrderPlaced> Future { get; } = future;
+        public async Task<bool> Handle(OrderPlaced message)
+        {
+            await Future.Complete(message);
+            return true;
+        }
+
+        public Future<OrderPlaced> Future { get; }
+    }
 }

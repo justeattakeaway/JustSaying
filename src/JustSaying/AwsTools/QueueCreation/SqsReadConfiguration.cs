@@ -1,53 +1,59 @@
-using JustSaying.Models;
+using System;
+using System.Collections.Generic;
+using JustSaying.Messaging.MessageProcessingStrategies;
+using JustSaying.Messaging.Middleware;
 using JustSaying.Naming;
 
-namespace JustSaying.AwsTools.QueueCreation;
-
-public class SqsReadConfiguration : SqsBasicConfiguration
+namespace JustSaying.AwsTools.QueueCreation
 {
-    public SqsReadConfiguration(SubscriptionType subscriptionType)
+    public class SqsReadConfiguration : SqsBasicConfiguration
     {
-        SubscriptionType = subscriptionType;
-        MessageRetention = JustSayingConstants.DefaultRetentionPeriod;
-        ErrorQueueRetentionPeriod = JustSayingConstants.MaximumRetentionPeriod;
-        VisibilityTimeout = JustSayingConstants.DefaultVisibilityTimeout;
-        RetryCountBeforeSendingToErrorQueue = JustSayingConstants.DefaultHandlerRetryCount;
-    }
-
-    public SubscriptionType SubscriptionType { get; }
-
-    public string TopicName { get; set; }
-    public string PublishEndpoint { get; set; }
-    public Dictionary<string, string> Tags { get; set; }
-    public string TopicSourceAccount { get; set; }
-    public string FilterPolicy { get; set; }
-    public bool RawMessageDelivery { get; set; }
-    public string SubscriptionGroupName { get; set; }
-
-    public void ApplyTopicNamingConvention<T>(ITopicNamingConvention namingConvention) where T: Message
-    {
-        TopicName = namingConvention.Apply<T>(TopicName);
-    }
-
-    protected override void OnValidating()
-    {
-        if (SubscriptionType == SubscriptionType.ToTopic)
+        public SqsReadConfiguration(SubscriptionType subscriptionType)
         {
-            if (string.IsNullOrWhiteSpace(TopicName))
-            {
-                throw new ConfigurationErrorsException(
-                    "Invalid configuration. Topic name must be provided.");
-            }
-
-            if (PublishEndpoint == null)
-            {
-                throw new ConfigurationErrorsException("You must provide a value for PublishEndpoint.");
-            }
+            SubscriptionType = subscriptionType;
+            MessageRetention = JustSayingConstants.DefaultRetentionPeriod;
+            ErrorQueueRetentionPeriod = JustSayingConstants.MaximumRetentionPeriod;
+            VisibilityTimeout = JustSayingConstants.DefaultVisibilityTimeout;
+            RetryCountBeforeSendingToErrorQueue = JustSayingConstants.DefaultHandlerRetryCount;
         }
 
-        if (string.IsNullOrWhiteSpace(SubscriptionGroupName))
+        public SubscriptionType SubscriptionType { get; private set; }
+
+        public string TopicName { get; set; }
+        public string PublishEndpoint { get; set; }
+        public Dictionary<string, string> Tags { get; set; }
+
+        public string TopicSourceAccount { get; set; }
+        public IMessageBackoffStrategy MessageBackoffStrategy { get; set; }
+        public string FilterPolicy { get; set; }
+        public string SubscriptionGroupName { get; set; }
+        public Action<HandlerMiddlewareBuilder> MiddlewareConfiguration { get; set; }
+
+        public void ApplyTopicNamingConvention<T>(ITopicNamingConvention namingConvention)
         {
-            throw new ConfigurationErrorsException("You must provide a name for the subscription group");
+            TopicName = namingConvention.Apply<T>(TopicName);
+        }
+
+        protected override void OnValidating()
+        {
+            if (SubscriptionType == SubscriptionType.ToTopic)
+            {
+                if (string.IsNullOrWhiteSpace(TopicName))
+                {
+                    throw new ConfigurationErrorsException(
+                        "Invalid configuration. Topic name must be provided.");
+                }
+
+                if (PublishEndpoint == null)
+                {
+                    throw new ConfigurationErrorsException("You must provide a value for PublishEndpoint.");
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(SubscriptionGroupName))
+            {
+                throw new ConfigurationErrorsException("You must provide a name for the subscription group");
+            }
         }
     }
 }

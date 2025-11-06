@@ -1,50 +1,54 @@
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Amazon;
 using JustSaying.Messaging;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
+using Xunit.Abstractions;
 
-namespace JustSaying.IntegrationTests.Fluent.Publishing;
-
-public class WhenRegisteringAPublisherForRegion(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+namespace JustSaying.IntegrationTests.Fluent.Publishing
 {
-    [AwsFact]
-    public async Task Then_A_Topic_Is_Created_In_That_Region()
+    public class WhenRegisteringAPublisherForRegion : IntegrationTestBase
     {
-        await ThenATopicIsCreatedInThatRegion<IMessagePublisher>();
-        await ThenATopicIsCreatedInThatRegion<IMessageBatchPublisher>();
-    }
+        public WhenRegisteringAPublisherForRegion(ITestOutputHelper outputHelper)
+            : base(outputHelper)
+        { }
 
-    private async Task ThenATopicIsCreatedInThatRegion<T>()
-        where T : IStartable
-    {
-        // Arrange
-        var region = RegionEndpoint.EUWest1;
+        [AwsFact]
+        public async Task Then_A_Topic_Is_Created_In_That_Region()
+        {
+            // Arrange
+            var region = RegionEndpoint.EUWest1;
 
-        var serviceProvider = GivenJustSaying()
-            .ConfigureJustSaying((builder) =>
-                builder.WithLoopbackTopic<MyMessageForRegion>(UniqueName))
-            .ConfigureJustSaying((builder) => builder.Messaging((config) => config.WithRegion(region)))
-            .BuildServiceProvider();
+            var serviceProvider = GivenJustSaying()
+                .ConfigureJustSaying((builder) =>
+                    builder.WithLoopbackTopic<MyMessageForRegion>(UniqueName))
+                .ConfigureJustSaying((builder) => builder.Messaging((config) => config.WithRegion(region)))
+                .BuildServiceProvider();
 
-        // Act
-        using var source = new CancellationTokenSource(Timeout);
-        var publisher = serviceProvider.GetRequiredService<T>();
-        await publisher.StartAsync(source.Token);
+            // Act
+            var publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
+            await publisher.StartAsync(CancellationToken.None);
 
-        // Assert
-        var busBuilder = serviceProvider.GetRequiredService<MessagingBusBuilder>();
-        var clientFactory = busBuilder.BuildClientFactory();
+            await publisher.PublishAsync(new MyMessageForRegion());
 
-        var client = clientFactory.GetSnsClient(region);
+            // Assert
+            var busBuilder = serviceProvider.GetRequiredService<MessagingBusBuilder>();
+            var clientFactory = busBuilder.BuildClientFactory();
 
-        (await client.GetAllTopics())
-            .Select((p) => p.TopicArn)
-            .Count((p) => p.EndsWith($":{nameof(MyMessageForRegion)}", StringComparison.OrdinalIgnoreCase))
-            .ShouldBe(1);
-    }
+            var client = clientFactory.GetSnsClient(region);
 
-    private sealed class MyMessageForRegion : Message
-    {
+            (await client.GetAllTopics())
+                .Select((p) => p.TopicArn)
+                .Count((p) => p.EndsWith($":{nameof(MyMessageForRegion)}", StringComparison.OrdinalIgnoreCase))
+                .ShouldBe(1);
+        }
+
+        private sealed class MyMessageForRegion : Message
+        { }
     }
 }

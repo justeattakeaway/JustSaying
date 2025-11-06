@@ -1,22 +1,28 @@
+using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 
-namespace JustSaying.IntegrationTests.TestHandlers;
-
-public class ThrowingHandler : IHandlerAsync<SimpleMessage>
+namespace JustSaying.IntegrationTests.TestHandlers
 {
-    public ThrowingHandler()
+    public class ThrowingHandler : IHandlerAsync<SimpleMessage>
     {
-        DoneSignal = new TaskCompletionSource<object>();
-    }
+        public ThrowingHandler()
+        {
+            DoneSignal = new TaskCompletionSource<object>();
+        }
 
-    public SimpleMessage MessageReceived { get; set; }
+        public SimpleMessage MessageReceived { get; set; }
 
-    public TaskCompletionSource<object> DoneSignal { get; private set; }
+        public TaskCompletionSource<object> DoneSignal { get; private set; }
 
-    public Task<bool> Handle(SimpleMessage message)
-    {
-        MessageReceived = message;
-        throw new TestException("ThrowingHandler has thrown");
+        public async Task<bool> Handle(SimpleMessage message)
+        {
+            MessageReceived = message;
+
+            await Task.Delay(0);
+            TaskHelpers.DelaySendDone(DoneSignal);
+
+            throw new TestException("ThrowingHandler has thrown");
+        }
     }
 }

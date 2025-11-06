@@ -1,31 +1,51 @@
-namespace JustSaying.TestingFramework;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
-public static class TaskHelpers
+namespace JustSaying.TestingFramework
 {
-    public static void DelaySendDone(TaskCompletionSource<object> doneSignal)
+    public static class TaskHelpers
     {
-        Task.Run(async () =>
-        {
-            await Task.Delay(10).ConfigureAwait(false);
-            doneSignal.SetResult(null);
-        });
-    }
+        private const int DefaultTimeoutMillis = 10000;
+        private const int DelaySendMillis = 200;
 
-    /// <summary>
-    /// Swallows any <see cref="OperationCanceledException"/>'s and returns true if one was swallowed, else false.
-    /// </summary>
-    /// <param name="task"></param>
-    /// <returns></returns>
-    public static async Task<bool> HandleCancellation(this Task task)
-    {
-        try
+        public static async Task<bool> WaitWithTimeoutAsync(Task task)
+            => await WaitWithTimeoutAsync(task, TimeSpan.FromMilliseconds(DefaultTimeoutMillis))
+                .ConfigureAwait(false);
+
+        public static async Task<bool> WaitWithTimeoutAsync(Task task, TimeSpan timeoutDuration)
         {
-            await task.ConfigureAwait(false);
+            var timeoutTask = Task.Delay(timeoutDuration);
+            var firstToComplete = await Task.WhenAny(task, timeoutTask).ConfigureAwait(false);
+
+            if (firstToComplete != timeoutTask) return true;
             return false;
         }
-        catch (OperationCanceledException)
+
+        public static void DelaySendDone(TaskCompletionSource<object> doneSignal)
         {
-            return true;
+            Task.Run(async () =>
+            {
+                await Task.Delay(DelaySendMillis).ConfigureAwait(false);
+                doneSignal.SetResult(null);
+            });
+        }
+
+        public static Task WaitForCancellation(this CancellationToken cancellationToken)
+        {
+            var tcs = new TaskCompletionSource<bool>();
+            cancellationToken.Register(() => tcs.SetResult(true));
+            return tcs.Task;
+        }
+
+        public static async Task HandleCancellation(this Task task)
+        {
+            try
+            {
+                await task.ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            { }
         }
     }
 }

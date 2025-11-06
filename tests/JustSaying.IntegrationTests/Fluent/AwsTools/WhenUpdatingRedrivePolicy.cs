@@ -1,41 +1,49 @@
+using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
-
+using Shouldly;
+using Xunit.Abstractions;
 #pragma warning disable 618
 
-namespace JustSaying.IntegrationTests.Fluent.AwsTools;
-
-public class WhenUpdatingRedrivePolicy(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+namespace JustSaying.IntegrationTests.Fluent.AwsTools
 {
-    [AwsFact]
-    public async Task Can_Update_Redrive_Policy()
+    public class WhenUpdatingRedrivePolicy : IntegrationTestBase
     {
-        // Arrange
-        int maximumReceives = 42;
+        public WhenUpdatingRedrivePolicy(ITestOutputHelper outputHelper)
+            : base(outputHelper)
+        {
+        }
 
-        ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
-        IAwsClientFactory clientFactory = CreateClientFactory();
+        [AwsFact]
+        public async Task Can_Update_Redrive_Policy()
+        {
+            // Arrange
+            int maximumReceives = 42;
 
-        var client = clientFactory.GetSqsClient(Region);
+            ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
+            IAwsClientFactory clientFactory = CreateClientFactory();
 
-        var queue = new SqsQueueByName(
-            Region,
-            UniqueName,
-            client,
-            1,
-            loggerFactory);
+            var client = clientFactory.GetSqsClient(Region);
 
-        await queue.CreateAsync(new SqsBasicConfiguration());
+            var queue = new SqsQueueByName(
+                Region,
+                UniqueName,
+                client,
+                1,
+                loggerFactory);
 
-        // Act
-        await queue.UpdateRedrivePolicyAsync(
-            new RedrivePolicy(maximumReceives, queue.ErrorQueue.Arn));
+            await queue.CreateAsync(new SqsBasicConfiguration());
 
-        // Assert
-        queue.RedrivePolicy.ShouldNotBeNull();
-        queue.RedrivePolicy.MaximumReceives.ShouldBe(maximumReceives);
+            // Act
+            await queue.UpdateRedrivePolicyAsync(
+                new RedrivePolicy(maximumReceives, queue.ErrorQueue.Arn));
+
+            // Assert
+            queue.RedrivePolicy.ShouldNotBeNull();
+            queue.RedrivePolicy.MaximumReceives.ShouldBe(maximumReceives);
+        }
     }
 }

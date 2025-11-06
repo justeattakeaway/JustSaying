@@ -1,14 +1,18 @@
+using System;
 using Xunit;
 
-namespace JustSaying.TestingFramework;
-
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-public sealed class AwsTheoryAttribute : TheoryAttribute
+namespace JustSaying.TestingFramework
 {
-    public AwsTheoryAttribute()
-        : base()
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    public sealed class AwsTheoryAttribute : TheoryAttribute
     {
-        // TODO Add back logic to check if AWS credentials are available when running with LocalStack
-        // at the moment we are not using LocalStack so we can skip this check
+        public AwsTheoryAttribute()
+            : base()
+        {
+            if (!TestEnvironment.IsSimulatorConfigured && !TestEnvironment.HasCredentials)
+            {
+                Skip = "This test requires either an AWS simulator URL or AWS credentials to be configured.";
+            }
+        }
     }
 }

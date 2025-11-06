@@ -1,6 +1,10 @@
-using System.Text.Json;
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.AwsTools.MessageHandling.Dispatch;
+using JustSaying.Fluent;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware;
 using JustSaying.TestingFramework;
@@ -8,69 +12,75 @@ using JustSaying.UnitTests.Messaging.Channels.Fakes;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Shouldly;
+using Xunit;
+using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
-
-public class WhenExactlyOnceIsAppliedWithoutSpecificTimeout(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
+namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
-    private SqsSource _queue;
-    private readonly int _maximumTimeout = (int)TimeSpan.MaxValue.TotalSeconds;
-    private FakeMessageLock _messageLock;
-
-    protected override void Given()
+    public class WhenExactlyOnceIsAppliedWithoutSpecificTimeout : BaseSubscriptionGroupTests
     {
-        _queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(),
-            new TestMessage
+        private ISqsQueue _queue;
+        private readonly int _maximumTimeout = (int)TimeSpan.MaxValue.TotalSeconds;
+        private FakeMessageLock _messageLock;
+
+        public WhenExactlyOnceIsAppliedWithoutSpecificTimeout(ITestOutputHelper testOutputHelper)
+            : base(testOutputHelper)
+        {
+        }
+
+        protected override void Given()
+        {
+            _queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), new TestMessage());
+            Queues.Add(_queue);
+            _messageLock = new FakeMessageLock();
+
+            var servicesBuilder = new ServicesBuilder(new MessagingBusBuilder());
+            var serviceResolver = new FakeServiceResolver(sc =>
+                sc.AddSingleton<IMessageLockAsync>(_messageLock)
+                    .AddSingleton<IHandlerAsync<SimpleMessage>>(Handler)
+                    .AddLogging(x => x.AddXUnit(OutputHelper)));
+
+            var middlewareBuilder = new HandlerMiddlewareBuilder(serviceResolver, serviceResolver);
+
+            var middleware = middlewareBuilder.Configure(pipe =>
             {
-                Body = $$"""{"Subject":"SimpleMessage", "Message": "{{JsonEncodedText.Encode("""{ "Content": "Hi" }""")}}"}"""
-            });
-        Queues.Add(_queue);
-        _messageLock = new FakeMessageLock();
+                pipe.UseExactlyOnce<SimpleMessage>("a-unique-lock-key");
+                pipe.UseHandler<SimpleMessage>();
+            }).Build();
 
-        var serviceResolver = new InMemoryServiceResolver(sc =>
-            sc.AddSingleton<IMessageLockAsync>(_messageLock)
-                .AddSingleton<IHandlerAsync<SimpleMessage>>(Handler)
-                .AddLogging(x => x.AddXUnit(OutputHelper).SetMinimumLevel(LogLevel.Information)));
+            Middleware = middleware;
+        }
 
-        var middlewareBuilder = new HandlerMiddlewareBuilder(serviceResolver, serviceResolver);
-
-        var middleware = middlewareBuilder.Configure(pipe =>
+        protected override async Task WhenAsync()
         {
-            pipe.UseExactlyOnce<SimpleMessage>("a-unique-lock-key");
-            pipe.UseHandler<SimpleMessage>();
-        }).Build();
+            MiddlewareMap.Add<SimpleMessage>(_queue.QueueName, Middleware);
 
-        Middleware = middleware;
-    }
+            var cts = new CancellationTokenSource();
 
-    protected override async Task WhenAsync()
-    {
-        MiddlewareMap.Add<SimpleMessage>(_queue.SqsQueue.QueueName, Middleware);
+            var completion = SystemUnderTest.RunAsync(cts.Token);
 
-        var cts = new CancellationTokenSource();
+            await Patiently.AssertThatAsync(OutputHelper,
+                () => Handler.ReceivedMessages.Any());
 
-        var completion = SystemUnderTest.RunAsync(cts.Token);
+            cts.Cancel();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
 
-        await Patiently.AssertThatAsync(OutputHelper,
-            () => !Handler.ReceivedMessages.IsEmpty);
+        }
 
-        await cts.CancelAsync();
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
-
-    }
-
-    [Fact]
-    public void MessageIsLocked()
-    {
-        var messageId = SetupMessage.Id.ToString();
-
-        var tempLockRequests = _messageLock.MessageLockRequests.Where(lr => !lr.isPermanent).ToList();
-        tempLockRequests.ShouldNotBeEmpty();
-
-        foreach(var lockRequest in tempLockRequests)
+        [Fact]
+        public void MessageIsLocked()
         {
-            lockRequest.key.ShouldContain(messageId, Case.Insensitive);
-            ((int)lockRequest.howLong.TotalSeconds).ShouldBe(_maximumTimeout);
+            var messageId = SerializationRegister.DefaultDeserializedMessage().Id.ToString();
+
+            var tempLockRequests = _messageLock.MessageLockRequests.Where(lr => !lr.isPermanent);
+            tempLockRequests.ShouldNotBeEmpty();
+
+            foreach(var lockRequest in tempLockRequests)
+            {
+                lockRequest.key.ShouldContain(messageId, Case.Insensitive);
+                ((int)lockRequest.howLong.TotalSeconds).ShouldBe(_maximumTimeout);
+            }
         }
     }
 }

@@ -1,21 +1,24 @@
-namespace JustSaying.Models;
+using System;
 
-public abstract class Message
+namespace JustSaying.Models
 {
-    protected Message()
+    public abstract class Message
     {
-        TimeStamp = DateTime.UtcNow;
-        Id = Guid.NewGuid();
+        protected Message()
+        {
+            TimeStamp = DateTime.UtcNow;
+            Id = Guid.NewGuid();
+        }
+
+        public Guid Id { get; set; }
+        public DateTime TimeStamp { get; set; }
+        public string RaisingComponent { get; set; }
+        public string Version { get; private set; }
+        public string SourceIp { get; private set; }
+        public string Tenant { get; set; }
+        public string Conversation { get; set; }
+
+        //footprint in order to avoid the same message being processed multiple times.
+        public virtual string UniqueKey() => Id.ToString();
     }
-
-    public Guid Id { get; set; }
-    public DateTime TimeStamp { get; set; }
-    public string RaisingComponent { get; set; }
-    public string Version { get; private set; }
-    public string SourceIp { get; private set; }
-    public string Tenant { get; set; }
-    public string Conversation { get; set; }
-
-    //footprint in order to avoid the same message being processed multiple times.
-    public virtual string UniqueKey() => Id.ToString();
 }

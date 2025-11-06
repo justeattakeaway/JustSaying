@@ -1,37 +1,44 @@
+using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
-
+using Xunit.Abstractions;
 #pragma warning disable 618
 
-namespace JustSaying.IntegrationTests.Fluent.AwsTools;
-
-public class WhenANamedQueueIsCreated(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+namespace JustSaying.IntegrationTests.Fluent.AwsTools
 {
-    [AwsFact]
-    public async Task Then_The_Error_Queue_Is_Created()
+    public class WhenANamedQueueIsCreated : IntegrationTestBase
     {
-        // Arrange
-        ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
-        IAwsClientFactory clientFactory = CreateClientFactory();
+        public WhenANamedQueueIsCreated(ITestOutputHelper outputHelper)
+            : base(outputHelper)
+        {
+        }
 
-        var client = clientFactory.GetSqsClient(Region);
+        [AwsFact]
+        public async Task Then_The_Error_Queue_Is_Created()
+        {
+            // Arrange
+            ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
+            IAwsClientFactory clientFactory = CreateClientFactory();
 
-        var queue = new SqsQueueByName(
-            Region,
-            UniqueName,
-            client,
-            1,
-            loggerFactory);
+            var client = clientFactory.GetSqsClient(Region);
 
-        // Act
-        await queue.CreateAsync(new SqsBasicConfiguration());
+            var queue = new SqsQueueByName(
+                Region,
+                UniqueName,
+                client,
+                1,
+                loggerFactory);
 
-        // Assert
-        await Patiently.AssertThatAsync(OutputHelper,
-            async () => await queue.ErrorQueue.ExistsAsync(CancellationToken.None),
-            40.Seconds());
+            // Act
+            await queue.CreateAsync(new SqsBasicConfiguration());
+
+            // Assert
+            await Patiently.AssertThatAsync(OutputHelper,
+                async () => await queue.ErrorQueue.ExistsAsync(),
+                40.Seconds());
+        }
     }
 }

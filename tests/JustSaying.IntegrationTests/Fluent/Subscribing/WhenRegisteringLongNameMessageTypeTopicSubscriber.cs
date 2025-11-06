@@ -1,49 +1,59 @@
 using System.Net;
+using System.Threading.Tasks;
+using JustSaying.Messaging;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
+using Xunit.Abstractions;
 
-namespace JustSaying.IntegrationTests.Fluent.Subscribing;
-
-public class WhenRegisteringLongNameMessageTypeTopicSubscriber(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+namespace JustSaying.IntegrationTests.Fluent.Subscribing
 {
-    [AwsFact]
-    public async Task Then_A_Queue_Is_Created()
+    public class WhenRegisteringLongNameMessageTypeTopicSubscriber : IntegrationTestBase
     {
-        // Arrange
-        var completionSource = new TaskCompletionSource<object>();
-        var handler = CreateHandler<LongestPossibleMessageSizeLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongMessag>(completionSource);
+        public WhenRegisteringLongNameMessageTypeTopicSubscriber(ITestOutputHelper outputHelper)
+            : base(outputHelper)
+        {
+        }
 
-        var services = GivenJustSaying()
-            .ConfigureJustSaying((builder) => builder.WithLoopbackTopic<LongestPossibleMessageSizeLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongMessag>(UniqueName))
-            .AddSingleton(handler);
+        [AwsFact]
+        public async Task Then_A_Queue_Is_Created()
+        {
+            // Arrange
+            var completionSource = new TaskCompletionSource<object>();
+            var handler = CreateHandler<LongestPossibleMessageSizeLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongMessag>(completionSource);
 
-        await WhenAsync(
-            services,
-            async (publisher, listener, serviceProvider, cancellationToken) =>
-            {
-                await listener.StartAsync(cancellationToken);
-                await publisher.StartAsync(cancellationToken);
+            var services = GivenJustSaying()
+                .ConfigureJustSaying((builder) => builder.WithLoopbackTopic<LongestPossibleMessageSizeLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongMessag>(UniqueName))
+                .AddSingleton(handler);
 
-                // Act
-                await publisher.PublishAsync(new LongestPossibleMessageSizeLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongMessag(), cancellationToken);
-                completionSource.Task.Wait(cancellationToken);
+            await WhenAsync(
+                services,
+                async (publisher, listener, serviceProvider, cancellationToken) =>
+                {
+                    await listener.StartAsync(cancellationToken);
+                    await publisher.StartAsync(cancellationToken);
 
-                // Assert
-                var busBuilder = serviceProvider.GetRequiredService<MessagingBusBuilder>();
-                var clientFactory = busBuilder.BuildClientFactory();
+                    // Act
+                    await publisher.PublishAsync(new LongestPossibleMessageSizeLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongMessag(), cancellationToken);
+                    completionSource.Task.Wait(cancellationToken);
 
-                var client = clientFactory.GetSqsClient(Region);
+                    // Assert
+                    var busBuilder = serviceProvider.GetRequiredService<MessagingBusBuilder>();
+                    var clientFactory = busBuilder.BuildClientFactory();
 
-                var response = await client.GetQueueUrlAsync(UniqueName, cancellationToken).ConfigureAwait(false);
+                    var client = clientFactory.GetSqsClient(Region);
 
-                response.ShouldNotBeNull();
-                response.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
-                response.QueueUrl.ShouldNotBeNull();
-            });
-    }
+                    var response = await client.GetQueueUrlAsync(UniqueName, cancellationToken).ConfigureAwait(false);
 
-    public sealed class LongestPossibleMessageSizeLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongMessag : Message
-    {
+                    response.ShouldNotBeNull();
+                    response.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
+                    response.QueueUrl.ShouldNotBeNull();
+                });
+        }
+
+        public sealed class LongestPossibleMessageSizeLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongMessag : Message
+        {
+        }
     }
 }

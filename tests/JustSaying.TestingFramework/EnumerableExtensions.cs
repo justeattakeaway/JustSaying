@@ -1,25 +1,29 @@
-namespace JustSaying.TestingFramework;
+using System;
+using System.Collections.Generic;
 
-public static class EnumerableExtensions
+namespace JustSaying.TestingFramework
 {
-    public static IEnumerable<T> Infinite<T>(this T item)
+    public static class EnumerableExtensions
     {
-        while (true)
+        public static IEnumerable<T> Infinite<T>(this T item)
         {
-            yield return item;
+            while (true)
+            {
+                yield return item;
+            }
         }
-    }
 
-    public static Func<IEnumerable<T>> GenerateInfinite<T>(Func<T> itemFunc)
-    {
-        return () => RepeatInfinitely(itemFunc);
-    }
-
-    public static IEnumerable<T> RepeatInfinitely<T>(Func<T> itemFunc)
-    {
-        while (true)
+        public static Func<IEnumerable<T>> GenerateInfinite<T>(Func<T> itemFunc)
         {
-            yield return itemFunc();
+            return () => RepeatInfinitely(itemFunc);
+        }
+
+        public static IEnumerable<T> RepeatInfinitely<T>(Func<T> itemFunc)
+        {
+            while (true)
+            {
+                yield return itemFunc();
+            }
         }
     }
 }

@@ -1,0 +1,48 @@
+{
+  "Region": "eu-west-1",
+  "Middleware": {
+    "Middlewares": [
+      {
+        "MessageType": "SimpleMessage",
+        "QueueName": "integrationTestQueueName",
+        "MiddlewareChain": [
+          "StopwatchMiddleware",
+          "HandlerInvocationMiddleware`1"
+        ]
+      }
+    ]
+  },
+  "PublishedMessageTypes": [],
+  "SubscriptionGroups": {
+    "Groups": [
+      {
+        "Name": "integrationTestQueueName",
+        "ConcurrencyLimit": 10,
+        "Multiplexer": {
+          "ChannelCapacity": 100,
+          "ReaderCount": 1
+        },
+        "ReceiveBuffers": [
+          {
+            "BufferSize": 10,
+            "QueueName": "integrationTestQueueName",
+            "Region": null,
+            "Prefetch": 10,
+            "BackoffStrategyName": null
+          }
+        ]
+      }
+    ]
+  }
+}
+
+{
+  "Region": "eu-west-1",
+  "Middleware": {
+    "Middlewares": []
+  },
+  "PublishedMessageTypes": [
+    "SimpleMessage"
+  ],
+  "SubscriptionGroups": null
+}

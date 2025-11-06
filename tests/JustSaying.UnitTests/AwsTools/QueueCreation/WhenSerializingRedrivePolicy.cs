@@ -1,18 +1,21 @@
 using JustSaying.AwsTools.QueueCreation;
+using Shouldly;
+using Xunit;
 
-namespace JustSaying.UnitTests.AwsTools.QueueCreation;
-
-public class WhenSerializingRedrivePolicy
+namespace JustSaying.UnitTests.AwsTools.QueueCreation
 {
-    [Fact]
-    public void CanDeserializeIntoRedrivePolicy()
+    public class WhenSerializingRedrivePolicy
     {
-        var policy = new RedrivePolicy(1, "queue");
-        var policySerialized = policy.ToString();
+        [Fact]
+        public void CanDeserializeIntoRedrivePolicy()
+        {
+            var policy = new RedrivePolicy(1, "queue");
+            var policySerialized = policy.ToString();
 
-        var outputPolicy = RedrivePolicy.ConvertFromString(policySerialized);
+            var outputPolicy = RedrivePolicy.ConvertFromString(policySerialized);
 
-        outputPolicy.MaximumReceives.ShouldBe(policy.MaximumReceives);
-        outputPolicy.DeadLetterQueue.ShouldBe(policy.DeadLetterQueue);
+            outputPolicy.MaximumReceives.ShouldBe(policy.MaximumReceives);
+            outputPolicy.DeadLetterQueue.ShouldBe(policy.DeadLetterQueue);
+        }
     }
 }

@@ -1,25 +1,32 @@
+using System.Collections.Generic;
 using JustSaying.Messaging.MessageHandling;
 
-namespace JustSaying.IntegrationTests.Fluent.Subscribing;
-
-public class RecordingMessageContextAccessor(IMessageContextAccessor inner) : IMessageContextAccessor, IMessageContextReader
+namespace JustSaying.IntegrationTests.Fluent.Subscribing
 {
-    private readonly IMessageContextAccessor _inner = inner;
-    private readonly List<MessageContext> _valuesWritten = new();
-
-    public IReadOnlyCollection<MessageContext> ValuesWritten => _valuesWritten;
-
-    public MessageContext MessageContext
+    public class RecordingMessageContextAccessor : IMessageContextAccessor, IMessageContextReader
     {
-        get => _inner.MessageContext;
-        set
-        {
-            if (value != null)
-            {
-                _valuesWritten.Add(value);
-            }
+        private readonly IMessageContextAccessor _inner;
+        private readonly List<MessageContext> _valuesWritten = new List<MessageContext>();
 
-            _inner.MessageContext = value;
+        public IReadOnlyCollection<MessageContext> ValuesWritten => _valuesWritten;
+
+        public RecordingMessageContextAccessor(IMessageContextAccessor inner)
+        {
+            _inner = inner;
+        }
+
+        public MessageContext MessageContext
+        {
+            get => _inner.MessageContext;
+            set
+            {
+                if (value != null)
+                {
+                    _valuesWritten.Add(value);
+                }
+
+                _inner.MessageContext = value;
+            }
         }
     }
 }

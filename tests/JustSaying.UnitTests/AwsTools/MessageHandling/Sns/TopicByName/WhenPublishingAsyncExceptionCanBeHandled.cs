@@ -1,49 +1,59 @@
+using System.Net;
+using System.Threading.Tasks;
 using Amazon.SimpleNotificationService.Model;
-using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
-using JustSaying.Messaging.Compression;
+using JustSaying.AwsTools.MessageHandling;
+using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
-using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.Core;
+using Shouldly;
+using Xunit;
+#pragma warning disable 618
 
-namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName;
-
-public class WhenPublishingAsyncExceptionCanBeHandled : WhenPublishingTestBase
+namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 {
-    private const string TopicArn = "topicarn";
-
-    private protected override Task<SnsMessagePublisher> CreateSystemUnderTestAsync()
+    public class WhenPublishingAsyncExceptionCanBeHandled : WhenPublishingTestBase
     {
-        var messageConverter = CreateConverter();
-        var topic = new SnsMessagePublisher(TopicArn, Sns, messageConverter, NullLoggerFactory.Instance, (_, _) => true, null);
+        private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
+        private const string TopicArn = "topicarn";
 
-        return Task.FromResult(topic);
-    }
+        private protected override async Task<SnsTopicByName> CreateSystemUnderTestAsync()
+        {
+            var topic = new SnsTopicByName("TopicName", Sns, _serializationRegister, Substitute.For<ILoggerFactory>(), new SnsWriteConfiguration
+            {
+                HandleException = (ex, m) => true
+            }, Substitute.For<IMessageSubjectProvider>());
 
-    protected override void Given()
-    {
-        Sns.FindTopicAsync("TopicName")
-            .Returns(new Topic { TopicArn = TopicArn });
-    }
+            await topic.ExistsAsync();
+            return topic;
+        }
 
-    protected override Task WhenAsync()
-    {
-        Sns.PublishAsync(Arg.Any<PublishRequest>()).Returns(ThrowsException);
-        return Task.CompletedTask;
-    }
+        protected override void Given()
+        {
+            Sns.FindTopicAsync("TopicName")
+                .Returns(new Topic { TopicArn = TopicArn });
+        }
 
-    [Fact]
-    public async Task FailSilently()
-    {
-        var unexpectedException = await Record.ExceptionAsync(
-            () => SystemUnderTest.PublishAsync(new SimpleMessage()));
-        unexpectedException.ShouldBeNull();
-    }
+        protected override Task WhenAsync()
+        {
+            Sns.PublishAsync(Arg.Any<PublishRequest>()).Returns(ThrowsException);
+            return Task.CompletedTask;
+        }
 
-    private static Task<PublishResponse> ThrowsException(CallInfo callInfo)
-    {
-        throw new InternalErrorException("Operation timed out");
+        [Fact]
+        public async Task FailSilently()
+        {
+            var unexpectedException = await Record.ExceptionAsync(
+                () => SystemUnderTest.PublishAsync(new SimpleMessage()));
+            unexpectedException.ShouldBeNull();
+        }
+
+        private static Task<PublishResponse> ThrowsException(CallInfo callInfo)
+        {
+            throw new InternalErrorException("Operation timed out");
+        }
     }
 }

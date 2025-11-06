@@ -1,10 +1,13 @@
-namespace JustSaying.Messaging.MessageSerialization;
+using System;
 
-/// <summary>
-/// This implementation is not suitable for generic types,
-/// but replicates the behaviour of the system before IMessageSubjectProvider was introduced
-/// </summary>
-public class NonGenericMessageSubjectProvider : IMessageSubjectProvider
+namespace JustSaying.Messaging.MessageSerialization
 {
-    public string GetSubjectForType(Type messageType) => messageType.Name;
+    /// <summary>
+    /// This implementation is not suitable for generic types,
+    /// but replicates the behaviour of the system before IMessageSubjectProvider was introduced
+    /// </summary>
+    public class NonGenericMessageSubjectProvider : IMessageSubjectProvider
+    {
+        public string GetSubjectForType(Type messageType) => messageType.Name;
+    }
 }

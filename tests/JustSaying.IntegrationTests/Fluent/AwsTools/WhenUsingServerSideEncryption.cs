@@ -1,50 +1,63 @@
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
+using NSubstitute;
+using Shouldly;
+using Xunit.Abstractions;
 
-namespace JustSaying.IntegrationTests.Fluent.AwsTools;
-
-public class WhenUsingServerSideEncryption(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+namespace JustSaying.IntegrationTests.Fluent.AwsTools
 {
-    [AwsFact]
-    public async Task Then_The_Message_Is_Handled()
+    public class WhenUsingServerSideEncryption : IntegrationTestBase
     {
-        // Arrange
-        var handler = new InspectableHandler<SimpleMessage>();
-
-        string masterKeyId = "alias/aws/sqs";
-
-        var services = GivenJustSaying()
-            .ConfigureJustSaying(
-                (builder) => builder.Publications((options) => options.WithQueue<SimpleMessage>(
-                    (queue) => queue.WithWriteConfiguration(
-                        (config) => config.WithQueueName(UniqueName).WithEncryption(masterKeyId)))))
-            .ConfigureJustSaying(
-                (builder) => builder.Subscriptions((options) => options.ForQueue<SimpleMessage>(
-                    (queue) => queue.WithQueueName(UniqueName).WithReadConfiguration(
-                        (config) => config.WithEncryption(masterKeyId)))))
-            .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
-
-        string content = Guid.NewGuid().ToString();
-
-        var message = new SimpleMessage()
+        public WhenUsingServerSideEncryption(ITestOutputHelper outputHelper)
+            : base(outputHelper)
         {
-            Content = content
-        };
+        }
 
-        await WhenAsync(
-            services,
-            async (publisher, listener, cancellationToken) =>
+        [AwsFact]
+        public async Task Then_The_Message_Is_Handled()
+        {
+            // Arrange
+            var handler = new InspectableHandler<SimpleMessage>();
+
+            string masterKeyId = "alias/aws/sqs";
+
+            var services = GivenJustSaying()
+                .ConfigureJustSaying(
+                    (builder) => builder.Publications((options) => options.WithQueue<SimpleMessage>(
+                        (queue) => queue.WithWriteConfiguration(
+                            (config) => config.WithQueueName(UniqueName).WithEncryption(masterKeyId)))))
+                .ConfigureJustSaying(
+                    (builder) => builder.Subscriptions((options) => options.ForQueue<SimpleMessage>(
+                        (queue) => queue.WithName(UniqueName).WithReadConfiguration(
+                            (config) => config.WithEncryption(masterKeyId)))))
+                .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
+
+            string content = Guid.NewGuid().ToString();
+
+            var message = new SimpleMessage()
             {
-                await listener.StartAsync(cancellationToken);
-                await publisher.StartAsync(cancellationToken);
+                Content = content
+            };
 
-                // Act
-                await publisher.PublishAsync(message, cancellationToken);
+            await WhenAsync(
+                services,
+                async (publisher, listener, cancellationToken) =>
+                {
+                    await listener.StartAsync(cancellationToken);
+                    await publisher.StartAsync(cancellationToken);
 
-                // Assert
-                await Patiently.AssertThatAsync(OutputHelper,
-                    () => handler.ReceivedMessages.Any(msg => msg.Content == content));
-            });
+                    // Act
+                    await publisher.PublishAsync(message, cancellationToken);
+
+                    // Assert
+                    await Patiently.AssertThatAsync(OutputHelper,
+                        () => handler.ReceivedMessages.Any(msg => msg.Content == content));
+                });
+        }
     }
 }

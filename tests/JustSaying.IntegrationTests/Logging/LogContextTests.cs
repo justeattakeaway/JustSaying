@@ -1,138 +1,88 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
+using AutoFixture;
 using JustSaying.IntegrationTests.Fluent;
+using JustSaying.IntegrationTests.Fluent.Subscribing;
 using JustSaying.Messaging;
-using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Shouldly;
+using Xunit;
+using Xunit.Abstractions;
+using Xunit.Sdk;
 
-namespace JustSaying.Logging;
-
-public class LogContextTests(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+namespace JustSaying.Logging
 {
-    [AwsFact]
-    public async Task PublishToTopicLogsShouldHaveContext()
+    public class LogContextTests : IntegrationTestBase
     {
-        var services = GivenJustSaying(levelOverride: LogLevel.Information)
-            .ConfigureJustSaying(
-                (builder) => builder.WithLoopbackTopic<SimpleMessage>(UniqueName));
+        public LogContextTests(ITestOutputHelper outputHelper) : base(outputHelper)
+        { }
 
-        var sp = services.BuildServiceProvider();
-
-        var cts = new CancellationTokenSource();
-
-        var publisher = sp.GetRequiredService<IMessagePublisher>();
-        await publisher.StartAsync(cts.Token);
-
-        var message = new SimpleMessage();
-        await publisher.PublishAsync(message, cts.Token);
-
-        var testLogger = sp.GetFakeLogCollector();
-        var messageMatcher = new Regex(@"Published message ([a-zA-Z0-9\-]+) of type ([\w\.]+) to ([\w\s]+) '(.+?)'.");
-
-        var handleMessage = testLogger.GetSnapshot()
-            .Single(le => messageMatcher.IsMatch(le.Message));
-
-        var propertyMap = handleMessage.StructuredState.ShouldNotBeNull().ToDictionary();
-        propertyMap.ShouldContainKeyAndValue("MessageId", message.Id.ToString());
-        propertyMap.ShouldContainKeyAndValue("MessageType", message.GetType().FullName);
-        propertyMap.ShouldContainKeyAndValue("DestinationType", "Topic");
-        propertyMap.ShouldContainKey("MessageDestination");
-
-        cts.Cancel();
-    }
-
-    [AwsFact]
-    public async Task PublishToQueueLogsShouldHaveContext()
-    {
-        var services = GivenJustSaying(levelOverride: LogLevel.Information)
-            .ConfigureJustSaying(
-                (builder) => builder.WithLoopbackQueue<SimpleMessage>(UniqueName));
-
-        var sp = services.BuildServiceProvider();
-
-        var cts = new CancellationTokenSource();
-
-        var publisher = sp.GetRequiredService<IMessagePublisher>();
-        await publisher.StartAsync(cts.Token);
-
-        var message = new SimpleMessage();
-        await publisher.PublishAsync(message, cts.Token);
-
-        var testLogger = sp.GetFakeLogCollector();
-        var messageMatcher = new Regex(@"Published message ([a-zA-Z0-9\-]+) of type ([\w\.]+) to Queue '(.+?)'.");
-
-        var handleMessage = testLogger.GetSnapshot()
-            .Single(le => messageMatcher.IsMatch(le.Message));
-
-        var propertyMap = handleMessage.StructuredState.ShouldNotBeNull().ToDictionary();
-        propertyMap.ShouldContainKeyAndValue("MessageId", message.Id.ToString());
-        propertyMap.ShouldContainKeyAndValue("MessageType", message.GetType().FullName);
-        propertyMap.ShouldContainKeyAndValue("DestinationType", "Queue");
-        propertyMap.ShouldContainKey("MessageDestination");
-
-        cts.Cancel();
-    }
-
-    [AwsTheory]
-    [InlineData(true, LogLevel.Information, "Succeeded", null)]
-    [InlineData(false, LogLevel.Warning, "Failed", null)]
-    [InlineData(false, LogLevel.Warning, "Failed", "Something went wrong!")]
-    public async Task HandleMessageFromQueueLogs_ShouldHaveContext(bool handlerShouldSucceed, LogLevel level, string status, string exceptionMessage)
-    {
-        var handler = new InspectableHandler<SimpleMessage>()
+        [AwsFact]
+        public async Task PublishToTopicLogsShouldHaveContext()
         {
-            ShouldSucceed = handlerShouldSucceed,
-        };
-        if (exceptionMessage != null)
-        {
-            handler.OnHandle = msg => throw new Exception(exceptionMessage);
+            var services = GivenJustSaying()
+                .ConfigureJustSaying(
+                    (builder) => builder.WithLoopbackTopic<SimpleMessage>(UniqueName));
+
+            var sp = services.BuildServiceProvider();
+
+            var cts = new CancellationTokenSource();
+
+            var publisher = sp.GetRequiredService<IMessagePublisher>();
+            await publisher.StartAsync(cts.Token);
+
+            var message = new SimpleMessage();
+            await publisher.PublishAsync(message, cts.Token);
+
+            var output = ((TestOutputHelper) OutputHelper).Output;
+            output.ShouldMatchApproved(o => o
+                .SubFolder("Approvals")
+                .WithScrubber(logMessage => ScrubLogs(logMessage, message.Id.ToString())));
+
+            cts.Cancel();
         }
 
-        var services = GivenJustSaying(levelOverride: LogLevel.Information)
-            .ConfigureJustSaying(
-                (builder) => builder.WithLoopbackQueue<SimpleMessage>(UniqueName))
-            .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
-
-        var sp = services.BuildServiceProvider();
-
-        var cts = new CancellationTokenSource();
-
-        var publisher = sp.GetRequiredService<IMessagePublisher>();
-        await publisher.StartAsync(cts.Token);
-        await sp.GetRequiredService<IMessagingBus>().StartAsync(cts.Token);
-
-        var message = new SimpleMessage();
-        await publisher .PublishAsync(message, cts.Token);
-
-        await Patiently.AssertThatAsync(() => handler.ReceivedMessages
-            .ShouldHaveSingleItem()
-            .Id.ShouldBe(message.Id));
-
-        var testLogger = sp.GetFakeLogCollector();
-        var messageMatcher = new Regex(@"\w handling message with Id '([a-zA-Z0-9\-]+)' of type ([\w\.]+) in \d*ms.");
-
-        await Patiently.AssertThatAsync(() =>
+        [AwsFact]
+        public async Task PublishToQueueLogsShouldHaveContext()
         {
-            var handleMessage = testLogger.GetSnapshot()
-                .SingleOrDefault(le => messageMatcher.IsMatch(le.Message));
+            var services = GivenJustSaying()
+                .ConfigureJustSaying(
+                    (builder) => builder.WithLoopbackQueue<SimpleMessage>(UniqueName));
 
-            handleMessage.ShouldNotBeNull();
+            var sp = services.BuildServiceProvider();
 
-            handleMessage.Level.ShouldBe(level);
+            var cts = new CancellationTokenSource();
 
-            if (exceptionMessage != null)
-            {
-                handleMessage.Exception.ShouldNotBeNull();
-                handleMessage.Exception.Message.ShouldBe(exceptionMessage);
-            }
+            var publisher = sp.GetRequiredService<IMessagePublisher>();
+            await publisher.StartAsync(cts.Token);
 
-            var propertyMap = handleMessage.StructuredState.ShouldNotBeNull().ToDictionary();
-            propertyMap.ShouldContainKeyAndValue("Status", status);
-            propertyMap.ShouldContainKeyAndValue("MessageId", message.Id.ToString());
-            propertyMap.ShouldContainKeyAndValue("MessageType", message.GetType().FullName);
-            propertyMap.ShouldContainKey("TimeToHandle");
-        });
-        cts.Cancel();
+            var message = new SimpleMessage();
+            await publisher.PublishAsync(message, cts.Token);
+
+            var output = ((TestOutputHelper) OutputHelper).Output;
+            output.ShouldMatchApproved(o => o
+                .SubFolder("Approvals")
+                .WithScrubber(logMessage => ScrubLogs(logMessage, message.Id.ToString())));
+
+            cts.Cancel();
+        }
+
+        private string ScrubLogs(string message, string messageId)
+        {
+            message = message.Replace(messageId, "{MessageId}");
+            message = message.Replace(UniqueName, "{TestDiscriminator}");
+
+            message = Regex.Replace(message, @"AwsRequestId: .{8}-.{4}-.{4}-.{4}-.{12}", "AwsRequestId: {AwsRequestId}");
+            message = Regex.Replace(message, @"(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})Z", "{DateTime}");
+            return message;
+        }
     }
 }

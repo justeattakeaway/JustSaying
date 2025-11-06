@@ -1,25 +1,34 @@
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
-namespace JustSaying.AwsTools.QueueCreation;
-
-internal sealed class RedrivePolicy
+namespace JustSaying.AwsTools.QueueCreation
 {
-    [JsonPropertyName("maxReceiveCount")]
-    public int MaximumReceives { get; set; }
-
-    [JsonPropertyName("deadLetterTargetArn")]
-    public string DeadLetterQueue { get; set; }
-
-    public RedrivePolicy(int maximumReceives, string deadLetterQueue)
+    public class RedrivePolicy
     {
-        MaximumReceives = maximumReceives;
-        DeadLetterQueue = deadLetterQueue;
+        [JsonProperty("maxReceiveCount")]
+        [JsonPropertyName("maxReceiveCount")]
+        public int MaximumReceives { get; set; }
+
+        [JsonProperty("deadLetterTargetArn")]
+        [JsonPropertyName("deadLetterTargetArn")]
+        public string DeadLetterQueue { get; set; }
+
+        public RedrivePolicy(int maximumReceives, string deadLetterQueue)
+        {
+            MaximumReceives = maximumReceives;
+            DeadLetterQueue = deadLetterQueue;
+        }
+
+        protected RedrivePolicy()
+        {
+        }
+
+        // Cannot use System.Text.Json below as no public parameterless constructor. Change for v7?
+
+        public override string ToString()
+            => JsonConvert.SerializeObject(this);
+
+        public static RedrivePolicy ConvertFromString(string policy)
+            => JsonConvert.DeserializeObject<RedrivePolicy>(policy);
     }
-
-    public override string ToString()
-        => JsonSerializer.Serialize(this);
-
-    public static RedrivePolicy ConvertFromString(string policy)
-        => JsonSerializer.Deserialize<RedrivePolicy>(policy);
 }

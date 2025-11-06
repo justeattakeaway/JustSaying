@@ -1,73 +1,86 @@
-using JustSaying.Messaging.Channels.Receive;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageSerialization;
-using JustSaying.TestingFramework;
+using JustSaying.Messaging.Monitoring;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using Xunit;
+using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.JustSayingBus;
-
-public abstract class GivenAServiceBus(ITestOutputHelper outputHelper) : IAsyncLifetime
+namespace JustSaying.UnitTests.JustSayingBus
 {
-    protected IMessagingConfig Config;
-    protected TrackingLoggingMonitor Monitor;
-    protected ILoggerFactory LoggerFactory = outputHelper.ToLoggerFactory();
-    private bool _recordThrownExceptions;
-
-    public ITestOutputHelper OutputHelper { get; private set; } = outputHelper;
-    protected Exception ThrownException { get; private set; }
-
-    protected JustSaying.JustSayingBus SystemUnderTest { get; private set; }
-
-    protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
-
-    public virtual async ValueTask InitializeAsync()
+    public abstract class GivenAServiceBus : IAsyncLifetime
     {
-        Given();
+        protected IMessagingConfig Config;
+        protected IMessageMonitor Monitor;
+        protected ILoggerFactory LoggerFactory;
+        private bool _recordThrownExceptions;
 
-        try
+        public ITestOutputHelper OutputHelper { get; private set; }
+        protected Exception ThrownException { get; private set; }
+
+        protected JustSaying.JustSayingBus SystemUnderTest { get; private set; }
+
+        protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
+
+
+        public GivenAServiceBus(ITestOutputHelper outputHelper)
         {
-            SystemUnderTest = CreateSystemUnderTest();
-            await WhenAsync().ConfigureAwait(false);
+            OutputHelper = outputHelper;
+            LoggerFactory = outputHelper.ToLoggerFactory();
         }
-        catch (Exception ex) when (_recordThrownExceptions)
+
+        public virtual async Task InitializeAsync()
         {
-            ThrownException = ex;
+            Given();
+
+            try
+            {
+                SystemUnderTest = CreateSystemUnderTest();
+                await WhenAsync().ConfigureAwait(false);
+            }
+            catch (Exception ex) when (_recordThrownExceptions)
+            {
+                ThrownException = ex;
+            }
         }
-    }
 
-    public virtual ValueTask DisposeAsync()
-    {
-        return ValueTask.CompletedTask;
-    }
+        public virtual Task DisposeAsync()
+        {
+            return Task.CompletedTask;
+        }
 
-    protected virtual void Given()
-    {
-        Config = Substitute.For<IMessagingConfig>();
-        Monitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
-    }
+        protected virtual void Given()
+        {
+            Config = Substitute.For<IMessagingConfig>();
+            Monitor = Substitute.For<IMessageMonitor>();
+        }
 
-    protected abstract Task WhenAsync();
+        protected abstract Task WhenAsync();
 
-    private JustSaying.JustSayingBus CreateSystemUnderTest()
-    {
-        var messageReceivePauseSignal = new MessageReceivePauseSignal();
-        var bus = new JustSaying.JustSayingBus(Config,
-            new NewtonsoftSerializationFactory(),
-            messageReceivePauseSignal,
-            LoggerFactory,
-            Monitor);
+        private JustSaying.JustSayingBus CreateSystemUnderTest()
+        {
+            var serializerRegister = new FakeSerializationRegister();
+            var bus = new JustSaying.JustSayingBus(Config,
+                serializerRegister,
+                LoggerFactory)
+            {
+                Monitor = Monitor
+            };
 
-        bus.SetGroupSettings(new SubscriptionGroupSettingsBuilder()
-                .WithDefaultConcurrencyLimit(8),
-            new Dictionary<string, SubscriptionGroupConfigBuilder>());
+            bus.SetGroupSettings(new SubscriptionGroupSettingsBuilder()
+                    .WithDefaultConcurrencyLimit(8),
+                new Dictionary<string, SubscriptionGroupConfigBuilder>());
 
-        return bus;
-    }
+            return bus;
+        }
 
-    public void RecordAnyExceptionsThrown()
-    {
-        _recordThrownExceptions = true;
+        public void RecordAnyExceptionsThrown()
+        {
+            _recordThrownExceptions = true;
+        }
     }
 }
