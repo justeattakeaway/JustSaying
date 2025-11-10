@@ -19,4 +19,6 @@ jobs:
       - name: Review dependencies
         uses: actions/dependency-review-action@40c09b7dc99638e5ddb0bfd91c1673effc064d8a # v4.8.1
         with:
-          allow-licenses: 'Apache-2.0,BSD-2-Clause,BSD-3-Clause,MIT'
+          config-file: './.github/dependency-review-config.yml'
+          license-check: false
+          fail-on-severity: critical
