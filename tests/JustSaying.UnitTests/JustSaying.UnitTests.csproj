@@ -18,7 +18,7 @@
     <PackageReference Include="JunitXml.TestLogger" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <PackageReference Include="Newtonsoft.Json" VersionOverride="13.0.3" />
+    <PackageReference Include="Newtonsoft.Json" VersionOverride="13.0.4" />
     <PackageReference Include="Polly.Core" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
