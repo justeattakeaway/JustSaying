@@ -24,7 +24,7 @@
     <PackageVersion Include="JunitXml.TestLogger" Version="4.1.0" />
     <PackageVersion Include="LocalSqsSnsMessaging" Version="0.6.4" />
     <PackageVersion Include="MartinCostello.Logging.XUnit.v3" Version="0.6.0" />
-    <PackageVersion Include="MELT" Version="0.9.0" />
+    <PackageVersion Include="MELT" Version="1.1.0" />
     <PackageVersion Include="MELT.Xunit" Version="0.9.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.0" />
