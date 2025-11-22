@@ -1,6 +1,32 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended"
+  "extends": ["config:recommended"],
+  "packageRules": [
+    {
+      "matchDatasources": ["nuget"],
+      "matchPackageNames": [
+        "AWSSDK.Extensions.NETCore.Setup",
+        "AWSSDK.SimpleNotificationService",
+        "AWSSDK.SQS",
+        "Microsoft.Bcl.AsyncInterfaces",
+        "Microsoft.Extensions.Configuration",
+        "Microsoft.Extensions.Configuration.EnvironmentVariables",
+        "Microsoft.Extensions.Configuration.Json",
+        "Microsoft.Extensions.DependencyInjection",
+        "Microsoft.Extensions.DependencyInjection.Abstractions",
+        "Microsoft.Extensions.Logging.Abstractions",
+        "Microsoft.Extensions.Logging.Console",
+        "Newtonsoft.Json",
+        "structuremap",
+        "System.Text.Json",
+        "System.Threading.Channels"
+      ],
+      "enabled": false
+    },
+    {
+      "matchDatasources": ["nuget"],
+      "matchPackagePatterns": ["^xunit"],
+      "groupName": "xunit"
+    }
   ]
 }
