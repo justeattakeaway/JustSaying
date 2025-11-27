@@ -12,7 +12,7 @@ A helpful library for publishing and consuming events / messages over SNS (SNS /
 
 ## Documentation
 
-Documentation can be found [here](https://justeat.gitbook.io/justsaying/).
+Documentation can be found [here]([https://justeat.gitbook.io/justsaying/](https://justeattakeaway.github.io/JustSaying/)).
 
 If you want to contribute to the documentation, they are in the [docs branch](https://github.com/justeattakeaway/JustSaying/tree/docs) - PRs should be issued against this branch.
 
