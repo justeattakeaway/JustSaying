@@ -14,7 +14,7 @@ A helpful library for publishing and consuming events / messages over SNS (SNS /
 
 Documentation can be found [here](https://justeattakeaway.github.io/JustSaying/).
 
-If you want to contribute to the documentation, they are in the [docs branch](https://github.com/justeattakeaway/JustSaying/tree/docs) - PRs should be issued against this branch.
+If you want to contribute to the documentation, they are in the [docs folder](/docs), which builds into a static site based on [Docusaurus](https://docusaurus.io/).
 
 ## Contributing
 
