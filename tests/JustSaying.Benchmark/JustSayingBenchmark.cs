@@ -3,7 +3,6 @@ using Amazon;
 using CommandLine;
 using JustSaying.Messaging;
 using Microsoft.Extensions.DependencyInjection;
-using MoreLinq;
 using Serilog;
 using SerilogTimings;
 
@@ -42,7 +41,7 @@ public class JustSayingBenchmark
 
         var watch = new Stopwatch();
 
-        var taskBatches = Enumerable.Range(0, options.MessageCount).Batch(20)
+        var taskBatches = Enumerable.Range(0, options.MessageCount).Chunk(20)
             .Select(async batch =>
             {
                 var messageTasks =

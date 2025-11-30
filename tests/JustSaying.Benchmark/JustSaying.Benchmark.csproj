@@ -8,7 +8,6 @@
     <ItemGroup>
       <PackageReference Include="CommandLineParser" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection" VersionOverride="9.0.10" />
-      <PackageReference Include="morelinq" />
       <PackageReference Include="Serilog" />
       <PackageReference Include="Serilog.Extensions.Logging" />
       <PackageReference Include="Serilog.Sinks.Console" />
