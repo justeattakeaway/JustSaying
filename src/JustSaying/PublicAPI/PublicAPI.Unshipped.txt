@@ -198,3 +198,8 @@ JustSaying.Messaging.Channels.SubscriptionGroups.IMessageSource
 JustSaying.Messaging.Channels.SubscriptionGroups.IMessageSource.Name.get -> string
 JustSaying.JustSayingBus.MessageBodySerializerFactory.get -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializationFactory
 JustSaying.JustSayingBus.MessageBodySerializerFactory.set -> void
+JustSaying.Fluent.PublicationsBuilder.BusBuilder.get -> JustSaying.MessagingBusBuilder
+JustSaying.Fluent.SubscriptionsBuilder.BusBuilder.get -> JustSaying.MessagingBusBuilder
+JustSaying.MessagingBusBuilder.MessagingConfig.get -> JustSaying.Fluent.MessagingConfigurationBuilder
+JustSaying.MessagingBusBuilder.MessagingConfig.set -> void
+JustSaying.MessagingBusBuilder.Properties.get -> System.Collections.Generic.Dictionary<string, object>
