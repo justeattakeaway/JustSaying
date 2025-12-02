@@ -12,6 +12,7 @@ JustSaying extension that adds Apache Kafka support with CloudEvents compliance 
 - ✅ **Producer & Consumer**: Full support for publishing and consuming messages
 - ✅ **Batch Publishing**: Efficient batch message publishing
 - ✅ **Fluent API**: Easy-to-use fluent configuration
+- ✅ **Subscription Pattern**: Declarative consumer configuration matching JustSaying patterns
 - ✅ **Metadata Preservation**: Maintains all JustSaying message metadata
 
 ## Installation
@@ -59,7 +60,54 @@ var message = new OrderPlacedEvent
 await publisher.PublishAsync(message);
 ```
 
-### Consuming Messages
+### Consuming Messages (Recommended: Subscription Pattern)
+
+The recommended approach is to use the declarative subscription pattern:
+
+```csharp
+// Register message handlers
+services.AddSingleton<OrderPlacedEventHandler>();
+
+// Configure subscriptions
+services.AddJustSaying(config =>
+{
+    config.Subscriptions(sub =>
+    {
+        sub.ForKafkaTopic<OrderPlacedEvent>("order-events", kafka =>
+        {
+            kafka.WithBootstrapServers("localhost:9092")
+                 .WithGroupId("order-processor")
+                 .WithCloudEvents(true, "urn:myapp:orders");
+        });
+    });
+});
+
+// Create a background service to start consumers
+public class KafkaBusService : BackgroundService
+{
+    private readonly IServiceProvider _serviceProvider;
+    private JustSayingBus _bus;
+
+    protected override async Task ExecuteAsync(CancellationToken ct)
+    {
+        _bus = _serviceProvider.GetRequiredService<JustSayingBus>();
+        await _bus.StartKafkaConsumersAsync(ct);
+    }
+
+    public override void Dispose()
+    {
+        _bus?.DisposeKafkaConsumers();
+        base.Dispose();
+    }
+}
+
+// Register the service
+services.AddHostedService<KafkaBusService>();
+```
+
+### Consuming Messages (Manual)
+
+For manual control, you can create consumers directly:
 
 ```csharp
 using JustSaying.Extensions.Kafka;

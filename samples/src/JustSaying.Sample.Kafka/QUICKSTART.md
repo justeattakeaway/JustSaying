@@ -1,10 +1,10 @@
-# Quick Start Guide - Kafka Transport with CloudEvents
+# Quick Start Guide - Kafka Extension for JustSaying
 
-This guide will get you up and running with the JustSaying Kafka extension in 5 minutes.
+This guide demonstrates how to use Kafka alongside AWS SQS/SNS with the unified JustSaying API.
 
 ## Prerequisites
 
-- .NET 8.0 SDK
+- .NET 8.0 SDK or later
 - Docker and Docker Compose (for local Kafka)
 
 ## Step 1: Start Kafka Locally
@@ -17,7 +17,7 @@ docker-compose up -d
 This starts:
 - Kafka broker on `localhost:9092`
 - Zookeeper on `localhost:2181`
-- Kafka UI on `http://localhost:8080`
+- Kafka UI on `http://localhost:8080` (optional)
 
 Verify Kafka is running:
 ```bash
@@ -27,110 +27,247 @@ docker-compose ps
 ## Step 2: Run the Sample Application
 
 ```bash
-cd samples/src/JustSaying.Sample.Kafka
 dotnet run
 ```
 
 You should see output like:
 ```
-[10:30:15 INF] Starting Kafka Sample Application with CloudEvents support
-[10:30:16 INF] Subscribed to Kafka topic 'order-placed'
-[10:30:16 INF] Subscribed to Kafka topic 'order-confirmed'
-[10:30:18 INF] Published OrderPlacedEvent for ORD-00001
-[10:30:18 INF] Processing order ORD-00001 for customer CUST-042. Amount: $125.00
-[10:30:19 INF] Published OrderConfirmedEvent for ORD-00001
-[10:30:19 INF] Order ORD-00001 confirmed by AutomatedSystem
+info: JustSaying.Sample.Kafka.Program[0]
+      Starting Kafka Sample Application with JustSaying
+info: JustSaying.Sample.Kafka.Program[0]
+      This sample demonstrates:
+info: JustSaying.Sample.Kafka.Program[0]
+        - Publishing messages to Kafka topics
+info: JustSaying.Sample.Kafka.Program[0]
+        - Consuming messages from Kafka topics
+info: JustSaying.Sample.Kafka.Program[0]
+        - CloudEvents format support
+info: JustSaying.Sample.Kafka.Program[0]
+        - Unified API alongside AWS SQS/SNS
+info: JustSaying.Sample.Kafka.Services.MessageGeneratorService[0]
+      ✅ Published OrderPlacedEvent for ORD-00001
+info: JustSaying.Sample.Kafka.Handlers.OrderPlacedEventHandler[0]
+      Processing order ORD-00001 for customer CUST-042. Amount: $125.00
+info: JustSaying.Sample.Kafka.Services.MessageGeneratorService[0]
+      ✅ Published OrderConfirmedEvent for ORD-00001
+info: JustSaying.Sample.Kafka.Handlers.OrderConfirmedEventHandler[0]
+      Order ORD-00001 confirmed by AutomatedSystem at 12/02/2025 10:30:19
 ```
 
-## Step 3: View Messages in Kafka UI
+## Step 3: Understanding the Code
 
-Open http://localhost:8080 in your browser to see:
-- Topics: `order-placed`, `order-confirmed`
-- CloudEvents formatted messages
-- Message metadata and headers
+### Global Kafka Configuration
 
-## Step 4: Inspect CloudEvents Messages
+The sample uses global Kafka configuration to avoid repetition:
 
-Click on a message in the Kafka UI to see the CloudEvents structure:
-
-```json
+```csharp
+builder.Messaging(config =>
 {
-  "specversion": "1.0",
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "type": "JustSaying.Sample.Kafka.Messages.OrderPlacedEvent",
-  "source": "urn:justsaying:sample:orders",
-  "time": "2024-12-02T10:30:00Z",
-  "datacontenttype": "application/json",
-  "subject": "OrderPlacedEvent",
-  "data": {
-    "orderId": "ORD-00001",
-    "customerId": "CUST-042",
-    "amount": 125.00,
-    "orderDate": "2024-12-02T10:30:00Z",
-    "items": [
-      {
-        "productId": "PROD-001",
-        "productName": "Widget",
-        "quantity": 2,
-        "unitPrice": 25.00
-      }
-    ]
-  },
-  "raisingcomponent": "OrderService",
-  "tenant": "tenant-demo"
-}
+    config.WithRegion("us-east-1"); // Required for AWS compatibility
+    
+    // Set global Kafka defaults - applies to all topics
+    config.WithKafka(kafka =>
+    {
+        kafka.BootstrapServers = "localhost:9092";
+        kafka.EnableCloudEvents = true;
+        kafka.CloudEventsSource = "urn:justsaying:sample:orders";
+    });
+});
 ```
 
-## Step 5: Create Your Own Message
+### Configure Publications (Publishing to Kafka)
 
-1. Define your message:
+With global configuration, you only need to specify the topic:
+
+```csharp
+builder.Publications(pubs =>
+{
+    // Inherits BootstrapServers and CloudEvents settings from global config
+    pubs.WithKafka<OrderPlacedEvent>("order-placed");
+});
+```
+
+### Configure Subscriptions (Consuming from Kafka)
+
+Subscriptions inherit global settings, you just add the consumer group:
+
+```csharp
+builder.Subscriptions(subs =>
+{
+    subs.ForKafka<OrderPlacedEvent>("order-placed", kafka =>
+    {
+        kafka.WithGroupId("sample-consumer-group");
+        // BootstrapServers and CloudEvents inherited from global config
+    });
+});
+```
+
+### Per-Topic Override (Optional)
+
+You can still override settings for specific topics:
+
+```csharp
+builder.Publications(pubs =>
+{
+    pubs.WithKafka<OrderPlacedEvent>("order-placed", kafka =>
+    {
+        kafka.WithBootstrapServers("different-kafka:9092"); // Override global
+    });
+});
+```
+
+### Register Handlers
+
+```csharp
+services.AddJustSayingHandler<OrderPlacedEvent, OrderPlacedEventHandler>();
+```
+
+## Step 4: Create Your Own Messages
+
+1. **Define your message** (inherits from `JustSaying.Models.Message`):
 
 ```csharp
 public class MyCustomEvent : Message
 {
     public string MyProperty { get; set; }
+    public int MyValue { get; set; }
 }
 ```
 
-2. Configure publisher:
+2. **Create a handler**:
 
 ```csharp
-config.WithKafkaPublisher<MyCustomEvent>("my-topic", kafka =>
+public class MyCustomEventHandler : IHandlerAsync<MyCustomEvent>
 {
-    kafka.BootstrapServers = "localhost:9092";
-    kafka.EnableCloudEvents = true;
-});
+    private readonly ILogger<MyCustomEventHandler> _logger;
+
+    public MyCustomEventHandler(ILogger<MyCustomEventHandler> logger)
+    {
+        _logger = logger;
+    }
+
+    public Task<bool> Handle(MyCustomEvent message)
+    {
+        _logger.LogInformation(
+            "Received: {Property} = {Value}", 
+            message.MyProperty, 
+            message.MyValue);
+        return Task.FromResult(true);
+    }
+}
 ```
 
-3. Publish:
+3. **Configure in Program.cs**:
 
 ```csharp
-await publisher.PublishAsync(new MyCustomEvent 
-{ 
-    MyProperty = "Hello Kafka!" 
+// Register handler
+services.AddJustSayingHandler<MyCustomEvent, MyCustomEventHandler>();
+
+// Configure publication
+builder.Publications(pubs =>
+{
+    pubs.WithKafka<MyCustomEvent>("my-topic", kafka =>
+    {
+        kafka.WithBootstrapServers("localhost:9092")
+             .WithCloudEvents(true);
+    });
+});
+
+// Configure subscription
+builder.Subscriptions(subs =>
+{
+    subs.ForKafka<MyCustomEvent>("my-topic", kafka =>
+    {
+        kafka.WithBootstrapServers("localhost:9092")
+             .WithGroupId("my-consumer-group")
+             .WithCloudEvents(true);
+    });
 });
 ```
 
-## What Just Happened?
+4. **Publish messages**:
 
-1. ✅ **Publisher**: Converted your `Message` to CloudEvents format
-2. ✅ **Kafka**: Stored the event in a topic with all metadata
-3. ✅ **Consumer**: Received and converted CloudEvents back to your `Message`
-4. ✅ **Handler**: Processed the message using the standard `IHandlerAsync<T>` interface
+```csharp
+public class MyService
+{
+    private readonly IMessagePublisher _publisher;
 
-## Key Concepts Demonstrated
+    public MyService(IMessagePublisher publisher)
+    {
+        _publisher = publisher;
+    }
 
-- **CloudEvents Compliance**: Messages follow the CloudEvents v1.0 specification
-- **Message Compatibility**: Your existing `Message` classes work without changes
-- **Bidirectional Conversion**: Seamless conversion between Message and CloudEvents
-- **Metadata Preservation**: All JustSaying metadata (Id, TimeStamp, RaisingComponent, etc.) is preserved
+    public async Task DoSomething()
+    {
+        await _publisher.PublishAsync(new MyCustomEvent 
+        { 
+            MyProperty = "Hello Kafka!",
+            MyValue = 42
+        });
+    }
+}
+```
 
-## Next Steps
+## What's Happening?
 
-1. **Explore the Sample Code**: Check out `Program.cs` to see how it's configured
-2. **Read the README**: See [README.md](README.md) for full API documentation
-3. **Migration Guide**: Review [MIGRATION.md](MIGRATION.md) for migrating from SNS/SQS
-4. **Customize**: Modify the sample to fit your use case
+1. **Unified API**: Same `AddJustSaying()` API as AWS SQS/SNS
+2. **CloudEvents**: Messages are automatically wrapped in CloudEvents format
+3. **Message Preservation**: All JustSaying metadata (Id, TimeStamp, etc.) is preserved
+4. **Middleware Support**: Full middleware pipeline support just like SQS
+5. **Multi-Transport**: Use Kafka and AWS transports side-by-side
+
+## Key Features Demonstrated
+
+- ✅ **Declarative Subscriptions**: Use `ForKafka<T>()` pattern like `ForQueue<T>()`
+- ✅ **Declarative Publications**: Use `WithKafka<T>()` pattern  
+- ✅ **CloudEvents Support**: Automatic CloudEvents v1.0 formatting
+- ✅ **Middleware Integration**: Same middleware pipeline as SQS/SNS
+- ✅ **Message Handlers**: Standard `IHandlerAsync<T>` interface
+- ✅ **Multi-Transport**: Mix Kafka and AWS in the same application
+
+## Viewing Messages in Kafka
+
+If you have Kafka UI running at http://localhost:8080, you can:
+- Browse topics: `order-placed`, `order-confirmed`
+- Inspect CloudEvents formatted messages
+- View consumer groups and their offsets
+
+## Mixing Transports
+
+You can use both Kafka and AWS SQS/SNS in the same application:
+
+```csharp
+builder.Publications(pubs =>
+{
+    // Kafka publication
+    pubs.WithKafka<OrderPlacedEvent>("order-placed", kafka => 
+    {
+        kafka.WithBootstrapServers("localhost:9092");
+    });
+    
+    // SNS publication
+    pubs.WithTopic<OrderPlacedEvent>(sns => 
+    {
+        sns.WithWriteConfiguration(c => c.QueueName = "order-placed");
+    });
+});
+
+builder.Subscriptions(subs =>
+{
+    // Kafka subscription
+    subs.ForKafka<OrderPlacedEvent>("order-placed", kafka => 
+    {
+        kafka.WithBootstrapServers("localhost:9092")
+             .WithGroupId("my-group");
+    });
+    
+    // SQS subscription  
+    subs.ForQueue<OrderConfirmedEvent>(sqs =>
+    {
+        sqs.WithReadConfiguration(c => c.QueueName = "order-confirmed");
+    });
+});
+```
 
 ## Troubleshooting
 
@@ -141,14 +278,14 @@ docker-compose up -d
 ```
 
 **Messages not appearing?**
-- Check Kafka UI at http://localhost:8080
-- Verify topic exists
-- Check application logs for errors
+- Check logs for exceptions
+- Verify Kafka is running: `docker-compose ps`
+- Check topic exists in Kafka UI
 
-**Consumer not receiving messages?**
-- Ensure consumer group ID is set
-- Check consumer is subscribed to correct topic
-- Verify CloudEvents enabled on both publisher and consumer
+**Consumer not receiving?**
+- Ensure `WithGroupId()` is set
+- Verify topic names match between publisher and subscriber
+- Check CloudEvents settings match on both sides
 
 ## Clean Up
 
@@ -157,12 +294,19 @@ Stop and remove all containers:
 docker-compose down -v
 ```
 
+## Next Steps
+
+1. **Explore the code**: Check out `Program.cs`, handlers, and messages
+2. **Add more messages**: Create your own message types
+3. **Customize configuration**: Add producer/consumer configurations
+4. **Mix transports**: Try using both Kafka and AWS SQS/SNS
+
 ## Further Reading
 
 - [CloudEvents Specification](https://cloudevents.io/)
 - [Apache Kafka Documentation](https://kafka.apache.org/documentation/)
-- [JustSaying Documentation](https://justeat.gitbook.io/justsaying/)
+- [JustSaying Documentation](https://github.com/justeat/JustSaying)
 
 ---
 
-**Congratulations!** You're now running JustSaying with Kafka and CloudEvents. 🎉
+**Congratulations!** You're now using Kafka with JustSaying's unified API. 🎉

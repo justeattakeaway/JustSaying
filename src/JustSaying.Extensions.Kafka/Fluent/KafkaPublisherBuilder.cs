@@ -17,6 +17,10 @@ public class KafkaPublisherBuilder<T> where T : Message
     private readonly string _topic;
     private readonly KafkaConfiguration _configuration = new();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="KafkaPublisherBuilder{T}"/> class.
+    /// </summary>
+    /// <param name="topic">The Kafka topic name.</param>
     public KafkaPublisherBuilder(string topic)
     {
         _topic = topic ?? throw new ArgumentNullException(nameof(topic));

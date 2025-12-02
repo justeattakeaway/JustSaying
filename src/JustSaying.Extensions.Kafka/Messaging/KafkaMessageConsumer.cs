@@ -3,8 +3,10 @@ using CloudNative.CloudEvents;
 using Confluent.Kafka;
 using JustSaying.Extensions.Kafka.CloudEvents;
 using JustSaying.Extensions.Kafka.Configuration;
+using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
+using JustSaying.Messaging.Middleware;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
@@ -49,6 +51,180 @@ public class KafkaMessageConsumer : IDisposable
 
         _consumer.Subscribe(_topic);
         _logger.LogInformation("Subscribed to Kafka topic '{Topic}'", _topic);
+    }
+
+    /// <summary>
+    /// Starts consuming messages with middleware support.
+    /// </summary>
+    public async Task StartConsumingWithMiddleware<T>(IHandlerAsync<T> handler, MiddlewareBase<HandleMessageContext, bool> middleware, CancellationToken cancellationToken) where T : Message
+    {
+        ThrowIfDisposed();
+
+        _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+        await Task.Run(async () =>
+        {
+            while (!_cancellationTokenSource.Token.IsCancellationRequested)
+            {
+                try
+                {
+                    var consumeResult = _consumer.Consume(_cancellationTokenSource.Token);
+                    
+                    if (consumeResult?.Message == null)
+                        continue;
+
+                    var message = DeserializeMessage<T>(consumeResult.Message);
+                    
+                    if (message != null)
+                    {
+                        _logger.LogDebug(
+                            "Received message {MessageId} from topic '{Topic}' partition {Partition} offset {Offset}",
+                            message.Id,
+                            _topic,
+                            consumeResult.Partition.Value,
+                            consumeResult.Offset.Value);
+
+                        // Create a dummy raw AWS message for middleware compatibility
+                        var rawMessage = new Amazon.SQS.Model.Message
+                        {
+                            MessageId = message.Id.ToString(),
+                            Body = string.Empty
+                        };
+
+                        // Create middleware context with Kafka-specific implementations
+                        var context = new HandleMessageContext(
+                            queueName: _topic,
+                            rawMessage: rawMessage,
+                            message: message,
+                            messageType: typeof(T),
+                            visibilityUpdater: new KafkaVisibilityUpdater(),
+                            messageDeleter: new KafkaMessageDeleter(),
+                            queueUri: new Uri($"kafka://{_topic}"),
+                            messageAttributes: new MessageAttributes());
+
+                        // Execute through middleware pipeline
+                        var handled = await middleware.RunAsync(context, null, _cancellationTokenSource.Token).ConfigureAwait(false);
+
+                        if (handled)
+                        {
+                            _consumer.Commit(consumeResult);
+                            
+                            _logger.LogInformation(
+                                "Successfully processed and committed message {MessageId} from topic '{Topic}'",
+                                message.Id,
+                                _topic);
+                        }
+                        else
+                        {
+                            _logger.LogWarning(
+                                "Handler returned false for message {MessageId} from topic '{Topic}'",
+                                message.Id,
+                                _topic);
+                        }
+                    }
+                }
+                catch (ConsumeException ex)
+                {
+                    _logger.LogError(ex, "Error consuming from Kafka topic '{Topic}'", _topic);
+                }
+                catch (OperationCanceledException)
+                {
+                    _logger.LogInformation("Kafka consumer for topic '{Topic}' was cancelled", _topic);
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unexpected error processing message from topic '{Topic}'", _topic);
+                }
+            }
+        }, _cancellationTokenSource.Token).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Starts consuming messages with middleware support (non-async overload for backward compatibility).
+    /// </summary>
+    public void StartConsuming<T>(IHandlerAsync<T> handler, MiddlewareBase<HandleMessageContext, bool> middleware) where T : Message
+    {
+        ThrowIfDisposed();
+
+        _cancellationTokenSource = new CancellationTokenSource();
+
+        Task.Run(async () =>
+        {
+            while (!_cancellationTokenSource.Token.IsCancellationRequested)
+            {
+                try
+                {
+                    var consumeResult = _consumer.Consume(_cancellationTokenSource.Token);
+                    
+                    if (consumeResult?.Message == null)
+                        continue;
+
+                    var message = DeserializeMessage<T>(consumeResult.Message);
+                    
+                    if (message != null)
+                    {
+                        _logger.LogDebug(
+                            "Received message {MessageId} from topic '{Topic}' partition {Partition} offset {Offset}",
+                            message.Id,
+                            _topic,
+                            consumeResult.Partition.Value,
+                            consumeResult.Offset.Value);
+
+                        // Create a dummy raw AWS message for middleware compatibility
+                        var rawMessage = new Amazon.SQS.Model.Message
+                        {
+                            MessageId = message.Id.ToString(),
+                            Body = string.Empty
+                        };
+
+                        // Create middleware context with Kafka-specific implementations
+                        var context = new HandleMessageContext(
+                            queueName: _topic,
+                            rawMessage: rawMessage,
+                            message: message,
+                            messageType: typeof(T),
+                            visibilityUpdater: new KafkaVisibilityUpdater(),
+                            messageDeleter: new KafkaMessageDeleter(),
+                            queueUri: new Uri($"kafka://{_topic}"),
+                            messageAttributes: new MessageAttributes());
+
+                        // Execute through middleware pipeline
+                        var handled = await middleware.RunAsync(context, null, _cancellationTokenSource.Token).ConfigureAwait(false);
+
+                        if (handled)
+                        {
+                            _consumer.Commit(consumeResult);
+                            
+                            _logger.LogInformation(
+                                "Successfully processed and committed message {MessageId} from topic '{Topic}'",
+                                message.Id,
+                                _topic);
+                        }
+                        else
+                        {
+                            _logger.LogWarning(
+                                "Handler returned false for message {MessageId} from topic '{Topic}'",
+                                message.Id,
+                                _topic);
+                        }
+                    }
+                }
+                catch (ConsumeException ex)
+                {
+                    _logger.LogError(ex, "Error consuming from Kafka topic '{Topic}'", _topic);
+                }
+                catch (OperationCanceledException)
+                {
+                    _logger.LogInformation("Kafka consumer for topic '{Topic}' was cancelled", _topic);
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unexpected error processing message from topic '{Topic}'", _topic);
+                }
+            }
+        }, _cancellationTokenSource.Token);
     }
 
     /// <summary>
@@ -150,7 +326,7 @@ public class KafkaMessageConsumer : IDisposable
             {
                 // Deserialize as CloudEvent
                 var cloudEvent = _cloudEventsConverter.Deserialize(kafkaMessage.Value);
-                message = _cloudEventsConverter.FromCloudEvent(cloudEvent);
+                message = _cloudEventsConverter.FromCloudEvent<T>(cloudEvent);
             }
             else
             {

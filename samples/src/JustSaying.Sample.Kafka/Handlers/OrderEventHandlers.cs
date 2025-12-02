@@ -1,30 +1,24 @@
+using System.Security.Cryptography;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Sample.Kafka.Messages;
-using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Sample.Kafka.Handlers;
 
 /// <summary>
 /// Handler for OrderPlacedEvent demonstrating CloudEvents consumption.
 /// </summary>
-public class OrderPlacedEventHandler : IHandlerAsync<OrderPlacedEvent>
+public class OrderPlacedEventHandler(ILogger<OrderPlacedEventHandler> logger, IMessagePublisher publisher) : IHandlerAsync<OrderPlacedEvent>
 {
-    private readonly ILogger<OrderPlacedEventHandler> _logger;
-
-    public OrderPlacedEventHandler(ILogger<OrderPlacedEventHandler> logger)
-    {
-        _logger = logger;
-    }
-
     public async Task<bool> Handle(OrderPlacedEvent message)
     {
-        _logger.LogInformation(
+        logger.LogInformation(
             "Processing order {OrderId} for customer {CustomerId}. Amount: {Amount:C}",
             message.OrderId,
             message.CustomerId,
             message.Amount);
 
-        _logger.LogInformation(
+        logger.LogInformation(
             "Order metadata - RaisingComponent: {Component}, Tenant: {Tenant}, Timestamp: {Timestamp}",
             message.RaisingComponent,
             message.Tenant,
@@ -32,18 +26,36 @@ public class OrderPlacedEventHandler : IHandlerAsync<OrderPlacedEvent>
 
         foreach (var item in message.Items)
         {
-            _logger.LogInformation(
+            logger.LogInformation(
                 "  Item: {ProductName} x {Quantity} @ {Price:C}",
                 item.ProductName,
                 item.Quantity,
                 item.UnitPrice);
         }
 
-        // Simulate processing
-        await Task.Delay(100);
+        // Simulate some processing
+        await Task.Delay(RandomNumberGenerator.GetInt32(50, 150));
 
-        _logger.LogInformation("Order {OrderId} processed successfully", message.OrderId);
+        // Publish confirmation event
+        var orderConfirmed = new OrderConfirmedEvent
+        {
+            OrderId = message.OrderId,
+            ConfirmedAt = DateTime.UtcNow,
+            ConfirmedBy = "OrderProcessingSystem",
+            RaisingComponent = "KafkaOrderingApi",
+            Tenant = message.Tenant
+        };
 
+        await publisher.PublishAsync(orderConfirmed);
+
+        logger.LogInformation("Order {OrderId} processed successfully and confirmed", message.OrderId);
+
+        // Returning true indicates:
+        //   The message was handled successfully
+        //   The message can be committed in Kafka
+        // Returning false would indicate:
+        //   The message was not handled successfully
+        //   The message handling should be retried
         return true;
     }
 }
@@ -51,24 +63,23 @@ public class OrderPlacedEventHandler : IHandlerAsync<OrderPlacedEvent>
 /// <summary>
 /// Handler for OrderConfirmedEvent.
 /// </summary>
-public class OrderConfirmedEventHandler : IHandlerAsync<OrderConfirmedEvent>
+public class OrderConfirmedEventHandler(ILogger<OrderConfirmedEventHandler> logger) : IHandlerAsync<OrderConfirmedEvent>
 {
-    private readonly ILogger<OrderConfirmedEventHandler> _logger;
-
-    public OrderConfirmedEventHandler(ILogger<OrderConfirmedEventHandler> logger)
-    {
-        _logger = logger;
-    }
-
     public async Task<bool> Handle(OrderConfirmedEvent message)
     {
-        _logger.LogInformation(
+        logger.LogInformation(
             "Order {OrderId} confirmed by {ConfirmedBy} at {ConfirmedAt}",
             message.OrderId,
             message.ConfirmedBy,
             message.ConfirmedAt);
 
-        await Task.Delay(50);
+        // This is where you would update order status in database
+        // Send notification to customer, etc.
+        // Intentionally left empty for the sake of this being a sample application
+
+        await Task.Delay(RandomNumberGenerator.GetInt32(25, 75));
+
+        logger.LogInformation("Order {OrderId} confirmation processed", message.OrderId);
 
         return true;
     }

@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json;
 using CloudNative.CloudEvents;
 using CloudNative.CloudEvents.SystemTextJson;
 using JustSaying.Messaging;
@@ -14,29 +15,39 @@ namespace JustSaying.Extensions.Kafka.CloudEvents;
 public class CloudEventsMessageConverter
 {
     private readonly IMessageBodySerializationFactory _serializationFactory;
-    private readonly CloudEventFormatter _formatter;
     private readonly string _source;
+    private readonly CloudEventFormatter _formatter;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CloudEventsMessageConverter"/> class.
+    /// </summary>
+    /// <param name="serializationFactory">The serialization factory for messages.</param>
+    /// <param name="source">The CloudEvents source URN.</param>
     public CloudEventsMessageConverter(
         IMessageBodySerializationFactory serializationFactory,
         string source = "urn:justsaying")
     {
         _serializationFactory = serializationFactory ?? throw new ArgumentNullException(nameof(serializationFactory));
-        _formatter = new JsonEventFormatter();
         _source = source;
+        _formatter = new JsonEventFormatter();
     }
 
     /// <summary>
     /// Converts a JustSaying Message to a CloudEvent.
     /// </summary>
-    public CloudEvent ToCloudEvent(Message message, PublishMetadata metadata = null)
+    public CloudEvent ToCloudEvent<T>(T message, PublishMetadata metadata = null) where T : Message
     {
         if (message == null)
             throw new ArgumentNullException(nameof(message));
 
-        var messageType = message.GetType();
-        var serializer = _serializationFactory.GetSerializer(messageType);
+        var messageType = typeof(T);
+        var serializer = _serializationFactory.GetSerializer<T>();
         var messageBody = serializer.Serialize(message);
+
+        // Parse the JSON string to a JsonDocument so CloudEvents can properly serialize it
+        // Otherwise, the string gets double-encoded
+        using var jsonDoc = System.Text.Json.JsonDocument.Parse(messageBody);
+        var dataElement = jsonDoc.RootElement.Clone();
 
         var cloudEvent = new CloudEvent
         {
@@ -45,7 +56,7 @@ public class CloudEventsMessageConverter
             Source = new Uri(_source),
             Time = message.TimeStamp,
             DataContentType = "application/json",
-            Data = messageBody,
+            Data = dataElement,
             Subject = messageType.Name
         };
 
@@ -77,94 +88,70 @@ public class CloudEventsMessageConverter
     /// <summary>
     /// Converts a CloudEvent to a JustSaying Message.
     /// </summary>
-    public Message FromCloudEvent(CloudEvent cloudEvent)
+    public T FromCloudEvent<T>(CloudEvent cloudEvent) where T : Message
     {
         if (cloudEvent == null)
             throw new ArgumentNullException(nameof(cloudEvent));
 
-        if (string.IsNullOrEmpty(cloudEvent.Type))
-            throw new InvalidOperationException("CloudEvent Type is required to deserialize message.");
-
-        // Get the message type from the CloudEvent type attribute
-        var messageType = Type.GetType(cloudEvent.Type);
-        if (messageType == null)
-        {
-            throw new InvalidOperationException($"Could not resolve message type '{cloudEvent.Type}'.");
-        }
-
         // Get the serializer for this message type
-        var serializer = _serializationFactory.GetSerializer(messageType);
+        var serializer = _serializationFactory.GetSerializer<T>();
 
-        // Extract the message data
+        // Extract the message data - the data field contains the serialized message JSON
         string messageBody;
+        
         if (cloudEvent.Data is string strData)
         {
+            // Already a string - use it directly
             messageBody = strData;
         }
         else if (cloudEvent.Data is byte[] bytesData)
         {
             messageBody = Encoding.UTF8.GetString(bytesData);
         }
+        else if (cloudEvent.Data is System.Text.Json.JsonElement jsonElement)
+        {
+            // JsonElement - need to check if it's a string value or an object
+            if (jsonElement.ValueKind == JsonValueKind.String)
+            {
+                // It's a JSON string value - get the actual string content
+                messageBody = jsonElement.GetString();
+            }
+            else
+            {
+                // It's a JSON object - get the raw text
+                messageBody = jsonElement.GetRawText();
+            }
+        }
+        else if (cloudEvent.Data != null)
+        {
+            // Other object type - serialize it
+            messageBody = JsonSerializer.Serialize(cloudEvent.Data);
+        }
         else
         {
-            messageBody = System.Text.Json.JsonSerializer.Serialize(cloudEvent.Data);
+            throw new InvalidOperationException("CloudEvent data is null");
         }
-
-        // Deserialize to the actual message type
+        
+        // Deserialize the JSON string to the message type
         var message = serializer.Deserialize(messageBody);
 
-        // Restore CloudEvent metadata to Message properties
-        if (Guid.TryParse(cloudEvent.Id, out var id))
-        {
-            message.Id = id;
-        }
-
-        if (cloudEvent.Time.HasValue)
-        {
-            message.TimeStamp = cloudEvent.Time.Value.UtcDateTime;
-        }
-
-        // Restore custom attributes
-        if (cloudEvent.GetPopulatedAttributes().Any(a => a.Key.Name == "raisingcomponent"))
-        {
-            message.RaisingComponent = cloudEvent["raisingcomponent"]?.ToString();
-        }
-
-        if (cloudEvent.GetPopulatedAttributes().Any(a => a.Key.Name == "tenant"))
-        {
-            message.Tenant = cloudEvent["tenant"]?.ToString();
-        }
-
-        if (cloudEvent.GetPopulatedAttributes().Any(a => a.Key.Name == "conversation"))
-        {
-            message.Conversation = cloudEvent["conversation"]?.ToString();
-        }
-
-        return message;
+        return (T)message;
     }
 
     /// <summary>
-    /// Serializes a CloudEvent to bytes for Kafka.
+    /// Serializes a CloudEvent to bytes for Kafka (using JSON).
     /// </summary>
     public byte[] Serialize(CloudEvent cloudEvent)
     {
-        return _formatter.EncodeStructuredModeMessage(cloudEvent, out _);
+        var bytes = _formatter.EncodeStructuredModeMessage(cloudEvent, out _);
+        return bytes.ToArray();
     }
 
     /// <summary>
     /// Deserializes a CloudEvent from Kafka bytes.
     /// </summary>
-    public CloudEvent Deserialize(byte[] data, string contentType = "application/cloudevents+json")
+    public CloudEvent Deserialize(byte[] data)
     {
-        return _formatter.DecodeStructuredModeMessage(data, new System.Net.Mime.ContentType(contentType), null);
-    }
-
-    private IMessageBodySerializer GetSerializer(Type messageType)
-    {
-        var method = typeof(IMessageBodySerializationFactory)
-            .GetMethod(nameof(IMessageBodySerializationFactory.GetSerializer))
-            ?.MakeGenericMethod(messageType);
-
-        return (IMessageBodySerializer)method?.Invoke(_serializationFactory, null);
+        return _formatter.DecodeStructuredModeMessage(data, null, null);
     }
 }

@@ -1,218 +1,142 @@
-using JustSaying;
-using JustSaying.Extensions.Kafka;
+using JustSaying.Extensions.Kafka.Fluent;
 using JustSaying.Messaging;
+using JustSaying.Sample.Kafka;
 using JustSaying.Sample.Kafka.Handlers;
 using JustSaying.Sample.Kafka.Messages;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using JustSaying.Sample.Kafka.Models;
+using Microsoft.OpenApi.Models;
 using Serilog;
+using Serilog.Events;
 
-namespace JustSaying.Sample.Kafka;
+const string appName = "KafkaOrderingApi";
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .MinimumLevel.Override("System", LogEventLevel.Warning)
+    .MinimumLevel.Debug()
+    .Enrich.WithProperty("AppName", appName)
+    .CreateLogger();
 
-public class Program
+Console.Title = "Kafka Ordering API";
+
+try
 {
-    public static async Task Main(string[] args)
+    var builder = WebApplication.CreateBuilder(args);
+    var configuration = builder.Configuration;
+    builder.Host.UseSerilog();
+    
+    builder.Services.AddJustSaying(config =>
     {
-        // Setup Serilog
-        Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Debug()
-            .WriteTo.Console()
-            .CreateLogger();
-
-        try
+        config.Messaging(x =>
         {
-            var host = Host.CreateDefaultBuilder(args)
-                .ConfigureServices((context, services) =>
-                {
-                    // Add logging
-                    services.AddLogging(builder =>
-                    {
-                        builder.AddSerilog(dispose: true);
-                    });
-
-                    // Register message handlers
-                    services.AddSingleton<OrderPlacedEventHandler>();
-                    services.AddSingleton<OrderConfirmedEventHandler>();
-
-                    // Configure JustSaying with Kafka
-                    services.AddJustSaying(config =>
-                    {
-                        config.Messaging(messaging =>
-                        {
-                            // Not using AWS for this Kafka example
-                            messaging.WithRegion("us-east-1");
-                        });
-
-                        // Add Kafka publishers with CloudEvents support
-                        config.WithKafkaPublisher<OrderPlacedEvent>("order-placed", kafka =>
-                        {
-                            kafka.BootstrapServers = "localhost:9092";
-                            kafka.EnableCloudEvents = true;
-                            kafka.CloudEventsSource = "urn:justsaying:sample:orders";
-                        });
-
-                        config.WithKafkaPublisher<OrderConfirmedEvent>("order-confirmed", kafka =>
-                        {
-                            kafka.BootstrapServers = "localhost:9092";
-                            kafka.EnableCloudEvents = true;
-                            kafka.CloudEventsSource = "urn:justsaying:sample:orders";
-                        });
-                    });
-
-                    // Add background services
-                    services.AddHostedService<PublisherService>();
-                    services.AddHostedService<ConsumerService>();
-                })
-                .Build();
-
-            Log.Information("Starting Kafka Sample Application with CloudEvents support");
-            await host.RunAsync();
-        }
-        catch (Exception ex)
-        {
-            Log.Fatal(ex, "Application terminated unexpectedly");
-        }
-        finally
-        {
-            Log.CloseAndFlush();
-        }
-    }
-}
-
-/// <summary>
-/// Background service that publishes sample messages to Kafka.
-/// </summary>
-public class PublisherService : BackgroundService
-{
-    private readonly IMessagePublisher _publisher;
-    private readonly ILogger<PublisherService> _logger;
-
-    public PublisherService(IMessagePublisher publisher, ILogger<PublisherService> logger)
-    {
-        _publisher = publisher;
-        _logger = logger;
-    }
-
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        // Wait a bit for consumers to start
-        await Task.Delay(2000, stoppingToken);
-
-        var orderNumber = 1;
-
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            try
+            // Configure AWS region (required for compatibility even when using only Kafka)
+            x.WithRegion(configuration.GetAWSRegion());
+            
+            // Configure global Kafka settings
+            x.WithKafka(kafka =>
             {
-                // Publish OrderPlacedEvent
-                var orderPlaced = new OrderPlacedEvent
-                {
-                    OrderId = $"ORD-{orderNumber:D5}",
-                    CustomerId = $"CUST-{Random.Shared.Next(1, 100):D3}",
-                    Amount = Random.Shared.Next(10, 1000),
-                    OrderDate = DateTime.UtcNow,
-                    RaisingComponent = "OrderService",
-                    Tenant = "tenant-demo",
-                    Items = new List<OrderItem>
-                    {
-                        new() { ProductId = "PROD-001", ProductName = "Widget", Quantity = 2, UnitPrice = 25.00m },
-                        new() { ProductId = "PROD-002", ProductName = "Gadget", Quantity = 1, UnitPrice = 50.00m }
-                    }
-                };
-
-                await _publisher.PublishAsync(orderPlaced, stoppingToken);
-                _logger.LogInformation("Published OrderPlacedEvent for {OrderId}", orderPlaced.OrderId);
-
-                // Wait a bit
-                await Task.Delay(1000, stoppingToken);
-
-                // Publish OrderConfirmedEvent
-                var orderConfirmed = new OrderConfirmedEvent
-                {
-                    OrderId = orderPlaced.OrderId,
-                    ConfirmedAt = DateTime.UtcNow,
-                    ConfirmedBy = "AutomatedSystem",
-                    RaisingComponent = "OrderService",
-                    Tenant = "tenant-demo"
-                };
-
-                await _publisher.PublishAsync(orderConfirmed, stoppingToken);
-                _logger.LogInformation("Published OrderConfirmedEvent for {OrderId}", orderConfirmed.OrderId);
-
-                orderNumber++;
-
-                // Publish every 5 seconds
-                await Task.Delay(5000, stoppingToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error publishing messages");
-                await Task.Delay(5000, stoppingToken);
-            }
-        }
-    }
-}
-
-/// <summary>
-/// Background service that consumes messages from Kafka.
-/// </summary>
-public class ConsumerService : BackgroundService
-{
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<ConsumerService> _logger;
-    private KafkaMessageConsumer _orderPlacedConsumer;
-    private KafkaMessageConsumer _orderConfirmedConsumer;
-
-    public ConsumerService(IServiceProvider serviceProvider, ILogger<ConsumerService> logger)
-    {
-        _serviceProvider = serviceProvider;
-        _logger = logger;
-    }
-
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        try
-        {
-            // Create consumers
-            _orderPlacedConsumer = _serviceProvider.CreateKafkaConsumer("order-placed", kafka =>
-            {
-                kafka.BootstrapServers = "localhost:9092";
-                kafka.GroupId = "sample-consumer-group";
+                kafka.BootstrapServers = configuration.GetKafkaBootstrapServers();
                 kafka.EnableCloudEvents = true;
+                kafka.CloudEventsSource = "urn:justsaying:sample:orders";
             });
-
-            _orderConfirmedConsumer = _serviceProvider.CreateKafkaConsumer("order-confirmed", kafka =>
+        });
+        
+        config.Subscriptions(x =>
+        {
+            // Subscribe to Kafka topics - inherits global Kafka configuration
+            x.ForKafka<OrderPlacedEvent>("order-placed", kafka =>
             {
-                kafka.BootstrapServers = "localhost:9092";
-                kafka.GroupId = "sample-consumer-group";
-                kafka.EnableCloudEvents = true;
+                kafka.WithGroupId(configuration.GetKafkaConsumerGroup());
             });
-
-            var orderPlacedHandler = _serviceProvider.GetRequiredService<OrderPlacedEventHandler>();
-            var orderConfirmedHandler = _serviceProvider.GetRequiredService<OrderConfirmedEventHandler>();
-
-            _logger.LogInformation("Starting Kafka consumers with CloudEvents support");
-
-            // Start both consumers
-            var tasks = new[]
+            
+            x.ForKafka<OrderConfirmedEvent>("order-confirmed", kafka =>
             {
-                _orderPlacedConsumer.StartAsync(orderPlacedHandler, stoppingToken),
-                _orderConfirmedConsumer.StartAsync(orderConfirmedHandler, stoppingToken)
+                kafka.WithGroupId(configuration.GetKafkaConsumerGroup());
+            });
+        });
+        
+        config.Publications(x =>
+        {
+            // Publish to Kafka topics - inherits global Kafka configuration
+            x.WithKafka<OrderPlacedEvent>("order-placed");
+            x.WithKafka<OrderConfirmedEvent>("order-confirmed");
+        });
+    });
+
+    // Register message handlers
+    builder.Services.AddJustSayingHandler<OrderPlacedEvent, OrderPlacedEventHandler>();
+    builder.Services.AddJustSayingHandler<OrderConfirmedEvent, OrderConfirmedEventHandler>();
+
+    // Add background service that starts the bus and listens for messages
+    builder.Services.AddHostedService<BusService>();
+
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen(options =>
+    {
+        options.SwaggerDoc("v1", new OpenApiInfo
+        {
+            Title = "Kafka Ordering API",
+            Version = "v1",
+            Description = "Sample API demonstrating JustSaying with Kafka transport"
+        });
+    });
+
+    var app = builder.Build();
+    app.UseSerilogRequestLogging();
+
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Kafka Ordering API");
+        c.RoutePrefix = string.Empty;
+    });
+
+    app.MapPost("api/orders",
+        async (CustomerOrderModel order, IMessagePublisher publisher) =>
+        {
+            app.Logger.LogInformation("Order received for {CustomerId}: {Description}", 
+                order.CustomerId, order.Description);
+
+            // Simulate saving order to database and generating OrderId
+            var orderId = $"ORD-{Random.Shared.Next(1, 10000):D5}";
+
+            var message = new OrderPlacedEvent
+            {
+                OrderId = orderId,
+                CustomerId = order.CustomerId,
+                Amount = order.Amount,
+                OrderDate = DateTime.UtcNow,
+                RaisingComponent = appName,
+                Tenant = "sample-tenant",
+                Items = order.Items.Select(item => new OrderItem
+                {
+                    ProductId = item.ProductId,
+                    ProductName = item.ProductName,
+                    Quantity = item.Quantity,
+                    UnitPrice = item.UnitPrice
+                }).ToList()
             };
 
-            await Task.WhenAll(tasks);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error in consumer service");
-        }
-    }
+            await publisher.PublishAsync(message);
 
-    public override void Dispose()
-    {
-        _orderPlacedConsumer?.Dispose();
-        _orderConfirmedConsumer?.Dispose();
-        base.Dispose();
-    }
+            app.Logger.LogInformation("Order {OrderId} placed successfully", orderId);
+            
+            return Results.Ok(new { orderId, message = "Order placed successfully" });
+        })
+        .WithName("PlaceOrder");
+
+    app.MapGet("api/health",
+        () => Results.Ok(new { status = "healthy", service = appName, timestamp = DateTime.UtcNow }))
+        .WithName("HealthCheck");
+
+    await app.RunAsync();
 }
+catch (Exception e)
+{
+    Log.Fatal(e, "Error occurred during startup: {Message}", e.Message);
+}
+finally
+{
+    Log.CloseAndFlush();
+}
+

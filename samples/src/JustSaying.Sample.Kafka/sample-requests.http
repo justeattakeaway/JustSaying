@@ -1,0 +1,84 @@
+### Kafka Sample API Requests
+
+@baseUrl = http://localhost:5000
+
+### Health Check
+GET {{baseUrl}}/api/health
+
+### Place Order - Example 1
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "customerId": "CUST-12345",
+  "amount": 125.50,
+  "description": "Lunch order",
+  "items": [
+    {
+      "productId": "PROD-001",
+      "productName": "Burger",
+      "quantity": 2,
+      "unitPrice": 12.99
+    },
+    {
+      "productId": "PROD-002",
+      "productName": "Fries",
+      "quantity": 2,
+      "unitPrice": 4.99
+    },
+    {
+      "productId": "PROD-003",
+      "productName": "Soda",
+      "quantity": 2,
+      "unitPrice": 2.50
+    }
+  ]
+}
+
+### Place Order - Example 2 (Pizza Order)
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "customerId": "CUST-67890",
+  "amount": 45.99,
+  "description": "Pizza delivery",
+  "items": [
+    {
+      "productId": "PROD-101",
+      "productName": "Large Pepperoni Pizza",
+      "quantity": 1,
+      "unitPrice": 18.99
+    },
+    {
+      "productId": "PROD-102",
+      "productName": "Garlic Bread",
+      "quantity": 1,
+      "unitPrice": 5.99
+    },
+    {
+      "productId": "PROD-103",
+      "productName": "2L Cola",
+      "quantity": 1,
+      "unitPrice": 3.99
+    }
+  ]
+}
+
+### Place Order - Minimal
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "customerId": "CUST-99999",
+  "amount": 10.00,
+  "description": "Coffee",
+  "items": [
+    {
+      "productId": "PROD-201",
+      "productName": "Espresso",
+      "quantity": 1,
+      "unitPrice": 3.50
+    }
+  ]
+}

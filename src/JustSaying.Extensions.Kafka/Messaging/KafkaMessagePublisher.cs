@@ -1,6 +1,8 @@
+using System.Net;
 using System.Text;
 using CloudNative.CloudEvents;
 using Confluent.Kafka;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Extensions.Kafka.CloudEvents;
 using JustSaying.Extensions.Kafka.Configuration;
 using JustSaying.Messaging;
@@ -25,8 +27,8 @@ public class KafkaMessagePublisher : IMessagePublisher, IMessageBatchPublisher, 
     private readonly string _topic;
     private bool _disposed;
 
-    public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
-    public Action<MessageBatchResponse, IReadOnlyCollection<Message>> MessageBatchResponseLogger { get; set; }
+    public Action<JustSaying.AwsTools.MessageHandling.MessageResponse, Message> MessageResponseLogger { get; set; }
+    public Action<JustSaying.AwsTools.MessageHandling.MessageBatchResponse, IReadOnlyCollection<Message>> MessageBatchResponseLogger { get; set; }
 
     public KafkaMessagePublisher(
         string topic,
@@ -169,7 +171,7 @@ public class KafkaMessagePublisher : IMessagePublisher, IMessageBatchPublisher, 
         if (_configuration.EnableCloudEvents)
         {
             // Use CloudEvents format
-            var cloudEvent = _cloudEventsConverter.ToCloudEvent(message, metadata);
+            var cloudEvent = ToCloudEventDynamic(message, metadata);
             value = _cloudEventsConverter.Serialize(cloudEvent);
             
             // Add CloudEvents headers
@@ -178,7 +180,7 @@ public class KafkaMessagePublisher : IMessagePublisher, IMessageBatchPublisher, 
         else
         {
             // Use standard serialization (backward compatibility)
-            var serializer = _serializationFactory.GetSerializer(message.GetType());
+            var serializer = GetSerializer(message.GetType());
             var messageBody = serializer.Serialize(message);
             value = Encoding.UTF8.GetBytes(messageBody);
             
@@ -215,6 +217,15 @@ public class KafkaMessagePublisher : IMessagePublisher, IMessageBatchPublisher, 
             ?.MakeGenericMethod(messageType);
 
         return (IMessageBodySerializer)method?.Invoke(_serializationFactory, null);
+    }
+
+    private CloudNative.CloudEvents.CloudEvent ToCloudEventDynamic(Message message, PublishMetadata metadata)
+    {
+        var method = typeof(CloudEventsMessageConverter)
+            .GetMethod(nameof(CloudEventsMessageConverter.ToCloudEvent))
+            ?.MakeGenericMethod(message.GetType());
+
+        return (CloudNative.CloudEvents.CloudEvent)method?.Invoke(_cloudEventsConverter, new object[] { message, metadata });
     }
 
     private void ThrowIfDisposed()

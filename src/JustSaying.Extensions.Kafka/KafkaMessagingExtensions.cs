@@ -1,6 +1,8 @@
 using JustSaying;
 using JustSaying.Extensions.Kafka.Configuration;
+using JustSaying.Extensions.Kafka.Fluent;
 using JustSaying.Extensions.Kafka.Messaging;
+using JustSaying.Fluent;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
@@ -16,13 +18,13 @@ public static class KafkaMessagingExtensions
     /// <summary>
     /// Adds Kafka as a message publisher for the specified message type.
     /// </summary>
-    public static MessagingBusBuilder WithKafkaPublisher<T>(
-        this MessagingBusBuilder builder,
+    public static IServiceCollection WithKafkaPublisher<T>(
+        this IServiceCollection services,
         string topic,
         Action<KafkaConfiguration> configure) where T : Message
     {
-        if (builder == null)
-            throw new ArgumentNullException(nameof(builder));
+        if (services == null)
+            throw new ArgumentNullException(nameof(services));
         if (string.IsNullOrEmpty(topic))
             throw new ArgumentException("Topic name is required.", nameof(topic));
         if (configure == null)
@@ -32,40 +34,56 @@ public static class KafkaMessagingExtensions
         configure(kafkaConfig);
         kafkaConfig.Validate();
 
-        builder.Services(services =>
+        // Register the publisher
+        services.AddSingleton<IMessagePublisher>(sp =>
         {
-            services.AddSingleton(kafkaConfig);
+            var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
+            var serializationFactory = sp.GetRequiredService<IMessageBodySerializationFactory>();
+            
+            return new KafkaMessagePublisher(
+                topic,
+                kafkaConfig,
+                serializationFactory,
+                loggerFactory);
         });
 
-        // Configure the publisher in the publications builder
-        builder.Publications(pub =>
-        {
-            pub.WithPublisher<T>((serviceResolver) =>
-            {
-                var loggerFactory = serviceResolver.ResolveService<ILoggerFactory>();
-                var serializationFactory = serviceResolver.ResolveService<IMessageBodySerializationFactory>();
-                
-                return new KafkaMessagePublisher(
-                    topic,
-                    kafkaConfig,
-                    serializationFactory,
-                    loggerFactory);
-            });
-        });
-
-        return builder;
+        return services;
     }
 
     /// <summary>
     /// Adds Kafka as a message batch publisher for the specified message type.
     /// </summary>
-    public static MessagingBusBuilder WithKafkaBatchPublisher<T>(
-        this MessagingBusBuilder builder,
+    public static IServiceCollection WithKafkaBatchPublisher<T>(
+        this IServiceCollection services,
         string topic,
         Action<KafkaConfiguration> configure) where T : Message
     {
         // The KafkaMessagePublisher implements both IMessagePublisher and IMessageBatchPublisher
-        return builder.WithKafkaPublisher<T>(topic, configure);
+        return services.WithKafkaPublisher<T>(topic, configure);
+    }
+
+    /// <summary>
+    /// Adds a Kafka topic subscription for the specified message type.
+    /// </summary>
+    public static IServiceCollection AddKafkaSubscription<T>(
+        this IServiceCollection services,
+        string topic,
+        Action<KafkaSubscriptionBuilder<T>> configure) where T : Message
+    {
+        if (services == null)
+            throw new ArgumentNullException(nameof(services));
+        if (string.IsNullOrEmpty(topic))
+            throw new ArgumentException("Topic name is required.", nameof(topic));
+        if (configure == null)
+            throw new ArgumentNullException(nameof(configure));
+
+        var kafkaBuilder = new KafkaSubscriptionBuilder<T>(topic);
+        configure(kafkaBuilder);
+
+        // Register the subscription in the DI container
+        services.AddSingleton(kafkaBuilder);
+
+        return services;
     }
 
     /// <summary>

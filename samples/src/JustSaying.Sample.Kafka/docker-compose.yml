@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
+    image: docker-virtual.cd.je-labs.com/confluentinc/cp-zookeeper:7.5.0
     hostname: zookeeper
     container_name: zookeeper
     ports:
@@ -14,7 +14,7 @@ services:
       - kafka-network
 
   kafka:
-    image: confluentinc/cp-kafka:7.5.0
+    image: docker-virtual.cd.je-labs.com/confluentinc/cp-kafka:7.5.0
     hostname: kafka
     container_name: kafka
     depends_on:
@@ -38,7 +38,7 @@ services:
       - kafka-network
 
   kafka-ui:
-    image: provectuslabs/kafka-ui:latest
+    image: docker-virtual.cd.je-labs.com/provectuslabs/kafka-ui:latest
     container_name: kafka-ui
     depends_on:
       - kafka

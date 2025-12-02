@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/samples/" />
   <Folder Name="/samples/src/">
+    <Project Path="samples/src/JustSaying.Sample.Kafka/JustSaying.Sample.Kafka.csproj" />
     <Project Path="samples/src/JustSaying.Sample.Middleware/JustSaying.Sample.Middleware.csproj" />
     <Project Path="samples/src/JustSaying.Sample.Restaurant.KitchenConsole/JustSaying.Sample.Restaurant.KitchenConsole.csproj" />
     <Project Path="samples/src/JustSaying.Sample.Restaurant.Models/JustSaying.Sample.Restaurant.Models.csproj" />
@@ -53,6 +54,7 @@
     <Project Path="src/JustSaying.Extensions.Aws/JustSaying.Extensions.Aws.csproj" />
     <Project Path="src/JustSaying.Extensions.DependencyInjection.Microsoft/JustSaying.Extensions.DependencyInjection.Microsoft.csproj" />
     <Project Path="src/JustSaying.Extensions.DependencyInjection.StructureMap/JustSaying.Extensions.DependencyInjection.StructureMap.csproj" />
+    <Project Path="src/JustSaying.Extensions.Kafka/JustSaying.Extensions.Kafka.csproj" />
     <Project Path="src/JustSaying.Models/JustSaying.Models.csproj" />
     <Project Path="src/JustSaying/JustSaying.csproj" />
   </Folder>
