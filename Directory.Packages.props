@@ -22,14 +22,12 @@
     <PackageVersion Include="coverlet.msbuild" Version="6.0.4" />
     <PackageVersion Include="GitHubActionsTestLogger" Version="2.4.1" />
     <PackageVersion Include="JunitXml.TestLogger" Version="4.1.0" />
-    <PackageVersion Include="LocalSqsSnsMessaging" Version="0.6.1" />
+    <PackageVersion Include="LocalSqsSnsMessaging" Version="0.6.4" />
     <PackageVersion Include="MartinCostello.Logging.XUnit.v3" Version="0.6.0" />
-    <PackageVersion Include="MELT" Version="0.9.0" />
-    <PackageVersion Include="MELT.Xunit" Version="0.9.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.9" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.10" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.Testing" Version="8.10.0" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="8.0.1" />
@@ -37,10 +35,9 @@
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageVersion Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" />
     <PackageVersion Include="MinVer" Version="6.0.0" />
-    <PackageVersion Include="morelinq" Version="4.4.0" />
     <PackageVersion Include="NSubstitute" Version="5.3.0" />
     <PackageVersion Include="Polly.Core" Version="8.5.2" />
-    <PackageVersion Include="ReportGenerator" Version="5.4.6" />
+    <PackageVersion Include="ReportGenerator" Version="5.5.0" />
     <PackageVersion Include="Serilog" Version="4.2.0" />
     <PackageVersion Include="Serilog.AspNetCore" Version="9.0.0" />
     <PackageVersion Include="Serilog.Extensions.Logging" Version="9.0.0" />
@@ -51,7 +48,7 @@
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="8.1.1" />
     <PackageVersion Include="xunit.v3" Version="2.0.3" />
     <PackageVersion Include="xunit.v3.extensibility.core" Version="2.0.3" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.1" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
   </ItemGroup>
   <ItemGroup Condition=" '$(IsShipping)' == 'true' ">
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="All" />

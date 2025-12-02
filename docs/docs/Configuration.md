@@ -1,3 +1,7 @@
+---
+sidebar_position: 3
+---
+
 # Configuring JustSaying
 
 ## The publish-subscribe pattern
@@ -47,7 +51,7 @@
 
 *Resulting infrastructure*
 
-![Single Publisher - Single Subscriber](SinglePublisher_SingleSubscriber.png)
+![Single Publisher - Single Subscriber](/SinglePublisher_SingleSubscriber.png)
 
 # Configuring a single publisher and a multiple subscribers
 
@@ -116,4 +120,4 @@ In this configuration, each of the two subscribers will have a dedicated queue t
     services.AddHostedService<Subscriber>();
 ```
 
-![Single Publisher - Multiple Subscribers](SinglePublisher_MultipleSubscribers.png)
+![Single Publisher - Multiple Subscribers](/SinglePublisher_MultipleSubscribers.png)

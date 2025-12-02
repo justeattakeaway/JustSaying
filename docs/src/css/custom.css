@@ -1,0 +1,266 @@
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ *
+ * This theme is based on PIE Design Tokens (Jet theme).
+ */
+
+/* PIE Design Tokens - Global Colors */
+:root {
+  /* Primary Brand Colors */
+  --pie-orange: #f36805;
+  --pie-orange-30: #ff8000;
+  --pie-orange-25: #ff9933;
+  --pie-orange-20: #fbc592;
+  --pie-orange-10: #fddfc3;
+  --pie-orange-0: #fff2e5;
+  --pie-orange-70: #b45512;
+  --pie-orange-75: #944600;
+  --pie-orange-90: #613105;
+
+  /* Neutral Colors (Truffle) */
+  --pie-truffle-5: #fdfdfb;
+  --pie-truffle-10: #f6f3ef;
+  --pie-truffle-20: #f0ece6;
+  --pie-truffle-30: #e7e2da;
+  --pie-truffle-55: #beb7ac;
+  --pie-truffle-65: #8c867e;
+  --pie-truffle-70: #59564f;
+  --pie-truffle-75: #4c4843;
+  --pie-truffle-80: #3f3d39;
+  --pie-truffle-85: #353431;
+  --pie-truffle-90: #2b2a28;
+  --pie-truffle-100: #1c1a17;
+
+  /* Support Colors */
+  --pie-blue: #3147ad;
+  --pie-blue-30: #9eaef0;
+  --pie-blue-10: #ced7f8;
+  --pie-blue-5: #e4e9fb;
+  --pie-blue-75: #2b3e97;
+  --pie-blue-80: #1e2c6b;
+  --pie-blue-90: #17214f;
+
+  --pie-red: #cc0300;
+  --pie-red-10: #ffbbba;
+  --pie-red-5: #ffd2d1;
+  --pie-red-50: #d60e0a;
+  --pie-red-90: #5c0200;
+  --pie-red-100: #47121b;
+
+  --pie-green: #2b7836;
+  --pie-green-10: #b4e4bb;
+  --pie-green-5: #ceeed3;
+  --pie-green-30: #68ca77;
+  --pie-green-80: #024c23;
+  --pie-green-90: #023d1c;
+
+  --pie-yellow: #ffd600;
+  --pie-yellow-10: #fff8d6;
+  --pie-yellow-30: #ffee94;
+  --pie-yellow-40: #ffde33;
+  --pie-yellow-75: #a38900;
+  --pie-yellow-80: #6b5a00;
+  --pie-yellow-90: #574a00;
+
+  /* Base Colors */
+  --pie-white: #fff;
+  --pie-black: #000;
+
+  /* Charcoal */
+  --pie-charcoal-30: #d7d9da;
+  --pie-charcoal-50: #8c999b;
+  --pie-charcoal-57: #68797d;
+  --pie-charcoal-70: #3c4c4f;
+  --pie-charcoal-75: #303d3f;
+  --pie-charcoal-80: #242e30;
+}
+
+/* Light Theme - Based on PIE Jet theme default alias tokens */
+:root {
+  /* Primary Brand */
+  --ifm-color-primary: var(--pie-orange);
+  --ifm-color-primary-dark: var(--pie-orange-70);
+  --ifm-color-primary-darker: var(--pie-orange-75);
+  --ifm-color-primary-darkest: var(--pie-orange-90);
+  --ifm-color-primary-light: var(--pie-orange-30);
+  --ifm-color-primary-lighter: var(--pie-orange-25);
+  --ifm-color-primary-lightest: var(--pie-orange-20);
+
+  /* Background */
+  --ifm-background-color: var(--pie-truffle-5);
+  --ifm-background-surface-color: var(--pie-white);
+
+  /* Content */
+  --ifm-color-content: rgba(0, 0, 0, 0.76); /* content-default */
+  --ifm-color-content-secondary: rgba(0, 0, 0, 0.64); /* content-subdued */
+
+  /* Headings */
+  --ifm-heading-color: var(--pie-charcoal-80);
+
+  /* Links */
+  --ifm-link-color: var(--pie-charcoal-80);
+  --ifm-link-hover-color: var(--pie-orange);
+
+  /* Code */
+  --ifm-code-font-size: 95%;
+  --ifm-code-background: var(--pie-truffle-10);
+  --ifm-code-color: var(--pie-charcoal-80);
+
+  /* Borders */
+  --ifm-color-emphasis-200: var(--pie-truffle-20);
+  --ifm-color-emphasis-300: var(--pie-truffle-30);
+
+  /* Alerts/Admonitions */
+  --ifm-alert-background-color: var(--pie-blue-5);
+  --ifm-alert-border-color: var(--pie-blue-30);
+  --ifm-alert-color: var(--pie-blue-90);
+
+  /* Navbar */
+  --ifm-navbar-background-color: var(--pie-white);
+  --ifm-navbar-link-color: var(--pie-charcoal-80);
+  --ifm-navbar-link-hover-color: var(--pie-orange);
+
+  /* Footer */
+  --ifm-footer-background-color: var(--pie-truffle-90);
+  --ifm-footer-color: rgba(255, 255, 255, 0.9);
+  --ifm-footer-link-color: rgba(255, 255, 255, 0.9);
+  --ifm-footer-link-hover-color: var(--pie-white);
+
+  /* Highlighted code lines */
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+
+  /* Table of Contents */
+  --ifm-toc-border-color: var(--pie-truffle-20);
+
+  /* Buttons */
+  --ifm-button-background-color: var(--pie-orange);
+  --ifm-button-color: var(--pie-white);
+  --ifm-button-border-color: var(--pie-orange);
+
+  /* Spacing */
+  --ifm-spacing-horizontal: 1.5rem;
+  --ifm-navbar-padding-horizontal: 1.5rem;
+}
+
+/* Dark Theme - Based on PIE Jet theme dark alias tokens */
+[data-theme='dark'] {
+  /* Primary Brand */
+  --ifm-color-primary: var(--pie-orange-30);
+  --ifm-color-primary-dark: var(--pie-orange);
+  --ifm-color-primary-darker: var(--pie-orange-70);
+  --ifm-color-primary-darkest: var(--pie-orange-75);
+  --ifm-color-primary-light: var(--pie-orange-25);
+  --ifm-color-primary-lighter: var(--pie-orange-20);
+  --ifm-color-primary-lightest: var(--pie-orange-10);
+
+  /* Background */
+  --ifm-background-color: var(--pie-truffle-100);
+  --ifm-background-surface-color: var(--pie-truffle-90);
+
+  /* Content */
+  --ifm-color-content: rgba(255, 255, 255, 0.9); /* content-default */
+  --ifm-color-content-secondary: rgba(255, 255, 255, 0.86); /* content-subdued */
+
+  /* Headings */
+  --ifm-heading-color: var(--pie-white);
+
+  /* Links */
+  --ifm-link-color: var(--pie-white);
+  --ifm-link-hover-color: var(--pie-orange-30);
+
+  /* Code */
+  --ifm-code-background: var(--pie-truffle-80);
+  --ifm-code-color: var(--pie-white);
+
+  /* Borders */
+  --ifm-color-emphasis-200: var(--pie-truffle-70);
+  --ifm-color-emphasis-300: var(--pie-truffle-65);
+
+  /* Alerts/Admonitions */
+  --ifm-alert-background-color: var(--pie-blue-90);
+  --ifm-alert-border-color: var(--pie-blue-30);
+  --ifm-alert-color: var(--pie-blue-10);
+
+  /* Navbar */
+  --ifm-navbar-background-color: var(--pie-truffle-90);
+  --ifm-navbar-link-color: rgba(255, 255, 255, 0.9);
+  --ifm-navbar-link-hover-color: var(--pie-orange-30);
+
+  /* Footer */
+  --ifm-footer-background-color: var(--pie-truffle-100);
+  --ifm-footer-color: rgba(255, 255, 255, 0.9);
+  --ifm-footer-link-color: rgba(255, 255, 255, 0.9);
+  --ifm-footer-link-hover-color: var(--pie-white);
+
+  /* Highlighted code lines */
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+
+  /* Table of Contents */
+  --ifm-toc-border-color: var(--pie-truffle-70);
+
+  /* Buttons */
+  --ifm-button-background-color: var(--pie-orange-30);
+  --ifm-button-color: var(--pie-truffle-90);
+  --ifm-button-border-color: var(--pie-orange-30);
+}
+
+/* Custom styling for better integration with PIE tokens */
+.navbar {
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.footer {
+  border-top: 1px solid var(--ifm-color-emphasis-300);
+}
+
+/* Admonitions with PIE support colors */
+.admonition.admonition-info {
+  --ifm-alert-background-color: var(--pie-blue-5);
+  --ifm-alert-border-color: var(--pie-blue-30);
+  --ifm-alert-color: var(--pie-blue-90);
+}
+
+[data-theme='dark'] .admonition.admonition-info {
+  --ifm-alert-background-color: var(--pie-blue-90);
+  --ifm-alert-border-color: var(--pie-blue-30);
+  --ifm-alert-color: var(--pie-blue-10);
+}
+
+.admonition.admonition-success {
+  --ifm-alert-background-color: var(--pie-green-5);
+  --ifm-alert-border-color: var(--pie-green-30);
+  --ifm-alert-color: var(--pie-green-90);
+}
+
+[data-theme='dark'] .admonition.admonition-success {
+  --ifm-alert-background-color: var(--pie-green-90);
+  --ifm-alert-border-color: var(--pie-green-30);
+  --ifm-alert-color: var(--pie-green-10);
+}
+
+.admonition.admonition-warning {
+  --ifm-alert-background-color: var(--pie-yellow-10);
+  --ifm-alert-border-color: var(--pie-yellow-40);
+  --ifm-alert-color: var(--pie-yellow-90);
+}
+
+[data-theme='dark'] .admonition.admonition-warning {
+  --ifm-alert-background-color: var(--pie-yellow-90);
+  --ifm-alert-border-color: var(--pie-yellow-40);
+  --ifm-alert-color: var(--pie-yellow-40);
+}
+
+.admonition.admonition-danger {
+  --ifm-alert-background-color: var(--pie-red-5);
+  --ifm-alert-border-color: var(--pie-red-30);
+  --ifm-alert-color: var(--pie-red-90);
+}
+
+[data-theme='dark'] .admonition.admonition-danger {
+  --ifm-alert-background-color: var(--pie-red-100);
+  --ifm-alert-border-color: var(--pie-red-50);
+  --ifm-alert-color: var(--pie-red-10);
+}
+
