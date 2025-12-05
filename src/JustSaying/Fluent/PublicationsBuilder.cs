@@ -24,9 +24,29 @@ public sealed class PublicationsBuilder
     internal MessagingBusBuilder Parent { get; }
 
     /// <summary>
+    /// Gets the parent bus builder for extension configuration.
+    /// </summary>
+    public MessagingBusBuilder BusBuilder => Parent;
+
+    /// <summary>
     /// Gets the configured publication builders.
     /// </summary>
     private List<IPublicationBuilder<Message>> Publications { get; } = [];
+
+    /// <summary>
+    /// Adds a custom publication builder to the list of publications.
+    /// This method is useful for extension libraries that want to add support for additional messaging systems.
+    /// </summary>
+    /// <param name="publicationBuilder">The publication builder to add.</param>
+    /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
+    public PublicationsBuilder WithCustomPublication(IPublicationBuilder<Message> publicationBuilder)
+    {
+        if (publicationBuilder == null) throw new ArgumentNullException(nameof(publicationBuilder));
+        
+        Publications.Add(publicationBuilder);
+        
+        return this;
+    }
 
     /// <summary>
     /// Configures a publisher for a queue.

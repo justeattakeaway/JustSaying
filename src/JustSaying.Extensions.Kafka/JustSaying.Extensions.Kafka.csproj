@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>JustSaying extensions for Apache Kafka with CloudEvents support.</Description>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <IsShipping>false</IsShipping>
+    <TargetFrameworks>netstandard2.0;net462;net8.0</TargetFrameworks>
+    <NoWarn>$(NoWarn);RS0016;RS0017</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\JustSaying\JustSaying.csproj" />
+    <ProjectReference Include="..\JustSaying.Extensions.DependencyInjection.Microsoft\JustSaying.Extensions.DependencyInjection.Microsoft.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Confluent.Kafka" />
+    <PackageReference Include="CloudNative.CloudEvents" />
+    <PackageReference Include="CloudNative.CloudEvents.Kafka" />
+    <PackageReference Include="CloudNative.CloudEvents.SystemTextJson" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Remove="System.Net.Http" />
+  </ItemGroup>
+</Project>

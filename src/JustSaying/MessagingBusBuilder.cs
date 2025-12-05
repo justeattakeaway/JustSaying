@@ -34,7 +34,7 @@ public sealed class MessagingBusBuilder
     /// <summary>
     /// Gets or sets the builder to use to configure messaging.
     /// </summary>
-    internal MessagingConfigurationBuilder MessagingConfig { get; set; }
+    public MessagingConfigurationBuilder MessagingConfig { get; set; }
 
     /// <summary>
     /// Gets or sets the builder to use for publications.
@@ -51,6 +51,11 @@ public sealed class MessagingBusBuilder
     /// so that services can be obtained in a consistent way
     /// </summary>
     private ServiceBuilderServiceResolver ServiceBuilderServiceResolver { get; set; }
+
+    /// <summary>
+    /// Gets a dictionary for storing custom properties that can be used by extensions.
+    /// </summary>
+    public Dictionary<string, object> Properties { get; } = new Dictionary<string, object>();
 
     public MessagingBusBuilder()
     {

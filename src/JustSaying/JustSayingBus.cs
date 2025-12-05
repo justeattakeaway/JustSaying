@@ -22,6 +22,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
     private readonly SemaphoreSlim _startLock = new(1, 1);
     private bool _busStarted;
     private readonly List<Func<CancellationToken, Task>> _startupTasks;
+    private readonly List<Func<CancellationToken, Task>> _customConsumers;
 
     private ConcurrentDictionary<string, SubscriptionGroupConfigBuilder> _subscriptionGroupSettings;
     private SubscriptionGroupSettingsBuilder _defaultSubscriptionGroupSettings;
@@ -39,7 +40,10 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
 
     internal MiddlewareMap MiddlewareMap { get; }
     internal MessageCompressionRegistry CompressionRegistry { get; }
-    internal IMessageBodySerializationFactory MessageBodySerializerFactory { get; set; }
+    /// <summary>
+    /// Gets the message body serialization factory used by this bus.
+    /// </summary>
+    public IMessageBodySerializationFactory MessageBodySerializerFactory { get; set; }
 
     public Task Completion { get; private set; }
 
@@ -64,6 +68,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
 
         _startupTasks = [];
+        _customConsumers = [];
         _log = _loggerFactory.CreateLogger("JustSaying");
         _messageReceivePauseSignal = messageReceivePauseSignal;
 
@@ -123,6 +128,17 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
     internal void AddStartupTask(Func<CancellationToken, Task> task)
     {
         _startupTasks.Add(task);
+    }
+
+    /// <summary>
+    /// Adds a custom consumer task that will run alongside the standard SQS subscription groups.
+    /// This allows extending JustSaying to support additional messaging transports (e.g., Kafka).
+    /// </summary>
+    /// <param name="consumerTask">A function that starts the consumer and returns a task that completes when the consumer stops.</param>
+    public void AddCustomConsumer(Func<CancellationToken, Task> consumerTask)
+    {
+        if (consumerTask == null) throw new ArgumentNullException(nameof(consumerTask));
+        _customConsumers.Add(consumerTask);
     }
 
     public void SetGroupSettings(
@@ -224,17 +240,43 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
 
         _log.LogInformation("Starting bus with settings: {@Response}", SubscriptionGroups.Interrogate());
 
-        try
+        var tasks = new List<Task>();
+
+        // Add the standard SQS subscription groups task
+        tasks.Add(Task.Run(async () =>
         {
-            await SubscriptionGroups.RunAsync(stoppingToken).ConfigureAwait(false);
-        }
-        catch (OperationCanceledException)
+            try
+            {
+                await SubscriptionGroups.RunAsync(stoppingToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                _log.LogDebug(
+                    "Suppressed an exception of type {ExceptionType} which likely means the bus is shutting down.",
+                    nameof(OperationCanceledException));
+            }
+        }, stoppingToken));
+
+        // Add custom consumer tasks (e.g., Kafka consumers)
+        foreach (var customConsumer in _customConsumers)
         {
-            _log.LogDebug(
-                "Suppressed an exception of type {ExceptionType} which likely means the bus is shutting down.",
-                nameof(OperationCanceledException));
-            // Don't bubble cancellation up to Completion task
+            tasks.Add(Task.Run(async () =>
+            {
+                try
+                {
+                    await customConsumer(stoppingToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    _log.LogDebug(
+                        "Suppressed an exception of type {ExceptionType} from custom consumer which likely means the bus is shutting down.",
+                        nameof(OperationCanceledException));
+                }
+            }, stoppingToken));
         }
+
+        // Wait for all tasks to complete
+        await Task.WhenAll(tasks).ConfigureAwait(false);
     }
 
     /// <inheritdoc/>
