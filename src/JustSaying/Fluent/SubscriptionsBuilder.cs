@@ -26,12 +26,32 @@ public sealed class SubscriptionsBuilder
     /// </summary>
     internal MessagingBusBuilder Parent { get; }
 
+    /// <summary>
+    /// Gets the parent bus builder for extension configuration.
+    /// </summary>
+    public MessagingBusBuilder BusBuilder => Parent;
+
     internal SubscriptionGroupSettingsBuilder Defaults = new();
 
     /// <summary>
     /// Gets the configured subscription builders.
     /// </summary>
     private List<ISubscriptionBuilder<Message>> Subscriptions { get; } = [];
+
+    /// <summary>
+    /// Adds a custom subscription builder to the list of subscriptions.
+    /// This method is useful for extension libraries that want to add support for additional messaging systems.
+    /// </summary>
+    /// <param name="subscriptionBuilder">The subscription builder to add.</param>
+    /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
+    public SubscriptionsBuilder WithCustomSubscription(ISubscriptionBuilder<Message> subscriptionBuilder)
+    {
+        if (subscriptionBuilder == null) throw new ArgumentNullException(nameof(subscriptionBuilder));
+        
+        Subscriptions.Add(subscriptionBuilder);
+        
+        return this;
+    }
 
     private Dictionary<string, SubscriptionGroupConfigBuilder> SubscriptionGroupSettings { get; } = new();
 
