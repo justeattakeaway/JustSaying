@@ -6,7 +6,7 @@ public class NonGenericMessageSubjectProviderTests
 {
     // this class is never instantiated, but the type is used in tests
 #pragma warning disable CA1812
-    class Foo { }
+    private class Foo { }
 #pragma warning restore CA1812
 
     [Fact]
