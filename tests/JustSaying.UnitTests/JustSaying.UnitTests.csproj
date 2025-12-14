@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <NoWarn>$(NoWarn);CA1034;CA1051;CA1054;CA1707;CA2000;CA2007;xUnit1051</NoWarn>
+    <NoWarn>$(NoWarn);CA1034;CA1051;CA1054;CA1707;CA2000;CA2007;xUnit1051;xUnit3003</NoWarn>
     <TargetFramework>net10.0</TargetFramework>
     <Deterministic>false</Deterministic>
   </PropertyGroup>
