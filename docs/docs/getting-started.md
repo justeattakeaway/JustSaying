@@ -38,6 +38,27 @@ public class OrderAccepter {
 }
 ```
 
+#### Publishing Multiple Messages
+
+For publishing multiple messages efficiently, use `IMessageBatchPublisher` which reduces AWS API calls:
+
+```csharp
+public class OrderBulkAccepter {
+    private IMessageBatchPublisher _batchPublisher;
+
+    public OrderBulkAccepter(IMessageBatchPublisher batchPublisher) {
+        _batchPublisher = batchPublisher;
+    }
+
+    public async Task AcceptBulk(IEnumerable<Order> orders) {
+        var messages = orders.Select(o => new OrderAccepted { OrderId = o.Id });
+        await _batchPublisher.PublishAsync(messages);
+    }
+}
+```
+
+Batch publishing automatically splits large batches into multiple requests \(AWS allows 10 messages per batch\). See [Batch Publishing](/publishing/batch-publishing) for more details.
+
 ### Handlers
 
 Handlers should implement the interface `IHandlerAsync<T>` which JustSaying will call when a message of the specified type is received.
@@ -111,6 +132,33 @@ public void ConfigureServices(IServiceCollection services)
 ```
 
 Note that the `AddJustSaying` extension method requires installing the [JustSaying.Extensions.DependencyInjection](https://www.nuget.org/packages/JustSaying.Extensions.DependencyInjection.Microsoft) package.
+
+#### AWS Configuration
+
+Configure AWS credentials and endpoints using the `.Client()` method. For local development with LocalStack:
+
+```csharp
+services.AddJustSaying(config =>
+{
+    config.Client(x =>
+    {
+        if (hostEnvironment.IsDevelopment())
+        {
+            // LocalStack for local development
+            x.WithServiceUri(new Uri("http://localhost:4566"))
+             .WithAnonymousCredentials();
+        }
+        // Production uses IAM roles automatically (no configuration needed)
+    });
+
+    config.Messaging(x => x.WithRegion("us-east-1"));
+
+    config.Publications(x => x.WithTopic<OrderPlacedEvent>());
+    config.Subscriptions(x => x.ForTopic<OrderReadyEvent>());
+});
+```
+
+For production applications running on AWS infrastructure \(EC2, ECS, Lambda\), IAM roles provide credentials automatically. See [AWS Configuration](/aws-configuration/README) for detailed credential options.
 
 ### Startup
 
