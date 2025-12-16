@@ -153,7 +153,7 @@ public class OrderDetailsEventHandler : IHandlerAsync<OrderDetailsEvent>
 
 ### Poor Use Cases
 
-- Small messages (&lt;10KB) - compression overhead isn't worth it
+- Small messages (less than 10KB) - compression overhead isn't worth it
 - Already compressed data (images, videos) - won't compress further
 - Low-volume scenarios - cost savings minimal
 
