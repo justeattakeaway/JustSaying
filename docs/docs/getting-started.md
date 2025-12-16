@@ -57,7 +57,7 @@ public class OrderBulkAccepter {
 }
 ```
 
-Batch publishing automatically splits large batches into multiple requests \(AWS allows 10 messages per batch\). See [Batch Publishing](/publishing/batch-publishing) for more details.
+Batch publishing automatically splits large batches into multiple requests (AWS allows 10 messages per batch). See [Batch Publishing](/publishing/batch-publishing) for more details.
 
 ### Handlers
 

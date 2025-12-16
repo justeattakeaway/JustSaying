@@ -9,11 +9,11 @@ JustSaying uses the AWS SDK to communicate with SNS and SQS. Configure credentia
 
 If you don't explicitly configure credentials, the AWS SDK uses its [default credential provider chain](https://docs.aws.amazon.com/sdk-for-net/v3/developer-guide/creds-assign.html), which checks:
 
-1. Environment variables \(`AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`\)
-2. AWS credentials file \(`~/.aws/credentials`\)
+1. Environment variables (`AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`)
+2. AWS credentials file (`~/.aws/credentials`)
 3. IAM role for EC2 instances, ECS tasks, or Lambda functions
 
-For production applications running on AWS infrastructure \(EC2, ECS, Lambda\), **IAM roles are the recommended approach** and require no explicit configuration in JustSaying.
+For production applications running on AWS infrastructure (EC2, ECS, Lambda), **IAM roles are the recommended approach** and require no explicit configuration in JustSaying.
 
 ```csharp
 services.AddJustSaying(config =>
@@ -72,7 +72,7 @@ config.Client(x =>
 
 ### `WithSessionCredentials(string accessKeyId, string secretAccessKey, string token)`
 
-Uses temporary AWS credentials with a session token. This is typically used with AWS Security Token Service \(STS\) for temporary access.
+Uses temporary AWS credentials with a session token. This is typically used with AWS Security Token Service (STS) for temporary access.
 
 ```csharp
 config.Client(x =>
@@ -106,7 +106,7 @@ config.Client(x =>
 
 ### Production Applications
 
-**On AWS Infrastructure \(Recommended\)**:
+**On AWS Infrastructure (Recommended)**:
 - Use IAM roles attached to EC2 instances, ECS tasks, or Lambda functions
 - No explicit credential configuration needed in JustSaying
 - Credentials are automatically rotated by AWS

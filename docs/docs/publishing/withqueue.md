@@ -8,8 +8,8 @@
 Publishes messages of type `T` directly to an SQS queue without using SNS. This is ideal for point-to-point messaging where only one consumer should process each message, typically used for command patterns.
 
 * An SQS queue will be created for messages of type `T`.
-* An error queue will be created with an `_error` suffix \(unless explicitly disabled\).
-* The queue name will be determined using the supplied \(or default if not\) `IQueueNamingConvention`, applied to the message type `T`.
+* An error queue will be created with an `_error` suffix (unless explicitly disabled).
+* The queue name will be determined using the supplied (or default if not) `IQueueNamingConvention`, applied to the message type `T`.
   * This convention can be overridden using `WithQueueName` in the queue configuration.
 
 #### Example:
@@ -42,7 +42,7 @@ config.Publications(x =>
 
 ### `WithQueueArn<T>(string queueArn)`
 
-Publishes messages of type `T` to an existing SQS queue specified by its ARN \(Amazon Resource Name\).
+Publishes messages of type `T` to an existing SQS queue specified by its ARN (Amazon Resource Name).
 
 #### Example:
 
@@ -112,7 +112,7 @@ x.WithQueue<ProcessPaymentCommand>(cfg =>
 ## When to Use Queues
 
 Use queues when:
-- Only one consumer should process each message \(point-to-point delivery\)
+- Only one consumer should process each message (point-to-point delivery)
 - You're publishing commands that instruct a service to do something
 - You need guaranteed message delivery to a single service
 - You want to avoid the overhead of SNS topic management

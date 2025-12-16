@@ -71,7 +71,7 @@ services.AddJustSaying(config =>
     {
         if (hostEnvironment.IsDevelopment())
         {
-            // LocalStack for local development
+            // LocalStack (local development)
             x.WithServiceUri(new Uri("http://localhost:4566"))
              .WithAnonymousCredentials();
         }
@@ -221,8 +221,8 @@ services.AddJustSaying(config =>
 
 Service endpoints can be used with any AWS-compatible service that implements the SNS and SQS APIs:
 
-- LocalStack \(local development\)
-- ElasticMQ \(SQS-compatible message queue\)
+- LocalStack (local development)
+- ElasticMQ (SQS-compatible message queue)
 - Custom AWS service implementations
 
 Configure the endpoint URL to point to your custom service.

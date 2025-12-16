@@ -38,15 +38,15 @@ services.AddJustSaying(config =>
 
 ### Topic Publications
 
-- [WithTopic\<T\>()](withtopic.md) - Publish to an SNS topic \(creates if not exists\)
-- WithTopicArn\<T\>(arn) - Publish to an existing topic by ARN
+- [WithTopic<T>()](withtopic.md) - Publish to an SNS topic (creates if not exists)
+- WithTopicArn<T>(arn) - Publish to an existing topic by ARN
 
 ### Queue Publications
 
-- [WithQueue\<T\>()](withqueue.md) - Publish directly to an SQS queue \(creates if not exists\)
-- WithQueueArn\<T\>(arn) - Publish to an existing queue by ARN
-- WithQueueUrl\<T\>(url) - Publish to an existing queue by URL
-- WithQueueUri\<T\>(uri) - Publish to an existing queue by URI
+- [WithQueue<T>()](withqueue.md) - Publish directly to an SQS queue (creates if not exists)
+- WithQueueArn<T>(arn) - Publish to an existing queue by ARN
+- WithQueueUrl<T>(url) - Publish to an existing queue by URL
+- WithQueueUri<T>(uri) - Publish to an existing queue by URI
 
 ## Further Configuration
 
