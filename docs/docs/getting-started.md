@@ -158,7 +158,7 @@ services.AddJustSaying(config =>
 });
 ```
 
-For production applications running on AWS infrastructure \(EC2, ECS, Lambda\), IAM roles provide credentials automatically. See [AWS Configuration](/aws-configuration/README) for detailed credential options.
+For production applications running on AWS infrastructure \(EC2, ECS, Lambda\), IAM roles provide credentials automatically. See [AWS Configuration](/aws-configuration/) for detailed credential options.
 
 ### Startup
 

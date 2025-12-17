@@ -36,4 +36,4 @@ Most applications don't need these advanced features. Consider them when:
 
 - [Publications Configuration](../publishing/configuration.md) - Basic publication setup
 - [Write Configuration](../publishing/write-configuration.md) - Advanced publication options
-- [AWS Configuration](../aws-configuration/README.md) - AWS client and region setup
+- [AWS Configuration](../aws-configuration/) - AWS client and region setup
