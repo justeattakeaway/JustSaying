@@ -71,20 +71,14 @@ jobs:
         shell: pwsh
         run: ./build.ps1 -EnableIntegrationTests
 
-      - name: Upload coverage to Codecov
+      - name: Upload coverage and test results to Codecov
+        if: ${{ !cancelled() }}
         uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
           flags: ${{ matrix.os-name }}
-
-      - name: Upload test results to Codecov
-        if: ${{ !cancelled() }}
-        uses:  codecov/test-results-action@0fa95f0e1eeaafde2c782583b36b28ad0d8c77d3 # v1.2.1
-        with:
-          files: ./test-results/**/*.xml
-          flags: ${{ matrix.os-name }}
-          token: ${{ secrets.CODECOV_TOKEN }}
+          test_results_files: ./test-results/**/*.xml
 
       - name: Generate SBOM
         uses: anchore/sbom-action@43a17d6e7add2b5535efe4dcae9952337c479a93 # v0.20.11
