@@ -193,3 +193,52 @@ jobs:
 
     - name: Push NuGet packages to NuGet.org
       run: dotnet nuget push "*.nupkg" --api-key ${{ secrets.NUGET_TOKEN }} --skip-duplicate --source https://api.nuget.org/v3/index.json
+
+  scip-upload:
+    needs: build
+    runs-on: ubuntu-latest
+    if: |
+      github.event.repository.fork == false &&
+      github.ref_name == github.event.repository.default_branch
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@2016bd2012dba4e32de620c46fe006a3ac9f0602 # v5.0.1
+      with:
+        dotnet-version: ${{ needs.build.outputs.dotnet-sdk-version }}
+
+    - name: Setup NuGet cache
+      uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.props') }}
+        restore-keys: ${{ runner.os }}-nuget-
+
+    - name: Build solution
+      shell: pwsh
+      run: ./build.ps1 -SkipTests
+
+    - name: Setup Node.js
+      uses: actions/setup-node@37e4f8e76a4e3821bb9924d8c6b903f56a360464 # v6.0.0
+      with:
+        node-version: '24'
+
+    - name: Install scip-dotnet
+      run: dotnet tool install --global scip-dotnet
+
+    - name: Generate SCIP index
+      run: scip-dotnet index
+
+    - name: Install Sourcegraph CLI
+      run: npm install -g @sourcegraph/src
+
+    - name: Upload SCIP index to Sourcegraph
+      env:
+        SRC_ACCESS_TOKEN: ${{ secrets.SOURCEGRAPH_TOKEN }}
+        SRC_ENDPOINT: https://sourcegraph.com
+      run: src code-intel upload
