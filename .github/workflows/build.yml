@@ -231,8 +231,21 @@ jobs:
     - name: Install scip-dotnet
       run: dotnet tool install --global scip-dotnet
 
+    - name: Convert slnx to sln
+      shell: pwsh
+      run: |
+        # Create a new .sln file
+        dotnet new sln -n JustSaying -o .
+        # Get all projects from the .slnx file and add them to the .sln file
+        $projects = dotnet sln JustSaying.slnx list | Select-Object -Skip 2
+        foreach ($project in $projects) {
+          if ($project.Trim()) {
+            dotnet sln JustSaying.sln add $project
+          }
+        }
+
     - name: Generate SCIP index
-      run: scip-dotnet index JustSaying.slnx
+      run: scip-dotnet index JustSaying.sln
 
     - name: Install Sourcegraph CLI
       run: npm install -g @sourcegraph/src
