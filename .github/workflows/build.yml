@@ -255,4 +255,4 @@ jobs:
       env:
         SRC_ACCESS_TOKEN: ${{ secrets.SOURCEGRAPH_TOKEN }}
         SRC_ENDPOINT: https://sourcegraph.com
-      run: src code-intel upload
+      run: src code-intel upload -repo=github.com/${{ github.repository }} -commit=${{ github.sha }} -root=${{ github.workspace }} -github-token=${{ secrets.GITHUB_TOKEN }} -no-progress
