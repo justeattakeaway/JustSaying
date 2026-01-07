@@ -4,6 +4,7 @@
 *.idea
 *.log
 *.orig
+*.scip
 *.sublime-workspace
 *.suo
 *.user

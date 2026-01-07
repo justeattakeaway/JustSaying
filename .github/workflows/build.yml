@@ -232,7 +232,7 @@ jobs:
       run: dotnet tool install --global scip-dotnet
 
     - name: Generate SCIP index
-      run: scip-dotnet index
+      run: scip-dotnet index JustSaying.slnx
 
     - name: Install Sourcegraph CLI
       run: npm install -g @sourcegraph/src
