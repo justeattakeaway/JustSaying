@@ -42,7 +42,7 @@ const config = {
       {
         generateLLMsTxt: true,
         generateLLMsFullTxt: true,
-        docsDir: 'docs',
+        docsDir: 'JustSaying',
       },
     ],
   ],
