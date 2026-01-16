@@ -43,6 +43,10 @@ const config = {
         generateLLMsTxt: true,
         generateLLMsFullTxt: true,
         docsDir: 'docs',
+        pathTransformation: {
+          ignorePaths: ['docs'],
+          addPaths: ['JustSaying'],
+        },
       },
     ],
   ],
