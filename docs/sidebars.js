@@ -24,6 +24,16 @@ const sidebars = {
     'Configuration',
     {
       type: 'category',
+      label: 'AWS Configuration',
+      items: [
+        'aws-configuration/README',
+        'aws-configuration/credentials',
+        'aws-configuration/regions',
+        'aws-configuration/service-endpoints',
+      ],
+    },
+    {
+      type: 'category',
       label: 'Messaging Configuration',
       items: [
         'messaging-configuration/README',
@@ -71,7 +81,23 @@ const sidebars = {
       type: 'category',
       label: 'Publications',
       items: [
+        'publishing/README',
         'publishing/configuration',
+        'publishing/withtopic',
+        'publishing/withqueue',
+        'publishing/write-configuration',
+        'publishing/batch-publishing',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Advanced',
+      items: [
+        'advanced/README',
+        'advanced/dynamic-topics',
+        'advanced/compression',
+        'advanced/encryption',
+        'advanced/testing',
       ],
     },
     'how-justsaying-uses-sqs-sns',

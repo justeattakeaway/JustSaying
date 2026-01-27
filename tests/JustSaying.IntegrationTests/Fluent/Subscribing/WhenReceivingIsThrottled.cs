@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
@@ -41,37 +42,38 @@ public sealed class WhenReceivingIsThrottled(ITestOutputHelper outputHelper) : I
                                 c.WithSubscriptionGroup("group")))))
             .AddSingleton<IHandlerAsync<WaitingMessage>>(handler);
 
-        var baseSleep = TimeSpan.FromMilliseconds(50);
-
         await WhenAsync(
             services,
             async (publisher, listener, cancellationToken) =>
             {
-                var waitForElevenMessages = handler.WaitForMessageCountAsync(11, cancellationToken);
-
                 await listener.StartAsync(cancellationToken);
                 await publisher.StartAsync(cancellationToken);
 
                 // Publish the message with a long-running handler
                 await publisher.PublishAsync(messagesToSend.First(), cancellationToken);
 
-                // Give some time to AWS to schedule the first long-running message
-                await Task.Delay(baseSleep, cancellationToken);
+                // Wait until the first (long-running) message has started processing
+                // This ensures it occupies one of the two concurrency slots
+                await handler.WaitForFirstMessageStartedAsync(cancellationToken);
 
-                foreach (var msg in messagesToSend.Skip(1).SkipLast(1))
+                // Now publish the remaining messages
+                foreach (var msg in messagesToSend.Skip(1))
                 {
                     await publisher.PublishAsync(msg, cancellationToken);
                 }
 
-                // Publish the last message after a couple of seconds to guarantee it was scheduled after all the rest
-                await Task.Delay(baseSleep, cancellationToken);
-                await publisher.PublishAsync(messagesToSend.Last(), cancellationToken);
+                // Wait for all short messages (messages 1-29) to complete
+                // Message 0 is still running and won't complete during this test
+                await handler.WaitForCompletedCountAsync(29, cancellationToken);
 
-                // Wait for more than 10 messages.
-                await waitForElevenMessages;
+                // Get the completed messages (excluding the still-running message 0)
+                var completedMessages = handler.CompletedMessages.ToList();
+                completedMessages.Count.ShouldBeGreaterThanOrEqualTo(29);
 
-                handler.ReceivedMessages.Count.ShouldBeGreaterThan(10);
-                handler.ReceivedMessages.ShouldBeInOrder(SortDirection.Ascending);
+                // Verify that messages 1-29 were processed in order
+                // (they should be, since only one slot was available after message 0 started)
+                var shortMessages = completedMessages.Where(m => m.Order > 0).ToList();
+                shortMessages.ShouldBeInOrder(SortDirection.Ascending);
             });
     }
 
@@ -90,11 +92,40 @@ public sealed class WhenReceivingIsThrottled(ITestOutputHelper outputHelper) : I
 
     private class InspectableWaitingHandler(ITestOutputHelper outputHelper) : InspectableHandler<WaitingMessage>
     {
+        private readonly TaskCompletionSource _firstMessageStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly ConcurrentQueue<WaitingMessage> _completedMessages = new();
+        private int _completedCount;
+
+        public ConcurrentQueue<WaitingMessage> CompletedMessages => _completedMessages;
+
+        public Task WaitForFirstMessageStartedAsync(CancellationToken cancellationToken)
+        {
+            cancellationToken.Register(() => _firstMessageStarted.TrySetCanceled(cancellationToken));
+            return _firstMessageStarted.Task;
+        }
+
+        public async Task WaitForCompletedCountAsync(int count, CancellationToken cancellationToken)
+        {
+            while (Volatile.Read(ref _completedCount) < count)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await Task.Delay(10, cancellationToken);
+            }
+        }
+
         public override async Task<bool> Handle(WaitingMessage message)
         {
             await base.Handle(message);
             outputHelper.WriteLine($"Running task {message.Order} which will wait for {message.TimeToWait.TotalMilliseconds}ms");
+
+            // Signal that the first message has started (this allows the test to proceed)
+            _firstMessageStarted.TrySetResult();
+
             await Task.Delay(message.TimeToWait);
+
+            _completedMessages.Enqueue(message);
+            Interlocked.Increment(ref _completedCount);
+
             return true;
         }
     }

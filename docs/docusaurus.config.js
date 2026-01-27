@@ -36,6 +36,33 @@ const config = {
     locales: ['en'],
   },
 
+  plugins: [
+    [
+      'docusaurus-plugin-llms',
+      {
+        generateLLMsTxt: true,
+        generateLLMsFullTxt: true,
+        docsDir: 'docs',
+        pathTransformation: {
+          ignorePaths: ['docs'],
+          addPaths: ['JustSaying'],
+        },
+      },
+    ],
+  ],
+
+  themes: [
+    [
+      require.resolve('@easyops-cn/docusaurus-search-local'),
+      /** @type {import("@easyops-cn/docusaurus-search-local").PluginOptions} */
+      ({
+        hashed: true,
+        docsRouteBasePath: '/',
+        indexBlog: false,
+      }),
+    ],
+  ],
+
   presets: [
     [
       'classic',

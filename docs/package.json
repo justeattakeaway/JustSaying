@@ -24,7 +24,9 @@
   },
   "devDependencies": {
     "@docusaurus/module-type-aliases": "^3.9.2",
-    "@docusaurus/types": "^3.9.2"
+    "@docusaurus/types": "^3.9.2",
+    "@easyops-cn/docusaurus-search-local": "^0.52.1",
+    "docusaurus-plugin-llms": "^0.2.2"
   },
   "browserslist": {
     "production": [

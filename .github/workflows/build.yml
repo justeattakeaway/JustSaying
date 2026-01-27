@@ -46,16 +46,16 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
 
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@2016bd2012dba4e32de620c46fe006a3ac9f0602 # v5.0.1
+        uses: actions/setup-dotnet@baa11fbfe1d6520db94683bd5c7a3818018e4309 # v5.1.0
         id: setup-dotnet
 
       - name: Setup NuGet cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.props') }}
@@ -72,7 +72,7 @@ jobs:
         run: ./build.ps1 -EnableIntegrationTests
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
@@ -80,14 +80,14 @@ jobs:
 
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
-        uses:  codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1.1.1
+        uses:  codecov/test-results-action@0fa95f0e1eeaafde2c782583b36b28ad0d8c77d3 # v1.2.1
         with:
           files: ./test-results/**/*.xml
           flags: ${{ matrix.os-name }}
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Generate SBOM
-        uses: anchore/sbom-action@fbfd9c6c189226748411491745178e0c2017392d # v0.20.10
+        uses: anchore/sbom-action@a930d0ac434e3182448fe678398ba5713717112a # v0.21.0
         with:
           artifact-name: build-${{ matrix.os-name }}.spdx.json
           output-file: ./artifacts/build.spdx.json
@@ -95,7 +95,7 @@ jobs:
           upload-release-assets: ${{ runner.os == 'Windows' }}
 
       - name: Attest artifacts
-        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3.0.0
+        uses: actions/attest-build-provenance@96278af6caaf10aea03fd8d33a09a777ca52d62f # v3.2.0
         if: |
           runner.os == 'Windows' &&
           github.event.repository.fork == false &&
@@ -111,7 +111,7 @@ jobs:
             ./artifacts/package/release/*
 
       - name: Publish NuGet packages
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: packages-${{ matrix.os-name }}
           path: ./artifacts/package/release
@@ -123,12 +123,12 @@ jobs:
     steps:
 
     - name: Download packages
-      uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
       with:
         name: packages-windows
 
     - name: Setup .NET SDK
-      uses: actions/setup-dotnet@2016bd2012dba4e32de620c46fe006a3ac9f0602 # v5.0.1
+      uses: actions/setup-dotnet@baa11fbfe1d6520db94683bd5c7a3818018e4309 # v5.1.0
       with:
         dotnet-version: ${{ needs.build.outputs.dotnet-sdk-version }}
 
@@ -161,12 +161,12 @@ jobs:
     steps:
 
     - name: Download packages
-      uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
       with:
         name: packages-windows
 
     - name: Setup .NET SDK
-      uses: actions/setup-dotnet@2016bd2012dba4e32de620c46fe006a3ac9f0602 # v5.0.1
+      uses: actions/setup-dotnet@baa11fbfe1d6520db94683bd5c7a3818018e4309 # v5.1.0
       with:
         dotnet-version: ${{ needs.build.outputs.dotnet-sdk-version }}
 
@@ -182,14 +182,77 @@ jobs:
     steps:
 
     - name: Download packages
-      uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
       with:
         name: packages-windows
 
     - name: Setup .NET SDK
-      uses: actions/setup-dotnet@2016bd2012dba4e32de620c46fe006a3ac9f0602 # v5.0.1
+      uses: actions/setup-dotnet@baa11fbfe1d6520db94683bd5c7a3818018e4309 # v5.1.0
       with:
         dotnet-version: ${{ needs.build.outputs.dotnet-sdk-version }}
 
     - name: Push NuGet packages to NuGet.org
       run: dotnet nuget push "*.nupkg" --api-key ${{ secrets.NUGET_TOKEN }} --skip-duplicate --source https://api.nuget.org/v3/index.json
+
+  scip-upload:
+    needs: build
+    runs-on: ubuntu-latest
+    if: |
+      github.event.repository.fork == false &&
+      github.ref_name == github.event.repository.default_branch
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@baa11fbfe1d6520db94683bd5c7a3818018e4309 # v5.1.0
+      with:
+        dotnet-version: ${{ needs.build.outputs.dotnet-sdk-version }}
+
+    - name: Setup NuGet cache
+      uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.props') }}
+        restore-keys: ${{ runner.os }}-nuget-
+
+    - name: Build solution
+      shell: pwsh
+      run: ./build.ps1 -SkipTests
+
+    - name: Setup Node.js
+      uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+      with:
+        node-version: '24'
+
+    - name: Install scip-dotnet
+      run: dotnet tool install --global scip-dotnet
+
+    - name: Convert slnx to sln
+      shell: pwsh
+      run: |
+        # Create a new .sln file
+        dotnet new sln -n JustSaying -o .
+        # Get all projects from the .slnx file and add them to the .sln file
+        # Skip first 2 lines which are the header ("Project(s)" and "----------")
+        $projects = dotnet sln JustSaying.slnx list | Select-Object -Skip 2
+        foreach ($project in $projects) {
+          if ($project.Trim()) {
+            dotnet sln JustSaying.sln add $project
+          }
+        }
+
+    - name: Generate SCIP index
+      run: scip-dotnet index JustSaying.sln
+
+    - name: Install Sourcegraph CLI
+      run: npm install -g @sourcegraph/src
+
+    - name: Upload SCIP index to Sourcegraph
+      env:
+        SRC_ACCESS_TOKEN: ${{ secrets.SOURCEGRAPH_TOKEN }}
+        SRC_ENDPOINT: https://sourcegraph.com
+      run: src code-intel upload -repo=github.com/${{ github.repository }} -commit=${{ github.sha }} -root=${{ github.workspace }} -github-token=${{ secrets.GITHUB_TOKEN }} -no-progress
