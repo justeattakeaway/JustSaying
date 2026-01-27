@@ -62,6 +62,7 @@
     <Project Path="tests/JustSaying.Benchmark/JustSaying.Benchmark.csproj" />
     <Project Path="tests/JustSaying.Extensions.Aws.Tests/JustSaying.Extensions.Aws.Tests.csproj" />
     <Project Path="tests/JustSaying.Extensions.DependencyInjection.StructureMap.Tests/JustSaying.Extensions.DependencyInjection.StructureMap.Tests.csproj" />
+    <Project Path="tests/JustSaying.Extensions.Kafka.Tests/JustSaying.Extensions.Kafka.Tests.csproj" />
     <Project Path="tests/JustSaying.IntegrationTests/JustSaying.IntegrationTests.csproj" />
     <Project Path="tests/JustSaying.TestingFramework/JustSaying.TestingFramework.csproj" />
     <Project Path="tests/JustSaying.UnitTests/JustSaying.UnitTests.csproj" />
