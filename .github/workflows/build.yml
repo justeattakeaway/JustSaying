@@ -107,6 +107,7 @@ jobs:
             ./artifacts/bin/JustSaying.Extensions.Aws/release*/JustSaying.Extensions.Aws.dll
             ./artifacts/bin/JustSaying.Extensions.DependencyInjection.Microsoft/release*/JustSaying.Extensions.DependencyInjection.Microsoft.dll
             ./artifacts/bin/JustSaying.Extensions.DependencyInjection.StructureMap/release*/JustSaying.Extensions.DependencyInjection.StructureMap.dll
+            ./artifacts/bin/JustSaying.Extensions.Kafka/release*/JustSaying.Extensions.Kafka.dll
             ./artifacts/bin/JustSaying.Models/release*/JustSaying.Models.dll
             ./artifacts/package/release/*
 
