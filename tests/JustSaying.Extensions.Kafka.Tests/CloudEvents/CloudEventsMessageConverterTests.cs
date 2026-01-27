@@ -1,7 +1,7 @@
+using System.Text.Json;
 using JustSaying.Extensions.Kafka.CloudEvents;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
-using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
 
 namespace JustSaying.Extensions.Kafka.Tests.CloudEvents;
@@ -13,7 +13,7 @@ public class CloudEventsMessageConverterTests
 
     public CloudEventsMessageConverterTests()
     {
-        _serializationFactory = new SystemTextJsonSerializationFactory();
+        _serializationFactory = new SystemTextJsonSerializationFactory(new JsonSerializerOptions());
         _converter = new CloudEventsMessageConverter(_serializationFactory, "urn:test:source");
     }
 
@@ -60,7 +60,7 @@ public class CloudEventsMessageConverterTests
         var cloudEvent = _converter.ToCloudEvent(originalMessage);
 
         // Act
-        var restoredMessage = _converter.FromCloudEvent(cloudEvent);
+        var restoredMessage = _converter.FromCloudEvent<TestMessage>(cloudEvent);
 
         // Assert
         restoredMessage.ShouldNotBeNull();
@@ -68,9 +68,7 @@ public class CloudEventsMessageConverterTests
         restoredMessage.Id.ShouldBe(originalMessage.Id);
         restoredMessage.RaisingComponent.ShouldBe(originalMessage.RaisingComponent);
         restoredMessage.Tenant.ShouldBe(originalMessage.Tenant);
-        
-        var typedMessage = (TestMessage)restoredMessage;
-        typedMessage.Content.ShouldBe(originalMessage.Content);
+        restoredMessage.Content.ShouldBe(originalMessage.Content);
     }
 
     [Fact]
@@ -101,17 +99,17 @@ public class CloudEventsMessageConverterTests
     public void ToCloudEvent_WithNullMessage_ShouldThrowArgumentNullException()
     {
         // Act & Assert
-        Should.Throw<ArgumentNullException>(() => _converter.ToCloudEvent(null));
+        Should.Throw<ArgumentNullException>(() => _converter.ToCloudEvent<TestMessage>(null));
     }
 
     [Fact]
     public void FromCloudEvent_WithNullCloudEvent_ShouldThrowArgumentNullException()
     {
         // Act & Assert
-        Should.Throw<ArgumentNullException>(() => _converter.FromCloudEvent(null));
+        Should.Throw<ArgumentNullException>(() => _converter.FromCloudEvent<TestMessage>(null));
     }
 
-    private class TestMessage : Message
+    public class TestMessage : Message
     {
         public string Content { get; set; }
     }

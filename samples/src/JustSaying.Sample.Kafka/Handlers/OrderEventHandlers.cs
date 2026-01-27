@@ -6,15 +6,35 @@ using JustSaying.Sample.Kafka.Messages;
 namespace JustSaying.Sample.Kafka.Handlers;
 
 /// <summary>
-/// Handler for OrderPlacedEvent demonstrating CloudEvents consumption.
+/// Handler for OrderPlacedEvent demonstrating CloudEvents consumption with retry/DLT support.
 /// </summary>
 public class OrderPlacedEventHandler(ILogger<OrderPlacedEventHandler> logger, IMessagePublisher publisher) : IHandlerAsync<OrderPlacedEvent>
 {
+    // Simulate transient failures - in production this would be actual business logic errors
+    private static readonly Random _random = new();
+    
+    // Track retry attempts per order (in production, use distributed state or message headers)
+    private static readonly Dictionary<string, int> _attemptTracker = new();
+    private static readonly object _lock = new();
+    
     public async Task<bool> Handle(OrderPlacedEvent message)
     {
+        // Track attempts for this order
+        int attemptNumber;
+        lock (_lock)
+        {
+            if (!_attemptTracker.TryGetValue(message.OrderId, out attemptNumber))
+            {
+                attemptNumber = 0;
+            }
+            attemptNumber++;
+            _attemptTracker[message.OrderId] = attemptNumber;
+        }
+        
         logger.LogInformation(
-            "Processing order {OrderId} for customer {CustomerId}. Amount: {Amount:C}",
+            "Processing order {OrderId} (attempt {Attempt}) for customer {CustomerId}. Amount: {Amount:C}",
             message.OrderId,
+            attemptNumber,
             message.CustomerId,
             message.Amount);
 
@@ -35,6 +55,31 @@ public class OrderPlacedEventHandler(ILogger<OrderPlacedEventHandler> logger, IM
 
         // Simulate some processing
         await Task.Delay(RandomNumberGenerator.GetInt32(50, 150));
+        
+        // ===== SIMULATE FAILURES FOR DLT DEMONSTRATION =====
+        // Orders with amount > 500 have a 70% chance of transient failure (to demonstrate retries)
+        // Orders with amount > 1000 always fail (to demonstrate DLT)
+        if (message.Amount > 1000)
+        {
+            logger.LogError(
+                "Order {OrderId} FAILED - Amount {Amount:C} exceeds processing limit. " +
+                "This order will be sent to DLT after all retries are exhausted.",
+                message.OrderId, message.Amount);
+            
+            // Throw exception to trigger retry mechanism
+            throw new InvalidOperationException($"Order amount ${message.Amount} exceeds maximum allowed limit of $1000");
+        }
+        
+        if (message.Amount > 500 && _random.NextDouble() < 0.7 && attemptNumber < 3)
+        {
+            logger.LogWarning(
+                "Order {OrderId} TRANSIENT FAILURE (attempt {Attempt}) - Simulating temporary error. Will retry...",
+                message.OrderId, attemptNumber);
+            
+            // Return false to indicate failure and trigger retry
+            return false;
+        }
+        // ===== END SIMULATION =====
 
         // Publish confirmation event
         var orderConfirmed = new OrderConfirmedEvent
@@ -48,7 +93,14 @@ public class OrderPlacedEventHandler(ILogger<OrderPlacedEventHandler> logger, IM
 
         await publisher.PublishAsync(orderConfirmed);
 
-        logger.LogInformation("Order {OrderId} processed successfully and confirmed", message.OrderId);
+        logger.LogInformation("Order {OrderId} processed successfully and confirmed after {Attempts} attempt(s)", 
+            message.OrderId, attemptNumber);
+        
+        // Clean up tracking
+        lock (_lock)
+        {
+            _attemptTracker.Remove(message.OrderId);
+        }
 
         // Returning true indicates:
         //   The message was handled successfully

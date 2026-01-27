@@ -11,11 +11,15 @@
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="1.1.0" Condition=" '$(TargetFramework)' == 'net462' " />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.0.0" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" Condition=" '$(TargetFramework)' == 'net8.0' " />
+    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="2.0.0" Condition=" '$(TargetFramework)' == 'net462' " />
+    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="2.0.0" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
+    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" Condition=" '$(TargetFramework)' == 'net8.0' " />
     <PackageVersion Include="System.Threading.Channels" Version="9.0.6" Condition=" '$(TargetFramework)' == 'net462' " />
     <PackageVersion Include="System.Threading.Channels" Version="9.0.6" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
     <PackageVersion Include="System.Text.Json" Version="8.0.5" Condition=" '$(TargetFramework)' == 'net462' " />
     <PackageVersion Include="System.Text.Json" Version="8.0.5" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />
+    <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="8.0.0" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageVersion Include="StructureMap" Version="4.6.0" />
     <PackageVersion Include="xunit.v3.assert" Version="2.0.3" />

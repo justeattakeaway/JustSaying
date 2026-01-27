@@ -16,6 +16,8 @@
     <PackageReference Include="CloudNative.CloudEvents.Kafka" />
     <PackageReference Include="CloudNative.CloudEvents.SystemTextJson" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" />
   </ItemGroup>
   <ItemGroup>
     <Using Remove="System.Net.Http" />

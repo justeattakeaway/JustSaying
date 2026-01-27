@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net;
 using System.Text;
 using CloudNative.CloudEvents;
@@ -5,6 +6,8 @@ using Confluent.Kafka;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Extensions.Kafka.CloudEvents;
 using JustSaying.Extensions.Kafka.Configuration;
+using JustSaying.Extensions.Kafka.Partitioning;
+using JustSaying.Extensions.Kafka.Tracing;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageSerialization;
@@ -68,12 +71,33 @@ public class KafkaMessagePublisher : IMessagePublisher, IMessageBatchPublisher, 
 
         ThrowIfDisposed();
 
+        // Use partition key strategy if configured, otherwise use UniqueKey
+        var messageKey = _configuration.PartitionKeyStrategy != null
+            ? _configuration.PartitionKeyStrategy.GetPartitionKey(message, _topic)
+            : message.UniqueKey();
+
+        // Start produce activity for distributed tracing
+        using var activity = KafkaActivitySource.StartProduceActivity(
+            _topic,
+            message.Id.ToString(),
+            messageKey);
+
         try
         {
             var kafkaMessage = CreateKafkaMessage(message, metadata);
+
+            // Inject trace context into headers
+            if (activity != null)
+            {
+                TraceContextPropagator.InjectTraceContext(kafkaMessage.Headers, activity);
+            }
             
             var deliveryResult = await _producer.ProduceAsync(_topic, kafkaMessage, cancellationToken)
                 .ConfigureAwait(false);
+
+            activity?.SetTag(KafkaActivitySource.MessagingKafkaPartitionTag, deliveryResult.Partition.Value);
+            activity?.SetTag(KafkaActivitySource.MessagingKafkaOffsetTag, deliveryResult.Offset.Value);
+            KafkaActivitySource.SetSuccess(activity);
 
             _logger.LogInformation(
                 "Published message {MessageId} of type {MessageType} to Kafka topic '{Topic}' at partition {Partition}, offset {Offset}",
@@ -95,6 +119,8 @@ public class KafkaMessagePublisher : IMessagePublisher, IMessageBatchPublisher, 
         }
         catch (ProduceException<string, byte[]> ex)
         {
+            KafkaActivitySource.RecordException(activity, ex);
+
             _logger.LogError(ex, "Failed to publish message {MessageId} to Kafka topic '{Topic}'", message.Id, _topic);
             throw new PublishException($"Failed to publish message to Kafka topic '{_topic}'.", ex);
         }
@@ -164,7 +190,11 @@ public class KafkaMessagePublisher : IMessagePublisher, IMessageBatchPublisher, 
 
     private Confluent.Kafka.Message<string, byte[]> CreateKafkaMessage(Message message, PublishMetadata metadata)
     {
-        var key = message.UniqueKey();
+        // Use partition key strategy if configured, otherwise use UniqueKey
+        var key = _configuration.PartitionKeyStrategy != null
+            ? _configuration.PartitionKeyStrategy.GetPartitionKey(message, _topic)
+            : message.UniqueKey();
+
         byte[] value;
         var headers = new Headers();
 

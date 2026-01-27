@@ -99,4 +99,95 @@ public class KafkaConfigurationTests
         // Assert
         config.CloudEventsSource.ShouldBe("urn:justsaying");
     }
+
+    [Fact]
+    public void DeadLetterTopic_DefaultsToNull()
+    {
+        // Arrange & Act
+        var config = new KafkaConfiguration();
+
+        // Assert
+        config.DeadLetterTopic.ShouldBeNull();
+    }
+
+    [Fact]
+    public void FailureTopic_DefaultsToNull()
+    {
+        // Arrange & Act
+        var config = new KafkaConfiguration();
+
+        // Assert
+        config.FailureTopic.ShouldBeNull();
+    }
+
+    [Fact]
+    public void DelayInMs_DefaultsToZero()
+    {
+        // Arrange & Act
+        var config = new KafkaConfiguration();
+
+        // Assert
+        config.DelayInMs.ShouldBe(0u);
+    }
+
+    [Fact]
+    public void Retry_HasDefaultConfiguration()
+    {
+        // Arrange & Act
+        var config = new KafkaConfiguration();
+
+        // Assert
+        config.Retry.ShouldNotBeNull();
+        config.Retry.Mode.ShouldBe(RetryMode.InProcess);
+        config.Retry.MaxRetryAttempts.ShouldBe(3);
+    }
+
+    [Fact]
+    public void FailureHandlerFactory_DefaultsToNull()
+    {
+        // Arrange & Act
+        var config = new KafkaConfiguration();
+
+        // Assert
+        config.FailureHandlerFactory.ShouldBeNull();
+    }
+
+    [Fact]
+    public void DeadLetterTopic_CanBeSet()
+    {
+        // Arrange
+        var config = new KafkaConfiguration();
+
+        // Act
+        config.DeadLetterTopic = "my-topic.dlt";
+
+        // Assert
+        config.DeadLetterTopic.ShouldBe("my-topic.dlt");
+    }
+
+    [Fact]
+    public void FailureTopic_CanBeSet()
+    {
+        // Arrange
+        var config = new KafkaConfiguration();
+
+        // Act
+        config.FailureTopic = "my-topic.retry-1";
+
+        // Assert
+        config.FailureTopic.ShouldBe("my-topic.retry-1");
+    }
+
+    [Fact]
+    public void DelayInMs_CanBeSet()
+    {
+        // Arrange
+        var config = new KafkaConfiguration();
+
+        // Act
+        config.DelayInMs = 30000;
+
+        // Assert
+        config.DelayInMs.ShouldBe(30000u);
+    }
 }

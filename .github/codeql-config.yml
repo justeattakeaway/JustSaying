@@ -1,0 +1,9 @@
+name: "CodeQL Config"
+
+paths-ignore:
+  - 'samples/**'
+  - '**/Sample*/**'
+  - 'tests/**/*.Sample*/**'
+
+queries:
+  - uses: security-and-quality
