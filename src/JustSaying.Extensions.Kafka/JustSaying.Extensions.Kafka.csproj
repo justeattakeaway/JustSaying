@@ -1,9 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Description>JustSaying extensions for Apache Kafka with CloudEvents support.</Description>
-    <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <IsShipping>false</IsShipping>
+    <Description>JustSaying extensions for Apache Kafka with CloudEvents support, dead letter topics, distributed tracing, and stream processing.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IsShipping>true</IsShipping>
     <TargetFrameworks>netstandard2.0;net462;net8.0</TargetFrameworks>
+    <PackageTags>kafka,cloudevents,messaging,opentelemetry,streaming</PackageTags>
     <NoWarn>$(NoWarn);RS0016;RS0017</NoWarn>
   </PropertyGroup>
   <ItemGroup>
