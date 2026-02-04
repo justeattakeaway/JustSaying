@@ -1,6 +1,8 @@
+using JustSaying.Messaging.Middleware;
 using JustSaying.Sample.Restaurant.KitchenConsole;
 using JustSaying.Sample.Restaurant.KitchenConsole.Handlers;
 using JustSaying.Sample.Restaurant.Models;
+using JustSaying.Sample.ServiceDefaults.Tracing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -10,6 +12,9 @@ Console.Title = appName;
 
 var builder = Host.CreateApplicationBuilder(args);
 builder.AddServiceDefaults();
+
+// Register tracing middleware as transient (required by JustSaying)
+builder.Services.AddTransient<TracingMiddleware>();
 
 var configuration = builder.Configuration;
 builder.Services.AddJustSaying(config =>
@@ -57,11 +62,21 @@ builder.Services.AddJustSaying(config =>
             cfg.WithTag("IsOrderEvent")
                 .WithTag("Subscriber", appName)
                 .WithReadConfiguration(rc =>
-                    rc.WithSubscriptionGroup("GroupA")));
+                    rc.WithSubscriptionGroup("GroupA"))
+                .WithMiddlewareConfiguration(pipe =>
+                {
+                    pipe.Use<TracingMiddleware>();
+                    pipe.UseDefaults<OrderPlacedEvent>(typeof(OrderPlacedEventHandler));
+                }));
 
         x.ForTopic<OrderOnItsWayEvent>(cfg =>
             cfg.WithReadConfiguration(rc =>
-                rc.WithSubscriptionGroup("GroupB")));
+                rc.WithSubscriptionGroup("GroupB"))
+                .WithMiddlewareConfiguration(pipe =>
+                {
+                    pipe.Use<TracingMiddleware>();
+                    pipe.UseDefaults<OrderOnItsWayEvent>(typeof(OrderOnItsWayEventHandler));
+                }));
     });
 
     config.Publications(x =>

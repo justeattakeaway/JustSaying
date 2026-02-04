@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Sample.Restaurant.Models;
+using JustSaying.Sample.ServiceDefaults.Tracing;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Sample.Restaurant.KitchenConsole.Handlers;
@@ -19,7 +20,7 @@ public class OrderOnItsWayEventHandler(IMessagePublisher publisher, ILogger<Orde
 
         logger.LogInformation("Order {OrderId} is on its way!", message.OrderId);
 
-        await publisher.PublishAsync(orderDeliveredEvent);
+        await publisher.PublishWithTracingAsync(orderDeliveredEvent);
 
         return true;
     }

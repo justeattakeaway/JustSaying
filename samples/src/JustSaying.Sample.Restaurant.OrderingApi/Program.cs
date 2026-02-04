@@ -1,14 +1,20 @@
 using JustSaying.Messaging;
+using JustSaying.Messaging.Middleware;
 using JustSaying.Sample.Restaurant.Models;
 using JustSaying.Sample.Restaurant.OrderingApi;
 using JustSaying.Sample.Restaurant.OrderingApi.Handlers;
 using JustSaying.Sample.Restaurant.OrderingApi.Models;
+using JustSaying.Sample.ServiceDefaults.Tracing;
 using Microsoft.OpenApi.Models;
 
 Console.Title = "OrderingApi";
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
+
+// Register tracing middleware as transient (required by JustSaying)
+builder.Services.AddTransient<TracingMiddleware>();
+
 var configuration = builder.Configuration;
 
 builder.Services.AddJustSaying(config =>
@@ -42,8 +48,18 @@ builder.Services.AddJustSaying(config =>
         //  - a SQS queue of name `orderreadyevent_error`
         //  - a SNS topic of name `orderreadyevent`
         //  - a SNS topic subscription on topic 'orderreadyevent' and queue 'orderreadyevent'
-        x.ForTopic<OrderReadyEvent>();
-        x.ForTopic<OrderDeliveredEvent>();
+        x.ForTopic<OrderReadyEvent>(cfg =>
+            cfg.WithMiddlewareConfiguration(pipe =>
+            {
+                pipe.Use<TracingMiddleware>();
+                pipe.UseDefaults<OrderReadyEvent>(typeof(OrderReadyEventHandler));
+            }));
+        x.ForTopic<OrderDeliveredEvent>(cfg =>
+            cfg.WithMiddlewareConfiguration(pipe =>
+            {
+                pipe.Use<TracingMiddleware>();
+                pipe.UseDefaults<OrderDeliveredEvent>(typeof(OrderDeliveredEventHandler));
+            }));
     });
     config.Publications(x =>
     {
@@ -95,7 +111,7 @@ app.MapPost("api/orders",
             Description = order.Description
         };
 
-        await publisher.PublishAsync(message);
+        await publisher.PublishWithTracingAsync(message);
 
         app.Logger.LogInformation("Order {OrderId} placed", orderId);
     });
@@ -117,7 +133,7 @@ app.MapPost("api/multi-orders",
             })
             .ToList();
 
-        await publisher.PublishAsync(message);
+        await publisher.PublishWithTracingAsync(message);
 
         app.Logger.LogInformation("Order {OrderIds} placed", message.Select(x => x.OrderId));
     });
