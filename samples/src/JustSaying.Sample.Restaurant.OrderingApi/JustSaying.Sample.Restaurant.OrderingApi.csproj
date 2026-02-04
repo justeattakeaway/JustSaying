@@ -9,8 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Serilog.AspNetCore" />
-    <PackageReference Include="Serilog.Sinks.Console" />
     <PackageReference Include="Swashbuckle.AspNetCore" />
   </ItemGroup>
 
@@ -19,6 +17,7 @@
     <ProjectReference Include="..\..\..\src\JustSaying.Models\JustSaying.Models.csproj" />
     <ProjectReference Include="..\..\..\src\JustSaying\JustSaying.csproj" />
     <ProjectReference Include="..\JustSaying.Sample.Restaurant.Models\JustSaying.Sample.Restaurant.Models.csproj" />
+    <ProjectReference Include="..\JustSaying.Sample.ServiceDefaults\JustSaying.Sample.ServiceDefaults.csproj" />
   </ItemGroup>
 
   <ItemGroup>

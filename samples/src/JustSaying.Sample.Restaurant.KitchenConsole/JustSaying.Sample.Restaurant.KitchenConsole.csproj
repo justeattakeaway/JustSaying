@@ -16,13 +16,12 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
     <PackageReference Include="Microsoft.Extensions.Hosting" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" />
-    <PackageReference Include="Serilog.AspNetCore" />
-    <PackageReference Include="Serilog.Sinks.Console" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\JustSaying.Extensions.DependencyInjection.Microsoft\JustSaying.Extensions.DependencyInjection.Microsoft.csproj" />
     <ProjectReference Include="..\..\..\src\JustSaying\JustSaying.csproj" />
     <ProjectReference Include="..\JustSaying.Sample.Restaurant.Models\JustSaying.Sample.Restaurant.Models.csproj" />
+    <ProjectReference Include="..\JustSaying.Sample.ServiceDefaults\JustSaying.Sample.ServiceDefaults.csproj" />
   </ItemGroup>
 </Project>
