@@ -2,7 +2,6 @@ using System.Security.Cryptography;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Sample.Restaurant.Models;
-using JustSaying.Sample.ServiceDefaults.Tracing;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Sample.Restaurant.KitchenConsole.Handlers;
@@ -39,7 +38,7 @@ public class OrderPlacedEventHandler(IMessagePublisher publisher, ILogger<OrderP
                 OrderId = message.OrderId
             };
 
-            await publisher.PublishWithTracingAsync(orderReadyEvent).ConfigureAwait(false);
+            await publisher.PublishAsync(orderReadyEvent, CancellationToken.None).ConfigureAwait(false);
             return true;
         }
         catch (Exception ex)

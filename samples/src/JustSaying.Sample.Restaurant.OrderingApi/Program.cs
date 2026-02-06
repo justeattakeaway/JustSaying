@@ -14,6 +14,7 @@ builder.AddServiceDefaults();
 
 // Register tracing middleware as transient (required by JustSaying)
 builder.Services.AddTransient<TracingMiddleware>();
+builder.Services.AddTransient<TracingPublishMiddleware>();
 
 var configuration = builder.Configuration;
 
@@ -67,6 +68,7 @@ builder.Services.AddJustSaying(config =>
         //  - a SNS topic of name `orderplacedevent`
         x.WithTopic<OrderPlacedEvent>();
         x.WithTopic<OrderOnItsWayEvent>();
+        x.WithPublishMiddleware<TracingPublishMiddleware>();
     });
 });
 
@@ -111,7 +113,7 @@ app.MapPost("api/orders",
             Description = order.Description
         };
 
-        await publisher.PublishWithTracingAsync(message);
+        await publisher.PublishAsync(message, CancellationToken.None);
 
         app.Logger.LogInformation("Order {OrderId} placed", orderId);
     });
@@ -133,7 +135,7 @@ app.MapPost("api/multi-orders",
             })
             .ToList();
 
-        await publisher.PublishWithTracingAsync(message);
+        await publisher.PublishAsync(message);
 
         app.Logger.LogInformation("Order {OrderIds} placed", message.Select(x => x.OrderId));
     });

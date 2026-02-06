@@ -1,3 +1,10 @@
+JustSaying.Fluent.PublicationsBuilder.WithPublishMiddleware<TMiddleware>() -> JustSaying.Fluent.PublicationsBuilder
+JustSaying.Messaging.Middleware.PublishContext
+JustSaying.Messaging.Middleware.PublishContext.Message.get -> JustSaying.Models.Message
+JustSaying.Messaging.Middleware.PublishContext.Messages.get -> System.Collections.Generic.IReadOnlyCollection<JustSaying.Models.Message>
+JustSaying.Messaging.Middleware.PublishContext.Metadata.get -> JustSaying.Messaging.PublishMetadata
+JustSaying.Messaging.Middleware.PublishContext.PublishContext(JustSaying.Models.Message message, JustSaying.Messaging.PublishMetadata metadata) -> void
+JustSaying.Messaging.Middleware.PublishContext.PublishContext(System.Collections.Generic.IReadOnlyCollection<JustSaying.Models.Message> messages, JustSaying.Messaging.PublishMetadata metadata) -> void
 const JustSaying.Messaging.Compression.ContentEncodings.GzipBase64 = "gzip,base64" -> string
 JustSaying.AwsTools.MessageHandling.PublishCompressionOptions
 JustSaying.AwsTools.MessageHandling.PublishCompressionOptions.CompressionEncoding.get -> string

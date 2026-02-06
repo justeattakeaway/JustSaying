@@ -2,7 +2,6 @@ using System.Security.Cryptography;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Sample.Restaurant.Models;
-using JustSaying.Sample.ServiceDefaults.Tracing;
 
 namespace JustSaying.Sample.Restaurant.OrderingApi.Handlers;
 
@@ -22,7 +21,7 @@ public class OrderReadyEventHandler(ILogger<OrderReadyEventHandler> logger, IMes
             OrderId = message.OrderId
         };
 
-        await publisher.PublishWithTracingAsync(orderOnItsWayEvent);
+        await publisher.PublishAsync(orderOnItsWayEvent, CancellationToken.None);
 
         // Returning true would indicate:
         //   The message was handled successfully

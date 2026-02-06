@@ -11,6 +11,7 @@ using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;
+using PublishMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.PublishContext, bool>;
 
 namespace JustSaying;
 
@@ -38,6 +39,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
     private ISubscriptionGroup SubscriptionGroups { get; set; }
 
     internal MiddlewareMap MiddlewareMap { get; }
+    internal PublishMessageMiddleware PublishMiddleware { get; set; }
     internal MessageCompressionRegistry CompressionRegistry { get; }
     internal IMessageBodySerializationFactory MessageBodySerializerFactory { get; set; }
 
@@ -249,7 +251,20 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
     {
         EnsureStarted();
 
-        IMessagePublisher publisher = GetPublisherForMessage(message);
+        if (PublishMiddleware != null)
+        {
+            var context = new Messaging.Middleware.PublishContext(message, metadata ?? new PublishMetadata());
+            await PublishMiddleware.RunAsync(context, async ct =>
+            {
+                var publisher = GetPublisherForMessage(message);
+                await PublishAsync(publisher, message, context.Metadata, 0, ct)
+                    .ConfigureAwait(false);
+                return true;
+            }, cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        var publisher = GetPublisherForMessage(message);
         await PublishAsync(publisher, message, metadata, 0, cancellationToken)
             .ConfigureAwait(false);
     }
@@ -351,18 +366,37 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
     }
 
     /// <inheritdoc/>
-    public Task PublishAsync(IEnumerable<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
+    public async Task PublishAsync(IEnumerable<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
     {
         EnsureStarted();
 
-        var tasks = new List<Task>();
+        if (PublishMiddleware != null)
+        {
+            var messageList = messages.ToList();
+            var context = new Messaging.Middleware.PublishContext(messageList, metadata ?? new PublishBatchMetadata());
+            await PublishMiddleware.RunAsync(context, async ct =>
+            {
+                var tasks = new List<Task>();
+                foreach (IGrouping<Type, Message> group in messageList.GroupBy(x => x.GetType()))
+                {
+                    IMessageBatchPublisher publisher = GetBatchPublishersForMessageType(group.Key);
+                    tasks.Add(PublishAsync(publisher, [..group], (PublishBatchMetadata)context.Metadata, 0, group.Key, ct));
+                }
+
+                await Task.WhenAll(tasks).ConfigureAwait(false);
+                return true;
+            }, cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        var batchTasks = new List<Task>();
         foreach (IGrouping<Type, Message> group in messages.GroupBy(x => x.GetType()))
         {
             IMessageBatchPublisher publisher = GetBatchPublishersForMessageType(group.Key);
-            tasks.Add(PublishAsync(publisher, [..group], metadata, 0, group.Key, cancellationToken));
+            batchTasks.Add(PublishAsync(publisher, [..group], metadata, 0, group.Key, cancellationToken));
         }
 
-        return Task.WhenAll(tasks);
+        await Task.WhenAll(batchTasks).ConfigureAwait(false);
     }
 
     private IMessageBatchPublisher GetBatchPublishersForMessageType(Type messageType)

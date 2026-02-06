@@ -15,6 +15,7 @@ builder.AddServiceDefaults();
 
 // Register tracing middleware as transient (required by JustSaying)
 builder.Services.AddTransient<TracingMiddleware>();
+builder.Services.AddTransient<TracingPublishMiddleware>();
 
 var configuration = builder.Configuration;
 builder.Services.AddJustSaying(config =>
@@ -91,6 +92,7 @@ builder.Services.AddJustSaying(config =>
                 .WithTag("Publisher", appName);
         });
         x.WithTopic<OrderDeliveredEvent>();
+        x.WithPublishMiddleware<TracingPublishMiddleware>();
     });
 });
 
