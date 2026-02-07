@@ -1,3 +1,8 @@
+#:sdk Aspire.AppHost.Sdk@13.1.0
+#:property SignAssembly=false
+#:project src/JustSaying.Sample.Restaurant.OrderingApi/JustSaying.Sample.Restaurant.OrderingApi.csproj
+#:project src/JustSaying.Sample.Restaurant.KitchenConsole/JustSaying.Sample.Restaurant.KitchenConsole.csproj
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 var localstack = builder.AddContainer("localstack", "localstack/localstack", "latest")

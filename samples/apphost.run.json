@@ -1,5 +1,4 @@
 {
-  "$schema": "https://json.schemastore.org/launchsettings.json",
   "profiles": {
     "https": {
       "commandName": "Project",
@@ -9,8 +8,9 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "DOTNET_ENVIRONMENT": "Development",
-        "ASPNETCORE_URLS": "https://localhost:17139;http://localhost:15139",
-        "ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL": "https://localhost:21139"
+        "ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL": "https://localhost:21139",
+        "ASPIRE_DASHBOARD_MCP_ENDPOINT_URL": "https://localhost:23139",
+        "ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL": "https://localhost:22139"
       }
     },
     "http": {
@@ -21,8 +21,9 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "DOTNET_ENVIRONMENT": "Development",
-        "ASPNETCORE_URLS": "http://localhost:15139",
         "ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL": "http://localhost:19139",
+        "ASPIRE_DASHBOARD_MCP_ENDPOINT_URL": "http://localhost:18139",
+        "ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL": "http://localhost:20139",
         "ASPIRE_ALLOW_UNSECURED_TRANSPORT": "true"
       }
     }
