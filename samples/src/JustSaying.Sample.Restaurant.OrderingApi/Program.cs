@@ -5,7 +5,7 @@ using JustSaying.Sample.Restaurant.OrderingApi;
 using JustSaying.Sample.Restaurant.OrderingApi.Handlers;
 using JustSaying.Sample.Restaurant.OrderingApi.Models;
 using JustSaying.Sample.ServiceDefaults.Tracing;
-using Microsoft.OpenApi.Models;
+using Scalar.AspNetCore;
 
 Console.Title = "OrderingApi";
 
@@ -80,25 +80,13 @@ builder.Services.AddJustSayingHandler<OrderDeliveredEvent, OrderDeliveredEventHa
 // Add a background service that is listening for messages related to the above subscriptions
 builder.Services.AddHostedService<BusService>();
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "Restaurant Ordering API",
-        Version = "v1"
-    });
-});
+builder.Services.AddOpenApi();
 
 var app = builder.Build();
 app.MapDefaultEndpoints();
 
-app.UseSwagger();
-app.UseSwaggerUI(c =>
-{
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Restaurant Ordering API");
-    c.RoutePrefix = string.Empty;
-});
+app.MapOpenApi();
+app.MapScalarApiReference();
 
 app.MapPost("api/orders",
     async (CustomerOrderModel order, IMessagePublisher publisher) =>
