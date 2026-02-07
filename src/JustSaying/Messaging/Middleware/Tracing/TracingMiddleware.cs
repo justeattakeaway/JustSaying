@@ -1,9 +1,7 @@
 using System.Diagnostics;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.Middleware;
-using OpenTelemetry.Trace;
 
-namespace JustSaying.Sample.ServiceDefaults.Tracing;
+namespace JustSaying.Messaging.Middleware.Tracing;
 
 /// <summary>
 /// Middleware that creates an Activity for message handling with trace context propagation.
@@ -66,7 +64,12 @@ public class TracingMiddleware(TracingOptions options) : MiddlewareBase<HandleMe
                 catch (Exception ex)
                 {
                     activity.SetStatus(ActivityStatusCode.Error, ex.Message);
-                    activity.AddException(ex);
+                    activity.AddEvent(new ActivityEvent("exception", tags: new ActivityTagsCollection
+                    {
+                        { "exception.type", ex.GetType().FullName },
+                        { "exception.message", ex.Message },
+                        { "exception.stacktrace", ex.ToString() }
+                    }));
                     throw;
                 }
             }

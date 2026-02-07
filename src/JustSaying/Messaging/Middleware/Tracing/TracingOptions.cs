@@ -1,4 +1,4 @@
-namespace JustSaying.Sample.ServiceDefaults.Tracing;
+namespace JustSaying.Messaging.Middleware.Tracing;
 
 /// <summary>
 /// Options for configuring distributed trace propagation behavior.

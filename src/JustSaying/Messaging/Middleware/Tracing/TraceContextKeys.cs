@@ -1,4 +1,4 @@
-namespace JustSaying.Sample.ServiceDefaults.Tracing;
+namespace JustSaying.Messaging.Middleware.Tracing;
 
 /// <summary>
 /// Message attribute keys for distributed trace context propagation.

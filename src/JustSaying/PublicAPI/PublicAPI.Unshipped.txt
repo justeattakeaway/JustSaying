@@ -5,6 +5,22 @@ JustSaying.Messaging.Middleware.PublishContext.Messages.get -> System.Collection
 JustSaying.Messaging.Middleware.PublishContext.Metadata.get -> JustSaying.Messaging.PublishMetadata
 JustSaying.Messaging.Middleware.PublishContext.PublishContext(JustSaying.Models.Message message, JustSaying.Messaging.PublishMetadata metadata) -> void
 JustSaying.Messaging.Middleware.PublishContext.PublishContext(System.Collections.Generic.IReadOnlyCollection<JustSaying.Models.Message> messages, JustSaying.Messaging.PublishMetadata metadata) -> void
+JustSaying.Messaging.Middleware.Tracing.TraceContextKeys
+const JustSaying.Messaging.Middleware.Tracing.TraceContextKeys.MessageId = "message_id" -> string
+const JustSaying.Messaging.Middleware.Tracing.TraceContextKeys.TraceParent = "traceparent" -> string
+const JustSaying.Messaging.Middleware.Tracing.TraceContextKeys.TraceState = "tracestate" -> string
+JustSaying.Messaging.Middleware.Tracing.TracingMiddleware
+JustSaying.Messaging.Middleware.Tracing.TracingMiddleware.TracingMiddleware(JustSaying.Messaging.Middleware.Tracing.TracingOptions options) -> void
+override JustSaying.Messaging.Middleware.Tracing.TracingMiddleware.RunInnerAsync(JustSaying.Messaging.Middleware.HandleMessageContext context, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task<bool>> func, System.Threading.CancellationToken stoppingToken) -> System.Threading.Tasks.Task<bool>
+JustSaying.Messaging.Middleware.Tracing.TracingMiddlewareBuilderExtensions
+static JustSaying.Messaging.Middleware.Tracing.TracingMiddlewareBuilderExtensions.UseTracingMiddleware(this JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder builder) -> JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder
+JustSaying.Messaging.Middleware.Tracing.TracingOptions
+JustSaying.Messaging.Middleware.Tracing.TracingOptions.TracingOptions() -> void
+JustSaying.Messaging.Middleware.Tracing.TracingOptions.UseParentSpan.get -> bool
+JustSaying.Messaging.Middleware.Tracing.TracingOptions.UseParentSpan.set -> void
+JustSaying.Messaging.Middleware.Tracing.TracingPublishMiddleware
+JustSaying.Messaging.Middleware.Tracing.TracingPublishMiddleware.TracingPublishMiddleware() -> void
+override JustSaying.Messaging.Middleware.Tracing.TracingPublishMiddleware.RunInnerAsync(JustSaying.Messaging.Middleware.PublishContext context, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task<bool>> func, System.Threading.CancellationToken stoppingToken) -> System.Threading.Tasks.Task<bool>
 const JustSaying.Messaging.Compression.ContentEncodings.GzipBase64 = "gzip,base64" -> string
 JustSaying.AwsTools.MessageHandling.PublishCompressionOptions
 JustSaying.AwsTools.MessageHandling.PublishCompressionOptions.CompressionEncoding.get -> string

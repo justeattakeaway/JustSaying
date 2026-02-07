@@ -2,7 +2,7 @@ using JustSaying.Messaging.Middleware;
 using JustSaying.Sample.Restaurant.KitchenConsole;
 using JustSaying.Sample.Restaurant.KitchenConsole.Handlers;
 using JustSaying.Sample.Restaurant.Models;
-using JustSaying.Sample.ServiceDefaults.Tracing;
+using JustSaying.Messaging.Middleware.Tracing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 

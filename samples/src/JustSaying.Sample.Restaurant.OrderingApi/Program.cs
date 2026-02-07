@@ -4,7 +4,7 @@ using JustSaying.Sample.Restaurant.Models;
 using JustSaying.Sample.Restaurant.OrderingApi;
 using JustSaying.Sample.Restaurant.OrderingApi.Handlers;
 using JustSaying.Sample.Restaurant.OrderingApi.Models;
-using JustSaying.Sample.ServiceDefaults.Tracing;
+using JustSaying.Messaging.Middleware.Tracing;
 using Scalar.AspNetCore;
 
 Console.Title = "OrderingApi";

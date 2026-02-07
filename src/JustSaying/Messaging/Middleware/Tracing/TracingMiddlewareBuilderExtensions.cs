@@ -1,12 +1,9 @@
-using JustSaying.Fluent;
-using JustSaying.Messaging.Middleware;
-
-namespace JustSaying.Sample.ServiceDefaults.Tracing;
+namespace JustSaying.Messaging.Middleware.Tracing;
 
 /// <summary>
-/// Extension methods for adding distributed tracing to JustSaying.
+/// Extension methods for adding distributed tracing to JustSaying message handling.
 /// </summary>
-public static class JustSayingTracingExtensions
+public static class TracingMiddlewareBuilderExtensions
 {
     /// <summary>
     /// Adds distributed tracing middleware to JustSaying message handling.

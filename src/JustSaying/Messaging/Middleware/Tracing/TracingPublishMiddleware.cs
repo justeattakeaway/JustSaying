@@ -1,9 +1,6 @@
 using System.Diagnostics;
-using JustSaying.Messaging;
-using JustSaying.Messaging.Middleware;
-using OpenTelemetry.Trace;
 
-namespace JustSaying.Sample.ServiceDefaults.Tracing;
+namespace JustSaying.Messaging.Middleware.Tracing;
 
 /// <summary>
 /// Publish middleware that creates an Activity span for message publishing
@@ -62,7 +59,12 @@ public class TracingPublishMiddleware : MiddlewareBase<PublishContext, bool>
             catch (Exception ex)
             {
                 activity.SetStatus(ActivityStatusCode.Error, ex.Message);
-                activity.AddException(ex);
+                activity.AddEvent(new ActivityEvent("exception", tags: new ActivityTagsCollection
+                {
+                    { "exception.type", ex.GetType().FullName },
+                    { "exception.message", ex.Message },
+                    { "exception.stacktrace", ex.ToString() }
+                }));
                 throw;
             }
         }
