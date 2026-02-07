@@ -13,7 +13,8 @@ Console.Title = appName;
 var builder = Host.CreateApplicationBuilder(args);
 builder.AddServiceDefaults();
 
-// Register tracing middleware as transient (required by JustSaying)
+// Configure tracing: UseParentSpan makes consumer spans children of producer spans
+builder.Services.AddSingleton(new TracingOptions { UseParentSpan = true });
 builder.Services.AddTransient<TracingMiddleware>();
 builder.Services.AddTransient<TracingPublishMiddleware>();
 
