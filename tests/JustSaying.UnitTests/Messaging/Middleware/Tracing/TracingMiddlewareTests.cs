@@ -5,6 +5,7 @@ using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Middleware.Tracing;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.Fakes;
+using Microsoft.Extensions.DependencyInjection;
 using MessageAttributeValue = JustSaying.Messaging.MessageAttributeValue;
 using SqsMessage = Amazon.SQS.Model.Message;
 
@@ -174,6 +175,39 @@ public class TracingMiddlewareTests : IDisposable
         var result = await middleware.RunAsync(context, _ => Task.FromResult(true), CancellationToken.None);
 
         result.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task ParentMode_WithNoTraceContext_CreatesActivityWithoutParent()
+    {
+        var middleware = new TracingMiddleware(new TracingOptions { UseParentSpan = true });
+        var context = ContextWithAttributes();
+
+        await middleware.RunAsync(context, _ => Task.FromResult(true), CancellationToken.None);
+
+        var activity = _activities.ShouldHaveSingleItem();
+        activity.ParentSpanId.ShouldBe(default(ActivitySpanId));
+        activity.Links.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task UseTracingMiddleware_ExtensionRegistersMiddleware()
+    {
+        var resolver = new InMemoryServiceResolver(c =>
+            c.AddSingleton(new TracingOptions())
+                .AddTransient<TracingMiddleware>());
+
+        var builder = new HandlerMiddlewareBuilder(resolver, resolver)
+            .UseTracingMiddleware()
+            .UseHandler(_ => new InspectableHandler<OrderAccepted>());
+
+        var middleware = builder.Build();
+        var context = ContextWithAttributes();
+
+        var result = await middleware.RunAsync(context, null, CancellationToken.None);
+
+        result.ShouldBeTrue();
+        _activities.ShouldHaveSingleItem();
     }
 
     private static HandleMessageContext ContextWithAttributes(
