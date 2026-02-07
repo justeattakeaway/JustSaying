@@ -34,14 +34,15 @@ public class TracingPublishMiddleware : MiddlewareBase<PublishContext, bool>
                 activity.SetTag("messaging.batch.message_count", context.Messages.Count);
             }
 
-            // Add W3C trace context to message attributes
-            var traceparent = $"00-{activity.TraceId}-{activity.SpanId}-{(activity.Recorded ? "01" : "00")}";
-            context.Metadata.AddMessageAttribute(TraceContextKeys.TraceParent, traceparent);
-
-            if (activity.TraceStateString != null)
-            {
-                context.Metadata.AddMessageAttribute(TraceContextKeys.TraceState, activity.TraceStateString);
-            }
+            // Propagate trace context via message attributes using the platform propagator
+            DistributedContextPropagator.Current.Inject(activity, context.Metadata,
+                static (carrier, key, value) =>
+                {
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        ((PublishMetadata)carrier).AddMessageAttribute(key, value);
+                    }
+                });
 
             // Add message ID for correlation (single message only)
             if (!isBatch && context.Message.Id != Guid.Empty)

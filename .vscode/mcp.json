@@ -1,19 +1,11 @@
 {
   "servers": {
-    "playwright": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "-y",
-        "@playwright/mcp@latest"
-      ]
-    },
     "aspire": {
       "command": "aspire",
       "args": [
         "mcp",
         "start"
       ]
-    },
+    }
   }
 }

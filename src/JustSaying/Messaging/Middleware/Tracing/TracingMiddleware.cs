@@ -80,13 +80,16 @@ public class TracingMiddleware(TracingOptions options) : MiddlewareBase<HandleMe
 
     private static ActivityContext ExtractParentContext(MessageAttributes attributes)
     {
-        var traceparent = attributes.Get(TraceContextKeys.TraceParent);
-        if (traceparent?.StringValue == null)
-        {
-            return default;
-        }
+        DistributedContextPropagator.Current.ExtractTraceIdAndState(attributes,
+            static (object carrier, string fieldName, out string fieldValue, out IEnumerable<string> fieldValues) =>
+            {
+                fieldValue = ((MessageAttributes)carrier).Get(fieldName)?.StringValue;
+                fieldValues = null;
+            },
+            out var traceparent,
+            out var tracestate);
 
-        if (ActivityContext.TryParse(traceparent.StringValue, null, out var parentContext))
+        if (traceparent != null && ActivityContext.TryParse(traceparent, tracestate, out var parentContext))
         {
             return parentContext;
         }
