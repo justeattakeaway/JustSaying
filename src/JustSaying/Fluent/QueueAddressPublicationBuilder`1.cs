@@ -3,6 +3,7 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Compression;
+using JustSaying.Messaging.Middleware;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
@@ -22,6 +23,8 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
     private string _subject;
     private bool _subjectSet;
     private bool _isRawMessage;
+
+    private Action<PublishMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="QueueAddressPublicationBuilder{T}"/> class.
@@ -66,8 +69,20 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
         return this;
     }
 
+    /// <summary>
+    /// Configures the publish middleware pipeline for this publication.
+    /// </summary>
+    /// <param name="middlewareConfiguration">A delegate to configure the publish middleware pipeline.</param>
+    /// <returns>The current <see cref="QueueAddressPublicationBuilder{T}"/>.</returns>
+    public QueueAddressPublicationBuilder<T> WithMiddlewareConfiguration(
+        Action<PublishMiddlewareBuilder> middlewareConfiguration)
+    {
+        MiddlewareConfiguration = middlewareConfiguration;
+        return this;
+    }
+
     /// <inheritdoc />
-    public void Configure(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
+    void IPublicationBuilder<T>.Configure(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory, IServiceResolver serviceResolver)
     {
         var logger = loggerFactory.CreateLogger<TopicAddressPublicationBuilder<T>>();
 
@@ -89,6 +104,13 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
         CompressionEncodingValidator.ValidateEncoding(bus.CompressionRegistry, compressionOptions);
 
         bus.AddMessagePublisher<T>(eventPublisher);
+
+        if (MiddlewareConfiguration != null)
+        {
+            var middlewareBuilder = new PublishMiddlewareBuilder(serviceResolver);
+            middlewareBuilder.Configure(MiddlewareConfiguration);
+            bus.AddPublishMiddleware<T>(middlewareBuilder.Build());
+        }
 
         logger.LogInformation(
             "Created SQS queue publisher on queue URL '{QueueName}' for message type '{MessageType}'",

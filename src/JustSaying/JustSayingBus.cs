@@ -28,6 +28,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
     private SubscriptionGroupSettingsBuilder _defaultSubscriptionGroupSettings;
     private readonly Dictionary<Type, IMessagePublisher> _publishersByType;
     private readonly Dictionary<Type, IMessageBatchPublisher> _batchPublishersByType;
+    private readonly Dictionary<Type, PublishMessageMiddleware> _publishMiddlewareByType;
 
     public IMessagingConfig Config { get; }
     public IPublishBatchConfiguration PublishBatchConfiguration { get; }
@@ -89,6 +90,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
 
         _publishersByType = [];
         _batchPublishersByType = [];
+        _publishMiddlewareByType = [];
         _subscriptionGroupSettings = new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(StringComparer.Ordinal);
         _defaultSubscriptionGroupSettings = new SubscriptionGroupSettingsBuilder();
     }
@@ -171,6 +173,11 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         }
     }
 
+    internal void AddPublishMiddleware<T>(PublishMessageMiddleware middleware) where T : Message
+    {
+        _publishMiddlewareByType[typeof(T)] = middleware;
+    }
+
     /// <inheritdoc/>
     public async Task StartAsync(CancellationToken stoppingToken)
     {
@@ -251,10 +258,11 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
     {
         EnsureStarted();
 
-        if (PublishMiddleware != null)
+        var middleware = GetPublishMiddlewareForMessage(message.GetType());
+        if (middleware != null)
         {
             var context = new Messaging.Middleware.PublishContext(message, metadata ?? new PublishMetadata());
-            await PublishMiddleware.RunAsync(context, async ct =>
+            await middleware.RunAsync(context, async ct =>
             {
                 var publisher = GetPublisherForMessage(message);
                 await PublishAsync(publisher, message, context.Metadata, 0, ct)
@@ -264,8 +272,8 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
             return;
         }
 
-        var publisher = GetPublisherForMessage(message);
-        await PublishAsync(publisher, message, metadata, 0, cancellationToken)
+        var pub = GetPublisherForMessage(message);
+        await PublishAsync(pub, message, metadata, 0, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -370,11 +378,14 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
     {
         EnsureStarted();
 
-        if (PublishMiddleware != null)
+        var messageList = messages.ToList();
+        var messageType = messageList.FirstOrDefault()?.GetType();
+        var middleware = messageType != null ? GetPublishMiddlewareForMessage(messageType) : null;
+
+        if (middleware != null)
         {
-            var messageList = messages.ToList();
             var context = new Messaging.Middleware.PublishContext(messageList, metadata ?? new PublishBatchMetadata());
-            await PublishMiddleware.RunAsync(context, async ct =>
+            await middleware.RunAsync(context, async ct =>
             {
                 var tasks = new List<Task>();
                 foreach (IGrouping<Type, Message> group in messageList.GroupBy(x => x.GetType()))
@@ -390,7 +401,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         }
 
         var batchTasks = new List<Task>();
-        foreach (IGrouping<Type, Message> group in messages.GroupBy(x => x.GetType()))
+        foreach (IGrouping<Type, Message> group in messageList.GroupBy(x => x.GetType()))
         {
             IMessageBatchPublisher publisher = GetBatchPublishersForMessageType(group.Key);
             batchTasks.Add(PublishAsync(publisher, [..group], metadata, 0, group.Key, cancellationToken));
@@ -415,6 +426,16 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         }
 
         return publisher;
+    }
+
+    private PublishMessageMiddleware GetPublishMiddlewareForMessage(Type messageType)
+    {
+        if (_publishMiddlewareByType.TryGetValue(messageType, out var perType))
+        {
+            return perType;
+        }
+
+        return PublishMiddleware;
     }
 
     private async Task PublishAsync(

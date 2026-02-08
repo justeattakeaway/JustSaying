@@ -217,7 +217,7 @@ public sealed class PublicationsBuilder
     {
         foreach (IPublicationBuilder<Message> builder in Publications)
         {
-            builder.Configure(bus, proxy, loggerFactory);
+            builder.Configure(bus, proxy, loggerFactory, serviceResolver);
         }
 
         if (_publishMiddlewareFactories.Count > 0)

@@ -19,5 +19,6 @@ internal interface IPublicationBuilder<out T>
     /// <param name="bus">The <see cref="JustSayingBus"/> to configure subscriptions for.</param>
     /// <param name="proxy">The <see cref="IAwsClientFactoryProxy"/> to use to create SQS/SNS clients with.</param>
     /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> logger factory to use.</param>
-    void Configure(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory);
+    /// <param name="serviceResolver">The <see cref="IServiceResolver"/> to use to resolve middleware services.</param>
+    void Configure(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory, IServiceResolver serviceResolver);
 }

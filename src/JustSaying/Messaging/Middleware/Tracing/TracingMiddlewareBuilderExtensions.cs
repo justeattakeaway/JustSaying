@@ -15,4 +15,15 @@ public static class TracingMiddlewareBuilderExtensions
     {
         return builder.Use<TracingMiddleware>();
     }
+
+    /// <summary>
+    /// Adds distributed tracing middleware to JustSaying message publishing.
+    /// This middleware creates Activity spans for each message published,
+    /// and propagates trace context via message attributes.
+    /// </summary>
+    public static PublishMiddlewareBuilder UseTracingPublishMiddleware(
+        this PublishMiddlewareBuilder builder)
+    {
+        return builder.Use<TracingPublishMiddleware>();
+    }
 }
