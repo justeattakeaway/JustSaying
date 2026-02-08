@@ -3,6 +3,7 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Middleware;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
@@ -29,6 +30,8 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
     private Action<SqsWriteConfiguration> ConfigureWrites { get; set; }
 
     private string QueueName { get; set; } = string.Empty;
+
+    private Action<PublishMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
     /// <summary>
     /// Configures the SQS write configuration.
@@ -85,11 +88,24 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
         return this;
     }
 
+    /// <summary>
+    /// Configures the publish middleware pipeline for this publication.
+    /// </summary>
+    /// <param name="middlewareConfiguration">A delegate to configure the publish middleware pipeline.</param>
+    /// <returns>The current <see cref="QueuePublicationBuilder{T}"/>.</returns>
+    public QueuePublicationBuilder<T> WithMiddlewareConfiguration(
+        Action<PublishMiddlewareBuilder> middlewareConfiguration)
+    {
+        MiddlewareConfiguration = middlewareConfiguration;
+        return this;
+    }
+
     /// <inheritdoc />
     void IPublicationBuilder<T>.Configure(
         JustSayingBus bus,
         IAwsClientFactoryProxy proxy,
-        ILoggerFactory loggerFactory)
+        ILoggerFactory loggerFactory,
+        IServiceResolver serviceResolver)
     {
         var logger = loggerFactory.CreateLogger<QueuePublicationBuilder<T>>();
 
@@ -145,6 +161,13 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
         bus.AddStartupTask(StartupTask);
 
         bus.AddMessagePublisher<T>(eventPublisher);
+
+        if (MiddlewareConfiguration != null)
+        {
+            var middlewareBuilder = new PublishMiddlewareBuilder(serviceResolver);
+            middlewareBuilder.Configure(MiddlewareConfiguration);
+            bus.AddPublishMiddleware<T>(middlewareBuilder.Build());
+        }
 
         logger.LogInformation(
             "Created SQS publisher for message type '{MessageType}' on queue '{QueueName}'.",

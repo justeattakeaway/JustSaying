@@ -1,6 +1,7 @@
 using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Messaging.Middleware;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
@@ -35,6 +36,8 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
     /// Gets or sets the topic name.
     /// </summary>
     private string TopicName { get; set; } = string.Empty;
+
+    private Action<PublishMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
     /// <summary>
     /// Function that will produce a topic name dynamically from a Message at publish time.
@@ -156,11 +159,24 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
         return this;
     }
 
+    /// <summary>
+    /// Configures the publish middleware pipeline for this publication.
+    /// </summary>
+    /// <param name="middlewareConfiguration">A delegate to configure the publish middleware pipeline.</param>
+    /// <returns>The current <see cref="TopicPublicationBuilder{T}"/>.</returns>
+    public TopicPublicationBuilder<T> WithMiddlewareConfiguration(
+        Action<PublishMiddlewareBuilder> middlewareConfiguration)
+    {
+        MiddlewareConfiguration = middlewareConfiguration;
+        return this;
+    }
+
     /// <inheritdoc />
     void IPublicationBuilder<T>.Configure(
         JustSayingBus bus,
         IAwsClientFactoryProxy proxy,
-        ILoggerFactory loggerFactory)
+        ILoggerFactory loggerFactory,
+        IServiceResolver serviceResolver)
     {
         var logger = loggerFactory.CreateLogger<TopicPublicationBuilder<T>>();
 
@@ -191,5 +207,12 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
         bus.AddStartupTask(config.StartupTask);
         bus.AddMessagePublisher<T>(config.Publisher);
         bus.AddMessageBatchPublisher<T>(config.BatchPublisher);
+
+        if (MiddlewareConfiguration != null)
+        {
+            var middlewareBuilder = new PublishMiddlewareBuilder(serviceResolver);
+            middlewareBuilder.Configure(MiddlewareConfiguration);
+            bus.AddPublishMiddleware<T>(middlewareBuilder.Build());
+        }
     }
 }

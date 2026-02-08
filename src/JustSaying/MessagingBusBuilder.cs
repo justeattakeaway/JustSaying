@@ -224,7 +224,7 @@ public sealed class MessagingBusBuilder
         JustSayingBus bus = CreateBus(config, loggerFactory);
         IAwsClientFactoryProxy proxy = CreateFactoryProxy();
 
-        PublicationsBuilder?.Configure(bus, proxy, loggerFactory);
+        PublicationsBuilder?.Configure(bus, proxy, loggerFactory, ServiceResolver);
 
         return bus;
     }
@@ -247,7 +247,7 @@ public sealed class MessagingBusBuilder
         JustSayingBus bus = CreateBus(config, loggerFactory, publishBatchConfiguration);
         IAwsClientFactoryProxy proxy = CreateFactoryProxy();
 
-        PublicationsBuilder?.Configure(bus, proxy, loggerFactory);
+        PublicationsBuilder?.Configure(bus, proxy, loggerFactory, ServiceResolver);
 
         return bus;
     }
