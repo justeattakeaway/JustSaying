@@ -33,21 +33,15 @@ public class TracingMiddlewareTests : IDisposable
     /// <summary>
     /// Finds the single activity created during a test action. Because ActivityListener is
     /// process-global, parallel test classes may add activities to our bag. We snapshot before
-    /// the action and find the new activity afterwards.
+    /// the action and filter by operation name afterwards to isolate our test's activity.
     /// </summary>
-    private Activity CaptureActivity(Func<Task> action)
-    {
-        var before = _activities.ToHashSet();
-        action().GetAwaiter().GetResult();
-        var newActivities = _activities.Where(a => !before.Contains(a)).ToList();
-        return newActivities.ShouldHaveSingleItem();
-    }
-
     private async Task<Activity> CaptureActivityAsync(Func<Task> action)
     {
         var before = _activities.ToHashSet();
         await action();
-        var newActivities = _activities.Where(a => !before.Contains(a)).ToList();
+        var newActivities = _activities
+            .Where(a => !before.Contains(a) && a.OperationName == "process OrderAccepted")
+            .ToList();
         return newActivities.ShouldHaveSingleItem();
     }
 
@@ -170,7 +164,6 @@ public class TracingMiddlewareTests : IDisposable
         var context = ContextWithAttributes();
 
         var exception = new InvalidOperationException("handler failed");
-        Activity activity = null;
         var before = _activities.ToHashSet();
 
         var thrown = await Should.ThrowAsync<InvalidOperationException>(
@@ -178,7 +171,9 @@ public class TracingMiddlewareTests : IDisposable
 
         thrown.ShouldBe(exception);
 
-        activity = _activities.Where(a => !before.Contains(a)).ToList().ShouldHaveSingleItem();
+        var activity = _activities
+            .Where(a => !before.Contains(a) && a.OperationName == "process OrderAccepted")
+            .ToList().ShouldHaveSingleItem();
         activity.Status.ShouldBe(ActivityStatusCode.Error);
 
         var exceptionEvent = activity.Events.ShouldHaveSingleItem();
