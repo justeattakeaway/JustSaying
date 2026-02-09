@@ -221,21 +221,17 @@ public sealed class PublicationsBuilder
             builder.Configure(bus, proxy, loggerFactory, serviceResolver);
         }
 
-        if (_publishMiddlewareFactories.Count > 0)
+        var allFactories = new List<Func<IServiceResolver, MiddlewareBase<PublishContext, bool>>>
         {
-            var middlewares = _publishMiddlewareFactories
-                .Select(f => f(serviceResolver))
-                .Reverse()
-                .ToArray();
+            resolver => resolver.ResolveService<TracingPublishMiddleware>()
+        };
+        allFactories.AddRange(_publishMiddlewareFactories);
 
-            bus.PublishMiddleware = MiddlewareBuilder.BuildAsync(middlewares);
-        }
-        else
-        {
-            // Default: include tracing middleware for publish operations.
-            // This is a no-op when no ActivityListener is attached.
-            bus.PublishMiddleware = MiddlewareBuilder.BuildAsync(
-                serviceResolver.ResolveService<TracingPublishMiddleware>());
-        }
+        var middlewares = allFactories
+            .Select(f => f(serviceResolver))
+            .Reverse()
+            .ToArray();
+
+        bus.PublishMiddleware = MiddlewareBuilder.BuildAsync(middlewares);
     }
 }
