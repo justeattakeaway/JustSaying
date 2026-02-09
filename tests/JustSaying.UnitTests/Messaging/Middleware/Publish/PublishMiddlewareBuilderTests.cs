@@ -1,5 +1,6 @@
 using JustSaying.Messaging.Middleware;
 using JustSaying.UnitTests.Messaging.Channels.Fakes;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.UnitTests.Messaging.Middleware.Publish;
 
@@ -100,6 +101,40 @@ public class PublishMiddlewareBuilderTests
             CancellationToken.None);
 
         callOrder.ShouldBe(["first", "second", "third", "inner"]);
+    }
+
+    [Fact]
+    public async Task UseGeneric_ResolvesFromServiceResolver()
+    {
+        var resolver = new InMemoryServiceResolver(sc =>
+            sc.AddTransient<TrackingPublishMiddleware>(_ =>
+                new TrackingPublishMiddleware(() => { })));
+
+        var middleware = new PublishMiddlewareBuilder(resolver)
+            .Use<TrackingPublishMiddleware>()
+            .Build();
+
+        var result = await middleware.RunAsync(
+            CreateContext(),
+            _ => Task.FromResult(true),
+            CancellationToken.None);
+
+        result.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void UseGeneric_ThrowsWhenMiddlewareAlreadyChained()
+    {
+        var existingMiddleware = new TrackingPublishMiddleware(() => { });
+        // Simulate a middleware that is already part of a chain
+        existingMiddleware.WithNext(new TrackingPublishMiddleware(() => { }));
+
+        var resolver = new InMemoryServiceResolver(sc =>
+            sc.AddSingleton(existingMiddleware));
+
+        var builder = new PublishMiddlewareBuilder(resolver);
+
+        Should.Throw<InvalidOperationException>(() => builder.Use<TrackingPublishMiddleware>());
     }
 
     private static PublishContext CreateContext()

@@ -3,6 +3,8 @@ using JustSaying.Messaging;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Middleware.Tracing;
 using JustSaying.TestingFramework;
+using JustSaying.UnitTests.Messaging.Channels.Fakes;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.UnitTests.Messaging.Middleware.Tracing;
 
@@ -132,5 +134,22 @@ public class TracingPublishMiddlewareTests : IDisposable
         var result = await middleware.RunAsync(context, _ => Task.FromResult(true), CancellationToken.None);
 
         result.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task UseTracingPublishMiddleware_ExtensionRegistersMiddleware()
+    {
+        var resolver = new InMemoryServiceResolver(sc =>
+            sc.AddTransient<TracingPublishMiddleware>());
+
+        var middleware = new PublishMiddlewareBuilder(resolver)
+            .UseTracingPublishMiddleware()
+            .Build();
+
+        var context = new PublishContext(new OrderAccepted(), new PublishMetadata());
+        var result = await middleware.RunAsync(context, _ => Task.FromResult(true), CancellationToken.None);
+
+        result.ShouldBeTrue();
+        _activities.ShouldHaveSingleItem();
     }
 }
