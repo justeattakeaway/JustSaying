@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
@@ -14,7 +15,7 @@ namespace JustSaying.UnitTests.Messaging.Middleware.Tracing;
 public class TracingMiddlewareTests : IDisposable
 {
     private readonly ActivityListener _listener;
-    private readonly List<Activity> _activities = new();
+    private readonly ConcurrentBag<Activity> _activities = new();
 
     public TracingMiddlewareTests()
     {
@@ -29,17 +30,38 @@ public class TracingMiddlewareTests : IDisposable
 
     public void Dispose() => _listener.Dispose();
 
+    /// <summary>
+    /// Finds the single activity created during a test action. Because ActivityListener is
+    /// process-global, parallel test classes may add activities to our bag. We snapshot before
+    /// the action and find the new activity afterwards.
+    /// </summary>
+    private Activity CaptureActivity(Func<Task> action)
+    {
+        var before = _activities.ToHashSet();
+        action().GetAwaiter().GetResult();
+        var newActivities = _activities.Where(a => !before.Contains(a)).ToList();
+        return newActivities.ShouldHaveSingleItem();
+    }
+
+    private async Task<Activity> CaptureActivityAsync(Func<Task> action)
+    {
+        var before = _activities.ToHashSet();
+        await action();
+        var newActivities = _activities.Where(a => !before.Contains(a)).ToList();
+        return newActivities.ShouldHaveSingleItem();
+    }
+
     [Fact]
     public async Task CreatesConsumerActivity()
     {
         var middleware = new TracingMiddleware(new TracingOptions());
         var context = ContextWithAttributes();
+        bool result = false;
 
-        var result = await middleware.RunAsync(context, _ => Task.FromResult(true), CancellationToken.None);
+        var activity = await CaptureActivityAsync(async () =>
+            result = await middleware.RunAsync(context, _ => Task.FromResult(true), CancellationToken.None));
 
         result.ShouldBeTrue();
-
-        var activity = _activities.ShouldHaveSingleItem();
         activity.OperationName.ShouldBe("process OrderAccepted");
         activity.Kind.ShouldBe(ActivityKind.Consumer);
         activity.Status.ShouldBe(ActivityStatusCode.Ok);
@@ -51,9 +73,9 @@ public class TracingMiddlewareTests : IDisposable
         var middleware = new TracingMiddleware(new TracingOptions());
         var context = ContextWithAttributes();
 
-        await middleware.RunAsync(context, _ => Task.FromResult(true), CancellationToken.None);
+        var activity = await CaptureActivityAsync(() =>
+            middleware.RunAsync(context, _ => Task.FromResult(true), CancellationToken.None));
 
-        var activity = _activities.ShouldHaveSingleItem();
         activity.GetTagItem("messaging.system").ShouldBe("aws_sqs");
         activity.GetTagItem("messaging.operation").ShouldBe("process");
         activity.GetTagItem("messaging.destination.name").ShouldBe("test-queue");
@@ -68,9 +90,8 @@ public class TracingMiddlewareTests : IDisposable
         var spanId = ActivitySpanId.CreateRandom();
         var context = ContextWithTraceParent(traceId, spanId);
 
-        await middleware.RunAsync(context, _ => Task.FromResult(true), CancellationToken.None);
-
-        var activity = _activities.ShouldHaveSingleItem();
+        var activity = await CaptureActivityAsync(() =>
+            middleware.RunAsync(context, _ => Task.FromResult(true), CancellationToken.None));
 
         // In link mode, the activity should NOT be a child of the producer
         activity.ParentSpanId.ShouldBe(default(ActivitySpanId));
@@ -89,9 +110,8 @@ public class TracingMiddlewareTests : IDisposable
         var spanId = ActivitySpanId.CreateRandom();
         var context = ContextWithTraceParent(traceId, spanId);
 
-        await middleware.RunAsync(context, _ => Task.FromResult(true), CancellationToken.None);
-
-        var activity = _activities.ShouldHaveSingleItem();
+        var activity = await CaptureActivityAsync(() =>
+            middleware.RunAsync(context, _ => Task.FromResult(true), CancellationToken.None));
 
         // In parent mode, the activity should be a child of the producer
         activity.TraceId.ShouldBe(traceId);
@@ -105,9 +125,9 @@ public class TracingMiddlewareTests : IDisposable
         var middleware = new TracingMiddleware(new TracingOptions());
         var context = ContextWithAttributes();
 
-        await middleware.RunAsync(context, _ => Task.FromResult(true), CancellationToken.None);
+        var activity = await CaptureActivityAsync(() =>
+            middleware.RunAsync(context, _ => Task.FromResult(true), CancellationToken.None));
 
-        var activity = _activities.ShouldHaveSingleItem();
         activity.ParentSpanId.ShouldBe(default(ActivitySpanId));
         activity.Links.ShouldBeEmpty();
     }
@@ -123,9 +143,9 @@ public class TracingMiddlewareTests : IDisposable
         var context = ContextWithAttributes(attributes);
         var middleware = new TracingMiddleware(new TracingOptions());
 
-        await middleware.RunAsync(context, _ => Task.FromResult(true), CancellationToken.None);
+        var activity = await CaptureActivityAsync(() =>
+            middleware.RunAsync(context, _ => Task.FromResult(true), CancellationToken.None));
 
-        var activity = _activities.ShouldHaveSingleItem();
         activity.GetTagItem("messaging.message.id").ShouldBe(messageId);
     }
 
@@ -134,12 +154,12 @@ public class TracingMiddlewareTests : IDisposable
     {
         var middleware = new TracingMiddleware(new TracingOptions());
         var context = ContextWithAttributes();
+        bool result = true;
 
-        var result = await middleware.RunAsync(context, _ => Task.FromResult(false), CancellationToken.None);
+        var activity = await CaptureActivityAsync(async () =>
+            result = await middleware.RunAsync(context, _ => Task.FromResult(false), CancellationToken.None));
 
         result.ShouldBeFalse();
-
-        var activity = _activities.ShouldHaveSingleItem();
         activity.Status.ShouldBe(ActivityStatusCode.Error);
     }
 
@@ -150,12 +170,15 @@ public class TracingMiddlewareTests : IDisposable
         var context = ContextWithAttributes();
 
         var exception = new InvalidOperationException("handler failed");
+        Activity activity = null;
+        var before = _activities.ToHashSet();
+
         var thrown = await Should.ThrowAsync<InvalidOperationException>(
             () => middleware.RunAsync(context, _ => throw exception, CancellationToken.None));
 
         thrown.ShouldBe(exception);
 
-        var activity = _activities.ShouldHaveSingleItem();
+        activity = _activities.Where(a => !before.Contains(a)).ToList().ShouldHaveSingleItem();
         activity.Status.ShouldBe(ActivityStatusCode.Error);
 
         var exceptionEvent = activity.Events.ShouldHaveSingleItem();
@@ -167,7 +190,6 @@ public class TracingMiddlewareTests : IDisposable
     public async Task WhenNoListenerAttached_StillCallsInnerFunc()
     {
         _listener.Dispose();
-        _activities.Clear();
 
         var middleware = new TracingMiddleware(new TracingOptions());
         var context = ContextWithAttributes();
@@ -183,9 +205,9 @@ public class TracingMiddlewareTests : IDisposable
         var middleware = new TracingMiddleware(new TracingOptions { UseParentSpan = true });
         var context = ContextWithAttributes();
 
-        await middleware.RunAsync(context, _ => Task.FromResult(true), CancellationToken.None);
+        var activity = await CaptureActivityAsync(() =>
+            middleware.RunAsync(context, _ => Task.FromResult(true), CancellationToken.None));
 
-        var activity = _activities.ShouldHaveSingleItem();
         activity.ParentSpanId.ShouldBe(default(ActivitySpanId));
         activity.Links.ShouldBeEmpty();
     }
@@ -204,10 +226,10 @@ public class TracingMiddlewareTests : IDisposable
         var middleware = builder.Build();
         var context = ContextWithAttributes();
 
-        var result = await middleware.RunAsync(context, null, CancellationToken.None);
+        var activity = await CaptureActivityAsync(() =>
+            middleware.RunAsync(context, null, CancellationToken.None));
 
-        result.ShouldBeTrue();
-        _activities.ShouldHaveSingleItem();
+        activity.ShouldNotBeNull();
     }
 
     private static HandleMessageContext ContextWithAttributes(

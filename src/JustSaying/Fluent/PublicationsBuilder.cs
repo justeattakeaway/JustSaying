@@ -1,5 +1,6 @@
 using JustSaying.AwsTools;
 using JustSaying.Messaging.Middleware;
+using JustSaying.Messaging.Middleware.Tracing;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
@@ -228,6 +229,13 @@ public sealed class PublicationsBuilder
                 .ToArray();
 
             bus.PublishMiddleware = MiddlewareBuilder.BuildAsync(middlewares);
+        }
+        else
+        {
+            // Default: include tracing middleware for publish operations.
+            // This is a no-op when no ActivityListener is attached.
+            bus.PublishMiddleware = MiddlewareBuilder.BuildAsync(
+                serviceResolver.ResolveService<TracingPublishMiddleware>());
         }
     }
 }

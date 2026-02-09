@@ -6,6 +6,7 @@
         "MessageType": "SimpleMessage",
         "QueueName": "beforequeue-simplemessage-afterqueue",
         "MiddlewareChain": [
+          "TracingMiddleware",
           "MessageContextAccessorMiddleware",
           "LoggingMiddleware",
           "StopwatchMiddleware",

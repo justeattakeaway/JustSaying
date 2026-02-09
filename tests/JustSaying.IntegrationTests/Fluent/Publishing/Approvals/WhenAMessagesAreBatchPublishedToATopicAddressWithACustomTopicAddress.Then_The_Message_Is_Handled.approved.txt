@@ -6,6 +6,7 @@
         "MessageType": "SimpleMessage",
         "QueueName": "integrationTestQueueName",
         "MiddlewareChain": [
+          "TracingMiddleware",
           "MessageContextAccessorMiddleware",
           "LoggingMiddleware",
           "StopwatchMiddleware",
