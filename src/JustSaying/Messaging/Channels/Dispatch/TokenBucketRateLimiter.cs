@@ -10,6 +10,7 @@ internal sealed class TokenBucketRateLimiter : IDisposable
     private readonly Timer _replenishTimer;
     private readonly int _maxTokens;
     private int _disposed;
+    private int _replenishing;
 
     /// <summary>
     /// Creates a new <see cref="TokenBucketRateLimiter"/>.
@@ -39,6 +40,7 @@ internal sealed class TokenBucketRateLimiter : IDisposable
         {
             throw new ObjectDisposedException(nameof(TokenBucketRateLimiter));
         }
+
         return _semaphore.WaitAsync(cancellationToken);
     }
 
@@ -49,11 +51,28 @@ internal sealed class TokenBucketRateLimiter : IDisposable
             return;
         }
 
-        int tokensToRelease = _maxTokens - _semaphore.CurrentCount;
-
-        if (tokensToRelease > 0)
+        // Prevent overlapping timer callbacks from double-releasing tokens.
+        if (Interlocked.CompareExchange(ref _replenishing, 1, 0) != 0)
         {
-            _semaphore.Release(tokensToRelease);
+            return;
+        }
+
+        try
+        {
+            int tokensToRelease = _maxTokens - _semaphore.CurrentCount;
+
+            if (tokensToRelease > 0)
+            {
+                _semaphore.Release(tokensToRelease);
+            }
+        }
+        catch (ObjectDisposedException)
+        {
+            // Dispose() was called concurrently — safe to ignore.
+        }
+        finally
+        {
+            Volatile.Write(ref _replenishing, 0);
         }
     }
 
