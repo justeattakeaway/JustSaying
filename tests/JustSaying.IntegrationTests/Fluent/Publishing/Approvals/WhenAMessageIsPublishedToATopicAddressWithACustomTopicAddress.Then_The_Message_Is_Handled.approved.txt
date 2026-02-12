@@ -22,6 +22,7 @@
       {
         "Name": "integrationTestQueueName",
         "ConcurrencyLimit": 10,
+        "ConcurrencyLimitType": "InFlightMessages",
         "Multiplexer": {
           "ChannelCapacity": 100,
           "ReaderCount": 2
