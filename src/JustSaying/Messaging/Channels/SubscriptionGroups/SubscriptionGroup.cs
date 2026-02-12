@@ -21,10 +21,11 @@ internal class SubscriptionGroup(
     ICollection<IMessageReceiveBuffer> receiveBuffers,
     IMultiplexer multiplexer,
     ICollection<IMultiplexerSubscriber> subscribers,
+    TokenBucketRateLimiter rateLimiter,
     ILogger<SubscriptionGroup> logger) : ISubscriptionGroup
 {
     /// <inheritdoc />
-    public Task RunAsync(CancellationToken stoppingToken)
+    public async Task RunAsync(CancellationToken stoppingToken)
     {
         var receiveBufferQueueNames = string.Join(",", receiveBuffers.Select(rb => rb.QueueName));
 
@@ -35,14 +36,21 @@ internal class SubscriptionGroup(
             receiveBuffers.Count,
             subscribers.Count);
 
-        var completionTasks = new List<Task>
+        try
         {
-            multiplexer.RunAsync(stoppingToken)
-        };
-        completionTasks.AddRange(subscribers.Select(subscriber => subscriber.RunAsync(stoppingToken)));
-        completionTasks.AddRange(receiveBuffers.Select(buffer => buffer.RunAsync(stoppingToken)));
+            var completionTasks = new List<Task>
+            {
+                multiplexer.RunAsync(stoppingToken)
+            };
+            completionTasks.AddRange(subscribers.Select(subscriber => subscriber.RunAsync(stoppingToken)));
+            completionTasks.AddRange(receiveBuffers.Select(buffer => buffer.RunAsync(stoppingToken)));
 
-        return Task.WhenAll(completionTasks);
+            await Task.WhenAll(completionTasks).ConfigureAwait(false);
+        }
+        finally
+        {
+            rateLimiter?.Dispose();
+        }
     }
 
     /// <inheritdoc />
@@ -52,6 +60,7 @@ internal class SubscriptionGroup(
         {
             settings.Name,
             ConcurrencyLimit = subscribers.Count,
+            ConcurrencyLimitType = settings.ConcurrencyLimitType.ToString(),
             Multiplexer = multiplexer.Interrogate(),
             ReceiveBuffers = receiveBuffers.Select(rb => rb.Interrogate()).ToArray(),
         });

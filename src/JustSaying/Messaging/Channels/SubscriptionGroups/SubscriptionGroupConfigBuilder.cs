@@ -24,6 +24,7 @@ public class SubscriptionGroupConfigBuilder(string groupName)
     private int? _concurrencyLimit;
     private int? _multiplexerCapacity;
     private int? _prefetch;
+    private ConcurrencyLimitType? _concurrencyLimitType;
 
     /// <summary>
     /// Adds an <see cref="ISqsQueue"/> to be consumed by this <see cref="ISubscriptionGroup"/>.
@@ -57,6 +58,21 @@ public class SubscriptionGroupConfigBuilder(string groupName)
     public SubscriptionGroupConfigBuilder WithConcurrencyLimit(int concurrencyLimit)
     {
         _concurrencyLimit = concurrencyLimit;
+        _concurrencyLimitType = ConcurrencyLimitType.InFlightMessages;
+        return this;
+    }
+
+    /// <summary>
+    /// Specifies the maximum number of messages that may be processed by this <see cref="ISubscriptionGroup"/>,
+    /// with the specified <see cref="ConcurrencyLimitType"/> controlling how the limit is applied.
+    /// </summary>
+    /// <param name="concurrencyLimit">The concurrency limit value.</param>
+    /// <param name="limitType">How the limit is applied. See <see cref="ConcurrencyLimitType"/> for details.</param>
+    /// <returns>This builder object.</returns>
+    public SubscriptionGroupConfigBuilder WithConcurrencyLimit(int concurrencyLimit, ConcurrencyLimitType limitType)
+    {
+        _concurrencyLimit = concurrencyLimit;
+        _concurrencyLimitType = limitType;
         return this;
     }
 
@@ -133,6 +149,7 @@ public class SubscriptionGroupConfigBuilder(string groupName)
         var settings = new SubscriptionGroupSettings(
             _groupName,
             _concurrencyLimit ?? defaults.ConcurrencyLimit,
+            _concurrencyLimitType ?? defaults.ConcurrencyLimitType,
             _bufferSize ?? defaults.BufferSize,
             _receiveBufferReadTimeout ?? defaults.ReceiveBufferReadTimeout,
             _receiveMessagesWaitTime ?? defaults.ReceiveMessagesWaitTime,

@@ -36,7 +36,15 @@ JustSaying.Messaging.Channels.SubscriptionGroups.SqsSource.MessageConverter.set 
 JustSaying.Messaging.Channels.SubscriptionGroups.SqsSource.SqsQueue.get -> JustSaying.AwsTools.MessageHandling.ISqsQueue
 JustSaying.Messaging.Channels.SubscriptionGroups.SqsSource.SqsQueue.set -> void
 JustSaying.Messaging.Channels.SubscriptionGroups.SqsSource.SqsSource() -> void
+JustSaying.Messaging.Channels.SubscriptionGroups.ConcurrencyLimitType
+JustSaying.Messaging.Channels.SubscriptionGroups.ConcurrencyLimitType.InFlightMessages = 0 -> JustSaying.Messaging.Channels.SubscriptionGroups.ConcurrencyLimitType
+JustSaying.Messaging.Channels.SubscriptionGroups.ConcurrencyLimitType.MessagesPerSecond = 1 -> JustSaying.Messaging.Channels.SubscriptionGroups.ConcurrencyLimitType
+JustSaying.Messaging.Channels.SubscriptionGroups.ISubscriptionGroupSettings.ConcurrencyLimitType.get -> JustSaying.Messaging.Channels.SubscriptionGroups.ConcurrencyLimitType
+JustSaying.Messaging.Channels.SubscriptionGroups.SubscriptionGroupConfigBuilder.WithConcurrencyLimit(int concurrencyLimit, JustSaying.Messaging.Channels.SubscriptionGroups.ConcurrencyLimitType limitType) -> JustSaying.Messaging.Channels.SubscriptionGroups.SubscriptionGroupConfigBuilder
+JustSaying.Messaging.Channels.SubscriptionGroups.SubscriptionGroupSettings.ConcurrencyLimitType.get -> JustSaying.Messaging.Channels.SubscriptionGroups.ConcurrencyLimitType
 JustSaying.Messaging.Channels.SubscriptionGroups.SubscriptionGroupSettings.QueueSources.get -> System.Collections.Generic.IReadOnlyCollection<JustSaying.Messaging.Channels.SubscriptionGroups.SqsSource>
+JustSaying.Messaging.Channels.SubscriptionGroups.SubscriptionGroupSettingsBuilder.ConcurrencyLimitType.get -> JustSaying.Messaging.Channels.SubscriptionGroups.ConcurrencyLimitType
+JustSaying.Messaging.Channels.SubscriptionGroups.SubscriptionGroupSettingsBuilder.WithDefaultConcurrencyLimit(int concurrencyLimit, JustSaying.Messaging.Channels.SubscriptionGroups.ConcurrencyLimitType limitType) -> JustSaying.Messaging.Channels.SubscriptionGroups.SubscriptionGroupSettingsBuilder
 JustSaying.Messaging.Compression.ContentEncodings
 JustSaying.Messaging.Compression.GzipMessageBodyCompression
 JustSaying.Messaging.Compression.GzipMessageBodyCompression.Compress(string messageBody) -> string

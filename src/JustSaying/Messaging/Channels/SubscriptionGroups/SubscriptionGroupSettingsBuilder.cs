@@ -20,6 +20,7 @@ public class SubscriptionGroupSettingsBuilder : ISubscriptionGroupSettings
         MultiplexerCapacity = 100;
         Prefetch = 10;
         ConcurrencyLimit = Environment.ProcessorCount * MessageDefaults.ParallelHandlerExecutionPerCore;
+        ConcurrencyLimitType = ConcurrencyLimitType.InFlightMessages;
     }
 
     /// <summary>
@@ -52,6 +53,11 @@ public class SubscriptionGroupSettingsBuilder : ISubscriptionGroupSettings
     /// Gets the default number of messages that may be buffered across all of the queues in this <see cref="ISubscriptionGroup"/>.
     /// </summary>
     public int MultiplexerCapacity { get; private set; }
+
+    /// <summary>
+    /// Gets the default type of concurrency limiting applied to message processing in a <see cref="ISubscriptionGroup"/>.
+    /// </summary>
+    public ConcurrencyLimitType ConcurrencyLimitType { get; private set; }
 
     /// <summary>
     /// Gets the default <see cref="ReceiveMiddleware"/> to be used by the receive pipeline.
@@ -118,6 +124,21 @@ public class SubscriptionGroupSettingsBuilder : ISubscriptionGroupSettings
     public SubscriptionGroupSettingsBuilder WithDefaultConcurrencyLimit(int concurrencyLimit)
     {
         ConcurrencyLimit = concurrencyLimit;
+        ConcurrencyLimitType = ConcurrencyLimitType.InFlightMessages;
+        return this;
+    }
+
+    /// <summary>
+    /// Specifies the default maximum number of messages that may be processed at once by a <see cref="ISubscriptionGroup"/>,
+    /// with the specified <see cref="ConcurrencyLimitType"/> controlling how the limit is applied.
+    /// </summary>
+    /// <param name="concurrencyLimit">The concurrency limit value.</param>
+    /// <param name="limitType">How the limit is applied. See <see cref="ConcurrencyLimitType"/> for details.</param>
+    /// <returns>This builder object.</returns>
+    public SubscriptionGroupSettingsBuilder WithDefaultConcurrencyLimit(int concurrencyLimit, ConcurrencyLimitType limitType)
+    {
+        ConcurrencyLimit = concurrencyLimit;
+        ConcurrencyLimitType = limitType;
         return this;
     }
 
