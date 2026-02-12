@@ -8,7 +8,7 @@ internal class MultiplexerSubscriber(
     IMessageDispatcher dispatcher,
     string subscriberId,
     ILogger<MultiplexerSubscriber> logger,
-    TokenBucketRateLimiter rateLimiter = null) : IMultiplexerSubscriber
+    IRateLimiter rateLimiter = null) : IMultiplexerSubscriber
 {
     private IAsyncEnumerable<IQueueMessageContext> _messageSource;
 

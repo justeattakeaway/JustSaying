@@ -84,7 +84,7 @@ internal sealed class SubscriptionGroupFactory : ISubscriptionGroupFactory
         var multiplexer = CreateMultiplexer(settings.MultiplexerCapacity);
         ICollection<IMessageReceiveBuffer> receiveBuffers = CreateBuffers(receiveMiddleware, settings);
 
-        TokenBucketRateLimiter rateLimiter = settings.ConcurrencyLimitType == ConcurrencyLimitType.MessagesPerSecond
+        IRateLimiter rateLimiter = settings.ConcurrencyLimitType == ConcurrencyLimitType.MessagesPerSecond
             ? new TokenBucketRateLimiter(settings.ConcurrencyLimit)
             : null;
 
@@ -143,7 +143,7 @@ internal sealed class SubscriptionGroupFactory : ISubscriptionGroupFactory
             _loggerFactory.CreateLogger<MergingMultiplexer>());
     }
 
-    private List<IMultiplexerSubscriber> CreateSubscribers(SubscriptionGroupSettings settings, TokenBucketRateLimiter rateLimiter)
+    private List<IMultiplexerSubscriber> CreateSubscribers(SubscriptionGroupSettings settings, IRateLimiter rateLimiter)
     {
         var logger = _loggerFactory.CreateLogger<MultiplexerSubscriber>();
 

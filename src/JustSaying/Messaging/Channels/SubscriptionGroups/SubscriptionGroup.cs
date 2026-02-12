@@ -21,7 +21,7 @@ internal class SubscriptionGroup(
     ICollection<IMessageReceiveBuffer> receiveBuffers,
     IMultiplexer multiplexer,
     ICollection<IMultiplexerSubscriber> subscribers,
-    TokenBucketRateLimiter rateLimiter,
+    IRateLimiter rateLimiter,
     ILogger<SubscriptionGroup> logger) : ISubscriptionGroup
 {
     /// <inheritdoc />

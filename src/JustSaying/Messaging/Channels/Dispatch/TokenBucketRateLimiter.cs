@@ -4,7 +4,7 @@ namespace JustSaying.Messaging.Channels.Dispatch;
 /// A simple token bucket rate limiter that allows a maximum number of operations per second.
 /// Tokens are replenished every second back to the maximum.
 /// </summary>
-internal sealed class TokenBucketRateLimiter : IDisposable
+internal sealed class TokenBucketRateLimiter : IRateLimiter
 {
     private readonly SemaphoreSlim _semaphore;
     private readonly Timer _replenishTimer;
