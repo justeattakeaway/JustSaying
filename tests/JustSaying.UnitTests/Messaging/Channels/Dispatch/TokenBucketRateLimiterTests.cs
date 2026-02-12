@@ -98,4 +98,39 @@ public class TokenBucketRateLimiterTests
         limiter.Dispose();
         limiter.Dispose(); // Should not throw
     }
+
+    [Fact]
+    public async Task Replenish_DoesNotThrowWhenDisposedDuringReplenishment()
+    {
+        // Consume a token so replenishment has work to do, then dispose
+        // before the timer fires — exercises the disposed check in Replenish.
+        var limiter = new TokenBucketRateLimiter(1);
+        await limiter.WaitAsync(CancellationToken.None);
+        limiter.Dispose();
+
+        // Allow time for any pending timer callback to execute
+        await Task.Delay(TimeSpan.FromMilliseconds(1200));
+    }
+
+    [Fact]
+    public async Task Replenish_DoesNotReleaseWhenNoTokensConsumed()
+    {
+        // All tokens are still available so replenishment should be a no-op
+        using var limiter = new TokenBucketRateLimiter(5);
+
+        // Wait for at least one replenish cycle
+        await Task.Delay(TimeSpan.FromMilliseconds(1200));
+
+        // All 5 tokens should still be available (not over-released)
+        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
+        for (int i = 0; i < 5; i++)
+        {
+            await limiter.WaitAsync(cts.Token);
+        }
+
+        // 6th should block — proves we didn't exceed max
+        using var cts2 = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => limiter.WaitAsync(cts2.Token));
+    }
 }
