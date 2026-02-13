@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Polly.Core" />
     <ProjectReference Include="..\..\..\src\JustSaying\JustSaying.csproj" />
     <ProjectReference Include="..\..\..\src\JustSaying.Models\JustSaying.Models.csproj" />
   </ItemGroup>
