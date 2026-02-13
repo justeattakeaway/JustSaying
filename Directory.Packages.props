@@ -16,7 +16,7 @@
     <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="8.0.1" Condition=" '$(TargetFramework)' == 'net462' " />
     <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="8.0.1" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
     <PackageVersion Include="StructureMap" Version="4.6.0" />
-    <PackageVersion Include="xunit.v3.assert" Version="2.0.3" />
+    <PackageVersion Include="xunit.v3.assert" Version="3.2.2" />
   </ItemGroup>
   <ItemGroup Label="Aspire">
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.4.0" />
@@ -59,8 +59,8 @@
     <PackageVersion Include="Shouldly" Version="4.3.0" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2" />
     <PackageVersion Include="Scalar.AspNetCore" Version="2.12.36" />
-    <PackageVersion Include="xunit.v3" Version="2.0.3" />
-    <PackageVersion Include="xunit.v3.extensibility.core" Version="2.0.3" />
+    <PackageVersion Include="xunit.v3" Version="3.2.2" />
+    <PackageVersion Include="xunit.v3.extensibility.core" Version="3.2.2" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
   </ItemGroup>
   <ItemGroup Condition=" '$(IsShipping)' == 'true' ">
