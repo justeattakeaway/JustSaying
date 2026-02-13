@@ -5,7 +5,10 @@ namespace JustSaying.TestingFramework;
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 public sealed class AwsFactAttribute : FactAttribute
 {
-    public AwsFactAttribute()
+    public AwsFactAttribute(
+        [System.Runtime.CompilerServices.CallerFilePath] string sourceFilePath = "",
+        [System.Runtime.CompilerServices.CallerLineNumber] int lineNumber = 0)
+        : base(sourceFilePath, lineNumber)
     {
         // TODO Add back logic to check if AWS credentials are available when running with LocalStack
         // at the moment we are not using LocalStack so we can skip this check
