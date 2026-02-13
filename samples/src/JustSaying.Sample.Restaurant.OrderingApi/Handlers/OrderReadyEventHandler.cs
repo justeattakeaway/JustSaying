@@ -21,7 +21,7 @@ public class OrderReadyEventHandler(ILogger<OrderReadyEventHandler> logger, IMes
             OrderId = message.OrderId
         };
 
-        await publisher.PublishAsync(orderOnItsWayEvent);
+        await publisher.PublishAsync(orderOnItsWayEvent, CancellationToken.None);
 
         // Returning true would indicate:
         //   The message was handled successfully

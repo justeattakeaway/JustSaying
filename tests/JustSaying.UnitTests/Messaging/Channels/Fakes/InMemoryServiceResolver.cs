@@ -2,6 +2,7 @@ using JustSaying.Fluent;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware.Logging;
 using JustSaying.Messaging.Middleware.PostProcessing;
+using JustSaying.Messaging.Middleware.Tracing;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -17,6 +18,9 @@ public class InMemoryServiceResolver : IServiceResolver, IHandlerResolver
             .AddSingleton(monitor)
             .AddSingleton<LoggingMiddleware>()
             .AddSingleton<SqsPostProcessorMiddleware>()
+            .AddSingleton<TracingOptions>()
+            .AddTransient<TracingMiddleware>()
+            .AddTransient<TracingPublishMiddleware>()
             .AddSingleton<IMessageContextAccessor>(new MessageContextAccessor());
 
     public InMemoryServiceResolver(ITestOutputHelper outputHelper, IMessageMonitor monitor, Action<IServiceCollection> configure = null) :

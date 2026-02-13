@@ -1,4 +1,6 @@
 using JustSaying.AwsTools;
+using JustSaying.Messaging.Middleware;
+using JustSaying.Messaging.Middleware.Tracing;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
@@ -27,6 +29,8 @@ public sealed class PublicationsBuilder
     /// Gets the configured publication builders.
     /// </summary>
     private List<IPublicationBuilder<Message>> Publications { get; } = [];
+
+    private readonly List<Func<IServiceResolver, MiddlewareBase<PublishContext, bool>>> _publishMiddlewareFactories = [];
 
     /// <summary>
     /// Configures a publisher for a queue.
@@ -192,16 +196,42 @@ public sealed class PublicationsBuilder
     }
 
     /// <summary>
+    /// Adds a publish middleware to the pipeline. The middleware will wrap all publish operations
+    /// and can be used to add cross-cutting concerns such as tracing, logging, or metadata enrichment.
+    /// </summary>
+    /// <typeparam name="TMiddleware">The type of middleware to add. Must be registered in the DI container.</typeparam>
+    /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
+    public PublicationsBuilder WithPublishMiddleware<TMiddleware>()
+        where TMiddleware : MiddlewareBase<PublishContext, bool>
+    {
+        _publishMiddlewareFactories.Add(resolver => resolver.ResolveService<TMiddleware>());
+        return this;
+    }
+
+    /// <summary>
     /// Configures the publications for the <see cref="JustSayingBus"/>.
     /// </summary>
     /// <param name="bus">The <see cref="JustSayingBus"/> to configure subscriptions for.</param>
     /// <param name="proxy">The <see cref="IAwsClientFactoryProxy"/> to use to create SQS/SNS clients with.</param>
     /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> logger factory to use.</param>
-    internal void Configure(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
+    internal void Configure(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory, IServiceResolver serviceResolver)
     {
         foreach (IPublicationBuilder<Message> builder in Publications)
         {
-            builder.Configure(bus, proxy, loggerFactory);
+            builder.Configure(bus, proxy, loggerFactory, serviceResolver);
         }
+
+        var allFactories = new List<Func<IServiceResolver, MiddlewareBase<PublishContext, bool>>>
+        {
+            resolver => resolver.ResolveService<TracingPublishMiddleware>()
+        };
+        allFactories.AddRange(_publishMiddlewareFactories);
+
+        var middlewares = allFactories
+            .Select(f => f(serviceResolver))
+            .Reverse()
+            .ToArray();
+
+        bus.PublishMiddleware = MiddlewareBuilder.BuildAsync(middlewares);
     }
 }

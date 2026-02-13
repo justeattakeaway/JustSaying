@@ -38,7 +38,7 @@ public class OrderPlacedEventHandler(IMessagePublisher publisher, ILogger<OrderP
                 OrderId = message.OrderId
             };
 
-            await publisher.PublishAsync(orderReadyEvent).ConfigureAwait(false);
+            await publisher.PublishAsync(orderReadyEvent, CancellationToken.None).ConfigureAwait(false);
             return true;
         }
         catch (Exception ex)

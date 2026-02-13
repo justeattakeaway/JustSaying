@@ -11,6 +11,7 @@ using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;
+using PublishMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.PublishContext, bool>;
 
 namespace JustSaying;
 
@@ -27,6 +28,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
     private SubscriptionGroupSettingsBuilder _defaultSubscriptionGroupSettings;
     private readonly Dictionary<Type, IMessagePublisher> _publishersByType;
     private readonly Dictionary<Type, IMessageBatchPublisher> _batchPublishersByType;
+    private readonly Dictionary<Type, PublishMessageMiddleware> _publishMiddlewareByType;
 
     public IMessagingConfig Config { get; }
     public IPublishBatchConfiguration PublishBatchConfiguration { get; }
@@ -38,6 +40,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
     private ISubscriptionGroup SubscriptionGroups { get; set; }
 
     internal MiddlewareMap MiddlewareMap { get; }
+    internal PublishMessageMiddleware PublishMiddleware { get; set; }
     internal MessageCompressionRegistry CompressionRegistry { get; }
     internal IMessageBodySerializationFactory MessageBodySerializerFactory { get; set; }
 
@@ -87,6 +90,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
 
         _publishersByType = [];
         _batchPublishersByType = [];
+        _publishMiddlewareByType = [];
         _subscriptionGroupSettings = new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(StringComparer.Ordinal);
         _defaultSubscriptionGroupSettings = new SubscriptionGroupSettingsBuilder();
     }
@@ -169,6 +173,11 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         }
     }
 
+    internal void AddPublishMiddleware<T>(PublishMessageMiddleware middleware) where T : Message
+    {
+        _publishMiddlewareByType[typeof(T)] = middleware;
+    }
+
     /// <inheritdoc/>
     public async Task StartAsync(CancellationToken stoppingToken)
     {
@@ -249,8 +258,22 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
     {
         EnsureStarted();
 
-        IMessagePublisher publisher = GetPublisherForMessage(message);
-        await PublishAsync(publisher, message, metadata, 0, cancellationToken)
+        var middleware = GetPublishMiddlewareForMessage(message.GetType());
+        if (middleware != null)
+        {
+            var context = new Messaging.Middleware.PublishContext(message, metadata ?? new PublishMetadata());
+            await middleware.RunAsync(context, async ct =>
+            {
+                var publisher = GetPublisherForMessage(message);
+                await PublishAsync(publisher, message, context.Metadata, 0, ct)
+                    .ConfigureAwait(false);
+                return true;
+            }, cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        var pub = GetPublisherForMessage(message);
+        await PublishAsync(pub, message, metadata, 0, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -351,18 +374,40 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
     }
 
     /// <inheritdoc/>
-    public Task PublishAsync(IEnumerable<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
+    public async Task PublishAsync(IEnumerable<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
     {
         EnsureStarted();
 
-        var tasks = new List<Task>();
-        foreach (IGrouping<Type, Message> group in messages.GroupBy(x => x.GetType()))
+        var messageList = messages.ToList();
+        var messageType = messageList.FirstOrDefault()?.GetType();
+        var middleware = messageType != null ? GetPublishMiddlewareForMessage(messageType) : null;
+
+        if (middleware != null)
         {
-            IMessageBatchPublisher publisher = GetBatchPublishersForMessageType(group.Key);
-            tasks.Add(PublishAsync(publisher, [..group], metadata, 0, group.Key, cancellationToken));
+            var context = new Messaging.Middleware.PublishContext(messageList, metadata ?? new PublishBatchMetadata());
+            await middleware.RunAsync(context, async ct =>
+            {
+                var tasks = new List<Task>();
+                foreach (IGrouping<Type, Message> group in messageList.GroupBy(x => x.GetType()))
+                {
+                    IMessageBatchPublisher publisher = GetBatchPublishersForMessageType(group.Key);
+                    tasks.Add(PublishAsync(publisher, [..group], (PublishBatchMetadata)context.Metadata, 0, group.Key, ct));
+                }
+
+                await Task.WhenAll(tasks).ConfigureAwait(false);
+                return true;
+            }, cancellationToken).ConfigureAwait(false);
+            return;
         }
 
-        return Task.WhenAll(tasks);
+        var batchTasks = new List<Task>();
+        foreach (IGrouping<Type, Message> group in messageList.GroupBy(x => x.GetType()))
+        {
+            IMessageBatchPublisher publisher = GetBatchPublishersForMessageType(group.Key);
+            batchTasks.Add(PublishAsync(publisher, [..group], metadata, 0, group.Key, cancellationToken));
+        }
+
+        await Task.WhenAll(batchTasks).ConfigureAwait(false);
     }
 
     private IMessageBatchPublisher GetBatchPublishersForMessageType(Type messageType)
@@ -381,6 +426,16 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         }
 
         return publisher;
+    }
+
+    private PublishMessageMiddleware GetPublishMiddlewareForMessage(Type messageType)
+    {
+        if (_publishMiddlewareByType.TryGetValue(messageType, out var perType))
+        {
+            return perType;
+        }
+
+        return PublishMiddleware;
     }
 
     private async Task PublishAsync(

@@ -7,6 +7,7 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware.Logging;
 using JustSaying.Messaging.Middleware.PostProcessing;
+using JustSaying.Messaging.Middleware.Tracing;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Naming;
 using Newtonsoft.Json;
@@ -46,6 +47,9 @@ internal sealed class JustSayingRegistry : Registry
 
         For<LoggingMiddleware>().AlwaysUnique();
         For<SqsPostProcessorMiddleware>().AlwaysUnique();
+        For<TracingOptions>().Use<TracingOptions>().Singleton();
+        For<TracingMiddleware>().AlwaysUnique();
+        For<TracingPublishMiddleware>().AlwaysUnique();
         For<IMessageBodyCompression>().Add<GzipMessageBodyCompression>().Singleton();
         For<MessageCompressionRegistry>().Singleton();
         For<IMessageReceivePauseSignal>().Use<MessageReceivePauseSignal>().Singleton();

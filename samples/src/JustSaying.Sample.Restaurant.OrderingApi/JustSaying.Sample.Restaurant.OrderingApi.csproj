@@ -6,12 +6,12 @@
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <UserSecretsId>JustSaying.Sample.Restaurant.OrderingApi</UserSecretsId>
     <NoWarn>$(NoWarn);CA2007</NoWarn>
+    <SignAssembly>false</SignAssembly>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Serilog.AspNetCore" />
-    <PackageReference Include="Serilog.Sinks.Console" />
-    <PackageReference Include="Swashbuckle.AspNetCore" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Scalar.AspNetCore" />
   </ItemGroup>
 
   <ItemGroup>
@@ -19,6 +19,7 @@
     <ProjectReference Include="..\..\..\src\JustSaying.Models\JustSaying.Models.csproj" />
     <ProjectReference Include="..\..\..\src\JustSaying\JustSaying.csproj" />
     <ProjectReference Include="..\JustSaying.Sample.Restaurant.Models\JustSaying.Sample.Restaurant.Models.csproj" />
+    <ProjectReference Include="..\JustSaying.Sample.ServiceDefaults\JustSaying.Sample.ServiceDefaults.csproj" />
   </ItemGroup>
 
   <ItemGroup>

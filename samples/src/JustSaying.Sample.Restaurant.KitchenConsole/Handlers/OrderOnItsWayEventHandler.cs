@@ -19,7 +19,7 @@ public class OrderOnItsWayEventHandler(IMessagePublisher publisher, ILogger<Orde
 
         logger.LogInformation("Order {OrderId} is on its way!", message.OrderId);
 
-        await publisher.PublishAsync(orderDeliveredEvent);
+        await publisher.PublishAsync(orderDeliveredEvent, CancellationToken.None);
 
         return true;
     }
