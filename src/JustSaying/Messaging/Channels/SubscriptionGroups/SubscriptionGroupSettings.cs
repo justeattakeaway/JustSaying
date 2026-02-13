@@ -11,6 +11,7 @@ public sealed class SubscriptionGroupSettings : ISubscriptionGroupSettings
     internal SubscriptionGroupSettings(
         string name,
         int concurrencyLimit,
+        ConcurrencyLimitType concurrencyLimitType,
         int bufferSize,
         TimeSpan receiveBufferReadTimeout,
         TimeSpan receiveMessagesWaitTime,
@@ -19,6 +20,7 @@ public sealed class SubscriptionGroupSettings : ISubscriptionGroupSettings
         IReadOnlyCollection<SqsSource> queueSources)
     {
         ConcurrencyLimit = concurrencyLimit;
+        ConcurrencyLimitType = concurrencyLimitType;
         BufferSize = bufferSize;
         ReceiveBufferReadTimeout = receiveBufferReadTimeout;
         ReceiveMessagesWaitTime = receiveMessagesWaitTime;
@@ -58,6 +60,11 @@ public sealed class SubscriptionGroupSettings : ISubscriptionGroupSettings
     /// Gets the maximum number of messages to fetch from SQS in each request.
     /// </summary>
     public int Prefetch { get; }
+
+    /// <summary>
+    /// Gets the type of concurrency limiting applied to message processing.
+    /// </summary>
+    public ConcurrencyLimitType ConcurrencyLimitType { get; }
 
     /// <summary>
     /// The name of the created <see cref="ISubscriptionGroup"/>.

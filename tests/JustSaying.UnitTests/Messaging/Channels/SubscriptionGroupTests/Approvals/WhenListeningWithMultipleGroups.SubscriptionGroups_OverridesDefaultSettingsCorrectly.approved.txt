@@ -3,6 +3,7 @@
     {
       "Name": "queueA",
       "ConcurrencyLimit": 1,
+      "ConcurrencyLimitType": "InFlightMessages",
       "Multiplexer": {
         "ChannelCapacity": 30,
         "ReaderCount": 1
@@ -19,6 +20,7 @@
     {
       "Name": "queueB",
       "ConcurrencyLimit": 8,
+      "ConcurrencyLimitType": "InFlightMessages",
       "Multiplexer": {
         "ChannelCapacity": 100,
         "ReaderCount": 1
