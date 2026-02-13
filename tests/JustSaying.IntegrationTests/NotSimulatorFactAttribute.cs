@@ -5,8 +5,10 @@ namespace JustSaying.IntegrationTests;
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 public sealed class NotSimulatorFactAttribute : FactAttribute
 {
-    public NotSimulatorFactAttribute()
-        : base()
+    public NotSimulatorFactAttribute(
+        [System.Runtime.CompilerServices.CallerFilePath] string sourceFilePath = "",
+        [System.Runtime.CompilerServices.CallerLineNumber] int lineNumber = 0)
+        : base(sourceFilePath, lineNumber)
     {
         if (TestEnvironment.IsSimulatorConfigured)
         {
