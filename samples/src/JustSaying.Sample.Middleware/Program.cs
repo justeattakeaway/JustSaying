@@ -77,10 +77,9 @@ static IHost BuildHost()
                         cfg.WithMiddlewareConfiguration(middlewareBuilder =>
                         {
                             var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-                            var logger = loggerFactory.CreateLogger<EchoJustSayingMiddleware>();
-                            middlewareBuilder.Use(new EchoJustSayingMiddleware(logger, "Outer"));
+                            middlewareBuilder.Use(new EchoJustSayingMiddleware(loggerFactory.CreateLogger<EchoJustSayingMiddleware>(), "Outer"));
                             middlewareBuilder.Use<InterrogateMiddleware>();
-                            middlewareBuilder.Use(new EchoJustSayingMiddleware(logger, "Inner"));
+                            middlewareBuilder.Use(new EchoJustSayingMiddleware(loggerFactory.CreateLogger<EchoJustSayingMiddleware>(), "Inner"));
                             middlewareBuilder.UseDefaults<SampleMessage>(typeof(SampleMessageHandler)); // You should always add UseDefaults to your pipeline as that enforces some default behaviour
                         });
                     });
