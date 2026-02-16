@@ -17,7 +17,7 @@ public sealed class InterrogateMiddleware(ILogger<InterrogateMiddleware> logger)
         }
         else if (context.Message is UnreliableMessage unreliableMessage)
         {
-            logger.LogInformation("[{MiddlewareName}] Hello UnreliableMessage! Hope you work this time....your Name is {Name} and Id is {Id}", nameof(InterrogateMiddleware),unreliableMessage.Name, context.Message.Id);
+            logger.LogInformation("[{MiddlewareName}] Hello UnreliableMessage! Hope you work this time....your Name is {Name} and Id is {Id}", nameof(InterrogateMiddleware), unreliableMessage.Name, context.Message.Id);
         }
 
         return await func(stoppingToken);
