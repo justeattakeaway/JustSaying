@@ -9,21 +9,13 @@ namespace JustSaying.Sample.Middleware.Middlewares;
 /// <summary>
 /// A middleware that will wrap the handling of a message in the provided Polly policy.
 /// </summary>
-public class PollyJustSayingMiddleware : MiddlewareBase<HandleMessageContext, bool>
+public class PollyJustSayingMiddleware(ILogger<PollyJustSayingMiddleware> logger) : MiddlewareBase<HandleMessageContext, bool>
 {
-    private static readonly ILoggerFactory LoggerFactory = Microsoft.Extensions.Logging.LoggerFactory.Create(builder => builder.AddConsole());
-    private static readonly ILogger Logger = LoggerFactory.CreateLogger<PollyJustSayingMiddleware>();
-
-    private readonly ResiliencePipeline _pipeline;
-
-    public PollyJustSayingMiddleware()
-    {
-        _pipeline = CreateResiliencePipeline();
-    }
+    private readonly ResiliencePipeline _pipeline = CreateResiliencePipeline(logger);
 
     protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
     {
-        Logger.LogInformation("[{MiddlewareName}] Started {MessageType}", nameof(PollyJustSayingMiddleware), context.Message.GetType().Name);
+        logger.LogInformation("[{MiddlewareName}] Started {MessageType}", nameof(PollyJustSayingMiddleware), context.Message.GetType().Name);
 
         try
         {
@@ -43,11 +35,11 @@ public class PollyJustSayingMiddleware : MiddlewareBase<HandleMessageContext, bo
         }
         finally
         {
-            Logger.LogInformation("[{MiddlewareName}] Finished {MessageType}", nameof(PollyJustSayingMiddleware), context.Message.GetType().Name);
+            logger.LogInformation("[{MiddlewareName}] Finished {MessageType}", nameof(PollyJustSayingMiddleware), context.Message.GetType().Name);
         }
     }
 
-    private static ResiliencePipeline CreateResiliencePipeline()
+    private static ResiliencePipeline CreateResiliencePipeline(ILogger<PollyJustSayingMiddleware> logger)
     {
         return new ResiliencePipelineBuilder()
             .AddRetry(new RetryStrategyOptions
@@ -58,7 +50,7 @@ public class PollyJustSayingMiddleware : MiddlewareBase<HandleMessageContext, bo
                 BackoffType = DelayBackoffType.Exponential,
                 OnRetry = (args) =>
                 {
-                    Logger.LogInformation("Retrying failed operation on count {RetryCount}", args.AttemptNumber);
+                    logger.LogInformation("Retrying failed operation on count {RetryCount}", args.AttemptNumber);
                     return ValueTask.CompletedTask;
                 }
             })
