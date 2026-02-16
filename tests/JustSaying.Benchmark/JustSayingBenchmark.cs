@@ -3,8 +3,7 @@ using Amazon;
 using CommandLine;
 using JustSaying.Messaging;
 using Microsoft.Extensions.DependencyInjection;
-using Serilog;
-using SerilogTimings;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Benchmark;
 
@@ -23,19 +22,19 @@ public class JustSayingBenchmark
 
         var services = new ServiceCollection()
             .AddSingleton<IReportConsumerMetric>(capture)
-            .AddLogging(lg => lg.AddSerilog());
+            .AddLogging(lg => lg.AddConsole());
 
         RegisterJustSaying(services);
 
         var provider = services.BuildServiceProvider();
         var publisher = provider.GetService<IMessagePublisher>();
 
-        using (Operation.Time("Executing startup work"))
-        {
-            await publisher.StartAsync(CancellationToken.None);
-            var bus = provider.GetService<IMessagingBus>();
-            await bus.StartAsync(CancellationToken.None);
-        }
+        var startupWatch = Stopwatch.StartNew();
+        await publisher.StartAsync(CancellationToken.None);
+        var bus = provider.GetService<IMessagingBus>();
+        await bus.StartAsync(CancellationToken.None);
+        startupWatch.Stop();
+        Console.WriteLine("Executing startup work completed in {0:F0}ms", startupWatch.Elapsed.TotalMilliseconds);
 
         Console.WriteLine("Completed startup, beginning benchmark");
 
@@ -55,21 +54,20 @@ public class JustSayingBenchmark
         var batchCount = taskBatches.Count;
         foreach (var taskBatch in taskBatches)
         {
-            using (Operation.Time("Sending batch id {BatchId} of {BatchCount}",
-                       batchId,
-                       batchCount))
-            {
-                await taskBatch;
-            }
+            var batchWatch = Stopwatch.StartNew();
+            await taskBatch;
+            batchWatch.Stop();
+            Console.WriteLine("Sending batch id {0} of {1} completed in {2:F0}ms",
+                batchId++, batchCount, batchWatch.Elapsed.TotalMilliseconds);
         }
 
-        Log.Information("Waiting for sends to complete...");
+        Console.WriteLine("Waiting for sends to complete...");
         await capture.SendCompleted;
 
-        Log.Information("Waiting for consumes to complete...");
+        Console.WriteLine("Waiting for consumes to complete...");
         await capture.ConsumeCompleted;
 
-        Log.Information("Sends and Consumes completed!");
+        Console.WriteLine("Sends and Consumes completed!");
 
         var messageMetrics = capture.GetMessageMetrics();
 

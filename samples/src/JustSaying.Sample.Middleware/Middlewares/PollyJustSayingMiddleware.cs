@@ -1,8 +1,8 @@
 using JustSaying.Messaging.Middleware;
 using JustSaying.Sample.Middleware.Exceptions;
+using Microsoft.Extensions.Logging;
 using Polly;
 using Polly.Retry;
-using Serilog;
 
 namespace JustSaying.Sample.Middleware.Middlewares;
 
@@ -11,6 +11,9 @@ namespace JustSaying.Sample.Middleware.Middlewares;
 /// </summary>
 public class PollyJustSayingMiddleware : MiddlewareBase<HandleMessageContext, bool>
 {
+    private static readonly ILoggerFactory LoggerFactory = Microsoft.Extensions.Logging.LoggerFactory.Create(builder => builder.AddConsole());
+    private static readonly ILogger Logger = LoggerFactory.CreateLogger<PollyJustSayingMiddleware>();
+
     private readonly ResiliencePipeline _pipeline;
 
     public PollyJustSayingMiddleware()
@@ -20,7 +23,7 @@ public class PollyJustSayingMiddleware : MiddlewareBase<HandleMessageContext, bo
 
     protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
     {
-        Log.Information("[{MiddlewareName}] Started {MessageType}", nameof(PollyJustSayingMiddleware), context.Message.GetType().Name);
+        Logger.LogInformation("[{MiddlewareName}] Started {MessageType}", nameof(PollyJustSayingMiddleware), context.Message.GetType().Name);
 
         try
         {
@@ -40,7 +43,7 @@ public class PollyJustSayingMiddleware : MiddlewareBase<HandleMessageContext, bo
         }
         finally
         {
-            Log.Information("[{MiddlewareName}] Finished {MessageType}", nameof(PollyJustSayingMiddleware), context.Message.GetType().Name);
+            Logger.LogInformation("[{MiddlewareName}] Finished {MessageType}", nameof(PollyJustSayingMiddleware), context.Message.GetType().Name);
         }
     }
 
@@ -55,7 +58,7 @@ public class PollyJustSayingMiddleware : MiddlewareBase<HandleMessageContext, bo
                 BackoffType = DelayBackoffType.Exponential,
                 OnRetry = (args) =>
                 {
-                    Log.Information("Retrying failed operation on count {RetryCount}", args.AttemptNumber);
+                    Logger.LogInformation("Retrying failed operation on count {RetryCount}", args.AttemptNumber);
                     return ValueTask.CompletedTask;
                 }
             })

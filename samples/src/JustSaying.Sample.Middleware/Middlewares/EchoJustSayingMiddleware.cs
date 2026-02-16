@@ -1,5 +1,5 @@
 using JustSaying.Messaging.Middleware;
-using Serilog;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Sample.Middleware.Middlewares;
 
@@ -8,9 +8,12 @@ namespace JustSaying.Sample.Middleware.Middlewares;
 /// </summary>
 public class EchoJustSayingMiddleware(string name) : MiddlewareBase<HandleMessageContext, bool>
 {
+    private static readonly ILoggerFactory LoggerFactory = Microsoft.Extensions.Logging.LoggerFactory.Create(builder => builder.AddConsole());
+    private static readonly ILogger Logger = LoggerFactory.CreateLogger<EchoJustSayingMiddleware>();
+
     protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
     {
-        Log.Information("[{MiddlewareName}] Starting {Name} for {MessageType}", nameof(EchoJustSayingMiddleware), name, context.Message.GetType().Name);
+        Logger.LogInformation("[{MiddlewareName}] Starting {Name} for {MessageType}", nameof(EchoJustSayingMiddleware), name, context.Message.GetType().Name);
 
         try
         {
@@ -18,7 +21,7 @@ public class EchoJustSayingMiddleware(string name) : MiddlewareBase<HandleMessag
         }
         finally
         {
-            Log.Information("[{MiddlewareName}] Ending {Name} for {MessageType}", nameof(EchoJustSayingMiddleware), name, context.Message.GetType().Name);
+            Logger.LogInformation("[{MiddlewareName}] Ending {Name} for {MessageType}", nameof(EchoJustSayingMiddleware), name, context.Message.GetType().Name);
         }
     }
 }

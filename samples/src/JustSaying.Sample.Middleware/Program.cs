@@ -1,4 +1,4 @@
-﻿using JustSaying.Messaging;
+using JustSaying.Messaging;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Sample.Middleware;
 using JustSaying.Sample.Middleware.Extensions;
@@ -8,41 +8,25 @@ using JustSaying.Sample.Middleware.Middlewares;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Serilog;
+using Microsoft.Extensions.Logging;
 
-Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console()
-    .MinimumLevel.Information()
-    .CreateLogger();
+var host = BuildHost();
 
-try
+await host.StartAsync();
+
+Console.WriteLine("Press enter to publish a message");
+
+var publisher = host.Services.GetService<IMessagePublisher>();
+
+while (true)
 {
-    var host = BuildHost();
+    var message = new SampleMessage();
 
-    await host.StartAsync();
+    // Uncomment this message to see the Polly middleware in action
+    //var message = new UnreliableMessage();
 
-    Log.Information("Press enter to publish a message");
-
-    var publisher = host.Services.GetService<IMessagePublisher>();
-
-    while (true)
-    {
-        var message = new SampleMessage();
-
-        // Uncomment this message to see the Polly middleware in action
-        //var message = new UnreliableMessage();
-
-        await publisher.PublishAsync(message);
-        Console.ReadLine();
-    }
-}
-catch (Exception e)
-{
-    Log.Fatal(e, "Error occurred during startup: {Message}", e.Message);
-}
-finally
-{
-    Log.CloseAndFlush();
+    await publisher.PublishAsync(message);
+    Console.ReadLine();
 }
 
 static IHost BuildHost()
@@ -52,7 +36,7 @@ static IHost BuildHost()
         {
             config.AddJsonFile("appsettings.json", optional: false);
         })
-        .UseSerilog()
+        .ConfigureLogging(logging => logging.AddConsole())
         .ConfigureServices((hostContext, services) =>
         {
             services.AddJustSaying(config =>
