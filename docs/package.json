@@ -26,7 +26,7 @@
     "@docusaurus/module-type-aliases": "^3.9.2",
     "@docusaurus/types": "^3.9.2",
     "@easyops-cn/docusaurus-search-local": "^0.55.0",
-    "docusaurus-plugin-llms": "^0.2.2"
+    "docusaurus-plugin-llms": "^0.3.0"
   },
   "browserslist": {
     "production": [
