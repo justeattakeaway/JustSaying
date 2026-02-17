@@ -39,7 +39,11 @@ static IHost BuildHost()
         .ConfigureLogging(logging => logging.AddConsole())
         .ConfigureServices((hostContext, services) =>
         {
-            services.AddJustSaying(config =>
+            // Register middleware as transient so they can be resolved from DI
+            services.AddTransient<InterrogateMiddleware>();
+            services.AddTransient<PollyJustSayingMiddleware>();
+            
+            services.AddJustSaying((config, serviceProvider) =>
             {
                 config.Client(x =>
                 {
@@ -72,9 +76,10 @@ static IHost BuildHost()
                         // The order middleware are declared is how they will be executed
                         cfg.WithMiddlewareConfiguration(middlewareBuilder =>
                         {
-                            middlewareBuilder.Use(new EchoJustSayingMiddleware("Outer"));
-                            middlewareBuilder.Use(new InterrogateMiddleware());
-                            middlewareBuilder.Use(new EchoJustSayingMiddleware("Inner"));
+                            var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+                            middlewareBuilder.Use(new EchoJustSayingMiddleware(loggerFactory.CreateLogger<EchoJustSayingMiddleware>(), "Outer"));
+                            middlewareBuilder.Use<InterrogateMiddleware>();
+                            middlewareBuilder.Use(new EchoJustSayingMiddleware(loggerFactory.CreateLogger<EchoJustSayingMiddleware>(), "Inner"));
                             middlewareBuilder.UseDefaults<SampleMessage>(typeof(SampleMessageHandler)); // You should always add UseDefaults to your pipeline as that enforces some default behaviour
                         });
                     });
@@ -82,10 +87,10 @@ static IHost BuildHost()
                     x.ForTopic<UnreliableMessage>((cfg) =>
                     {
                         // The handling of this message may result in some transient errors so we can leverage a Polly middleware here to introduce a backoff strategy
-                        cfg.WithMiddlewareConfiguration((middlewareBuilder) =>
+                        cfg.WithMiddlewareConfiguration(middlewareBuilder =>
                         {
-                            middlewareBuilder.Use(new InterrogateMiddleware()); // We can share middleware across message types
-                            middlewareBuilder.Use(new PollyJustSayingMiddleware());
+                            middlewareBuilder.Use<InterrogateMiddleware>(); // We can share middleware across message types
+                            middlewareBuilder.Use<PollyJustSayingMiddleware>();
                             middlewareBuilder.UseDefaults<UnreliableMessage>(typeof(UnreliableMessageHandler));
                         });
                     });
