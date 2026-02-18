@@ -67,8 +67,27 @@ internal sealed class MessageDispatcher : IMessageDispatcher
 
         using var activity = StartConsumerActivity(messageContext, typedMessage, messageType, attributes);
 
-        await middleware.RunAsync(handleContext, null, cancellationToken)
-            .ConfigureAwait(false);
+        try
+        {
+            await middleware.RunAsync(handleContext, null, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            if (activity is not null)
+            {
+                activity.SetStatus(ActivityStatusCode.Error, ex.Message);
+                activity.AddEvent(new ActivityEvent("exception",
+                    tags: new ActivityTagsCollection
+                    {
+                        { "exception.type", ex.GetType().FullName },
+                        { "exception.message", ex.Message },
+                        { "exception.stacktrace", ex.ToString() },
+                    }));
+            }
+
+            throw;
+        }
     }
 
     private static Activity StartConsumerActivity(

@@ -16,6 +16,7 @@ using SqsMessage = Amazon.SQS.Model.Message;
 
 namespace JustSaying.Extensions.OpenTelemetry.Tests;
 
+[Collection("Tracing")]
 public class MessageDispatcherActivityTests
 {
     [Fact]

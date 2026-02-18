@@ -13,6 +13,8 @@ using SqsMessage = Amazon.SQS.Model.Message;
 
 namespace JustSaying.Extensions.OpenTelemetry.Tests;
 
+// Metric tests share static Meter instruments, so must not run in parallel with other metric tests.
+[Collection("Metrics")]
 public class MetricsTests
 {
     [Fact]

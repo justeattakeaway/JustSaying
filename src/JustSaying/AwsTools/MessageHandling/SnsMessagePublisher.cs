@@ -49,7 +49,6 @@ internal sealed class SnsMessagePublisher(
         var request = await BuildPublishRequestAsync(message, metadata);
 
         Activity.Current?.SetTag("messaging.system", "aws_sns");
-        Activity.Current?.SetTag("messaging.operation.type", "send");
         Activity.Current?.SetTag("messaging.destination.name", request.TopicArn);
 
         PublishResponse response = null;
@@ -166,13 +165,12 @@ internal sealed class SnsMessagePublisher(
         int size = metadata?.BatchSize ?? JustSayingConstants.MaximumSnsBatchSize;
         size = Math.Min(size, JustSayingConstants.MaximumSnsBatchSize);
 
+        Activity.Current?.SetTag("messaging.system", "aws_sns");
+        Activity.Current?.SetTag("messaging.destination.name", Arn);
+
         foreach (var chunk in messages.Chunk(size))
         {
             var request = await BuildPublishBatchRequestAsync(chunk, metadata);
-
-            Activity.Current?.SetTag("messaging.system", "aws_sns");
-            Activity.Current?.SetTag("messaging.operation.type", "send");
-            Activity.Current?.SetTag("messaging.destination.name", request.TopicArn);
 
             PublishBatchResponse response = null;
             try

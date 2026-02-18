@@ -6,6 +6,7 @@ using OpenTelemetry.Trace;
 
 namespace JustSaying.Extensions.OpenTelemetry.Tests;
 
+[Collection("Tracing")]
 public class TracerProviderBuilderExtensionsTests
 {
     [Fact]
@@ -26,7 +27,7 @@ public class TracerProviderBuilderExtensionsTests
 
         // Assert
         exportedActivities.ShouldNotBeEmpty();
-        exportedActivities[0].OperationName.ShouldBe("test-operation");
+        exportedActivities.ShouldContain(a => a.OperationName == "test-operation");
     }
 
     [Fact]

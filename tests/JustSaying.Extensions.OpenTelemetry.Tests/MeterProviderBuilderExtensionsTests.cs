@@ -6,6 +6,7 @@ using OpenTelemetry.Metrics;
 
 namespace JustSaying.Extensions.OpenTelemetry.Tests;
 
+[Collection("Metrics")]
 public class MeterProviderBuilderExtensionsTests
 {
     [Fact]

@@ -46,7 +46,6 @@ internal sealed class SqsMessagePublisher(
         var request = await BuildSendMessageRequestAsync(message, metadata);
 
         Activity.Current?.SetTag("messaging.system", "aws_sqs");
-        Activity.Current?.SetTag("messaging.operation.type", "send");
         Activity.Current?.SetTag("messaging.destination.name", request.QueueUrl);
 
         SendMessageResponse response;
@@ -167,13 +166,12 @@ internal sealed class SqsMessagePublisher(
         int size = metadata?.BatchSize ?? JustSayingConstants.MaximumSnsBatchSize;
         size = Math.Min(size, JustSayingConstants.MaximumSnsBatchSize);
 
+        Activity.Current?.SetTag("messaging.system", "aws_sqs");
+        Activity.Current?.SetTag("messaging.destination.name", QueueUrl?.AbsoluteUri);
+
         foreach (var chunk in messages.Chunk(size))
         {
             var request = await BuildSendMessageBatchRequestAsync(chunk, metadata);
-
-            Activity.Current?.SetTag("messaging.system", "aws_sqs");
-            Activity.Current?.SetTag("messaging.operation.type", "send");
-            Activity.Current?.SetTag("messaging.destination.name", request.QueueUrl);
 
             SendMessageBatchResponse response;
             try

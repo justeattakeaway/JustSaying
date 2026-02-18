@@ -12,6 +12,7 @@ using OpenTelemetry.Trace;
 
 namespace JustSaying.Extensions.OpenTelemetry.Tests;
 
+[Collection("Tracing")]
 public class TraceContextPropagationTests
 {
     [Fact]
