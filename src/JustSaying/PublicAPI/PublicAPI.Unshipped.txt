@@ -130,6 +130,11 @@ JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer<T>
 JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializationFactory.GetSerializer<T>() -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializer
 JustSaying.MessagingConfig.DefaultCompressionOptions.get -> JustSaying.AwsTools.MessageHandling.PublishCompressionOptions
 JustSaying.MessagingConfig.DefaultCompressionOptions.set -> void
+JustSaying.Messaging.Monitoring.JustSayingDiagnostics
+const JustSaying.Messaging.Monitoring.JustSayingDiagnostics.ActivitySourceName = "JustSaying" -> string
+const JustSaying.Messaging.Monitoring.JustSayingDiagnostics.MeterName = "JustSaying" -> string
+static JustSaying.Messaging.Monitoring.JustSayingDiagnostics.ActivitySource.get -> System.Diagnostics.ActivitySource
+static JustSaying.Messaging.Monitoring.JustSayingDiagnostics.Meter.get -> System.Diagnostics.Metrics.Meter
 static JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions.get -> System.Text.Json.JsonSerializerOptions
 *REMOVED*JustSaying.AwsTools.MessageHandling.Dispatch.IMessageDispatcher
 *REMOVED*JustSaying.AwsTools.MessageHandling.Dispatch.IMessageDispatcher.DispatchMessageAsync(JustSaying.Messaging.Channels.Context.IQueueMessageContext messageContext, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task

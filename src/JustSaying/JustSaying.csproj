@@ -10,6 +10,7 @@
     <InternalsVisibleTo Include="JustSaying.IntegrationTests" Key="$(JustSayingKey)" />
     <InternalsVisibleTo Include="JustSaying.UnitTests" Key="$(JustSayingKey)" />
     <InternalsVisibleTo Include="JustSaying.Extensions.DependencyInjection.Microsoft" Key="$(JustSayingKey)" />
+    <InternalsVisibleTo Include="JustSaying.Extensions.OpenTelemetry.Tests" Key="$(JustSayingKey)" />
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" Key="$(DynamicProxyGenAssembly2PublicKey)" />
   </ItemGroup>
   <ItemGroup>

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json.Nodes;
 using JustSaying.AwsTools;
@@ -39,6 +40,7 @@ internal sealed class OutboundMessageConverter : IOutboundMessageConverter
 
         Dictionary<string, MessageAttributeValue> attributeValues = new();
         AddMessageAttributes(attributeValues, publishMetadata);
+        InjectTraceContext(attributeValues);
 
         (string compressedMessage, string contentEncoding) = CompressMessageBody(messageBody, publishMetadata);
         if (compressedMessage is not null)
@@ -57,6 +59,30 @@ internal sealed class OutboundMessageConverter : IOutboundMessageConverter
         }
 
         return new ValueTask<OutboundMessage>(new OutboundMessage(messageBody, attributeValues, _subject));
+    }
+
+    private static void InjectTraceContext(Dictionary<string, MessageAttributeValue> attributes)
+    {
+        var activity = Activity.Current;
+        if (activity is null)
+        {
+            return;
+        }
+
+        attributes[MessageAttributeKeys.TraceParent] = new MessageAttributeValue
+        {
+            DataType = "String",
+            StringValue = activity.Id
+        };
+
+        if (!string.IsNullOrEmpty(activity.TraceStateString))
+        {
+            attributes[MessageAttributeKeys.TraceState] = new MessageAttributeValue
+            {
+                DataType = "String",
+                StringValue = activity.TraceStateString
+            };
+        }
     }
 
     private static void AddMessageAttributes(Dictionary<string, MessageAttributeValue> requestMessageAttributes, PublishMetadata metadata)

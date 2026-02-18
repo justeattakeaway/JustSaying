@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
@@ -64,8 +65,47 @@ internal sealed class MessageDispatcher : IMessageDispatcher
             messageContext.QueueUri,
             attributes);
 
+        using var activity = StartConsumerActivity(messageContext, typedMessage, messageType, attributes);
+
         await middleware.RunAsync(handleContext, null, cancellationToken)
             .ConfigureAwait(false);
+    }
+
+    private static Activity StartConsumerActivity(
+        IQueueMessageContext messageContext,
+        Message typedMessage,
+        Type messageType,
+        MessageAttributes attributes)
+    {
+        var links = new List<ActivityLink>();
+        var traceParent = attributes?.Get(MessageAttributeKeys.TraceParent)?.StringValue;
+        if (traceParent is not null)
+        {
+            var traceState = attributes.Get(MessageAttributeKeys.TraceState)?.StringValue;
+            if (ActivityContext.TryParse(traceParent, traceState, out var parsed))
+            {
+                links.Add(new ActivityLink(parsed));
+            }
+        }
+
+        var activity = JustSayingDiagnostics.ActivitySource.StartActivity(
+            $"{messageContext.QueueName} process",
+            ActivityKind.Consumer,
+            default(ActivityContext),
+            tags: null,
+            links: links);
+
+        if (activity is not null)
+        {
+            activity.SetTag("messaging.system", "aws_sqs");
+            activity.SetTag("messaging.destination.name", messageContext.QueueName);
+            activity.SetTag("messaging.operation.name", "process");
+            activity.SetTag("messaging.operation.type", "process");
+            activity.SetTag("messaging.message.id", messageContext.Message.MessageId);
+            activity.SetTag("messaging.message.type", messageType.FullName);
+        }
+
+        return activity;
     }
 
     private async Task<(bool success, Message typedMessage, MessageAttributes attributes)>

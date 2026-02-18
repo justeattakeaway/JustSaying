@@ -18,6 +18,8 @@ public sealed class ErrorHandlerMiddleware(IMessageMonitor monitor) : Middleware
 
     protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
     {
+        bool hasError = false;
+        string errorType = null;
         try
         {
             return await func(stoppingToken).ConfigureAwait(false);
@@ -31,6 +33,8 @@ public sealed class ErrorHandlerMiddleware(IMessageMonitor monitor) : Middleware
         {
             _monitor.HandleException(context.MessageType);
             _monitor.HandleError(e, context.RawMessage);
+            hasError = true;
+            errorType = e.GetType().FullName;
 
             context.SetException(e);
             return false;
@@ -38,6 +42,18 @@ public sealed class ErrorHandlerMiddleware(IMessageMonitor monitor) : Middleware
         finally
         {
             _monitor.Handled(context.Message);
+            var queueTag = new KeyValuePair<string, object>("messaging.destination.name", context.QueueName);
+            var typeTag = new KeyValuePair<string, object>("messaging.message.type", context.MessageType.FullName);
+            if (hasError)
+            {
+                Monitoring.JustSayingDiagnostics.MessagesProcessed.Add(1,
+                    queueTag, typeTag,
+                    new KeyValuePair<string, object>("error.type", errorType));
+            }
+            else
+            {
+                Monitoring.JustSayingDiagnostics.MessagesProcessed.Add(1, queueTag, typeTag);
+            }
         }
     }
 }

@@ -1,0 +1,4 @@
+JustSaying.Extensions.OpenTelemetry.MeterProviderBuilderExtensions
+JustSaying.Extensions.OpenTelemetry.TracerProviderBuilderExtensions
+static JustSaying.Extensions.OpenTelemetry.MeterProviderBuilderExtensions.AddJustSayingInstrumentation(this OpenTelemetry.Metrics.MeterProviderBuilder builder) -> OpenTelemetry.Metrics.MeterProviderBuilder
+static JustSaying.Extensions.OpenTelemetry.TracerProviderBuilderExtensions.AddJustSayingInstrumentation(this OpenTelemetry.Trace.TracerProviderBuilder builder) -> OpenTelemetry.Trace.TracerProviderBuilder

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Threading.Channels;
 using Amazon.SQS;
 using Amazon.SQS.Model;
@@ -94,9 +95,19 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
                 }
 
                 IList<Message> messages;
+                var receiveWatch = Stopwatch.StartNew();
                 using (_monitor.MeasureReceive(_sqsQueueReader.QueueName, _sqsQueueReader.RegionSystemName))
                 {
                     messages = await GetMessagesAsync(_prefetch, stoppingToken).ConfigureAwait(false);
+                }
+
+                receiveWatch.Stop();
+                JustSayingDiagnostics.ClientOperationDuration.Record(
+                    receiveWatch.Elapsed.TotalSeconds,
+                    new KeyValuePair<string, object>("messaging.operation.type", "receive"));
+                if (messages is not null)
+                {
+                    JustSayingDiagnostics.MessagesReceived.Add(messages.Count);
                 }
 
                 if (_logger.IsEnabled(LogLevel.Trace))

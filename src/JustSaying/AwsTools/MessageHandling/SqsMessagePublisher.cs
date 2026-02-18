@@ -1,8 +1,10 @@
+using System.Diagnostics;
 using Amazon.Runtime;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
+using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 using Message = JustSaying.Models.Message;
 using MessageAttributeValue = Amazon.SQS.Model.MessageAttributeValue;
@@ -42,6 +44,11 @@ internal sealed class SqsMessagePublisher(
         EnsureQueueUrl();
 
         var request = await BuildSendMessageRequestAsync(message, metadata);
+
+        Activity.Current?.SetTag("messaging.system", "aws_sqs");
+        Activity.Current?.SetTag("messaging.operation.type", "send");
+        Activity.Current?.SetTag("messaging.destination.name", request.QueueUrl);
+
         SendMessageResponse response;
         try
         {
@@ -163,6 +170,11 @@ internal sealed class SqsMessagePublisher(
         foreach (var chunk in messages.Chunk(size))
         {
             var request = await BuildSendMessageBatchRequestAsync(chunk, metadata);
+
+            Activity.Current?.SetTag("messaging.system", "aws_sqs");
+            Activity.Current?.SetTag("messaging.operation.type", "send");
+            Activity.Current?.SetTag("messaging.destination.name", request.QueueUrl);
+
             SendMessageBatchResponse response;
             try
             {

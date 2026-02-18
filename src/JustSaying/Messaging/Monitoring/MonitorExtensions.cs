@@ -8,6 +8,7 @@ internal static class MonitorExtensions
             if (duration.TotalMilliseconds < 1) return;
             monitor.IncrementThrottlingStatistic();
             monitor.HandleThrottlingTime(duration);
+            JustSayingDiagnostics.MessagesThrottled.Add(1);
         });
 
     public static Operation MeasureDispatch(this IMessageMonitor messageMonitor)
