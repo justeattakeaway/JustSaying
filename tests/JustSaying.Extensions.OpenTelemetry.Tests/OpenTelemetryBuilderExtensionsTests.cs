@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using JustSaying.Messaging.Monitoring;
+using Microsoft.Extensions.DependencyInjection;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -57,6 +58,24 @@ public class OpenTelemetryBuilderExtensionsTests : IDisposable
         OpenTelemetryBuilder builder = null;
 
         Should.Throw<ArgumentNullException>(() => builder.AddJustSayingInstrumentation());
+    }
+
+    [Fact]
+    public void AddJustSayingInstrumentation_Registers_Via_OpenTelemetryBuilder()
+    {
+        // Arrange - use IServiceCollection to get a real OpenTelemetryBuilder
+        var services = new ServiceCollection();
+        services.AddOpenTelemetry().AddJustSayingInstrumentation();
+
+        using var serviceProvider = services.BuildServiceProvider();
+
+        // Force the TracerProvider and MeterProvider to be resolved
+        var tracerProvider = serviceProvider.GetService<TracerProvider>();
+        var meterProvider = serviceProvider.GetService<MeterProvider>();
+
+        // Assert - providers were created (the extension registered sources/meters)
+        tracerProvider.ShouldNotBeNull();
+        meterProvider.ShouldNotBeNull();
     }
 
     public void Dispose()

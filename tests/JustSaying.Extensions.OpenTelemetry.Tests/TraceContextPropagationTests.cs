@@ -75,5 +75,42 @@ public class TraceContextPropagationTests
         result.MessageAttributes.ShouldNotContainKey(MessageAttributeKeys.TraceParent);
     }
 
+    [Fact]
+    public async Task Publish_Injects_TraceState_When_Activity_Has_TraceState()
+    {
+        // Arrange
+        var exportedActivities = new List<Activity>();
+
+        using var tracerProvider = Sdk.CreateTracerProviderBuilder()
+            .AddJustSayingInstrumentation()
+            .AddInMemoryExporter(exportedActivities)
+            .Build();
+
+        var serializer = Substitute.For<IMessageBodySerializer>();
+        serializer.Serialize(Arg.Any<Message>()).Returns("{}");
+
+        var converter = new OutboundMessageConverter(
+            PublishDestinationType.Topic,
+            serializer,
+            new MessageCompressionRegistry([]),
+            null,
+            "TestSubject",
+            false);
+
+        // Act - start an activity with tracestate set
+        using var parentActivity = JustSayingDiagnostics.ActivitySource.StartActivity("test-publish", ActivityKind.Producer);
+        parentActivity.ShouldNotBeNull();
+        parentActivity.TraceStateString = "congo=t61rcWkgMzE";
+
+        var message = new SimpleMessage { Id = Guid.NewGuid() };
+        var result = await converter.ConvertToOutboundMessageAsync(message, null);
+
+        // Assert
+        result.MessageAttributes.ShouldContainKey(MessageAttributeKeys.TraceParent);
+        result.MessageAttributes.ShouldContainKey(MessageAttributeKeys.TraceState);
+        result.MessageAttributes[MessageAttributeKeys.TraceState].StringValue.ShouldBe("congo=t61rcWkgMzE");
+        result.MessageAttributes[MessageAttributeKeys.TraceState].DataType.ShouldBe("String");
+    }
+
     private class SimpleMessage : JustSaying.Models.Message { }
 }
