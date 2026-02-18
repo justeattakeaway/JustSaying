@@ -1,14 +1,14 @@
-﻿using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.MessageHandling;
 using JustSaying.Sample.Middleware.Exceptions;
 using JustSaying.Sample.Middleware.Messages;
-using Serilog;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Sample.Middleware.Handlers;
 
 /// <summary>
 /// A message handler that will randomly throw an exception, mimicking a transient error.
 /// </summary>
-public class UnreliableMessageHandler : IHandlerAsync<UnreliableMessage>
+public class UnreliableMessageHandler(ILogger<UnreliableMessageHandler> logger) : IHandlerAsync<UnreliableMessage>
 {
     public async Task<bool> Handle(UnreliableMessage message)
     {
@@ -16,7 +16,7 @@ public class UnreliableMessageHandler : IHandlerAsync<UnreliableMessage>
 
         if (Random.Shared.NextInt64() % 2 == 0)
         {
-            Log.Information("Throwing for message id {MessageId}", message.Id);
+            logger.LogInformation("Throwing for message id {MessageId}", message.Id);
             throw new BusinessException() { MessageId = message.Id.ToString() };
         }
 
