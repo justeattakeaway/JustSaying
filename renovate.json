@@ -1,9 +1,13 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
+  "extends": [
+    "config:recommended"
+  ],
   "packageRules": [
     {
-      "matchDatasources": ["nuget"],
+      "matchDatasources": [
+        "nuget"
+      ],
       "matchPackageNames": [
         "AWSSDK.Extensions.NETCore.Setup",
         "AWSSDK.SimpleNotificationService",
@@ -24,9 +28,13 @@
       "enabled": false
     },
     {
-      "matchDatasources": ["nuget"],
-      "matchPackagePatterns": ["^xunit"],
-      "groupName": "xunit"
+      "matchDatasources": [
+        "nuget"
+      ],
+      "groupName": "xunit",
+      "matchPackageNames": [
+        "/^xunit/"
+      ]
     }
   ]
 }
