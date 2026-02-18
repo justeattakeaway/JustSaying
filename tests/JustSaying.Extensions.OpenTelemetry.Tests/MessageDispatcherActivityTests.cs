@@ -142,6 +142,59 @@ public class MessageDispatcherActivityTests
         consumerActivity.ParentId.ShouldBeNull();
     }
 
+    [Fact]
+    public async Task DispatchMessage_Records_Error_Status_On_Middleware_Failure()
+    {
+        // Arrange
+        var exportedActivities = new List<Activity>();
+
+        using var tracerProvider = Sdk.CreateTracerProviderBuilder()
+            .AddJustSayingInstrumentation()
+            .AddInMemoryExporter(exportedActivities)
+            .Build();
+
+        var middlewareMap = new MiddlewareMap();
+        var throwingMiddleware = new ThrowingMiddleware();
+        middlewareMap.Add<SimpleMessage>("test-queue", throwingMiddleware);
+
+        var monitor = Substitute.For<IMessageMonitor>();
+
+        var dispatcher = new MessageDispatcher(
+            monitor,
+            middlewareMap,
+            NullLoggerFactory.Instance);
+
+        var sqsMessage = new SqsMessage
+        {
+            MessageId = "msg-error",
+            Body = "{}"
+        };
+
+        var messageAttributes = new MessageAttributes();
+        var inboundMessage = new InboundMessage(new SimpleMessage { Id = Guid.NewGuid() }, messageAttributes);
+
+        var messageConverter = Substitute.For<IInboundMessageConverter>();
+        messageConverter.ConvertToInboundMessageAsync(sqsMessage, Arg.Any<CancellationToken>())
+            .Returns(new ValueTask<InboundMessage>(inboundMessage));
+
+        var messageContext = Substitute.For<IQueueMessageContext>();
+        messageContext.Message.Returns(sqsMessage);
+        messageContext.QueueName.Returns("test-queue");
+        messageContext.QueueUri.Returns(new Uri("https://sqs.eu-west-1.amazonaws.com/123456789/test-queue"));
+        messageContext.MessageConverter.Returns(messageConverter);
+
+        // Act
+        await Should.ThrowAsync<InvalidOperationException>(
+            () => dispatcher.DispatchMessageAsync(messageContext, CancellationToken.None));
+        tracerProvider.ForceFlush();
+
+        // Assert
+        var consumerActivity = exportedActivities.FirstOrDefault(a => a.OperationName == "test-queue process");
+        consumerActivity.ShouldNotBeNull();
+        consumerActivity.Status.ShouldBe(ActivityStatusCode.Error);
+        consumerActivity.Events.ShouldContain(e => e.Name == "exception");
+    }
+
     private class SimpleMessage : JustSaying.Models.Message { }
 
     private class FakeMiddleware : MiddlewareBase<HandleMessageContext, bool>
@@ -149,6 +202,14 @@ public class MessageDispatcherActivityTests
         protected override Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
         {
             return Task.FromResult(true);
+        }
+    }
+
+    private class ThrowingMiddleware : MiddlewareBase<HandleMessageContext, bool>
+    {
+        protected override Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
+        {
+            throw new InvalidOperationException("Handler failed");
         }
     }
 }
