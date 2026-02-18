@@ -21,6 +21,9 @@ public static class TracerProviderBuilderExtensions
             throw new ArgumentNullException(nameof(builder));
         }
 
-        return builder.AddSource(JustSayingDiagnostics.ActivitySourceName);
+        return builder
+            .AddSource(JustSayingDiagnostics.ActivitySourceName)
+            .AddSource("JustSaying.MessageHandler")
+            .AddSource("JustSaying.MessagePublisher");
     }
 }

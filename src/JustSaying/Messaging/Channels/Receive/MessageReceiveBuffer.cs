@@ -104,10 +104,12 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
                 receiveWatch.Stop();
                 JustSayingDiagnostics.ClientOperationDuration.Record(
                     receiveWatch.Elapsed.TotalSeconds,
-                    new KeyValuePair<string, object>("messaging.operation.type", "receive"));
+                    new KeyValuePair<string, object>("messaging.operation.type", "receive"),
+                    new KeyValuePair<string, object>("messaging.destination.name", _sqsQueueReader.QueueName));
                 if (messages is not null)
                 {
-                    JustSayingDiagnostics.MessagesReceived.Add(messages.Count);
+                    JustSayingDiagnostics.MessagesReceived.Add(messages.Count,
+                        new KeyValuePair<string, object>("messaging.destination.name", _sqsQueueReader.QueueName));
                 }
 
                 if (_logger.IsEnabled(LogLevel.Trace))

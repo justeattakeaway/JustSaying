@@ -555,7 +555,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
                                 }));
                         }
 
-                        JustSayingDiagnostics.ClientSentMessages.Add(messages.Count,
+                        JustSayingDiagnostics.ClientSentMessages.Add(chunk.Length,
                             new KeyValuePair<string, object>("error.type", ex.GetType().FullName));
 
                         _log.LogError(
