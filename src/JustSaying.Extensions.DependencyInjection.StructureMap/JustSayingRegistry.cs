@@ -53,6 +53,9 @@ internal sealed class JustSayingRegistry : Registry
         For<MessageCompressionRegistry>().Singleton();
         For<IMessageReceivePauseSignal>().Use<MessageReceivePauseSignal>().Singleton();
 
+        // Note: in StructureMap the last registration wins, so user code that registers a custom
+        // TracingOptions (e.g. with UseParentSpan = true) must do so AFTER this registry runs.
+        // This is the inverse of Microsoft DI's TryAddSingleton (first-wins) behaviour.
 #pragma warning disable CS0618
         For<TracingOptions>().Use<TracingOptions>().Singleton();
 #pragma warning restore CS0618

@@ -69,10 +69,18 @@ internal sealed class OutboundMessageConverter : IOutboundMessageConverter
             return;
         }
 
+        // Always produce a valid W3C traceparent, regardless of the runtime's default IdFormat.
+        // activity.Id is only W3C-formatted when the OTel SDK has set Activity.DefaultIdFormat = W3C,
+        // which is not guaranteed (e.g. metrics-only setup). Constructing it explicitly is always safe.
+        var flags = activity.ActivityTraceFlags.HasFlag(ActivityTraceFlags.Recorded) ? "01" : "00";
+        var traceparent = activity.IdFormat == ActivityIdFormat.W3C
+            ? activity.Id
+            : $"00-{activity.TraceId}-{activity.SpanId}-{flags}";
+
         attributes[MessageAttributeKeys.TraceParent] = new MessageAttributeValue
         {
             DataType = "String",
-            StringValue = activity.Id
+            StringValue = traceparent
         };
 
         if (!string.IsNullOrEmpty(activity.TraceStateString))

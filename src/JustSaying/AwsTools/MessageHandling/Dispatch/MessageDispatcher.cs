@@ -110,7 +110,7 @@ internal sealed class MessageDispatcher : IMessageDispatcher
         var traceState = attributes?.Get(MessageAttributeKeys.TraceState)?.StringValue;
         ActivityContext parsed = default;
         bool hasParsed = traceParent is not null
-            && ActivityContext.TryParse(traceParent, traceState, out parsed);
+            && ActivityContext.TryParse(traceParent, traceState, isRemote: true, out parsed);
 
         Activity activity;
 #pragma warning disable CS0618
