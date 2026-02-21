@@ -1,6 +1,5 @@
 using JustSaying.AwsTools;
 using JustSaying.Messaging.Middleware;
-using JustSaying.Messaging.Middleware.Tracing;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
@@ -221,13 +220,7 @@ public sealed class PublicationsBuilder
             builder.Configure(bus, proxy, loggerFactory, serviceResolver);
         }
 
-        var allFactories = new List<Func<IServiceResolver, MiddlewareBase<PublishContext, bool>>>
-        {
-            resolver => resolver.ResolveService<TracingPublishMiddleware>()
-        };
-        allFactories.AddRange(_publishMiddlewareFactories);
-
-        var middlewares = allFactories
+        var middlewares = _publishMiddlewareFactories
             .Select(f => f(serviceResolver))
             .Reverse()
             .ToArray();

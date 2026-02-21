@@ -22,8 +22,6 @@ public static class TracerProviderBuilderExtensions
         }
 
         return builder
-            .AddSource(JustSayingDiagnostics.ActivitySourceName)
-            .AddSource("JustSaying.MessageHandler")
-            .AddSource("JustSaying.MessagePublisher");
+            .AddSource(JustSayingDiagnostics.ActivitySourceName);
     }
 }

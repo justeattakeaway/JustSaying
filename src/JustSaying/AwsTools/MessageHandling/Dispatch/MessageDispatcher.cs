@@ -6,6 +6,9 @@ using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
+#pragma warning disable CS0618
+using JustSaying.Messaging.Middleware.Tracing;
+#pragma warning restore CS0618
 
 namespace JustSaying.AwsTools.MessageHandling.Dispatch;
 
@@ -13,17 +16,24 @@ internal sealed class MessageDispatcher : IMessageDispatcher
 {
     private readonly IMessageMonitor _messagingMonitor;
     private readonly MiddlewareMap _middlewareMap;
-
     private readonly ILogger _logger;
 
+#pragma warning disable CS0618
+    private readonly TracingOptions _tracingOptions;
+#pragma warning restore CS0618
+
+#pragma warning disable CS0618
     public MessageDispatcher(
         IMessageMonitor messagingMonitor,
         MiddlewareMap middlewareMap,
-        ILoggerFactory loggerFactory)
+        ILoggerFactory loggerFactory,
+        TracingOptions tracingOptions = null)
+#pragma warning restore CS0618
     {
         _messagingMonitor = messagingMonitor;
         _middlewareMap = middlewareMap;
         _logger = loggerFactory.CreateLogger("JustSaying");
+        _tracingOptions = tracingOptions;
     }
 
     public async Task DispatchMessageAsync(
@@ -90,29 +100,42 @@ internal sealed class MessageDispatcher : IMessageDispatcher
         }
     }
 
-    private static Activity StartConsumerActivity(
+    private Activity StartConsumerActivity(
         IQueueMessageContext messageContext,
         Message typedMessage,
         Type messageType,
         MessageAttributes attributes)
     {
-        var links = new List<ActivityLink>();
         var traceParent = attributes?.Get(MessageAttributeKeys.TraceParent)?.StringValue;
-        if (traceParent is not null)
-        {
-            var traceState = attributes.Get(MessageAttributeKeys.TraceState)?.StringValue;
-            if (ActivityContext.TryParse(traceParent, traceState, out var parsed))
-            {
-                links.Add(new ActivityLink(parsed));
-            }
-        }
+        var traceState = attributes?.Get(MessageAttributeKeys.TraceState)?.StringValue;
+        ActivityContext parsed = default;
+        bool hasParsed = traceParent is not null
+            && ActivityContext.TryParse(traceParent, traceState, out parsed);
 
-        var activity = JustSayingDiagnostics.ActivitySource.StartActivity(
-            $"{messageContext.QueueName} process",
-            ActivityKind.Consumer,
-            default(ActivityContext),
-            tags: null,
-            links: links);
+        Activity activity;
+#pragma warning disable CS0618
+        if (hasParsed && _tracingOptions?.UseParentSpan == true)
+#pragma warning restore CS0618
+        {
+            // Parent mode: consumer becomes child of producer (same trace ID)
+            activity = JustSayingDiagnostics.ActivitySource.StartActivity(
+                $"{messageContext.QueueName} process",
+                ActivityKind.Consumer,
+                parentContext: parsed);
+        }
+        else
+        {
+            // Link mode (default): new trace, linked back to producer
+            var links = hasParsed
+                ? [new ActivityLink(parsed)]
+                : Array.Empty<ActivityLink>();
+            activity = JustSayingDiagnostics.ActivitySource.StartActivity(
+                $"{messageContext.QueueName} process",
+                ActivityKind.Consumer,
+                default(ActivityContext),
+                tags: null,
+                links: links);
+        }
 
         if (activity is not null)
         {

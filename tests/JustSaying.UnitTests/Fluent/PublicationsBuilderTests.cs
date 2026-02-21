@@ -2,7 +2,7 @@ using JustSaying.AwsTools;
 using JustSaying.Fluent;
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.MessageSerialization;
-using JustSaying.Messaging.Middleware.Tracing;
+using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.UnitTests.Messaging.Channels.Fakes;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,16 +29,25 @@ public class PublicationsBuilderTests
             monitor);
 
         var resolver = new InMemoryServiceResolver(sc =>
-            sc.AddTransient<TracingPublishMiddleware>());
+            sc.AddTransient<TestPublishMiddleware>());
 
         var messagingBusBuilder = new MessagingBusBuilder();
         var publicationsBuilder = new PublicationsBuilder(messagingBusBuilder);
-        publicationsBuilder.WithPublishMiddleware<TracingPublishMiddleware>();
+        publicationsBuilder.WithPublishMiddleware<TestPublishMiddleware>();
 
         var proxy = Substitute.For<IAwsClientFactoryProxy>();
 
         publicationsBuilder.Configure(bus, proxy, loggerFactory, resolver);
 
         bus.PublishMiddleware.ShouldNotBeNull();
+    }
+
+    private sealed class TestPublishMiddleware : MiddlewareBase<PublishContext, bool>
+    {
+        protected override Task<bool> RunInnerAsync(
+            PublishContext context,
+            Func<CancellationToken, Task<bool>> func,
+            CancellationToken stoppingToken)
+            => func(stoppingToken);
     }
 }

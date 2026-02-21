@@ -7,12 +7,14 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware.Logging;
 using JustSaying.Messaging.Middleware.PostProcessing;
-using JustSaying.Messaging.Middleware.Tracing;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Naming;
 using Newtonsoft.Json;
 using StructureMap;
 using StructureMap.Pipeline;
+#pragma warning disable CS0618
+using JustSaying.Messaging.Middleware.Tracing;
+#pragma warning restore CS0618
 
 namespace JustSaying;
 
@@ -47,12 +49,13 @@ internal sealed class JustSayingRegistry : Registry
 
         For<LoggingMiddleware>().AlwaysUnique();
         For<SqsPostProcessorMiddleware>().AlwaysUnique();
-        For<TracingOptions>().Use<TracingOptions>().Singleton();
-        For<TracingMiddleware>().AlwaysUnique();
-        For<TracingPublishMiddleware>().AlwaysUnique();
         For<IMessageBodyCompression>().Add<GzipMessageBodyCompression>().Singleton();
         For<MessageCompressionRegistry>().Singleton();
         For<IMessageReceivePauseSignal>().Use<MessageReceivePauseSignal>().Singleton();
+
+#pragma warning disable CS0618
+        For<TracingOptions>().Use<TracingOptions>().Singleton();
+#pragma warning restore CS0618
 
         For<DefaultNamingConventions>().Singleton();
         For<ITopicNamingConvention>().Use(context => context.GetInstance<DefaultNamingConventions>());
