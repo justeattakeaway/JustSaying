@@ -356,10 +356,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
                     .ConfigureAwait(false);
             }
 
-            if (isFirstAttempt)
-            {
-                JustSayingDiagnostics.ClientSentMessages.Add(1);
-            }
+            JustSayingDiagnostics.ClientSentMessages.Add(1);
         }
         catch (Exception ex)
         {
