@@ -96,6 +96,52 @@ public class MetricsTests
         messagesProcessed.ShouldNotBeNull("justsaying.messages.processed metric should be recorded on error");
     }
 
+    [Fact]
+    public void MessagesReceived_Counter_Is_Captured_By_MeterProvider()
+    {
+        // Arrange
+        var exportedMetrics = new List<Metric>();
+
+        using var meterProvider = Sdk.CreateMeterProviderBuilder()
+            .AddJustSayingInstrumentation()
+            .AddInMemoryExporter(exportedMetrics)
+            .Build();
+
+        // Act — emit the metric directly (the call site is inside MessageReceiveBuffer
+        // which requires a live SQS connection; this verifies the instrument is registered)
+        JustSayingDiagnostics.MessagesReceived.Add(3,
+            new KeyValuePair<string, object>("messaging.destination.name", "test-queue"));
+        meterProvider.ForceFlush();
+
+        // Assert
+        exportedMetrics.ShouldContain(m => m.Name == "justsaying.messages.received");
+    }
+
+    [Fact]
+    public async Task MessagesThrottled_Counter_Is_Captured_When_Throttle_Occurs()
+    {
+        // Arrange
+        var exportedMetrics = new List<Metric>();
+
+        using var meterProvider = Sdk.CreateMeterProviderBuilder()
+            .AddJustSayingInstrumentation()
+            .AddInMemoryExporter(exportedMetrics)
+            .Build();
+
+        var monitor = Substitute.For<IMessageMonitor>();
+
+        // Act — MeasureThrottle only emits the metric when elapsed >= 1ms
+        using (monitor.MeasureThrottle())
+        {
+            await Task.Delay(5); // ensure > 1ms elapses
+        }
+
+        meterProvider.ForceFlush();
+
+        // Assert
+        exportedMetrics.ShouldContain(m => m.Name == "justsaying.messages.throttled");
+    }
+
     private static HandleMessageContext CreateHandleMessageContext(string queueName)
     {
         var sqsMessage = new SqsMessage { MessageId = "msg-test", Body = "{}" };

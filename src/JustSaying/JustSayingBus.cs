@@ -550,6 +550,8 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
                     {
                         await publisher.PublishAsync(chunk, metadata, cancellationToken).ConfigureAwait(false);
                     }
+
+                    JustSayingDiagnostics.ClientSentMessages.Add(chunk.Length);
                 }
                 catch (Exception ex)
                 {
@@ -595,10 +597,6 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
                 }
             }
 
-            if (isFirstAttempt)
-            {
-                JustSayingDiagnostics.ClientSentMessages.Add(messages.Count);
-            }
         }
         finally
         {

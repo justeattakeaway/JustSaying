@@ -78,6 +78,41 @@ public class OpenTelemetryBuilderExtensionsTests : IDisposable
         meterProvider.ShouldNotBeNull();
     }
 
+    [Fact]
+    public void AddJustSayingInstrumentation_Captures_Activities_Via_OpenTelemetryBuilder()
+    {
+        // Arrange - wire up via the OpenTelemetryBuilder path (the IServiceCollection / hosting path)
+        var exportedActivities = new List<Activity>();
+        var exportedMetrics = new List<Metric>();
+
+        var services = new ServiceCollection();
+        services.AddOpenTelemetry()
+            .AddJustSayingInstrumentation()
+            .WithTracing(b => b.AddInMemoryExporter(exportedActivities))
+            .WithMetrics(b => b.AddInMemoryExporter(exportedMetrics));
+
+        using var serviceProvider = services.BuildServiceProvider();
+        var tracerProvider = serviceProvider.GetRequiredService<TracerProvider>();
+        var meterProvider = serviceProvider.GetRequiredService<MeterProvider>();
+
+        // Act — emit a trace and a metric from JustSayingDiagnostics
+        using (var activity = JustSayingDiagnostics.ActivitySource.StartActivity("test-builder-e2e"))
+        {
+            activity?.Stop();
+        }
+
+        JustSayingDiagnostics.ClientSentMessages.Add(1);
+
+        tracerProvider.ForceFlush();
+        meterProvider.ForceFlush();
+
+        // Assert — both are captured via the OpenTelemetryBuilder path
+        exportedActivities.ShouldContain(a => a.OperationName == "test-builder-e2e",
+            "JustSayingDiagnostics.ActivitySource should be subscribed via AddJustSayingInstrumentation");
+        exportedMetrics.ShouldContain(m => m.Name == "messaging.client.sent.messages",
+            "JustSayingDiagnostics.Meter should be subscribed via AddJustSayingInstrumentation");
+    }
+
     public void Dispose()
     {
         _tracerProvider?.Dispose();
