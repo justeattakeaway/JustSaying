@@ -7,9 +7,6 @@ using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
-#pragma warning disable CS0618
-using JustSaying.Messaging.Middleware.Tracing;
-#pragma warning restore CS0618
 
 namespace JustSaying;
 
@@ -283,11 +280,8 @@ public sealed class MessagingBusBuilder
         IMessageBodySerializationFactory serializationFactory = ServiceResolver.ResolveService<IMessageBodySerializationFactory>();
         IMessageReceivePauseSignal messageReceivePauseSignal = ServiceResolver.ResolveService<IMessageReceivePauseSignal>();
         IMessageMonitor monitor = ServiceResolver.ResolveOptionalService<IMessageMonitor>() ?? new NullOpMessageMonitor();
-#pragma warning disable CS0618
-        TracingOptions tracingOptions = ServiceResolver.ResolveOptionalService<TracingOptions>();
-#pragma warning restore CS0618
 
-        return new JustSayingBus(config, serializationFactory, messageReceivePauseSignal, loggerFactory, monitor, publishBatchConfiguration, tracingOptions);
+        return new JustSayingBus(config, serializationFactory, messageReceivePauseSignal, loggerFactory, monitor, publishBatchConfiguration);
     }
 
     private IAwsClientFactoryProxy CreateFactoryProxy()

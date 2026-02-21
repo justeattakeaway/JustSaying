@@ -12,9 +12,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using OpenTelemetry;
 using OpenTelemetry.Trace;
-#pragma warning disable CS0618
-using JustSaying.Messaging.Middleware.Tracing;
-#pragma warning restore CS0618
 using SqsMessage = Amazon.SQS.Model.Message;
 
 namespace JustSaying.Extensions.OpenTelemetry.Tests;
@@ -197,68 +194,6 @@ public class MessageDispatcherActivityTests
         consumerActivity.ShouldNotBeNull();
         consumerActivity.Status.ShouldBe(ActivityStatusCode.Error);
         consumerActivity.Events.ShouldContain(e => e.Name == "exception");
-    }
-
-    [Fact]
-    public async Task DispatchMessage_UseParentSpan_Creates_Child_Span_With_Same_TraceId()
-    {
-        // Arrange
-        var exportedActivities = new List<Activity>();
-
-        using var tracerProvider = Sdk.CreateTracerProviderBuilder()
-            .AddJustSayingInstrumentation()
-            .AddInMemoryExporter(exportedActivities)
-            .Build();
-
-        var traceId = ActivityTraceId.CreateRandom();
-        var spanId = ActivitySpanId.CreateRandom();
-        var traceParent = $"00-{traceId}-{spanId}-01";
-
-        var middlewareMap = new MiddlewareMap();
-        middlewareMap.Add<SimpleMessage>("test-queue", new FakeMiddleware());
-
-        var monitor = Substitute.For<IMessageMonitor>();
-
-#pragma warning disable CS0618
-        var tracingOptions = new TracingOptions { UseParentSpan = true };
-#pragma warning restore CS0618
-
-        var dispatcher = new MessageDispatcher(
-            monitor,
-            middlewareMap,
-            NullLoggerFactory.Instance,
-            tracingOptions);
-
-        var sqsMessage = new SqsMessage { MessageId = "msg-parent", Body = "{}" };
-
-        var messageAttributes = new MessageAttributes(new Dictionary<string, MessageAttributeValue>
-        {
-            [MessageAttributeKeys.TraceParent] = new() { DataType = "String", StringValue = traceParent }
-        });
-
-        var inboundMessage = new InboundMessage(new SimpleMessage { Id = Guid.NewGuid() }, messageAttributes);
-
-        var messageConverter = Substitute.For<IInboundMessageConverter>();
-        messageConverter.ConvertToInboundMessageAsync(sqsMessage, Arg.Any<CancellationToken>())
-            .Returns(new ValueTask<InboundMessage>(inboundMessage));
-
-        var messageContext = Substitute.For<IQueueMessageContext>();
-        messageContext.Message.Returns(sqsMessage);
-        messageContext.QueueName.Returns("test-queue");
-        messageContext.QueueUri.Returns(new Uri("https://sqs.eu-west-1.amazonaws.com/123456789/test-queue"));
-        messageContext.MessageConverter.Returns(messageConverter);
-
-        // Act
-        await dispatcher.DispatchMessageAsync(messageContext, CancellationToken.None);
-        tracerProvider.ForceFlush();
-
-        // Assert — consumer span is a child of the producer span (same traceId, parentSpanId set)
-        var consumerActivity = exportedActivities.FirstOrDefault(a => a.OperationName == "test-queue process");
-        consumerActivity.ShouldNotBeNull();
-        consumerActivity.Kind.ShouldBe(ActivityKind.Consumer);
-        consumerActivity.TraceId.ShouldBe(traceId);
-        consumerActivity.ParentSpanId.ShouldBe(spanId);
-        consumerActivity.Links.ShouldBeEmpty(); // parent mode uses no links
     }
 
     private class SimpleMessage : JustSaying.Models.Message { }

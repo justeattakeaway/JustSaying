@@ -11,9 +11,6 @@ using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
-#pragma warning disable CS0618
-using JustSaying.Messaging.Middleware.Tracing;
-#pragma warning restore CS0618
 using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;
 using PublishMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.PublishContext, bool>;
 
@@ -41,10 +38,6 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
 
     private readonly IMessageMonitor _monitor;
 
-#pragma warning disable CS0618
-    private readonly TracingOptions _tracingOptions;
-#pragma warning restore CS0618
-
     private ISubscriptionGroup SubscriptionGroups { get; set; }
 
     internal MiddlewareMap MiddlewareMap { get; }
@@ -63,20 +56,16 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
     {
     }
 
-#pragma warning disable CS0618
     internal JustSayingBus(
         IMessagingConfig config,
         IMessageBodySerializationFactory serializationFactory,
         IMessageReceivePauseSignal messageReceivePauseSignal,
         ILoggerFactory loggerFactory,
         IMessageMonitor monitor,
-        IPublishBatchConfiguration publishBatchConfiguration,
-        TracingOptions tracingOptions = null)
-#pragma warning restore CS0618
+        IPublishBatchConfiguration publishBatchConfiguration = null)
     {
         _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
         _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
-        _tracingOptions = tracingOptions;
 
         _startupTasks = [];
         _log = _loggerFactory.CreateLogger("JustSaying");
@@ -228,13 +217,10 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
 
     private async Task RunImplAsync(CancellationToken stoppingToken)
     {
-#pragma warning disable CS0618
         var dispatcher = new MessageDispatcher(
             _monitor,
             MiddlewareMap,
-            _loggerFactory,
-            _tracingOptions);
-#pragma warning restore CS0618
+            _loggerFactory);
 
         var subscriptionGroupFactory = new SubscriptionGroupFactory(
             dispatcher,

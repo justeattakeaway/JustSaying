@@ -118,10 +118,6 @@ const JustSaying.Messaging.Monitoring.JustSayingDiagnostics.ActivitySourceName =
 const JustSaying.Messaging.Monitoring.JustSayingDiagnostics.MeterName = "JustSaying" -> string
 static JustSaying.Messaging.Monitoring.JustSayingDiagnostics.ActivitySource.get -> System.Diagnostics.ActivitySource
 static JustSaying.Messaging.Monitoring.JustSayingDiagnostics.Meter.get -> System.Diagnostics.Metrics.Meter
-JustSaying.Messaging.Middleware.Tracing.TracingOptions
-JustSaying.Messaging.Middleware.Tracing.TracingOptions.TracingOptions() -> void
-JustSaying.Messaging.Middleware.Tracing.TracingOptions.UseParentSpan.get -> bool
-JustSaying.Messaging.Middleware.Tracing.TracingOptions.UseParentSpan.set -> void
 static JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions.get -> System.Text.Json.JsonSerializerOptions
 *REMOVED*JustSaying.AwsTools.MessageHandling.Dispatch.IMessageDispatcher
 *REMOVED*JustSaying.AwsTools.MessageHandling.Dispatch.IMessageDispatcher.DispatchMessageAsync(JustSaying.Messaging.Channels.Context.IQueueMessageContext messageContext, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task

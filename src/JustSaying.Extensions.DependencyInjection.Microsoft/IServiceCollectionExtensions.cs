@@ -14,9 +14,6 @@ using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using JustSaying.Naming;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-#pragma warning disable CS0618
-using JustSaying.Messaging.Middleware.Tracing;
-#pragma warning restore CS0618
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -150,10 +147,6 @@ public static class IServiceCollectionExtensions
         services.TryAddSingleton<MessageCompressionRegistry>();
 
         services.TryAddSingleton<IMessageReceivePauseSignal, MessageReceivePauseSignal>();
-
-#pragma warning disable CS0618
-        services.TryAddSingleton<TracingOptions>();
-#pragma warning restore CS0618
 
         services.TryAddSingleton(
             (serviceProvider) =>

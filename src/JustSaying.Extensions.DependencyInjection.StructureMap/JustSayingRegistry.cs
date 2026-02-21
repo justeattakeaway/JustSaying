@@ -12,9 +12,6 @@ using JustSaying.Naming;
 using Newtonsoft.Json;
 using StructureMap;
 using StructureMap.Pipeline;
-#pragma warning disable CS0618
-using JustSaying.Messaging.Middleware.Tracing;
-#pragma warning restore CS0618
 
 namespace JustSaying;
 
@@ -52,13 +49,6 @@ internal sealed class JustSayingRegistry : Registry
         For<IMessageBodyCompression>().Add<GzipMessageBodyCompression>().Singleton();
         For<MessageCompressionRegistry>().Singleton();
         For<IMessageReceivePauseSignal>().Use<MessageReceivePauseSignal>().Singleton();
-
-        // Note: in StructureMap the last registration wins, so user code that registers a custom
-        // TracingOptions (e.g. with UseParentSpan = true) must do so AFTER this registry runs.
-        // This is the inverse of Microsoft DI's TryAddSingleton (first-wins) behaviour.
-#pragma warning disable CS0618
-        For<TracingOptions>().Use<TracingOptions>().Singleton();
-#pragma warning restore CS0618
 
         For<DefaultNamingConventions>().Singleton();
         For<ITopicNamingConvention>().Use(context => context.GetInstance<DefaultNamingConventions>());
