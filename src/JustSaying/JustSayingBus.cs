@@ -62,7 +62,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         IMessageReceivePauseSignal messageReceivePauseSignal,
         ILoggerFactory loggerFactory,
         IMessageMonitor monitor,
-        IPublishBatchConfiguration publishBatchConfiguration = null)
+        IPublishBatchConfiguration publishBatchConfiguration)
     {
         _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
         _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
