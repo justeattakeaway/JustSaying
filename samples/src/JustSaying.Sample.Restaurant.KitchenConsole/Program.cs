@@ -1,4 +1,3 @@
-using JustSaying.Messaging.Middleware;
 using JustSaying.Sample.Restaurant.KitchenConsole;
 using JustSaying.Sample.Restaurant.KitchenConsole.Handlers;
 using JustSaying.Sample.Restaurant.Models;
@@ -58,19 +57,11 @@ builder.Services.AddJustSaying(config =>
             cfg.WithTag("IsOrderEvent")
                 .WithTag("Subscriber", appName)
                 .WithReadConfiguration(rc =>
-                    rc.WithSubscriptionGroup("GroupA"))
-                .WithMiddlewareConfiguration(pipe =>
-                {
-                    pipe.UseDefaults<OrderPlacedEvent>(typeof(OrderPlacedEventHandler));
-                }));
+                    rc.WithSubscriptionGroup("GroupA")));
 
         x.ForTopic<OrderOnItsWayEvent>(cfg =>
             cfg.WithReadConfiguration(rc =>
-                rc.WithSubscriptionGroup("GroupB"))
-                .WithMiddlewareConfiguration(pipe =>
-                {
-                    pipe.UseDefaults<OrderOnItsWayEvent>(typeof(OrderOnItsWayEventHandler));
-                }));
+                rc.WithSubscriptionGroup("GroupB")));
     });
 
     config.Publications(x =>

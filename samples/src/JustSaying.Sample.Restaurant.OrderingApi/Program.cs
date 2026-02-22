@@ -1,5 +1,4 @@
 using JustSaying.Messaging;
-using JustSaying.Messaging.Middleware;
 using JustSaying.Sample.Restaurant.Models;
 using JustSaying.Sample.Restaurant.OrderingApi;
 using JustSaying.Sample.Restaurant.OrderingApi.Handlers;
@@ -44,16 +43,8 @@ builder.Services.AddJustSaying(config =>
         //  - a SQS queue of name `orderreadyevent_error`
         //  - a SNS topic of name `orderreadyevent`
         //  - a SNS topic subscription on topic 'orderreadyevent' and queue 'orderreadyevent'
-        x.ForTopic<OrderReadyEvent>(cfg =>
-            cfg.WithMiddlewareConfiguration(pipe =>
-            {
-                pipe.UseDefaults<OrderReadyEvent>(typeof(OrderReadyEventHandler));
-            }));
-        x.ForTopic<OrderDeliveredEvent>(cfg =>
-            cfg.WithMiddlewareConfiguration(pipe =>
-            {
-                pipe.UseDefaults<OrderDeliveredEvent>(typeof(OrderDeliveredEventHandler));
-            }));
+        x.ForTopic<OrderReadyEvent>();
+        x.ForTopic<OrderDeliveredEvent>();
     });
     config.Publications(x =>
     {
