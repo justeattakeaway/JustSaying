@@ -14,13 +14,13 @@
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageVersion Include="OpenTelemetry.Api" Version="1.15.0" />
-    <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="8.0.1" Condition=" '$(TargetFramework)' == 'net462' " />
-    <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="8.0.1" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
+    <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="10.0.3" Condition=" '$(TargetFramework)' == 'net462' " />
+    <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="10.0.3" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
     <PackageVersion Include="StructureMap" Version="4.6.0" />
     <PackageVersion Include="xunit.v3.assert" Version="3.2.2" />
   </ItemGroup>
   <ItemGroup Label="Aspire">
-    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.10.0" />
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.3.0" />
     <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="10.3.0" />
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.0" />
     <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.15.0" />
