@@ -5,6 +5,7 @@
     <Project Path="samples/src/JustSaying.Sample.Restaurant.KitchenConsole/JustSaying.Sample.Restaurant.KitchenConsole.csproj" />
     <Project Path="samples/src/JustSaying.Sample.Restaurant.Models/JustSaying.Sample.Restaurant.Models.csproj" />
     <Project Path="samples/src/JustSaying.Sample.Restaurant.OrderingApi/JustSaying.Sample.Restaurant.OrderingApi.csproj" />
+    <Project Path="samples/src/JustSaying.Sample.ServiceDefaults/JustSaying.Sample.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/samples/tests/">
     <File Path="samples/tests/readme.md" />
