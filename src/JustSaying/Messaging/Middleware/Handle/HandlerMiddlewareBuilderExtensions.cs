@@ -4,7 +4,6 @@ using JustSaying.Messaging.Middleware.ErrorHandling;
 using JustSaying.Messaging.Middleware.Logging;
 using JustSaying.Messaging.Middleware.MessageContext;
 using JustSaying.Messaging.Middleware.PostProcessing;
-using JustSaying.Messaging.Middleware.Tracing;
 using JustSaying.Models;
 
 // ReSharper disable once CheckNamespace
@@ -42,7 +41,6 @@ public static class HandlerMiddlewareBuilderExtensions
     /// </para>
     /// The middlewares this adds are, in order:
     /// <list type="bullet">
-    /// <item>TracingMiddleware</item>
     /// <item>MessageContextAccessorMiddleware</item>
     /// <item>BackoffMiddleware (only if an <see cref="IMessageBackoffStrategy"/> is available)</item>
     /// <item>LoggingMiddleware</item>
@@ -65,7 +63,6 @@ public static class HandlerMiddlewareBuilderExtensions
         if (builder == null) throw new ArgumentNullException(nameof(builder));
         if (handlerType == null) throw new ArgumentNullException(nameof(handlerType), "HandlerType is used here to");
 
-        builder.Use<TracingMiddleware>();
         builder.UseMessageContextAccessor();
         builder.Use<LoggingMiddleware>();
         builder.UseStopwatch(handlerType);

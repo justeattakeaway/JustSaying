@@ -23,12 +23,14 @@ $libraryProjects = @(
     (Join-Path $solutionPath "src" "JustSaying.Models" "JustSaying.Models.csproj"),
     (Join-Path $solutionPath "src" "JustSaying.Extensions.Aws" "JustSaying.Extensions.Aws.csproj"),
     (Join-Path $solutionPath "src" "JustSaying.Extensions.DependencyInjection.Microsoft" "JustSaying.Extensions.DependencyInjection.Microsoft.csproj"),
-    (Join-Path $solutionPath "src" "JustSaying.Extensions.DependencyInjection.StructureMap" "JustSaying.Extensions.DependencyInjection.StructureMap.csproj")
+    (Join-Path $solutionPath "src" "JustSaying.Extensions.DependencyInjection.StructureMap" "JustSaying.Extensions.DependencyInjection.StructureMap.csproj"),
+    (Join-Path $solutionPath "src" "JustSaying.Extensions.OpenTelemetry" "JustSaying.Extensions.OpenTelemetry.csproj")
 )
 
 $testProjects = @(
     (Join-Path $solutionPath "tests" "JustSaying.UnitTests" "JustSaying.UnitTests.csproj"),
-    (Join-Path $solutionPath "tests" "JustSaying.Extensions.DependencyInjection.StructureMap.Tests" "JustSaying.Extensions.DependencyInjection.StructureMap.Tests.csproj")
+    (Join-Path $solutionPath "tests" "JustSaying.Extensions.DependencyInjection.StructureMap.Tests" "JustSaying.Extensions.DependencyInjection.StructureMap.Tests.csproj"),
+    (Join-Path $solutionPath "tests" "JustSaying.Extensions.OpenTelemetry.Tests" "JustSaying.Extensions.OpenTelemetry.Tests.csproj")
 )
 
 if ($EnableIntegrationTests -eq $true) {

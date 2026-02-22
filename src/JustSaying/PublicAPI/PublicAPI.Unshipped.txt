@@ -5,13 +5,6 @@ JustSaying.Messaging.Middleware.PublishContext.Messages.get -> System.Collection
 JustSaying.Messaging.Middleware.PublishContext.Metadata.get -> JustSaying.Messaging.PublishMetadata
 JustSaying.Messaging.Middleware.PublishContext.PublishContext(JustSaying.Models.Message message, JustSaying.Messaging.PublishMetadata metadata) -> void
 JustSaying.Messaging.Middleware.PublishContext.PublishContext(System.Collections.Generic.IReadOnlyCollection<JustSaying.Models.Message> messages, JustSaying.Messaging.PublishMetadata metadata) -> void
-JustSaying.Messaging.Middleware.Tracing.TraceContextKeys
-const JustSaying.Messaging.Middleware.Tracing.TraceContextKeys.MessageId = "message_id" -> string
-const JustSaying.Messaging.Middleware.Tracing.TraceContextKeys.TraceParent = "traceparent" -> string
-const JustSaying.Messaging.Middleware.Tracing.TraceContextKeys.TraceState = "tracestate" -> string
-JustSaying.Messaging.Middleware.Tracing.TracingMiddleware
-JustSaying.Messaging.Middleware.Tracing.TracingMiddleware.TracingMiddleware(JustSaying.Messaging.Middleware.Tracing.TracingOptions options) -> void
-override JustSaying.Messaging.Middleware.Tracing.TracingMiddleware.RunInnerAsync(JustSaying.Messaging.Middleware.HandleMessageContext context, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task<bool>> func, System.Threading.CancellationToken stoppingToken) -> System.Threading.Tasks.Task<bool>
 JustSaying.Messaging.Middleware.PublishMiddlewareBuilder
 JustSaying.Messaging.Middleware.PublishMiddlewareBuilder.Build() -> JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.PublishContext, bool>
 JustSaying.Messaging.Middleware.PublishMiddlewareBuilder.Configure(System.Action<JustSaying.Messaging.Middleware.PublishMiddlewareBuilder> configure) -> JustSaying.Messaging.Middleware.PublishMiddlewareBuilder
@@ -23,18 +16,8 @@ JustSaying.Fluent.QueuePublicationBuilder<T>.WithMiddlewareConfiguration(System.
 JustSaying.Fluent.TopicPublicationBuilder<T>.WithMiddlewareConfiguration(System.Action<JustSaying.Messaging.Middleware.PublishMiddlewareBuilder> middlewareConfiguration) -> JustSaying.Fluent.TopicPublicationBuilder<T>
 JustSaying.Fluent.TopicAddressPublicationBuilder<T>.WithMiddlewareConfiguration(System.Action<JustSaying.Messaging.Middleware.PublishMiddlewareBuilder> middlewareConfiguration) -> JustSaying.Fluent.TopicAddressPublicationBuilder<T>
 JustSaying.Fluent.QueueAddressPublicationBuilder<T>.WithMiddlewareConfiguration(System.Action<JustSaying.Messaging.Middleware.PublishMiddlewareBuilder> middlewareConfiguration) -> JustSaying.Fluent.QueueAddressPublicationBuilder<T>
-JustSaying.Messaging.Middleware.Tracing.TracingMiddlewareBuilderExtensions
-static JustSaying.Messaging.Middleware.Tracing.TracingMiddlewareBuilderExtensions.UseTracingMiddleware(this JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder builder) -> JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder
-static JustSaying.Messaging.Middleware.Tracing.TracingMiddlewareBuilderExtensions.UseTracingPublishMiddleware(this JustSaying.Messaging.Middleware.PublishMiddlewareBuilder builder) -> JustSaying.Messaging.Middleware.PublishMiddlewareBuilder
 *REMOVED*JustSaying.Fluent.QueueAddressPublicationBuilder<T>.Configure(JustSaying.JustSayingBus bus, JustSaying.AwsTools.IAwsClientFactoryProxy proxy, Microsoft.Extensions.Logging.ILoggerFactory loggerFactory) -> void
 *REMOVED*JustSaying.Fluent.TopicAddressPublicationBuilder<T>.Configure(JustSaying.JustSayingBus bus, JustSaying.AwsTools.IAwsClientFactoryProxy proxy, Microsoft.Extensions.Logging.ILoggerFactory loggerFactory) -> void
-JustSaying.Messaging.Middleware.Tracing.TracingOptions
-JustSaying.Messaging.Middleware.Tracing.TracingOptions.TracingOptions() -> void
-JustSaying.Messaging.Middleware.Tracing.TracingOptions.UseParentSpan.get -> bool
-JustSaying.Messaging.Middleware.Tracing.TracingOptions.UseParentSpan.set -> void
-JustSaying.Messaging.Middleware.Tracing.TracingPublishMiddleware
-JustSaying.Messaging.Middleware.Tracing.TracingPublishMiddleware.TracingPublishMiddleware() -> void
-override JustSaying.Messaging.Middleware.Tracing.TracingPublishMiddleware.RunInnerAsync(JustSaying.Messaging.Middleware.PublishContext context, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task<bool>> func, System.Threading.CancellationToken stoppingToken) -> System.Threading.Tasks.Task<bool>
 const JustSaying.Messaging.Compression.ContentEncodings.GzipBase64 = "gzip,base64" -> string
 JustSaying.AwsTools.MessageHandling.PublishCompressionOptions
 JustSaying.AwsTools.MessageHandling.PublishCompressionOptions.CompressionEncoding.get -> string
@@ -130,6 +113,11 @@ JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer<T>
 JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializationFactory.GetSerializer<T>() -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializer
 JustSaying.MessagingConfig.DefaultCompressionOptions.get -> JustSaying.AwsTools.MessageHandling.PublishCompressionOptions
 JustSaying.MessagingConfig.DefaultCompressionOptions.set -> void
+JustSaying.Messaging.Monitoring.JustSayingDiagnostics
+const JustSaying.Messaging.Monitoring.JustSayingDiagnostics.ActivitySourceName = "JustSaying" -> string
+const JustSaying.Messaging.Monitoring.JustSayingDiagnostics.MeterName = "JustSaying" -> string
+static JustSaying.Messaging.Monitoring.JustSayingDiagnostics.ActivitySource.get -> System.Diagnostics.ActivitySource
+static JustSaying.Messaging.Monitoring.JustSayingDiagnostics.Meter.get -> System.Diagnostics.Metrics.Meter
 static JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions.get -> System.Text.Json.JsonSerializerOptions
 *REMOVED*JustSaying.AwsTools.MessageHandling.Dispatch.IMessageDispatcher
 *REMOVED*JustSaying.AwsTools.MessageHandling.Dispatch.IMessageDispatcher.DispatchMessageAsync(JustSaying.Messaging.Channels.Context.IQueueMessageContext messageContext, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
@@ -12,7 +13,6 @@ internal sealed class MessageDispatcher : IMessageDispatcher
 {
     private readonly IMessageMonitor _messagingMonitor;
     private readonly MiddlewareMap _middlewareMap;
-
     private readonly ILogger _logger;
 
     public MessageDispatcher(
@@ -64,8 +64,64 @@ internal sealed class MessageDispatcher : IMessageDispatcher
             messageContext.QueueUri,
             attributes);
 
-        await middleware.RunAsync(handleContext, null, cancellationToken)
-            .ConfigureAwait(false);
+        using var activity = StartConsumerActivity(messageContext, typedMessage, messageType, attributes);
+
+        try
+        {
+            await middleware.RunAsync(handleContext, null, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            if (activity is not null)
+            {
+                activity.SetStatus(ActivityStatusCode.Error, ex.Message);
+                activity.AddEvent(new ActivityEvent("exception",
+                    tags: new ActivityTagsCollection
+                    {
+                        { "exception.type", ex.GetType().FullName },
+                        { "exception.message", ex.Message },
+                        { "exception.stacktrace", ex.ToString() },
+                    }));
+            }
+
+            throw;
+        }
+    }
+
+    private static Activity StartConsumerActivity(
+        IQueueMessageContext messageContext,
+        Message typedMessage,
+        Type messageType,
+        MessageAttributes attributes)
+    {
+        var traceParent = attributes?.Get(MessageAttributeKeys.TraceParent)?.StringValue;
+        var traceState = attributes?.Get(MessageAttributeKeys.TraceState)?.StringValue;
+        ActivityContext parsed = default;
+        bool hasParsed = traceParent is not null
+            && ActivityContext.TryParse(traceParent, traceState, isRemote: true, out parsed);
+
+        var links = hasParsed
+            ? [new ActivityLink(parsed)]
+            : Array.Empty<ActivityLink>();
+        var activity = JustSayingDiagnostics.ActivitySource.StartActivity(
+            $"{messageContext.QueueName} process",
+            ActivityKind.Consumer,
+            default(ActivityContext),
+            tags: null,
+            links: links);
+
+        if (activity is not null)
+        {
+            activity.SetTag("messaging.system", "aws_sqs");
+            activity.SetTag("messaging.destination.name", messageContext.QueueName);
+            activity.SetTag("messaging.operation.name", "process");
+            activity.SetTag("messaging.operation.type", "process");
+            activity.SetTag("messaging.message.id", messageContext.Message.MessageId);
+            activity.SetTag("messaging.message.type", messageType.FullName);
+        }
+
+        return activity;
     }
 
     private async Task<(bool success, Message typedMessage, MessageAttributes attributes)>

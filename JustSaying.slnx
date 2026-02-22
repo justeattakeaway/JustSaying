@@ -54,11 +54,13 @@
     <Project Path="src/JustSaying.Extensions.DependencyInjection.Microsoft/JustSaying.Extensions.DependencyInjection.Microsoft.csproj" />
     <Project Path="src/JustSaying.Extensions.DependencyInjection.StructureMap/JustSaying.Extensions.DependencyInjection.StructureMap.csproj" />
     <Project Path="src/JustSaying.Models/JustSaying.Models.csproj" />
+    <Project Path="src/JustSaying.Extensions.OpenTelemetry/JustSaying.Extensions.OpenTelemetry.csproj" />
     <Project Path="src/JustSaying/JustSaying.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/JustSaying.Benchmark/JustSaying.Benchmark.csproj" />
     <Project Path="tests/JustSaying.Extensions.Aws.Tests/JustSaying.Extensions.Aws.Tests.csproj" />
+    <Project Path="tests/JustSaying.Extensions.OpenTelemetry.Tests/JustSaying.Extensions.OpenTelemetry.Tests.csproj" />
     <Project Path="tests/JustSaying.Extensions.DependencyInjection.StructureMap.Tests/JustSaying.Extensions.DependencyInjection.StructureMap.Tests.csproj" />
     <Project Path="tests/JustSaying.IntegrationTests/JustSaying.IntegrationTests.csproj" />
     <Project Path="tests/JustSaying.TestingFramework/JustSaying.TestingFramework.csproj" />

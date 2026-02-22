@@ -5,7 +5,6 @@
       "QueueName": "TestQueueName",
       "MiddlewareChain": [
         "ExactlyOnceMiddleware`1[JustSaying.TestingFramework.SimpleMessage]",
-        "TracingMiddleware",
         "MessageContextAccessorMiddleware",
         "LoggingMiddleware",
         "StopwatchMiddleware",

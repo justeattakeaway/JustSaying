@@ -10,7 +10,6 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware.Logging;
 using JustSaying.Messaging.Middleware.PostProcessing;
-using JustSaying.Messaging.Middleware.Tracing;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using JustSaying.Naming;
@@ -136,9 +135,6 @@ public static class IServiceCollectionExtensions
 
         services.TryAddTransient<LoggingMiddleware>();
         services.TryAddTransient<SqsPostProcessorMiddleware>();
-        services.TryAddSingleton<TracingOptions>();
-        services.TryAddTransient<TracingMiddleware>();
-        services.TryAddTransient<TracingPublishMiddleware>();
 
         services.AddSingleton<MessageContextAccessor>();
         services.TryAddSingleton<IMessageContextAccessor>(serviceProvider => serviceProvider.GetRequiredService<MessageContextAccessor>());

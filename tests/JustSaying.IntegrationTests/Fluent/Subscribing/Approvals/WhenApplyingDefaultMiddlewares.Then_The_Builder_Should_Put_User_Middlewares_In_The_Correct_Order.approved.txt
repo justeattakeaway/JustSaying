@@ -6,7 +6,6 @@
       "MiddlewareChain": [
         "WhenApplyingDefaultMiddlewares+OuterTestMiddleware",
         "WhenApplyingDefaultMiddlewares+InnerTestMiddleware",
-        "TracingMiddleware",
         "MessageContextAccessorMiddleware",
         "LoggingMiddleware",
         "StopwatchMiddleware",

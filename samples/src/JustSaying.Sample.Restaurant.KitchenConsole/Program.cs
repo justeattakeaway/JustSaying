@@ -1,8 +1,6 @@
-using JustSaying.Messaging.Middleware;
 using JustSaying.Sample.Restaurant.KitchenConsole;
 using JustSaying.Sample.Restaurant.KitchenConsole.Handlers;
 using JustSaying.Sample.Restaurant.Models;
-using JustSaying.Messaging.Middleware.Tracing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -12,11 +10,6 @@ Console.Title = appName;
 
 var builder = Host.CreateApplicationBuilder(args);
 builder.AddServiceDefaults();
-
-// Configure tracing: UseParentSpan makes consumer spans children of producer spans
-builder.Services.AddSingleton(new TracingOptions { UseParentSpan = true });
-builder.Services.AddTransient<TracingMiddleware>();
-builder.Services.AddTransient<TracingPublishMiddleware>();
 
 var configuration = builder.Configuration;
 builder.Services.AddJustSaying(config =>
@@ -64,21 +57,11 @@ builder.Services.AddJustSaying(config =>
             cfg.WithTag("IsOrderEvent")
                 .WithTag("Subscriber", appName)
                 .WithReadConfiguration(rc =>
-                    rc.WithSubscriptionGroup("GroupA"))
-                .WithMiddlewareConfiguration(pipe =>
-                {
-                    pipe.Use<TracingMiddleware>();
-                    pipe.UseDefaults<OrderPlacedEvent>(typeof(OrderPlacedEventHandler));
-                }));
+                    rc.WithSubscriptionGroup("GroupA")));
 
         x.ForTopic<OrderOnItsWayEvent>(cfg =>
             cfg.WithReadConfiguration(rc =>
-                rc.WithSubscriptionGroup("GroupB"))
-                .WithMiddlewareConfiguration(pipe =>
-                {
-                    pipe.Use<TracingMiddleware>();
-                    pipe.UseDefaults<OrderOnItsWayEvent>(typeof(OrderOnItsWayEventHandler));
-                }));
+                rc.WithSubscriptionGroup("GroupB")));
     });
 
     config.Publications(x =>
@@ -93,7 +76,6 @@ builder.Services.AddJustSaying(config =>
                 .WithTag("Publisher", appName);
         });
         x.WithTopic<OrderDeliveredEvent>();
-        x.WithPublishMiddleware<TracingPublishMiddleware>();
     });
 });
 

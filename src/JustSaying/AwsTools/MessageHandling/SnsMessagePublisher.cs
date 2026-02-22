@@ -1,8 +1,10 @@
+using System.Diagnostics;
 using Amazon.Runtime;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
+using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 using MessageAttributeValue = Amazon.SimpleNotificationService.Model.MessageAttributeValue;
@@ -45,6 +47,10 @@ internal sealed class SnsMessagePublisher(
     public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
     {
         var request = await BuildPublishRequestAsync(message, metadata);
+
+        Activity.Current?.SetTag("messaging.system", "aws_sns");
+        Activity.Current?.SetTag("messaging.destination.name", request.TopicArn);
+
         PublishResponse response = null;
         try
         {
@@ -158,6 +164,9 @@ internal sealed class SnsMessagePublisher(
     {
         int size = metadata?.BatchSize ?? JustSayingConstants.MaximumSnsBatchSize;
         size = Math.Min(size, JustSayingConstants.MaximumSnsBatchSize);
+
+        Activity.Current?.SetTag("messaging.system", "aws_sns");
+        Activity.Current?.SetTag("messaging.destination.name", Arn);
 
         foreach (var chunk in messages.Chunk(size))
         {

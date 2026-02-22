@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Extensions;
 using JustSaying.Messaging;
@@ -310,6 +311,29 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         CancellationToken cancellationToken)
     {
         attemptCount++;
+
+        var isFirstAttempt = attemptCount == 1;
+        Activity activity = null;
+        Stopwatch publishWatch = null;
+
+        if (isFirstAttempt)
+        {
+            var messageType = message.GetType();
+            activity = JustSayingDiagnostics.ActivitySource.StartActivity(
+                $"{messageType.Name} publish",
+                ActivityKind.Producer);
+
+            if (activity is not null)
+            {
+                activity.SetTag("messaging.operation.name", "publish");
+                activity.SetTag("messaging.operation.type", "send");
+                activity.SetTag("messaging.message.id", message.Id.ToString());
+                activity.SetTag("messaging.message.type", messageType.FullName);
+            }
+
+            publishWatch = Stopwatch.StartNew();
+        }
+
         try
         {
             using (_monitor.MeasurePublish())
@@ -317,6 +341,8 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
                 await publisher.PublishAsync(message, metadata, cancellationToken)
                     .ConfigureAwait(false);
             }
+
+            JustSayingDiagnostics.ClientSentMessages.Add(1);
         }
         catch (Exception ex)
         {
@@ -325,6 +351,21 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
             if (attemptCount >= Config.PublishFailureReAttempts)
             {
                 _monitor.IssuePublishingMessage();
+
+                if (activity is not null)
+                {
+                    activity.SetStatus(ActivityStatusCode.Error, ex.Message);
+                    activity.AddEvent(new ActivityEvent("exception",
+                        tags: new ActivityTagsCollection
+                        {
+                            { "exception.type", ex.GetType().FullName },
+                            { "exception.message", ex.Message },
+                            { "exception.stacktrace", ex.ToString() },
+                        }));
+                }
+
+                JustSayingDiagnostics.ClientSentMessages.Add(1,
+                    new KeyValuePair<string, object>("error.type", ex.GetType().FullName));
 
                 _log.LogError(
                     ex,
@@ -348,6 +389,17 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
 
             await PublishAsync(publisher, message, metadata, attemptCount, cancellationToken)
                 .ConfigureAwait(false);
+        }
+        finally
+        {
+            if (isFirstAttempt)
+            {
+                publishWatch.Stop();
+                JustSayingDiagnostics.ClientOperationDuration.Record(
+                    publishWatch.Elapsed.TotalSeconds,
+                    new KeyValuePair<string, object>("messaging.operation.type", "send"));
+                activity?.Dispose();
+            }
         }
     }
 
@@ -450,41 +502,94 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         batchSize = Math.Min(batchSize, 10);
         attemptCount++;
 
-        foreach (var chunk in messages.Chunk(batchSize))
+        var isFirstAttempt = attemptCount == 1;
+        Activity activity = null;
+        Stopwatch publishWatch = null;
+
+        if (isFirstAttempt)
         {
-            try
+            activity = JustSayingDiagnostics.ActivitySource.StartActivity(
+                $"{messageType.Name} publish",
+                ActivityKind.Producer);
+
+            if (activity is not null)
             {
-                using (_monitor.MeasurePublish())
+                activity.SetTag("messaging.operation.name", "publish");
+                activity.SetTag("messaging.operation.type", "send");
+                activity.SetTag("messaging.message.type", messageType.FullName);
+                activity.SetTag("messaging.batch.message_count", messages.Count);
+            }
+
+            publishWatch = Stopwatch.StartNew();
+        }
+
+        try
+        {
+            foreach (var chunk in messages.Chunk(batchSize))
+            {
+                try
                 {
-                    await publisher.PublishAsync(chunk, metadata, cancellationToken).ConfigureAwait(false);
+                    using (_monitor.MeasurePublish())
+                    {
+                        await publisher.PublishAsync(chunk, metadata, cancellationToken).ConfigureAwait(false);
+                    }
+
+                    JustSayingDiagnostics.ClientSentMessages.Add(chunk.Length);
+                }
+                catch (Exception ex)
+                {
+                    if (attemptCount >= PublishBatchConfiguration.PublishFailureReAttempts)
+                    {
+                        _monitor.IssuePublishingMessage();
+
+                        if (activity is not null)
+                        {
+                            activity.SetStatus(ActivityStatusCode.Error, ex.Message);
+                            activity.AddEvent(new ActivityEvent("exception",
+                                tags: new ActivityTagsCollection
+                                {
+                                    { "exception.type", ex.GetType().FullName },
+                                    { "exception.message", ex.Message },
+                                    { "exception.stacktrace", ex.ToString() },
+                                }));
+                        }
+
+                        JustSayingDiagnostics.ClientSentMessages.Add(chunk.Length,
+                            new KeyValuePair<string, object>("error.type", ex.GetType().FullName));
+
+                        _log.LogError(
+                            ex,
+                            "Failed to publish a message batch of type '{MessageType}'. Halting after attempt number {PublishAttemptCount}.",
+                            messageType,
+                            attemptCount);
+
+                        throw;
+                    }
+
+                    _log.LogWarning(
+                        ex,
+                        "Failed to publish a message batch of type '{MessageType}'. Retrying after attempt number {PublishAttemptCount} of {PublishFailureReattempts}.",
+                        messageType,
+                        attemptCount,
+                        PublishBatchConfiguration.PublishFailureReAttempts);
+
+                    var delayForAttempt = TimeSpan.FromMilliseconds(Config.PublishFailureBackoff.TotalMilliseconds * attemptCount);
+                    await Task.Delay(delayForAttempt, cancellationToken).ConfigureAwait(false);
+
+                    await PublishAsync(publisher, messages, metadata, attemptCount, messageType, cancellationToken).ConfigureAwait(false);
                 }
             }
-            catch (Exception ex)
+
+        }
+        finally
+        {
+            if (isFirstAttempt)
             {
-                if (attemptCount >= PublishBatchConfiguration.PublishFailureReAttempts)
-                {
-                    _monitor.IssuePublishingMessage();
-
-                    _log.LogError(
-                        ex,
-                        "Failed to publish a message batch of type '{MessageType}'. Halting after attempt number {PublishAttemptCount}.",
-                        messageType,
-                        attemptCount);
-
-                    throw;
-                }
-
-                _log.LogWarning(
-                    ex,
-                    "Failed to publish a message batch of type '{MessageType}'. Retrying after attempt number {PublishAttemptCount} of {PublishFailureReattempts}.",
-                    messageType,
-                    attemptCount,
-                    PublishBatchConfiguration.PublishFailureReAttempts);
-
-                var delayForAttempt = TimeSpan.FromMilliseconds(Config.PublishFailureBackoff.TotalMilliseconds * attemptCount);
-                await Task.Delay(delayForAttempt, cancellationToken).ConfigureAwait(false);
-
-                await PublishAsync(publisher, messages, metadata, attemptCount, messageType, cancellationToken).ConfigureAwait(false);
+                publishWatch.Stop();
+                JustSayingDiagnostics.ClientOperationDuration.Record(
+                    publishWatch.Elapsed.TotalSeconds,
+                    new KeyValuePair<string, object>("messaging.operation.type", "send"));
+                activity?.Dispose();
             }
         }
     }

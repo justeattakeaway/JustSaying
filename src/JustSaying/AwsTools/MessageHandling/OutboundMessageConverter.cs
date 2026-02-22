@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json.Nodes;
 using JustSaying.AwsTools;
@@ -39,6 +40,7 @@ internal sealed class OutboundMessageConverter : IOutboundMessageConverter
 
         Dictionary<string, MessageAttributeValue> attributeValues = new();
         AddMessageAttributes(attributeValues, publishMetadata);
+        InjectTraceContext(attributeValues);
 
         (string compressedMessage, string contentEncoding) = CompressMessageBody(messageBody, publishMetadata);
         if (compressedMessage is not null)
@@ -57,6 +59,38 @@ internal sealed class OutboundMessageConverter : IOutboundMessageConverter
         }
 
         return new ValueTask<OutboundMessage>(new OutboundMessage(messageBody, attributeValues, _subject));
+    }
+
+    private static void InjectTraceContext(Dictionary<string, MessageAttributeValue> attributes)
+    {
+        var activity = Activity.Current;
+        if (activity is null)
+        {
+            return;
+        }
+
+        // Always produce a valid W3C traceparent, regardless of the runtime's default IdFormat.
+        // activity.Id is only W3C-formatted when the OTel SDK has set Activity.DefaultIdFormat = W3C,
+        // which is not guaranteed (e.g. metrics-only setup). Constructing it explicitly is always safe.
+        var flags = activity.ActivityTraceFlags.HasFlag(ActivityTraceFlags.Recorded) ? "01" : "00";
+        var traceparent = activity.IdFormat == ActivityIdFormat.W3C
+            ? activity.Id
+            : $"00-{activity.TraceId}-{activity.SpanId}-{flags}";
+
+        attributes[MessageAttributeKeys.TraceParent] = new MessageAttributeValue
+        {
+            DataType = "String",
+            StringValue = traceparent
+        };
+
+        if (!string.IsNullOrEmpty(activity.TraceStateString))
+        {
+            attributes[MessageAttributeKeys.TraceState] = new MessageAttributeValue
+            {
+                DataType = "String",
+                StringValue = activity.TraceStateString
+            };
+        }
     }
 
     private static void AddMessageAttributes(Dictionary<string, MessageAttributeValue> requestMessageAttributes, PublishMetadata metadata)
