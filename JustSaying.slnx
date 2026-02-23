@@ -1,6 +1,8 @@
 <Solution>
   <Folder Name="/samples/" />
   <Folder Name="/samples/src/">
+    <File Path="samples/src/apphost.cs" />
+    <File Path="samples/src/apphost.run.json" />
     <Project Path="samples/src/JustSaying.Sample.Middleware/JustSaying.Sample.Middleware.csproj" />
     <Project Path="samples/src/JustSaying.Sample.Restaurant.KitchenConsole/JustSaying.Sample.Restaurant.KitchenConsole.csproj" />
     <Project Path="samples/src/JustSaying.Sample.Restaurant.Models/JustSaying.Sample.Restaurant.Models.csproj" />
