@@ -222,8 +222,35 @@ jobs:
       with:
         node-version: '24'
 
-    - name: Install scip-dotnet
-      run: dotnet tool install --global scip-dotnet
+    - name: Build and install patched scip-dotnet
+      run: |
+        # Build scip-dotnet from source with a fix for NullReferenceException in Roslyn's
+        # GetSymbolInfo (https://github.com/sourcegraph/scip-dotnet, v0.2.13).
+        # The bug causes scip-dotnet to crash when indexing certain C# code patterns.
+        git clone --depth 1 --branch v0.2.13 https://github.com/sourcegraph/scip-dotnet.git /tmp/scip-dotnet
+        cd /tmp/scip-dotnet
+        python3 << 'PYEOF'
+        path = 'ScipDotnet/ScipCSharpSyntaxWalker.cs'
+        with open(path) as f:
+            content = f.read()
+        old = '            _scipDocumentIndexer.VisitOccurrence(_semanticModel.GetSymbolInfo(node).Symbol, node.GetLocation(), false);'
+        new = '\n'.join([
+            '            try',
+            '            {',
+            '                _scipDocumentIndexer.VisitOccurrence(_semanticModel.GetSymbolInfo(node).Symbol, node.GetLocation(), false);',
+            '            }',
+            '            catch (NullReferenceException)',
+            '            {',
+            '                // Roslyn GetSymbolInfo can throw NullReferenceException on certain code patterns',
+            '            }'
+        ])
+        assert old in content, f'Failed to find target line in {path} for patching - scip-dotnet source may have changed'
+        content = content.replace(old, new, 1)
+        with open(path, 'w') as f:
+            f.write(content)
+        PYEOF
+        dotnet pack ScipDotnet/ScipDotnet.csproj -c Release -o ./nupkg
+        dotnet tool install --global --add-source ./nupkg scip-dotnet
 
     - name: Convert slnx to sln
       shell: pwsh
