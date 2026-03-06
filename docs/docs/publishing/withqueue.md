@@ -94,6 +94,20 @@ x.WithQueue<ProcessPaymentCommand>(cfg =>
 });
 ```
 
+#### `WithMiddlewareConfiguration(Action<PublishMiddlewareBuilder> middlewareConfiguration)`
+
+Configure a per-publisher middleware pipeline for this queue. When set, this takes priority over the global publish middleware. See [Publish Middleware](middleware.md) for details.
+
+```csharp
+x.WithQueue<ProcessPaymentCommand>(cfg =>
+{
+    cfg.WithMiddlewareConfiguration(m =>
+    {
+        m.Use<LoggingPublishMiddleware>();
+    });
+});
+```
+
 #### `WithWriteConfiguration(Action<SqsWriteConfigurationBuilder> configure)`
 
 Configure advanced publishing options such as encryption, message retention, and error queues. See [Write Configuration](write-configuration.md) for details.

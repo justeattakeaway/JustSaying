@@ -102,6 +102,21 @@ x.WithTopic<OrderPlacedEvent>(cfg =>
 });
 ```
 
+#### `WithMiddlewareConfiguration(Action<PublishMiddlewareBuilder> middlewareConfiguration)`
+
+Configure a per-publisher middleware pipeline for this topic. When set, this takes priority over the global publish middleware. See [Publish Middleware](middleware.md) for details.
+
+```csharp
+x.WithTopic<OrderPlacedEvent>(cfg =>
+{
+    cfg.WithMiddlewareConfiguration(m =>
+    {
+        m.Use<AuditPublishMiddleware>();
+        m.Use<LoggingPublishMiddleware>();
+    });
+});
+```
+
 #### `WithWriteConfiguration(Action<SnsWriteConfigurationBuilder> configure)`
 
 Configure advanced publishing options such as encryption, compression, and error handling. See [Write Configuration](write-configuration.md) for details.
