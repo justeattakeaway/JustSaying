@@ -25,13 +25,13 @@ public class WhenSerializingAndDeserializing : XBehaviourTest<SystemTextJsonMess
         _messageIn = SystemUnderTest.Deserialize(_jsonMessage) as MessageWithEnum;
     }
 
-    [Fact]
+    [Test]
     public void MessageHasBeenCreated()
     {
         _messageOut.ShouldNotBeNull();
     }
 
-    [Fact]
+    [Test]
     public void MessagesContainSameDetails()
     {
         _messageOut.EnumVal.ShouldBe(_messageIn.EnumVal);
@@ -39,7 +39,7 @@ public class WhenSerializingAndDeserializing : XBehaviourTest<SystemTextJsonMess
         _messageOut.TimeStamp.ShouldBe(_messageIn.TimeStamp);
     }
 
-    [Fact]
+    [Test]
     public void EnumsAreRepresentedAsStrings()
     {
         _jsonMessage.ShouldContain("EnumVal");

@@ -15,7 +15,7 @@ using NSubstitute;
 
 namespace JustSaying.IntegrationTests.Fluent;
 
-public abstract class IntegrationTestBase(ITestOutputHelper outputHelper)
+public abstract class IntegrationTestBase
 {
     protected virtual string AccessKeyId { get; } = "accessKeyId";
 
@@ -23,9 +23,10 @@ public abstract class IntegrationTestBase(ITestOutputHelper outputHelper)
 
     protected virtual string SessionToken { get; } = "token";
 
-    protected ITestOutputHelper OutputHelper { get; } = outputHelper;
+    protected TextWriter OutputHelper => TestContext.Current!.OutputWriter;
 
-    protected ILoggerFactory LoggerFactory { get; } = Microsoft.Extensions.Logging.LoggerFactory.Create(lf => lf.AddXUnit(outputHelper));
+    protected ILoggerFactory LoggerFactory => _loggerFactory ??= Microsoft.Extensions.Logging.LoggerFactory.Create(lf => lf.AddTextWriter(OutputHelper));
+    private ILoggerFactory _loggerFactory;
 
     protected virtual string RegionName => Region.SystemName;
 
@@ -57,7 +58,7 @@ public abstract class IntegrationTestBase(ITestOutputHelper outputHelper)
         return new ServiceCollection()
             .AddLogging((p) => p
                 .AddFakeLogging()
-                .AddXUnit(OutputHelper, o =>
+                .AddTextWriter(OutputHelper, o =>
                 {
                     o.IncludeScopes = true;
                     o.Filter = (_, level) => level >= logLevel;

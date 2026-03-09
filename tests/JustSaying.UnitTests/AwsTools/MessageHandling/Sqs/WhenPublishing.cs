@@ -40,7 +40,7 @@ public class WhenPublishing : WhenPublishingTestBase
         await SystemUnderTest.PublishAsync(_message);
     }
 
-    [Fact]
+    [Test]
     public void MessageIsPublishedToQueue()
     {
         _capturedMessageBody.ShouldNotBeNull();
@@ -51,7 +51,7 @@ public class WhenPublishing : WhenPublishingTestBase
         content.ShouldBe("Hello");
     }
 
-    [Fact]
+    [Test]
     public void MessageIsPublishedToCorrectLocation()
     {
         Sqs.Received().SendMessageAsync(Arg.Is<SendMessageRequest>(x => x.QueueUrl == Url));

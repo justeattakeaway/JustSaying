@@ -8,7 +8,7 @@ public class WhenMessageHandlingThrows : BaseSubscriptionGroupTests
     private readonly object _firstTimeLock = new();
     private FakeSqsQueue _queue;
 
-    public WhenMessageHandlingThrows(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
+    public WhenMessageHandlingThrows()
     {
         MessagesToWaitFor = 10;
     }
@@ -42,13 +42,13 @@ public class WhenMessageHandlingThrows : BaseSubscriptionGroupTests
         return await base.UntilAsync();
     }
 
-    [Fact]
+    [Test]
     public void MessageHandlerWasCalled()
     {
         Handler.ReceivedMessages.Any(msg => msg.GetType() == typeof(SimpleMessage)).ShouldBeTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task FailedMessageIsNotRemovedFromQueue()
     {
         await Patiently.AssertThatAsync(() =>
@@ -63,7 +63,7 @@ public class WhenMessageHandlingThrows : BaseSubscriptionGroupTests
         });
     }
 
-    [Fact]
+    [Test]
     public void ExceptionIsLoggedToMonitor()
     {
         Monitor.HandledExceptions.ShouldNotBeEmpty();

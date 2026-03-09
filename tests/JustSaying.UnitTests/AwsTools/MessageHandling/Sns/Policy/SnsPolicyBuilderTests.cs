@@ -5,7 +5,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.Policy;
 
 public class SnsPolicyBuilderTests
 {
-    [Fact]
+    [Test]
     public void ShouldGenerateApprovedIamPolicy()
     {
         // arrange
@@ -37,10 +37,10 @@ public class SnsPolicyBuilderTests
             .Replace(json["Statement"]![1]!["Sid"]!.ToString(), "<sid2>");
     }
 
-    [Theory]
-    [InlineData("")]
-    [InlineData(null)]
-    [InlineData("arn:aws:service:region:123456789012")]// missing topic
+    [Test]
+    [Arguments("")]
+    [Arguments(null)]
+    [Arguments("arn:aws:service:region:123456789012")]// missing topic
     public void ShouldThrowArgumentExceptionWhenUsingInvalidArn(string sourceArn)
     {
         // arrange

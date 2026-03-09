@@ -5,9 +5,9 @@ using NSubstitute;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenAMessageIsPublishedToAQueueWithSystemTextJson(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenAMessageIsPublishedToAQueueWithSystemTextJson : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task Then_The_Message_Is_Handled()
     {
         // Arrange

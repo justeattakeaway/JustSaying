@@ -22,14 +22,14 @@ using SQSMessage = Amazon.SQS.Model.Message;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests;
 
-public class WhenDispatchingMessage : IAsyncLifetime
+public class WhenDispatchingMessage
 {
     private const string ExpectedQueueUrl = "http://testurl.com/queue";
 
     private readonly TrackingLoggingMonitor _messageMonitor;
     private readonly MiddlewareMap _middlewareMap;
     private readonly ILoggerFactory _loggerFactory;
-    private readonly ITestOutputHelper _outputHelper;
+    protected TextWriter OutputHelper => TestContext.Current!.OutputWriter;
 
     private FakeSqsQueue _queue;
     private SQSMessage _sqsMessage;
@@ -42,14 +42,13 @@ public class WhenDispatchingMessage : IAsyncLifetime
     private readonly InboundMessageConverter _messageConverter;
     private readonly FakeLogCollector _fakeLogCollector;
 
-    public WhenDispatchingMessage(ITestOutputHelper outputHelper)
+    public WhenDispatchingMessage()
     {
-        _outputHelper = outputHelper;
         var services =
             new ServiceCollection().AddLogging(lb =>
             {
                 lb.SetMinimumLevel(LogLevel.Information);
-                lb.AddFakeLogging().AddXUnit(outputHelper);
+                lb.AddFakeLogging().AddTextWriter(TestContext.Current!.OutputWriter);
             });
         var sp =  services.BuildServiceProvider();
         _fakeLogCollector = sp.GetFakeLogCollector();
@@ -59,18 +58,14 @@ public class WhenDispatchingMessage : IAsyncLifetime
         _messageConverter = new InboundMessageConverter(_messageBodySerializer, new MessageCompressionRegistry(), true);
     }
 
-    public virtual async ValueTask InitializeAsync()
+    [Before(Test)]
+    public virtual async Task SetUp()
     {
         Given();
 
         SystemUnderTest = CreateSystemUnderTestAsync();
 
         await When();
-    }
-
-    public virtual ValueTask DisposeAsync()
-    {
-        return ValueTask.CompletedTask;
     }
 
     protected virtual void Given()
@@ -113,13 +108,14 @@ public class WhenDispatchingMessage : IAsyncLifetime
         return dispatcher;
     }
 
-    [Fact]
+    [Test]
     public void ShouldDeserializeMessage()
     {
         _messageBodySerializer.Received(1).Deserialize(Arg.Is<string>(x => x == _sqsMessage.Body));
     }
 
-    public class AndHandlerMapDoesNotHaveMatchingHandler(ITestOutputHelper outputHelper) : WhenDispatchingMessage(outputHelper)
+    [InheritsTests]
+    public class AndHandlerMapDoesNotHaveMatchingHandler : WhenDispatchingMessage
     {
         private const int ExpectedReceiveCount = 1;
         private readonly TimeSpan _expectedBackoffTimeSpan = TimeSpan.FromMinutes(4);
@@ -131,12 +127,12 @@ public class WhenDispatchingMessage : IAsyncLifetime
             _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, ExpectedReceiveCount.ToString(CultureInfo.InvariantCulture));
         }
 
-        [Fact]
+        [Test]
         public async Task ShouldNotHandleMessage()
         {
             _messageBodySerializer.Received(1).Deserialize(Arg.Is<string>(x => x == _sqsMessage.Body));
             _messageMonitor.HandledMessages.ShouldBeEmpty();
-            await Patiently.AssertThatAsync(_outputHelper, () =>
+            await Patiently.AssertThatAsync(OutputHelper, () =>
             {
                 var logs = _fakeLogCollector.GetSnapshot();
                 logs.ShouldContain(le => le.Message == "Failed to dispatch. Middleware for message of type 'JustSaying.TestingFramework.SimpleMessage' not found in middleware map.");
@@ -144,7 +140,8 @@ public class WhenDispatchingMessage : IAsyncLifetime
         }
     }
 
-    public class AndMessageProcessingSucceeds(ITestOutputHelper outputHelper) : WhenDispatchingMessage(outputHelper)
+    [InheritsTests]
+    public class AndMessageProcessingSucceeds : WhenDispatchingMessage
     {
         protected override void Given()
         {
@@ -152,7 +149,7 @@ public class WhenDispatchingMessage : IAsyncLifetime
 
             var handler = new InspectableHandler<SimpleMessage>();
 
-            var testResolver = new InMemoryServiceResolver(_outputHelper,
+            var testResolver = new InMemoryServiceResolver(OutputHelper,
                 _messageMonitor,
                 sc => sc.AddSingleton<IHandlerAsync<SimpleMessage>>(handler));
 
@@ -164,7 +161,7 @@ public class WhenDispatchingMessage : IAsyncLifetime
             _middlewareMap.Add<SimpleMessage>(_queue.QueueName, middleware);
         }
 
-        [Fact]
+        [Test]
         public void ShouldDeleteMessageIfHandledSuccessfully()
         {
             var request = _queue.DeleteMessageRequests.ShouldHaveSingleItem();
@@ -173,7 +170,8 @@ public class WhenDispatchingMessage : IAsyncLifetime
         }
     }
 
-    public class AndMessageProcessingFails(ITestOutputHelper outputHelper) : WhenDispatchingMessage(outputHelper)
+    [InheritsTests]
+    public class AndMessageProcessingFails : WhenDispatchingMessage
     {
         private const int ExpectedReceiveCount = 1;
         private readonly TimeSpan _expectedBackoffTimeSpan = TimeSpan.FromMinutes(4);
@@ -188,7 +186,7 @@ public class WhenDispatchingMessage : IAsyncLifetime
                 OnHandle = msg => throw _expectedException
             };
 
-            var testResolver = new InMemoryServiceResolver(_outputHelper,
+            var testResolver = new InMemoryServiceResolver(OutputHelper,
                 _messageMonitor,
                 sc => sc.AddSingleton<IHandlerAsync<SimpleMessage>>(handler));
 
@@ -204,13 +202,13 @@ public class WhenDispatchingMessage : IAsyncLifetime
             _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, ExpectedReceiveCount.ToString(CultureInfo.InvariantCulture));
         }
 
-        [Fact]
+        [Test]
         public void ShouldInvokeMessageBackoffStrategyWithNumberOfReceives()
         {
             _messageBackoffStrategy.Received(1).GetBackoffDuration(Arg.Is(_typedMessage), Arg.Is(ExpectedReceiveCount), Arg.Is(_expectedException));
         }
 
-        [Fact]
+        [Test]
         public void ShouldUpdateMessageVisibility()
         {
             var request = _queue.ChangeMessageVisibilityRequests.ShouldHaveSingleItem();

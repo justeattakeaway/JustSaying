@@ -2,20 +2,12 @@ using JustSaying.TestingFramework;
 
 namespace JustSaying.IntegrationTests;
 
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-public sealed class NeedsTwoAwsAccountsFactAttribute : FactAttribute
+/// <summary>
+/// Skips the test when secondary AWS account credentials are not available.
+/// </summary>
+public sealed class NeedsTwoAwsAccountsSkipAttribute()
+    : SkipAttribute("This test requires secondary AWS account credentials to be configured.")
 {
-    public NeedsTwoAwsAccountsFactAttribute(
-        [System.Runtime.CompilerServices.CallerFilePath] string sourceFilePath = "",
-        [System.Runtime.CompilerServices.CallerLineNumber] int lineNumber = 0)
-        : base(sourceFilePath, lineNumber)
-    {
-        if (string.IsNullOrEmpty(TestEnvironment.AccountId) ||
-            string.IsNullOrEmpty(TestEnvironment.SecondaryAccountId) ||
-            !TestEnvironment.HasCredentials ||
-            !TestEnvironment.HasSecondaryCredentials)
-        {
-            Skip = "Requires IDs and credentials for two AWS accounts.";
-        }
-    }
+    public override Task<bool> ShouldSkip(TestRegisteredContext context)
+        => Task.FromResult(!TestEnvironment.HasSecondaryCredentials);
 }

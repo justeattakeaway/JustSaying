@@ -8,9 +8,9 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent.Monitoring;
 
-public class WhenUsingAMessageMonitor(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenUsingAMessageMonitor : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task MonitorShouldBeCalled()
     {
         // Arrange

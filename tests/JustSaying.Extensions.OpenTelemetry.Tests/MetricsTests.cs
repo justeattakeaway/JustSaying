@@ -14,10 +14,10 @@ using SqsMessage = Amazon.SQS.Model.Message;
 namespace JustSaying.Extensions.OpenTelemetry.Tests;
 
 // Metric tests share static Meter instruments, so must not run in parallel with other metric tests.
-[Collection("Metrics")]
+[NotInParallel("Metrics")]
 public class MetricsTests
 {
-    [Fact]
+    [Test]
     public async Task ProcessDuration_Is_Recorded_With_Dimensional_Tags()
     {
         // Arrange
@@ -42,7 +42,7 @@ public class MetricsTests
         processDuration.ShouldNotBeNull("messaging.process.duration metric should be recorded");
     }
 
-    [Fact]
+    [Test]
     public async Task MessagesProcessed_Is_Recorded_On_Successful_Handle()
     {
         // Arrange
@@ -67,7 +67,7 @@ public class MetricsTests
         messagesProcessed.ShouldNotBeNull("justsaying.messages.processed metric should be recorded");
     }
 
-    [Fact]
+    [Test]
     public async Task MessagesProcessed_Records_ErrorType_On_Handler_Failure()
     {
         // Arrange
@@ -96,7 +96,7 @@ public class MetricsTests
         messagesProcessed.ShouldNotBeNull("justsaying.messages.processed metric should be recorded on error");
     }
 
-    [Fact]
+    [Test]
     public void MessagesReceived_Counter_Is_Captured_By_MeterProvider()
     {
         // Arrange
@@ -117,7 +117,7 @@ public class MetricsTests
         exportedMetrics.ShouldContain(m => m.Name == "justsaying.messages.received");
     }
 
-    [Fact]
+    [Test]
     public async Task MessagesThrottled_Counter_Is_Captured_When_Throttle_Occurs()
     {
         // Arrange

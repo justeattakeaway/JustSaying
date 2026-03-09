@@ -15,21 +15,20 @@ namespace JustSaying.UnitTests.Messaging.Channels;
 
 public class SubscriptionGroupCollectionTests
 {
-    private IMessageReceivePauseSignal MessageReceivePauseSignal { get; }
-    private ILoggerFactory LoggerFactory { get; }
-    private IMessageMonitor MessageMonitor { get; }
-    private readonly ITestOutputHelper _outputHelper;
+    private IMessageReceivePauseSignal MessageReceivePauseSignal { get; set; }
+    private ILoggerFactory LoggerFactory { get; set; }
+    private IMessageMonitor MessageMonitor { get; set; }
+    private TextWriter OutputHelper => TestContext.Current!.OutputWriter;
 
-
-    public SubscriptionGroupCollectionTests(ITestOutputHelper testOutputHelper)
+    [Before(Test)]
+    public void Setup()
     {
         MessageReceivePauseSignal = new MessageReceivePauseSignal();
-        _outputHelper = testOutputHelper;
-        LoggerFactory = testOutputHelper.ToLoggerFactory();
+        LoggerFactory = OutputHelper.ToLoggerFactory();
         MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
     }
 
-    [Fact]
+    [Test]
     public async Task Add_Different_Handler_Per_Queue()
     {
         // Arrange
@@ -66,7 +65,7 @@ public class SubscriptionGroupCollectionTests
         // Act
         await bus.StartAsync(cts.Token);
 
-        await Patiently.AssertThatAsync(_outputHelper,
+        await Patiently.AssertThatAsync(OutputHelper,
             () =>
             {
                 middleware1.Handler.ReceivedMessages.Count.ShouldBeGreaterThan(0);

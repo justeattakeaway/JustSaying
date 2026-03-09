@@ -7,9 +7,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.DependencyInjection.Microsoft;
 
-public class WhenRegisteringASingleHandlerViaContainer(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenRegisteringASingleHandlerViaContainer : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task Then_The_Handler_Is_Resolved()
     {
         // Arrange
@@ -38,7 +38,7 @@ public class WhenRegisteringASingleHandlerViaContainer(ITestOutputHelper outputH
             });
     }
 
-    [AwsFact]
+    [Test]
     public async Task Then_The_Handler_Is_Resolved_ForMultiMessage()
     {
         // Arrange

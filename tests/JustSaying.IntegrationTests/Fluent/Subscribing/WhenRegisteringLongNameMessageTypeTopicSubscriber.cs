@@ -5,9 +5,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing;
 
-public class WhenRegisteringLongNameMessageTypeTopicSubscriber(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenRegisteringLongNameMessageTypeTopicSubscriber : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task Then_A_Queue_Is_Created()
     {
         // Arrange

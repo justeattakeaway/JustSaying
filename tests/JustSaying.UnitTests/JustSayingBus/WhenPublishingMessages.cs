@@ -5,7 +5,7 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.JustSayingBus;
 
-public class WhenPublishingMessages(ITestOutputHelper outputHelper) : GivenAServiceBus(outputHelper)
+public class WhenPublishingMessages : GivenAServiceBus
 {
     private readonly IMessagePublisher _publisher = Substitute.For<IMessagePublisher>();
 
@@ -19,13 +19,13 @@ public class WhenPublishingMessages(ITestOutputHelper outputHelper) : GivenAServ
         await SystemUnderTest.PublishAsync(new SimpleMessage());
     }
 
-    [Fact]
+    [Test]
     public void PublisherIsCalledToPublish()
     {
         _publisher.Received().PublishAsync(Arg.Any<Message>(),
             Arg.Any<PublishMetadata>(), Arg.Any<CancellationToken>());
     }
-    [Fact]
+    [Test]
     public void PublishMessageTimeStatsSent()
     {
         Monitor.PublishMessageTimes.ShouldHaveSingleItem();

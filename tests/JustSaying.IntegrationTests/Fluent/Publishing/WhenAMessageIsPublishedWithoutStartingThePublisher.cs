@@ -3,9 +3,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenAMessageIsPublishedWithoutStartingThePublisher(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenAMessageIsPublishedWithoutStartingThePublisher : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task Then_The_PushlishShouldThrow()
     {
         // Arrange
@@ -25,7 +25,7 @@ public class WhenAMessageIsPublishedWithoutStartingThePublisher(ITestOutputHelpe
             services,
             async (publisher, listener, cancellationToken) =>
             {
-                await Assert.ThrowsAsync<InvalidOperationException>(
+                await Should.ThrowAsync<InvalidOperationException>(
                     () => publisher.PublishAsync(message, cancellationToken));
             });
     }

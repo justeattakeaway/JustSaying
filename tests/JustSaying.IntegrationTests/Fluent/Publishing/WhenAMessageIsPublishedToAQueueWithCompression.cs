@@ -7,9 +7,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenAMessageIsPublishedToAQueueWithCompression(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenAMessageIsPublishedToAQueueWithCompression : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task Then_The_Message_Is_Handled()
     {
         // Arrange

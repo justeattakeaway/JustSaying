@@ -5,9 +5,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenAMessageIsPublishedToATopicWithCustomSubject(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenAMessageIsPublishedToATopicWithCustomSubject : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task Then_The_Message_Is_Handled()
     {
         // Arrange

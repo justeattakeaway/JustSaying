@@ -4,9 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.DependencyInjection.Microsoft;
 
-public class WhenRegisteringAHandlerViaContainerWithMissingRegistration(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenRegisteringAHandlerViaContainerWithMissingRegistration : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public void Then_An_Exception_Is_Thrown()
     {
         // Arrange
@@ -17,7 +17,7 @@ public class WhenRegisteringAHandlerViaContainerWithMissingRegistration(ITestOut
             .BuildServiceProvider();
 
         // Act and Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => serviceProvider.GetService<IMessagingBus>());
+        var exception = Should.Throw<InvalidOperationException>(() => serviceProvider.GetService<IMessagingBus>());
         exception.Message.ShouldBe("No handler for message type JustSaying.IntegrationTests.TestHandlers.OrderPlaced is registered.");
     }
 }

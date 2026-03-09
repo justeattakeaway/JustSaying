@@ -6,7 +6,7 @@ namespace JustSaying.UnitTests.Messaging.Middleware.Publish;
 
 public class PublishMiddlewareBuilderTests
 {
-    [Fact]
+    [Test]
     public async Task Build_WithNoMiddleware_ReturnsPassthroughChain()
     {
         var resolver = new InMemoryServiceResolver();
@@ -22,7 +22,7 @@ public class PublishMiddlewareBuilderTests
         result.ShouldBeTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task Use_WithInstance_AddsMiddlewareToChain()
     {
         var resolver = new InMemoryServiceResolver();
@@ -41,7 +41,7 @@ public class PublishMiddlewareBuilderTests
         invoked.ShouldBeTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task Use_WithFactory_InvokesFactory()
     {
         var resolver = new InMemoryServiceResolver();
@@ -59,7 +59,7 @@ public class PublishMiddlewareBuilderTests
         invoked.ShouldBeTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task Configure_DefersExecution()
     {
         var resolver = new InMemoryServiceResolver();
@@ -79,7 +79,7 @@ public class PublishMiddlewareBuilderTests
         invoked.ShouldBeTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task DeclarationOrder_MatchesExecutionOrder()
     {
         var resolver = new InMemoryServiceResolver();
@@ -103,7 +103,7 @@ public class PublishMiddlewareBuilderTests
         callOrder.ShouldBe(["first", "second", "third", "inner"]);
     }
 
-    [Fact]
+    [Test]
     public async Task UseGeneric_ResolvesFromServiceResolver()
     {
         var resolver = new InMemoryServiceResolver(sc =>
@@ -122,7 +122,7 @@ public class PublishMiddlewareBuilderTests
         result.ShouldBeTrue();
     }
 
-    [Fact]
+    [Test]
     public void UseGeneric_ThrowsWhenMiddlewareAlreadyChained()
     {
         var existingMiddleware = new TrackingPublishMiddleware(() => { });

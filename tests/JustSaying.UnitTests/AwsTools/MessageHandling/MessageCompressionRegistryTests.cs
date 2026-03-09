@@ -11,7 +11,7 @@ public class MessageCompressionRegistryTests
     private readonly MessageCompressionRegistry _compressionRegistry = new([new GzipMessageBodyCompression()]);
     private readonly SystemTextJsonMessageBodySerializer<SimpleMessage> _bodySerializer = new(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions);
 
-    [Fact]
+    [Test]
     public void CompressMessageIfNeeded_NoCompression_ReturnsOriginalMessage()
     {
         // Arrange
@@ -24,11 +24,11 @@ public class MessageCompressionRegistryTests
         var result = messageConverter.CompressMessageBody(message, metadata);
 
         // Assert
-        Assert.Null(result.compressedMessage);
-        Assert.Null(result.contentEncoding);
+        result.compressedMessage.ShouldBeNull();
+        result.contentEncoding.ShouldBeNull();
     }
 
-    [Fact]
+    [Test]
     public void CompressMessageIfNeeded_CompressionThresholdNotMet_ReturnsOriginalMessage()
     {
         // Arrange
@@ -45,11 +45,11 @@ public class MessageCompressionRegistryTests
         var result = messageConverter.CompressMessageBody(message, metadata);
 
         // Assert
-        Assert.Null(result.compressedMessage);
-        Assert.Null(result.contentEncoding);
+        result.compressedMessage.ShouldBeNull();
+        result.contentEncoding.ShouldBeNull();
     }
 
-    [Fact]
+    [Test]
     public void CompressMessageIfNeeded_CompressionThresholdMet_ReturnsCompressedMessage()
     {
         // Arrange
@@ -66,16 +66,16 @@ public class MessageCompressionRegistryTests
         var result = messageConverter.CompressMessageBody(message, metadata);
 
         // Assert
-        Assert.NotNull(result.compressedMessage);
-        Assert.Equal(ContentEncodings.GzipBase64, result.contentEncoding);
+        result.compressedMessage.ShouldNotBeNull();
+        result.contentEncoding.ShouldBe(ContentEncodings.GzipBase64);
 
         // Verify that the compressed message can be decompressed
         var gzipCompression = new GzipMessageBodyCompression();
         var decompressedMessage = gzipCompression.Decompress(result.compressedMessage);
-        Assert.Equal(message, decompressedMessage);
+        decompressedMessage.ShouldBe(message);
     }
 
-    [Fact]
+    [Test]
     public void CompressMessageIfNeeded_WithRawMessage_CompressionThresholdMet_ReturnsCompressedMessage()
     {
         // Arrange
@@ -92,16 +92,16 @@ public class MessageCompressionRegistryTests
         var result = messageConverter.CompressMessageBody(message, metadata);
 
         // Assert
-        Assert.NotNull(result.compressedMessage);
-        Assert.Equal(ContentEncodings.GzipBase64, result.contentEncoding);
+        result.compressedMessage.ShouldNotBeNull();
+        result.contentEncoding.ShouldBe(ContentEncodings.GzipBase64);
 
         // Verify that the compressed message can be decompressed
         var gzipCompression = new GzipMessageBodyCompression();
         var decompressedMessage = gzipCompression.Decompress(result.compressedMessage);
-        Assert.Equal(message, decompressedMessage);
+        decompressedMessage.ShouldBe(message);
     }
 
-    [Fact]
+    [Test]
     public void CompressMessageIfNeeded_WithMessageAttributes_CalculatesTotalSize()
     {
         // Arrange
@@ -121,12 +121,12 @@ public class MessageCompressionRegistryTests
         var result = messageConverter.CompressMessageBody(message, metadata);
 
         // Assert
-        Assert.NotNull(result.compressedMessage);
-        Assert.Equal(ContentEncodings.GzipBase64, result.contentEncoding);
+        result.compressedMessage.ShouldNotBeNull();
+        result.contentEncoding.ShouldBe(ContentEncodings.GzipBase64);
 
         // Verify that the compressed message can be decompressed
         var gzipCompression = new GzipMessageBodyCompression();
         var decompressedMessage = gzipCompression.Decompress(result.compressedMessage);
-        Assert.Equal(message, decompressedMessage);
+        decompressedMessage.ShouldBe(message);
     }
 }

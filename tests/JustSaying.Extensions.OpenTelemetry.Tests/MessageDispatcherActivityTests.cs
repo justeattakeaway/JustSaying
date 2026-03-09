@@ -16,10 +16,10 @@ using SqsMessage = Amazon.SQS.Model.Message;
 
 namespace JustSaying.Extensions.OpenTelemetry.Tests;
 
-[Collection("Tracing")]
+[NotInParallel("Tracing")]
 public class MessageDispatcherActivityTests
 {
-    [Fact]
+    [Test]
     public async Task DispatchMessage_Creates_Consumer_Activity_With_Parent_From_TraceParent()
     {
         // Arrange
@@ -70,6 +70,7 @@ public class MessageDispatcherActivityTests
         messageContext.MessageConverter.Returns(messageConverter);
 
         // Act
+        Activity.Current = null; // Clear ambient activity from test framework
         await dispatcher.DispatchMessageAsync(messageContext, CancellationToken.None);
         tracerProvider.ForceFlush();
 
@@ -90,7 +91,7 @@ public class MessageDispatcherActivityTests
         consumerActivity.GetTagItem("messaging.message.type").ShouldBe(typeof(SimpleMessage).FullName);
     }
 
-    [Fact]
+    [Test]
     public async Task DispatchMessage_Creates_Activity_Without_Parent_When_No_TraceParent()
     {
         // Arrange
@@ -143,7 +144,7 @@ public class MessageDispatcherActivityTests
         consumerActivity.ParentId.ShouldBeNull();
     }
 
-    [Fact]
+    [Test]
     public async Task DispatchMessage_Records_Error_Status_On_Middleware_Failure()
     {
         // Arrange

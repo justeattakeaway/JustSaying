@@ -12,7 +12,7 @@ using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
-public sealed class WhenUsingSqsQueueByName(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper), IDisposable
+public sealed class WhenUsingSqsQueueByName : BaseSubscriptionGroupTests, IDisposable
 {
     private ISqsQueue _queue;
     private FakeAmazonSqs _client;
@@ -51,7 +51,7 @@ public sealed class WhenUsingSqsQueueByName(ITestOutputHelper testOutputHelper) 
         });
     }
 
-    [Fact]
+    [Test]
     public void HandlerReceivesMessage()
     {
         Handler.ReceivedMessages.Contains(_message)

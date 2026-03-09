@@ -13,7 +13,7 @@ public class HandlerMiddlewareBuilderTests
         _resolver = new InMemoryServiceResolver();
     }
 
-    [Fact]
+    [Test]
     public async Task ThreeMiddlewares_ShouldExecuteInCorrectOrder()
     {
         var callRecord = new List<string>();
@@ -48,7 +48,7 @@ public class HandlerMiddlewareBuilderTests
         record.ShouldMatchApproved(c => c.SubFolder("Approvals"));
     }
 
-    [Fact]
+    [Test]
     public async Task MiddlewareBuilder_WithoutDefaults_ShouldExecute()
     {
         var callRecord = new List<string>();

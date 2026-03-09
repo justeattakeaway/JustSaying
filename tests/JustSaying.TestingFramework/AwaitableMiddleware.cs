@@ -1,11 +1,10 @@
 using JustSaying.Messaging.Middleware;
-using Xunit;
 
 namespace JustSaying.TestingFramework;
 
-public class AwaitableMiddleware(ITestOutputHelper outputHelper, int runCountToAwait = 1) : MiddlewareBase<HandleMessageContext, bool>
+public class AwaitableMiddleware(TextWriter outputWriter, int runCountToAwait = 1) : MiddlewareBase<HandleMessageContext, bool>
 {
-    private readonly ITestOutputHelper _outputHelper = outputHelper;
+    private readonly TextWriter _outputWriter = outputWriter;
     private int _runCountToAwait = runCountToAwait;
     private readonly TaskCompletionSource _tcs = new (TaskCreationOptions.RunContinuationsAsynchronously);
     public Task Complete => _tcs.Task;
@@ -21,7 +20,7 @@ public class AwaitableMiddleware(ITestOutputHelper outputHelper, int runCountToA
             Interlocked.Decrement(ref _runCountToAwait);
             if (_runCountToAwait == 0)
             {
-                _outputHelper.WriteLine("Completing AwaitableMiddleware - the job is done.");
+                _outputWriter.WriteLine("Completing AwaitableMiddleware - the job is done.");
                 _tcs.SetResult();
             }
         }

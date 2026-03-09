@@ -4,9 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing;
 
-public class WhenUsingMultipleMiddlewares(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenUsingMultipleMiddlewares : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task Then_The_Middlewares_Are_Called()
     {
         var handler = new InspectableHandler<SimpleMessage>();

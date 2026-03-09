@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
-public class WhenExactlyOnceIsAppliedWithoutSpecificTimeout(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
+public class WhenExactlyOnceIsAppliedWithoutSpecificTimeout : BaseSubscriptionGroupTests
 {
     private SqsSource _queue;
     private readonly int _maximumTimeout = (int)TimeSpan.MaxValue.TotalSeconds;
@@ -30,7 +30,7 @@ public class WhenExactlyOnceIsAppliedWithoutSpecificTimeout(ITestOutputHelper te
         var serviceResolver = new InMemoryServiceResolver(sc =>
             sc.AddSingleton<IMessageLockAsync>(_messageLock)
                 .AddSingleton<IHandlerAsync<SimpleMessage>>(Handler)
-                .AddLogging(x => x.AddXUnit(OutputHelper).SetMinimumLevel(LogLevel.Information)));
+                .AddLogging(x => x.AddTextWriter(OutputHelper).SetMinimumLevel(LogLevel.Information)));
 
         var middlewareBuilder = new HandlerMiddlewareBuilder(serviceResolver, serviceResolver);
 
@@ -55,11 +55,11 @@ public class WhenExactlyOnceIsAppliedWithoutSpecificTimeout(ITestOutputHelper te
             () => !Handler.ReceivedMessages.IsEmpty);
 
         await cts.CancelAsync();
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
+        await Should.ThrowAsync<OperationCanceledException>(() => completion);
 
     }
 
-    [Fact]
+    [Test]
     public void MessageIsLocked()
     {
         var messageId = SetupMessage.Id.ToString();

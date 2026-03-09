@@ -5,9 +5,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing;
 
-public class WhenAHandlerUsesMessageContext(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenAHandlerUsesMessageContext : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task Then_The_Message_Is_Handled()
     {
         // Arrange

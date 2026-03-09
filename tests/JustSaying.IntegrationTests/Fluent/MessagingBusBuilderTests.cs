@@ -10,15 +10,15 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.IntegrationTests;
 
-public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
+public class MessagingBusBuilderTests
 {
-    private ITestOutputHelper OutputHelper { get; } = outputHelper;
+    private TextWriter OutputHelper => TestContext.Current!.OutputWriter;
 
     private class QueueStore(ILogger<TestMessageStore<QueueMessage>> logger) : TestMessageStore<QueueMessage>(logger)
     {
     }
 
-    [AwsFact]
+    [Test]
     public async Task Can_Create_Messaging_Bus_Fluently_For_A_Queue()
     {
         var queueName = Guid.NewGuid().ToString();
@@ -26,7 +26,7 @@ public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
         // Arrange
         var bus = new InMemoryAwsBus();
         var services = new ServiceCollection()
-            .AddLogging((p) => p.AddXUnit(OutputHelper))
+            .AddLogging((p) => p.AddTextWriter(OutputHelper))
             .AddJustSaying(
                 (builder) =>
                 {
@@ -66,7 +66,7 @@ public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
             () => store.Messages.Any(msg => msg.Id == message.Id));
     }
 
-    [AwsFact]
+    [Test]
     public async Task Can_Create_Messaging_Bus_Fluently_For_A_Topic()
     {
         var topicName = Guid.NewGuid().ToString();
@@ -74,7 +74,7 @@ public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
         // Arrange
         var bus = new InMemoryAwsBus();
         var services = new ServiceCollection()
-            .AddLogging((p) => p.AddXUnit(OutputHelper))
+            .AddLogging((p) => p.AddTextWriter(OutputHelper))
             .AddJustSaying(
                 (builder) =>
                 {
@@ -113,7 +113,7 @@ public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
             () => store.Messages.Any(msg => msg.Id == message.Id));
     }
 
-    [AwsFact]
+    [Test]
     public async Task Can_Create_Messaging_Bus_Fluently_For_A_Topic_Address()
     {
         var topicName = Guid.NewGuid().ToString();
@@ -121,7 +121,7 @@ public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
         // Arrange
         var bus = new InMemoryAwsBus();
         var services = new ServiceCollection()
-            .AddLogging((p) => p.AddXUnit(OutputHelper))
+            .AddLogging((p) => p.AddTextWriter(OutputHelper))
             .AddJustSaying(
                 (builder) =>
                 {
@@ -159,12 +159,12 @@ public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
             () => store.Messages.Any(msg => msg.Id == message.Id));
     }
 
-    [AwsFact]
+    [Test]
     public async Task Can_Create_Messaging_Bus()
     {
         // Arrange
         var services = new ServiceCollection()
-            .AddLogging((p) => p.AddXUnit(OutputHelper))
+            .AddLogging((p) => p.AddTextWriter(OutputHelper))
             .AddJustSaying("eu-west-1")
             .AddJustSayingHandler<QueueMessage, InspectableHandler<QueueMessage>>();
 
@@ -180,12 +180,12 @@ public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
         await publisher.StartAsync(source.Token);
     }
 
-    [AwsFact]
+    [Test]
     public async Task Can_Create_Messaging_Bus_With_Contributors()
     {
         // Arrange
         var services = new ServiceCollection()
-            .AddLogging((p) => p.AddXUnit(OutputHelper))
+            .AddLogging((p) => p.AddTextWriter(OutputHelper))
             .AddJustSaying()
             .AddSingleton<IMessageBusConfigurationContributor, AwsContributor>()
             .AddSingleton<IMessageBusConfigurationContributor, MessagingContributor>()

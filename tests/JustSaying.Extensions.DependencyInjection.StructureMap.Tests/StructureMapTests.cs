@@ -9,26 +9,26 @@ using LocalSqsSnsMessaging;
 using Microsoft.Extensions.Logging;
 using Shouldly;
 using StructureMap;
-using Xunit;
+using TUnit.Core;
 
 namespace JustSaying;
 
-public class WhenUsingStructureMap(ITestOutputHelper outputHelper)
+public class WhenUsingStructureMap
 {
-    private ITestOutputHelper OutputHelper { get; } = outputHelper;
     private InMemoryAwsBus InMemoryAwsBus { get; } = new();
 
-    [AwsFact]
+    [Test]
     public async Task Can_Create_Messaging_Bus_Fluently_For_A_Queue()
     {
         // Arrange
+        var outputWriter = TestContext.Current!.OutputWriter;
         var handler = new InspectableHandler<SimpleMessage>();
 
         using var container = new Container(
             (registry) =>
             {
                 registry.For<ILoggerFactory>()
-                    .Use(() => OutputHelper.ToLoggerFactory())
+                    .Use(() => outputWriter.ToLoggerFactory())
                     .Singleton();
 
                 registry.For<IHandlerAsync<SimpleMessage>>()
@@ -39,9 +39,6 @@ public class WhenUsingStructureMap(ITestOutputHelper outputHelper)
                     {
                         builder.Client((options) =>
                                     options.WithClientFactory(() => new LocalAwsClientFactory(InMemoryAwsBus))
-                                // TODO Add back LocalStack config for running in CI
-                                // options.WithBasicCredentials("accessKey", "secretKey")
-                                //     .WithServiceUri(TestEnvironment.SimulatorUrl)
                                 )
                             .Messaging((options) => options.WithRegion("eu-west-1"))
                             .Publications((options) => options.WithQueue<SimpleMessage>())
@@ -68,21 +65,22 @@ public class WhenUsingStructureMap(ITestOutputHelper outputHelper)
         await publisher.PublishAsync(message, source.Token);
         await batchPublisher.PublishAsync([message], source.Token);
 
-        await Patiently.AssertThatAsync(OutputHelper, () => handler.ReceivedMessages.Count > 1);
+        await Patiently.AssertThatAsync(outputWriter, () => handler.ReceivedMessages.Count > 1);
 
         // Assert
         handler.ReceivedMessages.ShouldContain(x => x.GetType() == typeof(SimpleMessage));
     }
 
-    [AwsFact]
+    [Test]
     public void Registers_Middleware_With_The_Correct_Lifetime()
     {
         // Arrange
+        var outputWriter = TestContext.Current!.OutputWriter;
         using var container = new Container(
             (registry) =>
             {
                 registry.For<ILoggerFactory>()
-                    .Use(() => OutputHelper.ToLoggerFactory())
+                    .Use(() => outputWriter.ToLoggerFactory())
                     .Singleton();
 
                 registry.AddJustSaying(

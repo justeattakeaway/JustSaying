@@ -32,7 +32,7 @@ public class WhenPublishing : WhenPublishingTestBase
         await SystemUnderTest.PublishAsync(new SimpleMessage());
     }
 
-    [Fact]
+    [Test]
     public void MessageIsPublishedToSnsTopic()
     {
         Sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => B(x)));
@@ -43,13 +43,13 @@ public class WhenPublishing : WhenPublishingTestBase
         return x.Message.Equals(Message, StringComparison.Ordinal);
     }
 
-    [Fact]
+    [Test]
     public void MessageSubjectIsObjectType()
     {
         Sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.Subject == nameof(SimpleMessage)));
     }
 
-    [Fact]
+    [Test]
     public void MessageIsPublishedToCorrectLocation()
     {
         Sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.TopicArn == TopicArn));

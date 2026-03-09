@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
-public class WhenListeningStartsAndStops(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
+public class WhenListeningStartsAndStops : BaseSubscriptionGroupTests
 {
     private int _expectedMaxMessageCount;
     private bool _running;
@@ -56,19 +56,19 @@ public class WhenListeningStartsAndStops(ITestOutputHelper testOutputHelper) : B
         _running = false;
     }
 
-    [Fact]
+    [Test]
     public void MessagesAreReceived()
     {
         _queue.ReceiveMessageRequests.ShouldNotBeEmpty();
     }
 
-    [Fact]
+    [Test]
     public void TheMaxMessageAllowanceIsGrabbed()
     {
         _queue.ReceiveMessageRequests.ShouldAllBe(req => req.MaxNumOfMessages == _expectedMaxMessageCount);
     }
 
-    [Fact]
+    [Test]
     public void MessageIsProcessed()
     {
         Handler.ReceivedMessages.ShouldContain(m => m.Content.Equals("Message Contents Running"));

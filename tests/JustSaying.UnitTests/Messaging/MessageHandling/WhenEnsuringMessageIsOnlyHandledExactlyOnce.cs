@@ -9,19 +9,20 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.UnitTests.Messaging.MessageHandling;
 
-public class WhenEnsuringMessageIsOnlyHandledExactlyOnce(ITestOutputHelper outputHelper)
+public class WhenEnsuringMessageIsOnlyHandledExactlyOnce
 {
-    [Fact]
+    private TextWriter OutputHelper => TestContext.Current!.OutputWriter;
+    [Test]
     public async Task WhenMessageIsLockedByAnotherHandler_MessageWillBeLeftInTheQueue()
     {
         var messageLock = new FakeMessageLock(false);
 
         var testResolver = new InMemoryServiceResolver(sc => sc
             .AddLogging(l =>
-                l.AddXUnit(outputHelper))
+                l.AddTextWriter(OutputHelper))
             .AddSingleton<IMessageLockAsync>(messageLock));
 
-        var monitor = new TrackingLoggingMonitor(LoggerFactory.Create(lf => lf.AddXUnit().SetMinimumLevel(LogLevel.Information)).CreateLogger<TrackingLoggingMonitor>());
+        var monitor = new TrackingLoggingMonitor(LoggerFactory.Create(lf => lf.AddTextWriter(OutputHelper).SetMinimumLevel(LogLevel.Information)).CreateLogger<TrackingLoggingMonitor>());
         var handler = new InspectableHandler<OrderAccepted>();
 
         var middleware = new HandlerMiddlewareBuilder(testResolver, testResolver)

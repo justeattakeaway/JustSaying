@@ -15,7 +15,7 @@ public class WhenListeningWithRateLimiting : BaseSubscriptionGroupTests
                                        }
                                        """;
 
-    public WhenListeningWithRateLimiting(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
+    public WhenListeningWithRateLimiting()
     {
         MessagesToWaitFor = 3;
     }
@@ -39,13 +39,13 @@ public class WhenListeningWithRateLimiting : BaseSubscriptionGroupTests
         };
     }
 
-    [Fact]
+    [Test]
     public void MessagesAreHandledSuccessfully()
     {
         Handler.ReceivedMessages.ShouldNotBeEmpty();
     }
 
-    [Fact]
+    [Test]
     public void InterrogationShowsMessagesPerSecondLimitType()
     {
         var interrogationResult = SystemUnderTest.Interrogate();

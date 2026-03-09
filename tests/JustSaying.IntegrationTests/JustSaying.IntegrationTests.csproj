@@ -1,32 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <OutputType>Exe</OutputType>
     <NoWarn>$(NoWarn);CA1001;CA1034;CA1707;CA1812;CA1822;CA2007</NoWarn>
     <RootNamespace>JustSaying</RootNamespace>
     <TargetFramework>net10.0</TargetFramework>
     <Deterministic>false</Deterministic>
   </PropertyGroup>
   <ItemGroup>
-    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\JustSaying.TestingFramework\JustSaying.TestingFramework.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AWSSDK.SimpleNotificationService" />
     <PackageReference Include="AWSSDK.SQS" />
-    <PackageReference Include="GitHubActionsTestLogger" />
-    <PackageReference Include="JunitXml.TestLogger" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <PackageReference Include="Microsoft.Testing.Platform" />
     <PackageReference Include="Newtonsoft.Json" VersionOverride="13.0.3" />
-    <PackageReference Include="xunit.v3" />
-    <PackageReference Include="xunit.runner.visualstudio" />
-
+    <PackageReference Include="TUnit" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Shouldly" />
-    <Using Include="Xunit" />
   </ItemGroup>
 </Project>

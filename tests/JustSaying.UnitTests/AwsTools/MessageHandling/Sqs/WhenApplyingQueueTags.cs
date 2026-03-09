@@ -64,7 +64,7 @@ public class WhenApplyingQueueTags
         });
     }
 
-    [Fact]
+    [Test]
     public async Task TagsAreAppliedToParentAndErrorQueues()
     {
         // Arrange
@@ -86,7 +86,7 @@ public class WhenApplyingQueueTags
         await _client.Received(1).TagQueueAsync(Arg.Is<TagQueueRequest>(req => req.QueueUrl == QueueUrl && req.Tags == config.Tags));
     }
 
-    [Fact]
+    [Test]
     public async Task TagsAreNotAppliedIfNoneAreProvided()
     {
         // Arrange

@@ -16,20 +16,20 @@ namespace JustSaying.UnitTests.Messaging.Channels;
 
 public class ErrorHandlingTests
 {
-    private IMessageReceivePauseSignal MessageReceivePauseSignal { get; }
-    private ILoggerFactory LoggerFactory { get; }
-    private IMessageMonitor MessageMonitor { get; }
-    private readonly ITestOutputHelper _outputHelper;
+    private IMessageReceivePauseSignal MessageReceivePauseSignal { get; set; }
+    private ILoggerFactory LoggerFactory { get; set; }
+    private IMessageMonitor MessageMonitor { get; set; }
+    private TextWriter OutputHelper => TestContext.Current!.OutputWriter;
 
-    public ErrorHandlingTests(ITestOutputHelper testOutputHelper)
+    [Before(Test)]
+    public void Setup()
     {
-        _outputHelper = testOutputHelper;
         MessageReceivePauseSignal = new MessageReceivePauseSignal();
-        LoggerFactory = testOutputHelper.ToLoggerFactory();
+        LoggerFactory = OutputHelper.ToLoggerFactory();
         MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
     }
 
-    [Fact]
+    [Test]
     public async Task Sqs_Client_Throwing_Exceptions_Continues_To_Request_Messages()
     {
         // Arrange
@@ -75,7 +75,7 @@ public class ErrorHandlingTests
         // Act
         var runTask = collection.RunAsync(cts.Token);
 
-        await Patiently.AssertThatAsync(_outputHelper,
+        await Patiently.AssertThatAsync(OutputHelper,
             () =>
             {
                 messagesRequested.ShouldBeGreaterThan(1, $"but was {messagesRequested}");
@@ -86,7 +86,7 @@ public class ErrorHandlingTests
         await runTask.HandleCancellation();
     }
 
-    [Fact]
+    [Test]
     public async Task Message_Processing_Throwing_Exceptions_Continues_To_Request_Messages()
     {
         // Arrange
@@ -127,7 +127,7 @@ public class ErrorHandlingTests
         // Act
         var runTask = collection.RunAsync(cts.Token);
 
-        await Patiently.AssertThatAsync(_outputHelper,
+        await Patiently.AssertThatAsync(OutputHelper,
             () =>
             {
                 messagesRequested.ShouldBeGreaterThan(1);
