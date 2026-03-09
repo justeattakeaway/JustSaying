@@ -1,5 +1,6 @@
 using Amazon;
 using Amazon.SimpleNotificationService.Model;
+using JustSaying.IntegrationTests;
 using JustSaying.Messaging;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
@@ -12,6 +13,8 @@ public class WhenRegisteringAPublisherWithTags : IntegrationTestBase
     [Test]
     public async Task Then_A_Topic_Is_Created_With_The_Correct_Tags()
     {
+        NotSimulatorGuard.SkipIfNotSupported();
+
         // Arrange
         var tags = new Dictionary<string, string>
         {

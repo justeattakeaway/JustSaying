@@ -1,6 +1,7 @@
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.IntegrationTests;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 
@@ -13,6 +14,8 @@ public class WhenRemovingSnsServerSideEncryption : IntegrationTestBase
     [Test]
     public async Task Can_Remove_Encryption()
     {
+        NotSimulatorGuard.SkipIfNotSupported();
+
         // Arrange
         ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
         IAwsClientFactory clientFactory = CreateClientFactory();

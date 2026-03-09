@@ -12,6 +12,8 @@ public class WhenPublishingWithTracePropagation : IntegrationTestBase
     [Test]
     public async Task Then_Trace_Context_Is_Propagated_With_Link()
     {
+        Activity.Current = null; // Clear ambient activity from test framework
+
         var handler = new InspectableHandler<SimpleMessage>();
         var activities = new ConcurrentBag<Activity>();
 

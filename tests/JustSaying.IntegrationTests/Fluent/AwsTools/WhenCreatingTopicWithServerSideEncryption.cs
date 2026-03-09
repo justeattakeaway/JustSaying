@@ -1,6 +1,7 @@
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.IntegrationTests;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 
@@ -13,6 +14,8 @@ public class WhenCreatingTopicWithServerSideEncryption : IntegrationTestBase
     [Test]
     public async Task Can_Create_Topic_With_Encryption()
     {
+        NotSimulatorGuard.SkipIfNotSupported();
+
         // Arrange
         ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
         IAwsClientFactory clientFactory = CreateClientFactory();
@@ -34,6 +37,8 @@ public class WhenCreatingTopicWithServerSideEncryption : IntegrationTestBase
     [Test]
     public async Task Can_Add_Encryption_To_Existing_Topic()
     {
+        NotSimulatorGuard.SkipIfNotSupported();
+
         // Arrange
         ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
         IAwsClientFactory clientFactory = CreateClientFactory();
@@ -57,6 +62,8 @@ public class WhenCreatingTopicWithServerSideEncryption : IntegrationTestBase
     [Test]
     public async Task Can_Update_Encryption_For_Existing_Topic()
     {
+        NotSimulatorGuard.SkipIfNotSupported();
+
         // Arrange
         ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
         IAwsClientFactory clientFactory = CreateClientFactory();

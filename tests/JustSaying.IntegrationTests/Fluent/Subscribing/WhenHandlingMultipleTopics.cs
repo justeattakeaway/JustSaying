@@ -1,4 +1,5 @@
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.IntegrationTests;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
@@ -15,6 +16,8 @@ public class WhenHandlingMultipleTopics : IntegrationTestBase
     [Test]
     public async Task Sqs_Policy_Is_Applied_With_Wildcard()
     {
+        NotSimulatorGuard.SkipIfNotSupported();
+
         // Arrange
         var services = GivenJustSaying()
             .ConfigureJustSaying((builder) => builder.WithLoopbackTopic<TopicA>(UniqueName))
@@ -38,7 +41,7 @@ public class WhenHandlingMultipleTopics : IntegrationTestBase
 
                 dynamic policyJson = JObject.Parse(queue.Policy);
 
-                policyJson.Statement.Count.ShouldBe(1, $"Expecting 1 statement in Sqs policy but found {policyJson.Statement.Count}.");
+                ((int)policyJson.Statement.Count).ShouldBe(1, $"Expecting 1 statement in Sqs policy but found {policyJson.Statement.Count}.");
             });
     }
 

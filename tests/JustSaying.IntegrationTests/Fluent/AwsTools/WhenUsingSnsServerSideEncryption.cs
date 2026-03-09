@@ -1,5 +1,6 @@
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.IntegrationTests;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
@@ -11,6 +12,8 @@ public class WhenUsingSnsServerSideEncryption : IntegrationTestBase
     [Test]
     public async Task Then_The_Message_Is_Published()
     {
+        NotSimulatorGuard.SkipIfNotSupported();
+
         // Arrange
         var completionSource = new TaskCompletionSource<object>();
         var handler = CreateHandler<SimpleMessage>(completionSource);

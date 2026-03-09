@@ -3,6 +3,7 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
+using JustSaying.IntegrationTests;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -15,6 +16,8 @@ public class WhenRegisteringASubscriberWithTags : IntegrationTestBase
     [Test]
     public async Task Then_A_Queue_For_Topic_Subscription_Is_Created_With_The_Correct_Tags()
     {
+        NotSimulatorGuard.SkipIfNotSupported();
+
         // Arrange
         var tags = new Dictionary<string, string>
         {
@@ -38,6 +41,8 @@ public class WhenRegisteringASubscriberWithTags : IntegrationTestBase
     [Test]
     public async Task Then_A_Queue_Subscription_Is_Created_With_The_Correct_Tags()
     {
+        NotSimulatorGuard.SkipIfNotSupported();
+
         // Arrange
         var tags = new Dictionary<string, string>
         {
