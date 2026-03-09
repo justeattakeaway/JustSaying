@@ -39,10 +39,10 @@ public class WhenPublishingWithTracePropagation : IntegrationTestBase
         });
 
         // Find the matched producer/consumer pair: the consumer links back to the producer.
-        // We iterate all producers because ActivityListener is process-global and parallel tests
-        // may contribute activities to our bag.
+        // Match by SpanId (unique per activity) rather than TraceId, because an ambient
+        // parent activity from the test framework can cause all activities to share a TraceId.
         var (producerActivity, consumerActivity) = FindActivityPair(activities,
-            (producer, consumer) => consumer.Links.Any(l => l.Context.TraceId == producer.TraceId));
+            (producer, consumer) => consumer.Links.Any(l => l.Context.SpanId == producer.SpanId));
 
         producerActivity.Kind.ShouldBe(ActivityKind.Producer);
         consumerActivity.Kind.ShouldBe(ActivityKind.Consumer);
