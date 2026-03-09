@@ -17,6 +17,5 @@
   </ItemGroup>
   <ItemGroup>
     <Using Include="Shouldly" />
-    <Using Include="TUnit.Core" />
   </ItemGroup>
 </Project>
