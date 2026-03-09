@@ -35,6 +35,15 @@
       "matchPackageNames": [
         "/^xunit/"
       ]
+    },
+    {
+      "matchDatasources": [
+        "nuget"
+      ],
+      "groupName": "TUnit",
+      "matchPackageNames": [
+        "/^TUnit/"
+      ]
     }
   ]
 }
