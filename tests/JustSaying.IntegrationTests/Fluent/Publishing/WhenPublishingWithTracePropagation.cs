@@ -12,8 +12,6 @@ public class WhenPublishingWithTracePropagation : IntegrationTestBase
     [Test]
     public async Task Then_Trace_Context_Is_Propagated_With_Link()
     {
-        Activity.Current = null; // Clear ambient activity from test framework
-
         var handler = new InspectableHandler<SimpleMessage>();
         var activities = new ConcurrentBag<Activity>();
 
@@ -26,9 +24,13 @@ public class WhenPublishingWithTracePropagation : IntegrationTestBase
 
         await WhenAsync(services, async (publisher, listener, cancellationToken) =>
         {
+            // Clear ambient activity so background subscription threads don't inherit test framework's trace
+            Activity.Current = null;
             await listener.StartAsync(cancellationToken);
             await publisher.StartAsync(cancellationToken);
 
+            // Clear again after awaits which may restore the test framework's activity
+            Activity.Current = null;
             await publisher.PublishAsync(new SimpleMessage { Content = "trace-test" }, cancellationToken);
 
             await Patiently.AssertThatAsync(OutputHelper,
