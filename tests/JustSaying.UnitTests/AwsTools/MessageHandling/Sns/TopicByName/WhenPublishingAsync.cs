@@ -74,12 +74,12 @@ public class WhenPublishingAsync : WhenPublishingTestBase
     [Test]
     public void MessageAttributeValueIsPublished()
     {
-        Sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.MessageAttributes.Single().Value.StringValue == MessageAttributeValue));
+        Sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.MessageAttributes[MessageAttributeKey].StringValue == MessageAttributeValue));
     }
 
     [Test]
     public void MessageAttributeDataTypeIsPublished()
     {
-        Sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.MessageAttributes.Single().Value.DataType == MessageAttributeDataType));
+        Sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.MessageAttributes[MessageAttributeKey].DataType == MessageAttributeDataType));
     }
 }

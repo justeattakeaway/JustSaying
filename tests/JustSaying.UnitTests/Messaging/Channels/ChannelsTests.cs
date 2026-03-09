@@ -241,6 +241,7 @@ public class ChannelsTests
     public async Task Sqs_Queue_Is_Not_Polled_After_Cancellation()
     {
         var cts = new CancellationTokenSource();
+        var firstPollReceived = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         int callCountBeforeCancelled = 0;
         int callCountAfterCancelled = 0;
@@ -253,6 +254,7 @@ public class ChannelsTests
             else
             {
                 callCountBeforeCancelled++;
+                firstPollReceived.TrySetResult();
             }
         });
 
@@ -261,7 +263,8 @@ public class ChannelsTests
 
         var runTask = bus.RunAsync(cts.Token);
 
-        cts.CancelAfter(_timeoutPeriod);
+        await firstPollReceived.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        cts.Cancel();
 
         await Should.ThrowAsync<OperationCanceledException>(() => runTask);
 
@@ -273,6 +276,7 @@ public class ChannelsTests
     public async Task Messages_Not_Dispatched_After_Cancellation()
     {
         var cts = new CancellationTokenSource();
+        var firstDispatchReceived = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         int dispatchedBeforeCancelled = 0;
         int dispatchedAfterCancelled = 0;
@@ -287,6 +291,7 @@ public class ChannelsTests
             else
             {
                 dispatchedBeforeCancelled++;
+                firstDispatchReceived.TrySetResult();
             }
         });
 
@@ -294,7 +299,8 @@ public class ChannelsTests
 
         var runTask = bus.RunAsync(cts.Token);
 
-        cts.CancelAfter(_timeoutPeriod);
+        await firstDispatchReceived.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        cts.Cancel();
 
         await Should.ThrowAsync<OperationCanceledException>(() => runTask);
 
