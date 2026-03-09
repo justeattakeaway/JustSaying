@@ -88,6 +88,7 @@ const sidebars = {
         'publishing/withqueue',
         'publishing/write-configuration',
         'publishing/batch-publishing',
+        'publishing/middleware',
       ],
     },
     {
