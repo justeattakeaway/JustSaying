@@ -10,8 +10,6 @@
     <ProjectReference Include="..\..\src\JustSaying\JustSaying.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="GitHubActionsTestLogger" />
-    <PackageReference Include="JunitXml.TestLogger" />
     <PackageReference Include="NSubstitute" />
     <PackageReference Include="Shouldly" />
     <PackageReference Include="OpenTelemetry.Exporter.InMemory" />

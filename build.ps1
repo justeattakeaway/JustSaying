@@ -107,20 +107,20 @@ function DotNetTest {
 
     $additionalArgs = @()
 
-    if (![string]::IsNullOrEmpty($env:GITHUB_SHA)) {
-        $additionalArgs += "--logger:GitHubActions;report-warnings=false"
-    }
-
-    # Always generate JUnit XML test results for codecov
+    # Generate TRX test results for codecov
     $testResultsDir = Join-Path $solutionPath "test-results"
     if (!(Test-Path $testResultsDir)) {
         New-Item -ItemType Directory -Path $testResultsDir -Force | Out-Null
     }
 
     $projectName = [System.IO.Path]::GetFileNameWithoutExtension($Project)
-    $additionalArgs += "--logger:junit;LogFilePath=${testResultsDir}/${projectName}.xml"
+    $additionalArgs += "--report-trx"
+    $additionalArgs += "--report-trx-filename"
+    $additionalArgs += "${projectName}.trx"
+    $additionalArgs += "--results-directory"
+    $additionalArgs += $testResultsDir
 
-    & $dotnet test $Project --configuration "Release" $additionalArgs
+    & $dotnet test --project $Project --configuration "Release" $additionalArgs
 
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet test failed with exit code $LASTEXITCODE"

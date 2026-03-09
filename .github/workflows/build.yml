@@ -78,7 +78,7 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
           flags: ${{ matrix.os-name }}
-          test_results_files: ./test-results/**/*.xml
+          test_results_files: ./test-results/**/*.trx
 
       - name: Generate SBOM
         uses: anchore/sbom-action@17ae1740179002c89186b61233e0f892c3118b11 # v0.23.0

@@ -11,8 +11,6 @@
   <ItemGroup>
     <PackageReference Include="AWSSDK.SimpleNotificationService" />
     <PackageReference Include="AWSSDK.SQS" />
-    <PackageReference Include="GitHubActionsTestLogger" />
-    <PackageReference Include="JunitXml.TestLogger" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />
     <PackageReference Include="Newtonsoft.Json" VersionOverride="13.0.3" />
     <PackageReference Include="Polly.Core" />
