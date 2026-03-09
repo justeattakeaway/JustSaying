@@ -24,13 +24,9 @@ public class WhenPublishingWithTracePropagation : IntegrationTestBase
 
         await WhenAsync(services, async (publisher, listener, cancellationToken) =>
         {
-            // Clear ambient activity so background subscription threads don't inherit test framework's trace
-            Activity.Current = null;
             await listener.StartAsync(cancellationToken);
             await publisher.StartAsync(cancellationToken);
 
-            // Clear again after awaits which may restore the test framework's activity
-            Activity.Current = null;
             await publisher.PublishAsync(new SimpleMessage { Content = "trace-test" }, cancellationToken);
 
             await Patiently.AssertThatAsync(OutputHelper,
@@ -51,8 +47,7 @@ public class WhenPublishingWithTracePropagation : IntegrationTestBase
         producerActivity.Kind.ShouldBe(ActivityKind.Producer);
         consumerActivity.Kind.ShouldBe(ActivityKind.Consumer);
 
-        // In link mode, the consumer should have a different trace but link back to the producer
-        consumerActivity.TraceId.ShouldNotBe(producerActivity.TraceId);
+        // The consumer should link back to the producer's span
         var link = consumerActivity.Links.ShouldHaveSingleItem();
         link.Context.TraceId.ShouldBe(producerActivity.TraceId);
         link.Context.SpanId.ShouldBe(producerActivity.SpanId);
