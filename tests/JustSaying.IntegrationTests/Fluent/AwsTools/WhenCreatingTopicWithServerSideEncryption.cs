@@ -11,11 +11,10 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools;
 
 public class WhenCreatingTopicWithServerSideEncryption : IntegrationTestBase
 {
+    [NotSimulatorSkip]
     [Test]
     public async Task Can_Create_Topic_With_Encryption()
     {
-        NotSimulatorGuard.SkipIfNotSupported();
-
         // Arrange
         ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
         IAwsClientFactory clientFactory = CreateClientFactory();
@@ -34,11 +33,10 @@ public class WhenCreatingTopicWithServerSideEncryption : IntegrationTestBase
         topic.ServerSideEncryption.KmsMasterKeyId.ShouldBe(JustSayingConstants.DefaultSnsAttributeEncryptionKeyId);
     }
 
+    [NotSimulatorSkip]
     [Test]
     public async Task Can_Add_Encryption_To_Existing_Topic()
     {
-        NotSimulatorGuard.SkipIfNotSupported();
-
         // Arrange
         ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
         IAwsClientFactory clientFactory = CreateClientFactory();
@@ -59,11 +57,10 @@ public class WhenCreatingTopicWithServerSideEncryption : IntegrationTestBase
         topic.ServerSideEncryption.KmsMasterKeyId.ShouldBe(JustSayingConstants.DefaultSnsAttributeEncryptionKeyId);
     }
 
+    [NotSimulatorSkip]
     [Test]
     public async Task Can_Update_Encryption_For_Existing_Topic()
     {
-        NotSimulatorGuard.SkipIfNotSupported();
-
         // Arrange
         ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
         IAwsClientFactory clientFactory = CreateClientFactory();

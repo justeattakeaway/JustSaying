@@ -13,11 +13,10 @@ public class WhenRegisteringASubscriberWithTags : IntegrationTestBase
 {
     private const string QueueName = "simple-message-queue-with-tags";
 
+    [NotSimulatorSkip]
     [Test]
     public async Task Then_A_Queue_For_Topic_Subscription_Is_Created_With_The_Correct_Tags()
     {
-        NotSimulatorGuard.SkipIfNotSupported();
-
         // Arrange
         var tags = new Dictionary<string, string>
         {
@@ -38,11 +37,10 @@ public class WhenRegisteringASubscriberWithTags : IntegrationTestBase
                 }));
     }
 
+    [NotSimulatorSkip]
     [Test]
     public async Task Then_A_Queue_Subscription_Is_Created_With_The_Correct_Tags()
     {
-        NotSimulatorGuard.SkipIfNotSupported();
-
         // Arrange
         var tags = new Dictionary<string, string>
         {

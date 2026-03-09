@@ -11,11 +11,10 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools;
 
 public class WhenRemovingServerSideEncryption : IntegrationTestBase
 {
+    [NotSimulatorSkip]
     [Test]
     public async Task Can_Remove_Encryption()
     {
-        NotSimulatorGuard.SkipIfNotSupported();
-
         // Arrange
         ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
         IAwsClientFactory clientFactory = CreateClientFactory();

@@ -9,11 +9,10 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools;
 
 public class WhenUsingSnsServerSideEncryption : IntegrationTestBase
 {
+    [NotSimulatorSkip]
     [Test]
     public async Task Then_The_Message_Is_Published()
     {
-        NotSimulatorGuard.SkipIfNotSupported();
-
         // Arrange
         var completionSource = new TaskCompletionSource<object>();
         var handler = CreateHandler<SimpleMessage>(completionSource);

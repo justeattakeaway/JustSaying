@@ -13,11 +13,10 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing;
 
 public class WhenHandlingMultipleTopics : IntegrationTestBase
 {
+    [NotSimulatorSkip]
     [Test]
     public async Task Sqs_Policy_Is_Applied_With_Wildcard()
     {
-        NotSimulatorGuard.SkipIfNotSupported();
-
         // Arrange
         var services = GivenJustSaying()
             .ConfigureJustSaying((builder) => builder.WithLoopbackTopic<TopicA>(UniqueName))
