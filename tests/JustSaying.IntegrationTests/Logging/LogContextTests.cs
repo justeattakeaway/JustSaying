@@ -8,9 +8,9 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Logging;
 
-public class LogContextTests(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class LogContextTests : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task PublishToTopicLogsShouldHaveContext()
     {
         var services = GivenJustSaying(levelOverride: LogLevel.Information)
@@ -42,7 +42,7 @@ public class LogContextTests(ITestOutputHelper outputHelper) : IntegrationTestBa
         cts.Cancel();
     }
 
-    [AwsFact]
+    [Test]
     public async Task PublishToQueueLogsShouldHaveContext()
     {
         var services = GivenJustSaying(levelOverride: LogLevel.Information)
@@ -74,10 +74,10 @@ public class LogContextTests(ITestOutputHelper outputHelper) : IntegrationTestBa
         cts.Cancel();
     }
 
-    [AwsTheory]
-    [InlineData(true, LogLevel.Information, "Succeeded", null)]
-    [InlineData(false, LogLevel.Warning, "Failed", null)]
-    [InlineData(false, LogLevel.Warning, "Failed", "Something went wrong!")]
+    [Test]
+    [Arguments(true, LogLevel.Information, "Succeeded", null)]
+    [Arguments(false, LogLevel.Warning, "Failed", null)]
+    [Arguments(false, LogLevel.Warning, "Failed", "Something went wrong!")]
     public async Task HandleMessageFromQueueLogs_ShouldHaveContext(bool handlerShouldSucceed, LogLevel level, string status, string exceptionMessage)
     {
         var handler = new InspectableHandler<SimpleMessage>()

@@ -6,7 +6,7 @@ namespace JustSaying.UnitTests.Fluent;
 
 public class CompressionEncodingValidatorTests
 {
-    [Fact]
+    [Test]
     public void ValidateEncoding_WithNullCompressionOptions_DoesNotThrow()
     {
         // Arrange
@@ -16,7 +16,7 @@ public class CompressionEncodingValidatorTests
         CompressionEncodingValidator.ValidateEncoding(registry, null);
     }
 
-    [Fact]
+    [Test]
     public void ValidateEncoding_WithNullCompressionEncoding_DoesNotThrow()
     {
         // Arrange
@@ -27,7 +27,7 @@ public class CompressionEncodingValidatorTests
         CompressionEncodingValidator.ValidateEncoding(registry, options);
     }
 
-    [Fact]
+    [Test]
     public void ValidateEncoding_WithRegisteredEncoding_DoesNotThrow()
     {
         // Arrange
@@ -39,7 +39,7 @@ public class CompressionEncodingValidatorTests
         CompressionEncodingValidator.ValidateEncoding(registry, options);
     }
 
-    [Fact]
+    [Test]
     public void ValidateEncoding_WithUnregisteredEncoding_ThrowsInvalidOperationException()
     {
         // Arrange
@@ -47,9 +47,9 @@ public class CompressionEncodingValidatorTests
         var options = new PublishCompressionOptions { CompressionEncoding = "unknown" };
 
         // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() =>
+        var exception = Should.Throw<InvalidOperationException>(() =>
             CompressionEncodingValidator.ValidateEncoding(registry, options));
 
-        Assert.Equal("Compression encoding 'unknown' is not registered with the bus.", exception.Message);
+        exception.Message.ShouldBe("Compression encoding 'unknown' is not registered with the bus.");
     }
 }

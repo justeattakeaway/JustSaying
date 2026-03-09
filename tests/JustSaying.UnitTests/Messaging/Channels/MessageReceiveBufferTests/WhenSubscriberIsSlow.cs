@@ -17,11 +17,12 @@ public class WhenSubscriberIsSlow
     protected class TestMessage : Message { }
 
     private int _callCount;
-    private readonly MessageReceiveBuffer _messageReceiveBuffer;
+    private MessageReceiveBuffer _messageReceiveBuffer;
 
-    public WhenSubscriberIsSlow(ITestOutputHelper testOutputHelper)
+    [Before(Test)]
+    public void Setup()
     {
-        var loggerFactory = testOutputHelper.ToLoggerFactory();
+        var loggerFactory = TestContext.Current!.OutputWriter.ToLoggerFactory();
 
         MiddlewareBase<ReceiveMessagesContext, IList<Message>> sqsMiddleware =
             new DelegateMiddleware<ReceiveMessagesContext, IList<Message>>();
@@ -70,7 +71,7 @@ public class WhenSubscriberIsSlow
         return messagesProcessed;
     }
 
-    [Fact]
+    [Test]
     public async Task All_Messages_Are_Processed()
     {
         using var cts = new CancellationTokenSource();

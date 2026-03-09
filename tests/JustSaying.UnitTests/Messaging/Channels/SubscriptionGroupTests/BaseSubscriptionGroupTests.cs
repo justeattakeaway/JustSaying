@@ -15,38 +15,41 @@ using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<J
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
-public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
+public abstract class BaseSubscriptionGroupTests
 {
     protected IList<SqsSource> Queues;
     protected MiddlewareMap MiddlewareMap;
     protected TrackingLoggingMonitor Monitor;
     protected int ConcurrencyLimit = 8;
-    protected ITestOutputHelper OutputHelper { get; }
+    protected TextWriter OutputHelper => TestContext.Current!.OutputWriter;
 
     protected HandleMessageMiddleware Middleware;
     protected InspectableHandler<SimpleMessage> Handler;
     protected ISubscriptionGroup SystemUnderTest { get; private set; }
-    protected ILoggerFactory LoggerFactory { get; }
-    protected ILogger Logger { get; }
+    protected ILoggerFactory LoggerFactory { get; private set; }
+    protected ILogger Logger { get; private set; }
     protected CancellationTokenSource CancellationTokenSource { get; } = new();
 
-    private readonly IMessageReceivePauseSignal _messageReceivePauseSignal;
+    private IMessageReceivePauseSignal _messageReceivePauseSignal;
 
-    public BaseSubscriptionGroupTests(ITestOutputHelper testOutputHelper)
+    [Before(Test)]
+    public async Task SetUp()
     {
         _messageReceivePauseSignal = new MessageReceivePauseSignal();
-        OutputHelper = testOutputHelper;
-        LoggerFactory = testOutputHelper.ToLoggerFactory();
+        LoggerFactory = OutputHelper.ToLoggerFactory();
         Logger = LoggerFactory.CreateLogger(GetType());
-    }
 
-    public async ValueTask InitializeAsync()
-    {
         GivenInternal();
 
         SystemUnderTest = CreateSystemUnderTest();
 
         await WhenAsync().ConfigureAwait(false);
+    }
+
+    [After(Test)]
+    public async Task TearDown()
+    {
+        LoggerFactory?.Dispose();
     }
 
     private void GivenInternal()
@@ -159,13 +162,6 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
                     SetupMessage),
                 new MessageCompressionRegistry(), false)
         };
-    }
-
-    public ValueTask DisposeAsync()
-    {
-        LoggerFactory?.Dispose();
-
-        return ValueTask.CompletedTask;
     }
 
     protected class TestMessage : Message

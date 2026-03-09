@@ -5,9 +5,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.Fluent.RawDelivery;
 
-public class WhenPublishingToAQueueWithRawMessages(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenPublishingToAQueueWithRawMessages : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task Then_The_Message_Is_Published()
     {
         // Arrange

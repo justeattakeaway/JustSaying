@@ -6,7 +6,7 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.JustSayingBus;
 
-public class WhenBatchPublishingWithPerTypeMiddleware(ITestOutputHelper outputHelper) : GivenAServiceBus(outputHelper)
+public class WhenBatchPublishingWithPerTypeMiddleware : GivenAServiceBus
 {
     private readonly IMessageBatchPublisher _simpleBatchPublisher = Substitute.For<IMessageBatchPublisher, IMessagePublisher>();
     private readonly IMessageBatchPublisher _anotherBatchPublisher = Substitute.For<IMessageBatchPublisher, IMessagePublisher>();
@@ -41,19 +41,19 @@ public class WhenBatchPublishingWithPerTypeMiddleware(ITestOutputHelper outputHe
             CancellationToken.None);
     }
 
-    [Fact]
+    [Test]
     public void PerTypeMiddlewareIsInvokedForConfiguredType()
     {
         _perTypeMiddlewareInvoked.ShouldBeTrue();
     }
 
-    [Fact]
+    [Test]
     public void GlobalMiddlewareIsUsedAsFallback()
     {
         _globalMiddlewareInvoked.ShouldBeTrue();
     }
 
-    [Fact]
+    [Test]
     public void BothBatchPublishersAreCalled()
     {
         _simpleBatchPublisher.Received().PublishAsync(

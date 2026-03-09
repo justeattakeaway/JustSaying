@@ -8,9 +8,9 @@ using NSubstitute;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing;
 
-public class AddressPubSub(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class AddressPubSub : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task SimplePubSubWorks()
     {
         IAwsClientFactory clientFactory = CreateClientFactory();
@@ -59,7 +59,7 @@ public class AddressPubSub(ITestOutputHelper outputHelper) : IntegrationTestBase
             });
     }
 
-    [AwsFact]
+    [Test]
     public async Task CanSubscribeUsingQueueArn()
     {
         IAwsClientFactory clientFactory = CreateClientFactory();
@@ -109,7 +109,7 @@ public class AddressPubSub(ITestOutputHelper outputHelper) : IntegrationTestBase
             });
     }
 
-    [AwsFact]
+    [Test]
     public async Task CanPublishUsingQueueUrl()
     {
         IAwsClientFactory clientFactory = CreateClientFactory();
@@ -154,7 +154,7 @@ public class AddressPubSub(ITestOutputHelper outputHelper) : IntegrationTestBase
             });
     }
 
-    [AwsFact]
+    [Test]
     public async Task CanPublishUsingTopicArnWithoutStartingBusAndWithNoRegion()
     {
         IAwsClientFactory clientFactory = CreateClientFactory();
@@ -162,7 +162,7 @@ public class AddressPubSub(ITestOutputHelper outputHelper) : IntegrationTestBase
         var topicResponse = await snsClient.CreateTopicAsync(UniqueName);
 
         var services = new ServiceCollection()
-            .AddLogging((p) => p.AddXUnit(OutputHelper, o => o.IncludeScopes = true).SetMinimumLevel(LogLevel.Debug))
+            .AddLogging((p) => p.AddTextWriter(OutputHelper, o => o.IncludeScopes = true).SetMinimumLevel(LogLevel.Debug))
             .AddJustSaying(
                 (builder, serviceProvider) =>
                 {
@@ -204,7 +204,7 @@ public class AddressPubSub(ITestOutputHelper outputHelper) : IntegrationTestBase
             });
     }
 
-    [AwsFact]
+    [Test]
     public async Task CanPublishUsingTopicArnWithoutStartingBusAndWithNoRegionWithPublisherWrapper()
     {
         // Arrange
@@ -213,7 +213,7 @@ public class AddressPubSub(ITestOutputHelper outputHelper) : IntegrationTestBase
         var topicResponse = await snsClient.CreateTopicAsync(UniqueName);
 
         var services = new ServiceCollection()
-            .AddLogging((p) => p.AddXUnit(OutputHelper, o => o.IncludeScopes = true).SetMinimumLevel(LogLevel.Debug))
+            .AddLogging((p) => p.AddTextWriter(OutputHelper, o => o.IncludeScopes = true).SetMinimumLevel(LogLevel.Debug))
             .AddTransient((_) => Substitute.For<IMessagePublisher>())
             .AddJustSaying(
                 (builder, serviceProvider) =>

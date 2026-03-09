@@ -6,10 +6,10 @@ using OpenTelemetry.Metrics;
 
 namespace JustSaying.Extensions.OpenTelemetry.Tests;
 
-[Collection("Metrics")]
+[NotInParallel("Metrics")]
 public class MeterProviderBuilderExtensionsTests
 {
-    [Fact]
+    [Test]
     public void AddJustSayingInstrumentation_Registers_Meter()
     {
         // Arrange
@@ -29,7 +29,7 @@ public class MeterProviderBuilderExtensionsTests
         exportedMetrics.ShouldContain(m => m.Name == "messaging.client.sent.messages");
     }
 
-    [Fact]
+    [Test]
     public void AddJustSayingInstrumentation_Throws_When_Builder_Is_Null()
     {
         MeterProviderBuilder builder = null;

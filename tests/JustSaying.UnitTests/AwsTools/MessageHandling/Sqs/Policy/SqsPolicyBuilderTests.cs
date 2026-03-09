@@ -5,7 +5,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs.Policy;
 
 public class SqsPolicyBuilderTests
 {
-    [Fact]
+    [Test]
     public void ShouldGenerateApprovedIamPolicy()
     {
         // arrange
@@ -27,7 +27,7 @@ public class SqsPolicyBuilderTests
         });
     }
 
-    [Fact]
+    [Test]
     public void ShouldGenerateApprovedIamPolicyWithWildcardFromEmptySourceArn()
     {
         // arrange

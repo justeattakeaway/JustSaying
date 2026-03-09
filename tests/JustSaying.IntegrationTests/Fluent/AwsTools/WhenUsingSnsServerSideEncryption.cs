@@ -6,9 +6,9 @@ using NSubstitute;
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools;
 
-public class WhenUsingSnsServerSideEncryption(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenUsingSnsServerSideEncryption : IntegrationTestBase
 {
-    [NotSimulatorFact]
+    [Test]
     public async Task Then_The_Message_Is_Published()
     {
         // Arrange

@@ -1,21 +1,3 @@
-using JustSaying.TestingFramework;
-
-namespace JustSaying.IntegrationTests;
-
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-public sealed class NeedsTwoAwsAccountsFactAttribute : FactAttribute
-{
-    public NeedsTwoAwsAccountsFactAttribute(
-        [System.Runtime.CompilerServices.CallerFilePath] string sourceFilePath = "",
-        [System.Runtime.CompilerServices.CallerLineNumber] int lineNumber = 0)
-        : base(sourceFilePath, lineNumber)
-    {
-        if (string.IsNullOrEmpty(TestEnvironment.AccountId) ||
-            string.IsNullOrEmpty(TestEnvironment.SecondaryAccountId) ||
-            !TestEnvironment.HasCredentials ||
-            !TestEnvironment.HasSecondaryCredentials)
-        {
-            Skip = "Requires IDs and credentials for two AWS accounts.";
-        }
-    }
-}
+// Removed: NeedsTwoAwsAccountsFactAttribute was an xUnit attribute for conditional test skipping.
+// Tests that used [NeedsTwoAwsAccountsFact] now use [Test] directly.
+// TODO: Add TUnit-compatible conditional skip mechanism if needed.

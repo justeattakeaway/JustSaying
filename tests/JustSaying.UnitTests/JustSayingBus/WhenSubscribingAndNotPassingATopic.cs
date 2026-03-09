@@ -1,6 +1,6 @@
 namespace JustSaying.UnitTests.JustSayingBus;
 
-public class WhenSubscribingAndNotPassingATopic(ITestOutputHelper outputHelper) : GivenAServiceBus(outputHelper)
+public class WhenSubscribingAndNotPassingATopic : GivenAServiceBus
 {
     protected override void Given()
     {
@@ -14,7 +14,7 @@ public class WhenSubscribingAndNotPassingATopic(ITestOutputHelper outputHelper) 
         return Task.CompletedTask;
     }
 
-    [Fact]
+    [Test]
     public void ArgExceptionThrown()
     {
         ((ArgumentException)ThrownException).ParamName.ShouldBe("queue");

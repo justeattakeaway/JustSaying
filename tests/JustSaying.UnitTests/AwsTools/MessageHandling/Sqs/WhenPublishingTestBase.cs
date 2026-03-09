@@ -8,12 +8,13 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs;
 
-public abstract class WhenPublishingTestBase : IAsyncLifetime
+public abstract class WhenPublishingTestBase
 {
     private protected SqsMessagePublisher SystemUnderTest { get; private set; }
     public IAmazonSQS Sqs { get; private set; } = Substitute.For<IAmazonSQS>();
 
-    public virtual async ValueTask InitializeAsync()
+    [Before(Test)]
+    public virtual async Task SetUp()
     {
         Given();
 
@@ -22,10 +23,10 @@ public abstract class WhenPublishingTestBase : IAsyncLifetime
         await WhenAsync().ConfigureAwait(false);
     }
 
-    public virtual ValueTask DisposeAsync()
+    [After(Test)]
+    public virtual async Task TearDown()
     {
         Sqs?.Dispose();
-        return ValueTask.CompletedTask;
     }
 
     protected abstract void Given();

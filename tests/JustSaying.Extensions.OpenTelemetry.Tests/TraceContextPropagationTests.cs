@@ -12,10 +12,10 @@ using OpenTelemetry.Trace;
 
 namespace JustSaying.Extensions.OpenTelemetry.Tests;
 
-[Collection("Tracing")]
+[NotInParallel("Tracing")]
 public class TraceContextPropagationTests
 {
-    [Fact]
+    [Test]
     public async Task Publish_Injects_TraceParent_Into_Message_Attributes()
     {
         // Arrange
@@ -50,7 +50,7 @@ public class TraceContextPropagationTests
         result.MessageAttributes[MessageAttributeKeys.TraceParent].DataType.ShouldBe("String");
     }
 
-    [Fact]
+    [Test]
     public async Task Publish_Does_Not_Inject_TraceParent_When_No_Activity()
     {
         // Arrange - ensure no active activity
@@ -75,7 +75,7 @@ public class TraceContextPropagationTests
         result.MessageAttributes.ShouldNotContainKey(MessageAttributeKeys.TraceParent);
     }
 
-    [Fact]
+    [Test]
     public async Task Publish_Injects_TraceState_When_Activity_Has_TraceState()
     {
         // Arrange

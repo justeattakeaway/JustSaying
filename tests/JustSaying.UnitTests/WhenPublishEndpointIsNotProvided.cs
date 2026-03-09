@@ -15,7 +15,7 @@ public class WhenPublishEndpointIsNotProvided : XBehaviourTest<SqsReadConfigurat
         SystemUnderTest.Validate();
     }
 
-    [Fact]
+    [Test]
     public void ThrowsException()
     {
         ThrownException.ShouldNotBeNull();

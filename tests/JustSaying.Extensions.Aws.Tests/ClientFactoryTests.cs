@@ -9,7 +9,7 @@ public class ClientFactoryTests
 {
     private readonly string _credentialsFile = Path.Join(AppContext.BaseDirectory, "credentials");
 
-    [Fact]
+    [Test]
     public void ShouldReadConfigFromFile()
     {
         //Arrange
@@ -29,7 +29,7 @@ public class ClientFactoryTests
         snsClient.Config.UseHttp.ShouldBeTrue();
     }
 
-    [Fact]
+    [Test]
     public void ShouldReadFromConfigValues()
     {
         //Arrange
@@ -56,7 +56,7 @@ public class ClientFactoryTests
         snsClient.Config.ServiceURL.ShouldBe("http://profile.test/");
     }
 
-    [Fact]
+    [Test]
     public void CanSetCorrectRegion()
     {
         //Arrange
@@ -82,7 +82,7 @@ public class ClientFactoryTests
         snsClient.Config.RegionEndpoint.ShouldBe(RegionEndpoint.USEast1);
     }
 
-    [Fact]
+    [Test]
     public void ThrowsExceptionIfRegionConfigDiffers()
     {
         //Arrange
@@ -102,6 +102,6 @@ public class ClientFactoryTests
         var clientFactory = provider.GetRequiredService<IAwsClientFactory>();
 
         //Assert
-        Assert.Throws<ArgumentException>("region", () => clientFactory.GetSnsClient(RegionEndpoint.USEast2));
+        Should.Throw<ArgumentException>(() => clientFactory.GetSnsClient(RegionEndpoint.USEast2));
     }
 }

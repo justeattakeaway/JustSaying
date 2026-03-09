@@ -4,7 +4,7 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.JustSayingBus;
 
-public class WhenPublishingWithoutRegistering(ITestOutputHelper outputHelper) : GivenAServiceBus(outputHelper)
+public class WhenPublishingWithoutRegistering : GivenAServiceBus
 {
     protected override void Given()
     {
@@ -17,7 +17,7 @@ public class WhenPublishingWithoutRegistering(ITestOutputHelper outputHelper) : 
         await SystemUnderTest.PublishAsync(Substitute.For<Message>());
     }
 
-    [Fact]
+    [Test]
     public void InvalidOperationIsThrown()
     {
         ThrownException.ShouldBeAssignableTo<InvalidOperationException>();

@@ -10,9 +10,9 @@ using Newtonsoft.Json.Linq;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing;
 
-public class WhenHandlingMultipleTopics(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenHandlingMultipleTopics : IntegrationTestBase
 {
-    [NotSimulatorFact]
+    [Test]
     public async Task Sqs_Policy_Is_Applied_With_Wildcard()
     {
         // Arrange

@@ -1,1 +1,1 @@
-[assembly: CollectionBehavior(DisableTestParallelization = false)]
+// TUnit runs tests in parallel by default

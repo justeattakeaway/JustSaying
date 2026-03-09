@@ -1,8 +1,6 @@
 using System.Diagnostics;
 using NSubstitute.Exceptions;
 using Shouldly;
-using Xunit;
-using Xunit.Sdk;
 
 namespace JustSaying.TestingFramework;
 
@@ -15,7 +13,7 @@ public static class Patiently
         await AssertThatAsync(null, func, memberName);
 
     public static async Task AssertThatAsync(
-        ITestOutputHelper output,
+        TextWriter output,
         Action func,
         [System.Runtime.CompilerServices.CallerMemberName]
         string memberName = "")
@@ -28,7 +26,7 @@ public static class Patiently
             memberName).ConfigureAwait(false);
 
     public static async Task AssertThatAsync(
-        ITestOutputHelper output,
+        TextWriter output,
         Func<bool> func,
         [System.Runtime.CompilerServices.CallerMemberName]
         string memberName = "",
@@ -37,7 +35,7 @@ public static class Patiently
         => await AssertThatAsyncInner(output, func, 5.Seconds(), memberName, assertionExpression).ConfigureAwait(false);
 
     public static async Task AssertThatAsync(
-        ITestOutputHelper output,
+        TextWriter output,
         Func<bool> func,
         TimeSpan timeout,
         [System.Runtime.CompilerServices.CallerMemberName]
@@ -46,11 +44,11 @@ public static class Patiently
         string assertionExpression = "")
         => await AssertThatAsyncInner(output, func, timeout, memberName, assertionExpression).ConfigureAwait(false);
 
-    public static async Task AssertThatAsync(ITestOutputHelper output, Func<Task<bool>> func) =>
+    public static async Task AssertThatAsync(TextWriter output, Func<Task<bool>> func) =>
         await AssertThatAsync(output, func, 5.Seconds()).ConfigureAwait(false);
 
     public static async Task AssertThatAsync(
-        ITestOutputHelper output,
+        TextWriter output,
         Func<Task<bool>> func,
         TimeSpan timeout)
     {
@@ -67,7 +65,7 @@ public static class Patiently
             }
             catch (ShouldAssertException)
             { }
-            catch (XunitException)
+            catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
             { }
 
             await Task.Delay(50.Milliseconds()).ConfigureAwait(false);
@@ -81,7 +79,7 @@ public static class Patiently
     }
 
     private static async Task AssertThatAsyncInner(
-        ITestOutputHelper output,
+        TextWriter output,
         Func<bool> func,
         TimeSpan timeout,
         string description,
@@ -100,9 +98,9 @@ public static class Patiently
             }
             catch (ShouldAssertException)
             { }
-            catch (XunitException)
-            { }
             catch (SubstituteException)
+            { }
+            catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
             { }
 
             await Task.Delay(50.Milliseconds()).ConfigureAwait(false);

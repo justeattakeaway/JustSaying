@@ -7,9 +7,9 @@ using NSubstitute;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenPublishingWithoutAMonitor(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenPublishingWithoutAMonitor : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task A_Message_Can_Still_Be_Published_To_A_Queue()
     {
         // Arrange
@@ -24,7 +24,7 @@ public class WhenPublishingWithoutAMonitor(ITestOutputHelper outputHelper) : Int
         await AssertMessagePublishedAndReceivedAsync(services, handler, completionSource);
     }
 
-    [AwsFact]
+    [Test]
     public async Task A_Message_Can_Still_Be_Published_To_A_Topic()
     {
         // Arrange
@@ -84,7 +84,7 @@ public class WhenPublishingWithoutAMonitor(ITestOutputHelper outputHelper) : Int
         await handler.Received(1).Handle(Arg.Is<T>((p) => p.UniqueKey() == message.UniqueKey()));
     }
 
-    [AwsFact]
+    [Test]
     public async Task A_Batch_Message_Can_Still_Be_Published_To_A_Queue()
     {
         const int batchSize = 10;
@@ -101,7 +101,7 @@ public class WhenPublishingWithoutAMonitor(ITestOutputHelper outputHelper) : Int
         await AssertBatchMessagePublishedAndReceivedAsync(services, handler, completionSource, batchSize);
     }
 
-    [AwsFact]
+    [Test]
     public async Task A_Batch_Message_Can_Still_Be_Published_To_A_Topic()
     {
         const int batchSize = 10;

@@ -6,9 +6,9 @@ using Newtonsoft.Json;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing;
 
-public class WhenHandlerIsDeclaredAsExactlyOnce(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenHandlerIsDeclaredAsExactlyOnce : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task Then_The_Handler_Only_Receives_The_Message_Once()
     {
         // Arrange

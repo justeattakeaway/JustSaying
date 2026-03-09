@@ -20,7 +20,7 @@ public class WhenUsingCustomSettings : XBehaviourTest<SystemTextJsonMessageBodyS
         _messageOut = new MessageWithEnum() { EnumVal = Value.Two };
     }
 
-    public string GetMessageInContext(MessageWithEnum message)
+    private string GetMessageInContext(MessageWithEnum message)
     {
         var context = new { Subject = message.GetType().Name, Message = SystemUnderTest.Serialize(message) };
         return JsonConvert.SerializeObject(context);
@@ -31,13 +31,13 @@ public class WhenUsingCustomSettings : XBehaviourTest<SystemTextJsonMessageBodyS
         _jsonMessage = GetMessageInContext(_messageOut);
     }
 
-    [Fact]
+    [Test]
     public void MessageHasBeenCreated()
     {
         _messageOut.ShouldNotBeNull();
     }
 
-    [Fact]
+    [Test]
     public void EnumsAreNotRepresentedAsStrings()
     {
         _jsonMessage.ShouldContain("EnumVal");

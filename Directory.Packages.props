@@ -17,7 +17,6 @@
     <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="8.0.1" Condition=" '$(TargetFramework)' == 'net462' " />
     <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="8.0.1" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
     <PackageVersion Include="StructureMap" Version="4.6.0" />
-    <PackageVersion Include="xunit.v3.assert" Version="3.2.2" />
   </ItemGroup>
   <ItemGroup Label="Aspire">
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.3.0" />
@@ -36,7 +35,6 @@
     <PackageVersion Include="GitHubActionsTestLogger" Version="2.4.1" />
     <PackageVersion Include="JunitXml.TestLogger" Version="8.0.0" />
     <PackageVersion Include="LocalSqsSnsMessaging" Version="0.8.4" />
-    <PackageVersion Include="MartinCostello.Logging.XUnit.v3" Version="0.7.1" />
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.3" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.3" />
@@ -56,9 +54,11 @@
     <PackageVersion Include="Shouldly" Version="4.3.0" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
     <PackageVersion Include="Scalar.AspNetCore" Version="2.13.1" />
-    <PackageVersion Include="xunit.v3" Version="3.2.2" />
-    <PackageVersion Include="xunit.v3.extensibility.core" Version="3.2.2" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageVersion Include="TUnit" Version="1.19.11" />
+    <PackageVersion Include="TUnit.Core" Version="1.19.11" />
+    <PackageVersion Include="TUnit.Assertions" Version="1.19.11" />
+    <PackageVersion Include="TUnit.Engine" Version="1.19.11" />
+    <PackageVersion Include="TUnit.Logging.Microsoft" Version="1.19.11" />
   </ItemGroup>
   <ItemGroup Condition=" '$(IsShipping)' == 'true' ">
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="All" />

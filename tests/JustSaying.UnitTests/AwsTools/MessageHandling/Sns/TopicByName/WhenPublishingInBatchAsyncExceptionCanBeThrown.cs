@@ -37,13 +37,13 @@ public class WhenPublishingInBatchAsyncExceptionCanBeThrown : WhenPublishingTest
         return Task.CompletedTask;
     }
 
-    [Fact]
+    [Test]
     public async Task ExceptionIsThrown()
     {
         await Should.ThrowAsync<PublishBatchException>(() => SystemUnderTest.PublishAsync(new List<Message> {new SimpleMessage() }));
     }
 
-    [Fact]
+    [Test]
     public async Task ExceptionContainsContext()
     {
         try

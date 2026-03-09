@@ -38,7 +38,7 @@ public class WhenPublishingAsync : WhenPublishingTestBase
         await SystemUnderTest.PublishAsync(new SimpleMessage(), metadata);
     }
 
-    [Fact]
+    [Test]
     public void MessageIsPublishedToSnsTopic()
     {
         Sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => B(x)));
@@ -50,19 +50,19 @@ public class WhenPublishingAsync : WhenPublishingTestBase
     }
 
 
-    [Fact]
+    [Test]
     public void MessageSubjectIsObjectType()
     {
         Sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.Subject == typeof(SimpleMessage).Name));
     }
 
-    [Fact]
+    [Test]
     public void MessageIsPublishedToCorrectLocation()
     {
         Sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.TopicArn == TopicArn));
     }
 
-    [Fact]
+    [Test]
     public void MessageAttributeKeyIsPublished()
     {
         Sns.Received().PublishAsync(Arg.Is<PublishRequest>(x =>
@@ -71,13 +71,13 @@ public class WhenPublishingAsync : WhenPublishingTestBase
         ));
     }
 
-    [Fact]
+    [Test]
     public void MessageAttributeValueIsPublished()
     {
         Sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.MessageAttributes.Single().Value.StringValue == MessageAttributeValue));
     }
 
-    [Fact]
+    [Test]
     public void MessageAttributeDataTypeIsPublished()
     {
         Sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.MessageAttributes.Single().Value.DataType == MessageAttributeDataType));

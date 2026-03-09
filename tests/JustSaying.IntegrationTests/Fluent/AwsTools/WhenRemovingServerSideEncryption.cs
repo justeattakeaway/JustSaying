@@ -1,15 +1,16 @@
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 
 #pragma warning disable 618
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools;
 
-public class WhenRemovingServerSideEncryption(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenRemovingServerSideEncryption : IntegrationTestBase
 {
-    [NotSimulatorFact]
+    [Test]
     public async Task Can_Remove_Encryption()
     {
         // Arrange

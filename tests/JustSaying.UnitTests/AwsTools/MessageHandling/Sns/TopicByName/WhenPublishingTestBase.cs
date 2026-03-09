@@ -8,13 +8,14 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName;
 
-public abstract class WhenPublishingTestBase : IAsyncLifetime
+public abstract class WhenPublishingTestBase
 {
     private protected SnsMessagePublisher SystemUnderTest { get; private set; }
 
     public IAmazonSimpleNotificationService Sns { get; private set; } = Substitute.For<IAmazonSimpleNotificationService>();
 
-    public virtual async ValueTask InitializeAsync()
+    [Before(Test)]
+    public virtual async Task SetUp()
     {
         Given();
 
@@ -23,10 +24,10 @@ public abstract class WhenPublishingTestBase : IAsyncLifetime
         await WhenAsync().ConfigureAwait(false);
     }
 
-    public virtual ValueTask DisposeAsync()
+    [After(Test)]
+    public virtual async Task TearDown()
     {
         Sns?.Dispose();
-        return ValueTask.CompletedTask;
     }
 
     protected abstract void Given();

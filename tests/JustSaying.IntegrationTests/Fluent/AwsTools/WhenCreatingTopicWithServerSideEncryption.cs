@@ -1,15 +1,16 @@
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 
 #pragma warning disable 618
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools;
 
-public class WhenCreatingTopicWithServerSideEncryption(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenCreatingTopicWithServerSideEncryption : IntegrationTestBase
 {
-    [NotSimulatorFact]
+    [Test]
     public async Task Can_Create_Topic_With_Encryption()
     {
         // Arrange
@@ -30,7 +31,7 @@ public class WhenCreatingTopicWithServerSideEncryption(ITestOutputHelper outputH
         topic.ServerSideEncryption.KmsMasterKeyId.ShouldBe(JustSayingConstants.DefaultSnsAttributeEncryptionKeyId);
     }
 
-    [NotSimulatorFact]
+    [Test]
     public async Task Can_Add_Encryption_To_Existing_Topic()
     {
         // Arrange
@@ -53,7 +54,7 @@ public class WhenCreatingTopicWithServerSideEncryption(ITestOutputHelper outputH
         topic.ServerSideEncryption.KmsMasterKeyId.ShouldBe(JustSayingConstants.DefaultSnsAttributeEncryptionKeyId);
     }
 
-    [NotSimulatorFact]
+    [Test]
     public async Task Can_Update_Encryption_For_Existing_Topic()
     {
         // Arrange

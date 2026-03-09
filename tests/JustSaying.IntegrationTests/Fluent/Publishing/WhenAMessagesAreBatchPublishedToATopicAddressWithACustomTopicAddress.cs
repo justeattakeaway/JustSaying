@@ -7,9 +7,9 @@ using Newtonsoft.Json;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenAMessagesAreBatchPublishedToATopicAddressWithACustomTopicAddress(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenAMessagesAreBatchPublishedToATopicAddressWithACustomTopicAddress : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task Then_The_Message_Is_Handled()
     {
         // Arrange

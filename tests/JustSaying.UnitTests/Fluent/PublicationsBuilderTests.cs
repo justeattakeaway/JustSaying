@@ -13,7 +13,7 @@ namespace JustSaying.UnitTests.Fluent;
 
 public class PublicationsBuilderTests
 {
-    [Fact]
+    [Test]
     public void WithPublishMiddleware_ConfigureSetsGlobalMiddlewareOnBus()
     {
         var loggerFactory = Substitute.For<ILoggerFactory>();

@@ -7,9 +7,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenPublishingWithTracePropagation(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenPublishingWithTracePropagation : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task Then_Trace_Context_Is_Propagated_With_Link()
     {
         var handler = new InspectableHandler<SimpleMessage>();

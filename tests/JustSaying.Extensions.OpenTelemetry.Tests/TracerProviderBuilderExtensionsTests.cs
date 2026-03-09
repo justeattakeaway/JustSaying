@@ -6,10 +6,10 @@ using OpenTelemetry.Trace;
 
 namespace JustSaying.Extensions.OpenTelemetry.Tests;
 
-[Collection("Tracing")]
+[NotInParallel("Tracing")]
 public class TracerProviderBuilderExtensionsTests
 {
-    [Fact]
+    [Test]
     public void AddJustSayingInstrumentation_Registers_ActivitySource()
     {
         // Arrange
@@ -30,7 +30,7 @@ public class TracerProviderBuilderExtensionsTests
         exportedActivities.ShouldContain(a => a.OperationName == "test-operation");
     }
 
-    [Fact]
+    [Test]
     public void AddJustSayingInstrumentation_Throws_When_Builder_Is_Null()
     {
         TracerProviderBuilder builder = null;
