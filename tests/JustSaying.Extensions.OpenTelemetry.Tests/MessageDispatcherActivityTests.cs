@@ -70,6 +70,7 @@ public class MessageDispatcherActivityTests
         messageContext.MessageConverter.Returns(messageConverter);
 
         // Act
+        Activity.Current = null; // Clear ambient activity from test framework
         await dispatcher.DispatchMessageAsync(messageContext, CancellationToken.None);
         tracerProvider.ForceFlush();
 
