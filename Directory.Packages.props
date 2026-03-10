@@ -52,11 +52,11 @@
     <PackageVersion Include="Shouldly" Version="4.3.0" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
     <PackageVersion Include="Scalar.AspNetCore" Version="2.13.2" />
-    <PackageVersion Include="TUnit" Version="1.19.16" />
-    <PackageVersion Include="TUnit.Core" Version="1.19.16" />
-    <PackageVersion Include="TUnit.Assertions" Version="1.19.16" />
-    <PackageVersion Include="TUnit.Engine" Version="1.19.16" />
-    <PackageVersion Include="TUnit.Logging.Microsoft" Version="1.19.16" />
+    <PackageVersion Include="TUnit" Version="1.19.22" />
+    <PackageVersion Include="TUnit.Core" Version="1.19.22" />
+    <PackageVersion Include="TUnit.Assertions" Version="1.19.22" />
+    <PackageVersion Include="TUnit.Engine" Version="1.19.22" />
+    <PackageVersion Include="TUnit.Logging.Microsoft" Version="1.19.22" />
   </ItemGroup>
   <ItemGroup Condition=" '$(IsShipping)' == 'true' ">
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="All" />
