@@ -1,14 +1,13 @@
 <Project>
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+  <PropertyGroup>
+    <!-- Test projects need Deterministic=false so Shouldly ShouldMatchApproved can
+         resolve source files via CallerFilePath. This was the original setting before
+         the MS CodeCoverage migration. Dynamic instrumentation is used instead of
+         static to avoid the incompatibility with non-deterministic assemblies. -->
+    <Deterministic>false</Deterministic>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" PrivateAssets="All" />
   </ItemGroup>
-  <!-- Clear the PathMap right before compilation so CallerFilePath resolves to real
-       disk paths (needed by Shouldly ShouldMatchApproved). DeterministicSourcePaths=true
-       is still in effect (needed by MS CodeCoverage) but without actual path remapping. -->
-  <Target Name="_ClearPathMapForTests" BeforeTargets="CoreCompile">
-    <PropertyGroup>
-      <PathMap></PathMap>
-    </PropertyGroup>
-  </Target>
 </Project>
