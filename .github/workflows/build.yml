@@ -78,6 +78,11 @@ jobs:
         shell: pwsh
         run: ./build.ps1 -EnableIntegrationTests
 
+      - name: Clean up intermediate coverage files
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: find test-results -name "coverage.json" -delete 2>/dev/null || true
+
       - name: Upload coverage and test results to Codecov
         if: ${{ !cancelled() }}
         uses: codecov/codecov-action@75cd11691c0faa626561e295848008c8a7dddffe # v5.5.4

@@ -1,10 +1,7 @@
 <Project>
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
-  <PropertyGroup>
-    <CoverletInclude>[JustSaying]*,[JustSaying.*]*</CoverletInclude>
-    <CoverletOutputFormat>cobertura</CoverletOutputFormat>
-  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="coverlet.MTP" PrivateAssets="All" />
+    <None Include="$(MSBuildThisFileDirectory)coverlet.mtp.appsettings.json" CopyToOutputDirectory="PreserveNewest" Link="coverlet.mtp.appsettings.json" />
   </ItemGroup>
 </Project>
