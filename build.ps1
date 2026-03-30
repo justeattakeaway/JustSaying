@@ -123,6 +123,8 @@ function DotNetTest {
     $additionalArgs += "--coverlet"
     $additionalArgs += "--coverlet-output-format"
     $additionalArgs += "cobertura"
+    $additionalArgs += "--coverlet-file-prefix"
+    $additionalArgs += $projectName
     $additionalArgs += "--coverlet-exclude"
     $additionalArgs += "[*.Benchmarks]*"
     $additionalArgs += "--coverlet-exclude"
