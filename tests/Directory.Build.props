@@ -1,7 +1,7 @@
 <Project>
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
   <PropertyGroup>
-    <CoverletExclude>[*.Benchmarks]*,[*Sample*]*,[*Test*]*,[xunit.*]*</CoverletExclude>
+    <CoverletInclude>[JustSaying]*,[JustSaying.*]*</CoverletInclude>
     <CoverletOutputFormat>cobertura</CoverletOutputFormat>
   </PropertyGroup>
   <ItemGroup>
