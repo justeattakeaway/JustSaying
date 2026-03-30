@@ -125,6 +125,8 @@ function DotNetTest {
     $additionalArgs += "cobertura"
     $additionalArgs += "--coverage-output"
     $additionalArgs += "${projectName}.cobertura.xml"
+    $additionalArgs += "--coverage-settings"
+    $additionalArgs += (Join-Path $solutionPath "codecoverage.runsettings")
 
     & $dotnet test --project $Project --configuration "Release" $additionalArgs
 
