@@ -120,6 +120,10 @@ function DotNetTest {
     $additionalArgs += "--results-directory"
     $additionalArgs += $testResultsDir
 
+    $additionalArgs += "--coverage"
+    $additionalArgs += "--coverage-output-format"
+    $additionalArgs += "cobertura"
+
     & $dotnet test --project $Project --configuration "Release" $additionalArgs
 
     if ($LASTEXITCODE -ne 0) {
