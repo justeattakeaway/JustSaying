@@ -120,6 +120,18 @@ function DotNetTest {
     $additionalArgs += "--results-directory"
     $additionalArgs += $testResultsDir
 
+    $additionalArgs += "--coverlet"
+    $additionalArgs += "--coverlet-output-format"
+    $additionalArgs += "cobertura"
+    $additionalArgs += "--coverlet-exclude"
+    $additionalArgs += "[*.Benchmarks]*"
+    $additionalArgs += "--coverlet-exclude"
+    $additionalArgs += "[*Sample*]*"
+    $additionalArgs += "--coverlet-exclude"
+    $additionalArgs += "[*Test*]*"
+    $additionalArgs += "--coverlet-exclude"
+    $additionalArgs += "[xunit.*]*"
+
     & $dotnet test --project $Project --configuration "Release" $additionalArgs
 
     if ($LASTEXITCODE -ne 0) {
