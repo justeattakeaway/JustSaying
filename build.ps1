@@ -114,17 +114,18 @@ function DotNetTest {
     }
 
     $projectName = [System.IO.Path]::GetFileNameWithoutExtension($Project)
+    $projectResultsDir = Join-Path $testResultsDir $projectName
     $additionalArgs += "--report-trx"
     $additionalArgs += "--report-trx-filename"
     $additionalArgs += "${projectName}.trx"
     $additionalArgs += "--results-directory"
-    $additionalArgs += $testResultsDir
+    $additionalArgs += $projectResultsDir
 
     $additionalArgs += "--coverage"
     $additionalArgs += "--coverage-output-format"
     $additionalArgs += "cobertura"
     $additionalArgs += "--coverage-output"
-    $additionalArgs += "${projectName}.cobertura.xml"
+    $additionalArgs += "coverage.cobertura.xml"
     $additionalArgs += "--coverage-settings"
     $additionalArgs += (Join-Path $solutionPath "codecoverage.runsettings")
 
