@@ -3,13 +3,12 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" PrivateAssets="All" />
   </ItemGroup>
-  <!-- Override the SDK's deterministic source path mapping so that CallerFilePath
-       resolves to real disk paths. Shouldly ShouldMatchApproved needs this to find
-       approved files. We keep DeterministicSourcePaths=true (required by MS CodeCoverage)
-       but map source roots to themselves instead of /_/. -->
-  <Target Name="_UseRealSourcePaths" BeforeTargets="_SetPathMap" Condition="'$(ContinuousIntegrationBuild)' == 'true'">
-    <ItemGroup>
-      <SourceRoot Update="@(SourceRoot)" MappedPath="%(Identity)" />
-    </ItemGroup>
+  <!-- Clear the PathMap right before compilation so CallerFilePath resolves to real
+       disk paths (needed by Shouldly ShouldMatchApproved). DeterministicSourcePaths=true
+       is still in effect (needed by MS CodeCoverage) but without actual path remapping. -->
+  <Target Name="_ClearPathMapForTests" BeforeTargets="CoreCompile">
+    <PropertyGroup>
+      <PathMap></PathMap>
+    </PropertyGroup>
   </Target>
 </Project>
