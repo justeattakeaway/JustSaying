@@ -1,8 +1,9 @@
 {
   "Coverlet": {
     "Include": "[JustSaying]*,[JustSaying.*]*",
+    "Exclude": "[JustSaying.TestingFramework]*",
     "Format": "cobertura",
-    "SkipAutoProps": true,
-    "ExcludeAssembliesWithoutSources": "MissingAll"
+    "SkipAutoProps": false,
+    "ExcludeAssembliesWithoutSources": "None"
   }
 }
