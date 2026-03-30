@@ -83,8 +83,11 @@ jobs:
         shell: bash
         run: |
           find test-results -mindepth 2 -type d -exec rm -rf {} + 2>/dev/null || true
-          echo "Coverage files:"
-          find test-results -name "*.cobertura.xml" 2>/dev/null || true
+          echo "=== Coverage files ==="
+          for f in $(find test-results -name "*.cobertura.xml" 2>/dev/null); do
+            echo "--- $f ---"
+            head -2 "$f" | grep '<coverage' | sed 's/.*line-rate="\([^"]*\)".*lines-covered="\([^"]*\)".*lines-valid="\([^"]*\)".*/  line-rate=\1 covered=\2 valid=\3/'
+          done
 
       - name: Upload coverage and test results to Codecov
         if: ${{ !cancelled() }}
@@ -94,6 +97,7 @@ jobs:
         with:
           flags: ${{ matrix.os-name }}
           directory: test-results
+          verbose: true
 
       - name: Generate SBOM
         uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
