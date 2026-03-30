@@ -8,8 +8,7 @@
         <ModulePath>.*JustSaying.*\.dll$</ModulePath>
       </Include>
       <Exclude>
-        <ModulePath>.*\.Tests?\.dll$</ModulePath>
-        <ModulePath>.*\.IntegrationTests\.dll$</ModulePath>
+        <ModulePath>.*Tests\.dll$</ModulePath>
         <ModulePath>.*\.TestingFramework\.dll$</ModulePath>
         <ModulePath>.*\.Benchmarks\.dll$</ModulePath>
         <ModulePath>.*\.Sample.*\.dll$</ModulePath>

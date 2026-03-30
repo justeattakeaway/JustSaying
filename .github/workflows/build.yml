@@ -78,17 +78,6 @@ jobs:
         shell: pwsh
         run: ./build.ps1 -EnableIntegrationTests
 
-      - name: Diagnostic - list test output directories
-        if: ${{ !cancelled() }}
-        shell: bash
-        run: |
-          echo "=== Test output directories ==="
-          for dir in tests/artifacts/bin/*/release/; do
-            echo "--- $dir ---"
-            ls -la "$dir"/*.dll 2>/dev/null | head -20
-            echo ""
-          done
-
       - name: Clean up intermediate coverage files
         if: ${{ !cancelled() }}
         shell: bash
