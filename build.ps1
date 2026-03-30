@@ -114,11 +114,12 @@ function DotNetTest {
     }
 
     $projectName = [System.IO.Path]::GetFileNameWithoutExtension($Project)
+    $projectResultsDir = Join-Path $testResultsDir $projectName
     $additionalArgs += "--report-trx"
     $additionalArgs += "--report-trx-filename"
     $additionalArgs += "${projectName}.trx"
     $additionalArgs += "--results-directory"
-    $additionalArgs += $testResultsDir
+    $additionalArgs += $projectResultsDir
     $additionalArgs += "--coverlet"
 
     & $dotnet test --project $Project --configuration "Release" $additionalArgs
