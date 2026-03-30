@@ -83,13 +83,8 @@ jobs:
         shell: bash
         run: |
           find test-results -mindepth 2 -type d -exec rm -rf {} + 2>/dev/null || true
-          echo "=== Coverage files ==="
-          find test-results -name "*.cobertura.xml" 2>/dev/null
-          echo "=== Packages in coverage files ==="
-          for f in $(find test-results -name "*.cobertura.xml" 2>/dev/null); do
-            echo "--- $f ---"
-            grep -oP 'package name="\K[^"]+' "$f" 2>/dev/null || grep -o 'name="[^"]*"' "$f" | head -20
-          done
+          echo "Coverage files:"
+          find test-results -name "*.cobertura.xml" 2>/dev/null || true
 
       - name: Upload coverage and test results to Codecov
         if: ${{ !cancelled() }}
