@@ -1,12 +1,15 @@
 <Project>
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
-  <PropertyGroup>
-    <!-- Map source paths to themselves so Shouldly ShouldMatchApproved can find
-         approved files on disk, while still keeping DeterministicSourcePaths=true
-         which MS CodeCoverage requires for instrumentation. -->
-    <PathMap Condition="'$(ContinuousIntegrationBuild)' == 'true'">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)../'))=$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)../'))</PathMap>
-  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" PrivateAssets="All" />
   </ItemGroup>
+  <!-- Override the SDK's deterministic source path mapping so that CallerFilePath
+       resolves to real disk paths. Shouldly ShouldMatchApproved needs this to find
+       approved files. We keep DeterministicSourcePaths=true (required by MS CodeCoverage)
+       but map source roots to themselves instead of /_/. -->
+  <Target Name="_UseRealSourcePaths" BeforeTargets="_SetPathMap" Condition="'$(ContinuousIntegrationBuild)' == 'true'">
+    <ItemGroup>
+      <SourceRoot Update="@(SourceRoot)" MappedPath="%(Identity)" />
+    </ItemGroup>
+  </Target>
 </Project>
