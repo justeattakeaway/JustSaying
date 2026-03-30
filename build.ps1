@@ -123,6 +123,8 @@ function DotNetTest {
     $additionalArgs += "--coverage"
     $additionalArgs += "--coverage-output-format"
     $additionalArgs += "cobertura"
+    $additionalArgs += "--coverage-output"
+    $additionalArgs += "${projectName}.cobertura.xml"
 
     & $dotnet test --project $Project --configuration "Release" $additionalArgs
 
