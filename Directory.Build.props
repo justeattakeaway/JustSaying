@@ -1,6 +1,5 @@
 <Project>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" PrivateAssets="All" Condition="'$(IsTestProject)' == 'true'" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
     <PackageReference Include="ReportGenerator" PrivateAssets="All" />
     <PackageReference Include="MinVer" PrivateAssets="All" />
