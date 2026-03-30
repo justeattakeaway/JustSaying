@@ -114,25 +114,25 @@ function DotNetTest {
     }
 
     $projectName = [System.IO.Path]::GetFileNameWithoutExtension($Project)
-    $additionalArgs += "--report-trx"
-    $additionalArgs += "--report-trx-filename"
-    $additionalArgs += "${projectName}.trx"
-    $additionalArgs += "--results-directory"
-    $additionalArgs += $testResultsDir
 
-    $additionalArgs += "--coverlet"
-    $additionalArgs += "--coverlet-output-format"
-    $additionalArgs += "cobertura"
-    $additionalArgs += "--coverlet-exclude"
-    $additionalArgs += "[*.Benchmarks]*"
-    $additionalArgs += "--coverlet-exclude"
-    $additionalArgs += "[*Sample*]*"
-    $additionalArgs += "--coverlet-exclude"
-    $additionalArgs += "[*Test*]*"
-    $additionalArgs += "--coverlet-exclude"
-    $additionalArgs += "[xunit.*]*"
+    # Runner args go after -- to prevent dotnet test from parsing them
+    $runnerArgs = @()
+    $runnerArgs += "--report-trx"
+    $runnerArgs += "--report-trx-filename"
+    $runnerArgs += "${projectName}.trx"
+    $runnerArgs += "--coverlet"
+    $runnerArgs += "--coverlet-output-format"
+    $runnerArgs += "cobertura"
+    $runnerArgs += "--coverlet-exclude"
+    $runnerArgs += "[*.Benchmarks]*"
+    $runnerArgs += "--coverlet-exclude"
+    $runnerArgs += "[*Sample*]*"
+    $runnerArgs += "--coverlet-exclude"
+    $runnerArgs += "[*Test*]*"
+    $runnerArgs += "--coverlet-exclude"
+    $runnerArgs += "[xunit.*]*"
 
-    & $dotnet test --project $Project --configuration "Release" $additionalArgs
+    & $dotnet test --project $Project --configuration "Release" --results-directory $testResultsDir -- $runnerArgs
 
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet test failed with exit code $LASTEXITCODE"
