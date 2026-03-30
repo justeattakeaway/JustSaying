@@ -1,9 +1,12 @@
+#nullable enable
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Shouldly;
 using Shouldly.Configuration;
 
 namespace JustSaying.TestingFramework;
 
+#pragma warning disable CA2255 // ModuleInitializer in library code
 internal static class ShouldlyDeterministicPathFix
 {
     [ModuleInitializer]
@@ -25,7 +28,7 @@ internal static class ShouldlyDeterministicPathFix
         // which doesn't exist on disk. Map it back to the actual repo root.
         if (sourceDir.StartsWith("/_/", StringComparison.Ordinal))
         {
-            var repoRoot = Assembly.GetCallingAssembly()
+            var repoRoot = System.Reflection.Assembly.GetCallingAssembly()
                 .GetCustomAttributes<AssemblyMetadataAttribute>()
                 .FirstOrDefault(a => a.Key == "RepoRoot")?.Value;
 
@@ -49,3 +52,4 @@ internal static class ShouldlyDeterministicPathFix
         return Path.Combine(sourceDir, filename + ".approved." + fileExtension);
     }
 }
+#pragma warning restore CA2255
