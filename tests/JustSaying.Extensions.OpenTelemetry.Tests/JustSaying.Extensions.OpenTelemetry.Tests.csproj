@@ -3,7 +3,6 @@
     <OutputType>Exe</OutputType>
     <NoWarn>$(NoWarn);CA1034;CA1051;CA1054;CA1707;CA2000;CA2007</NoWarn>
     <TargetFramework>net10.0</TargetFramework>
-    <DeterministicSourcePaths>false</DeterministicSourcePaths>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\JustSaying.Extensions.OpenTelemetry\JustSaying.Extensions.OpenTelemetry.csproj" />
