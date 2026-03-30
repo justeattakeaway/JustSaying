@@ -28,8 +28,8 @@ $libraryProjects = @(
 )
 
 $testProjects = @(
-    (Join-Path $solutionPath "tests" "JustSaying.Extensions.DependencyInjection.StructureMap.Tests" "JustSaying.Extensions.DependencyInjection.StructureMap.Tests.csproj"),
     (Join-Path $solutionPath "tests" "JustSaying.UnitTests" "JustSaying.UnitTests.csproj"),
+    (Join-Path $solutionPath "tests" "JustSaying.Extensions.DependencyInjection.StructureMap.Tests" "JustSaying.Extensions.DependencyInjection.StructureMap.Tests.csproj"),
     (Join-Path $solutionPath "tests" "JustSaying.Extensions.OpenTelemetry.Tests" "JustSaying.Extensions.OpenTelemetry.Tests.csproj")
 )
 
