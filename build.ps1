@@ -114,25 +114,14 @@ function DotNetTest {
     }
 
     $projectName = [System.IO.Path]::GetFileNameWithoutExtension($Project)
+    $additionalArgs += "--report-trx"
+    $additionalArgs += "--report-trx-filename"
+    $additionalArgs += "${projectName}.trx"
+    $additionalArgs += "--results-directory"
+    $additionalArgs += $testResultsDir
+    $additionalArgs += "--coverlet"
 
-    # Runner args go after -- to prevent dotnet test from parsing them
-    $runnerArgs = @()
-    $runnerArgs += "--report-trx"
-    $runnerArgs += "--report-trx-filename"
-    $runnerArgs += "${projectName}.trx"
-    $runnerArgs += "--coverlet"
-    $runnerArgs += "--coverlet-output-format"
-    $runnerArgs += "cobertura"
-    $runnerArgs += "--coverlet-exclude"
-    $runnerArgs += "[*.Benchmarks]*"
-    $runnerArgs += "--coverlet-exclude"
-    $runnerArgs += "[*Sample*]*"
-    $runnerArgs += "--coverlet-exclude"
-    $runnerArgs += "[*Test*]*"
-    $runnerArgs += "--coverlet-exclude"
-    $runnerArgs += "[xunit.*]*"
-
-    & $dotnet test --project $Project --configuration "Release" --results-directory $testResultsDir -- $runnerArgs
+    & $dotnet test --project $Project --configuration "Release" $additionalArgs
 
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet test failed with exit code $LASTEXITCODE"
