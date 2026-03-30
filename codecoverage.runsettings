@@ -8,6 +8,7 @@
       <Exclude>
         <ModulePath>.*\.Tests?\.dll$</ModulePath>
         <ModulePath>.*\.IntegrationTests\.dll$</ModulePath>
+        <ModulePath>.*\.TestingFramework\.dll$</ModulePath>
         <ModulePath>.*\.Benchmarks\.dll$</ModulePath>
         <ModulePath>.*\.Sample.*\.dll$</ModulePath>
       </Exclude>

@@ -81,7 +81,7 @@ jobs:
       - name: Clean up intermediate coverage files
         if: ${{ !cancelled() }}
         shell: bash
-        run: find test-results -path '*/_*' -type d -exec rm -rf {} + 2>/dev/null || true
+        run: find test-results -mindepth 2 -type d -exec rm -rf {} + 2>/dev/null || true
 
       - name: Upload coverage and test results to Codecov
         if: ${{ !cancelled() }}
@@ -90,6 +90,7 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
           flags: ${{ matrix.os-name }}
+          exclude: codecoverage.runsettings,*.sig
 
       - name: Generate SBOM
         uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
