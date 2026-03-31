@@ -81,16 +81,7 @@ jobs:
       - name: Clean up intermediate coverage files
         if: ${{ !cancelled() }}
         shell: bash
-        run: |
-          find test-results -mindepth 2 -type d -exec rm -rf {} + 2>/dev/null || true
-          echo "=== Coverage files ==="
-          find test-results -name "*.cobertura.xml" -print0 2>/dev/null | while IFS= read -r -d '' f; do
-            size=$(wc -c < "$f" | tr -d ' ')
-            lines=$(grep -c '<line ' "$f" 2>/dev/null || echo 0)
-            echo "--- $f (${size} bytes, ${lines} <line> elements) ---"
-            head -3 "$f"
-            echo ""
-          done
+        run: find test-results -mindepth 2 -type d -exec rm -rf {} + 2>/dev/null || true
 
       - name: Upload coverage and test results to Codecov
         if: ${{ !cancelled() }}
