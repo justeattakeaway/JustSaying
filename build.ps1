@@ -95,7 +95,7 @@ if (($installDotNetSdk -eq $true) -And ($null -eq $env:TF_BUILD)) {
 function DotNetPack {
     param([string]$Project)
 
-    & $dotnet pack $Project
+    & $dotnet pack $Project --no-build
 
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet pack failed with exit code $LASTEXITCODE"
@@ -114,17 +114,32 @@ function DotNetTest {
     }
 
     $projectName = [System.IO.Path]::GetFileNameWithoutExtension($Project)
+    $projectResultsDir = Join-Path $testResultsDir $projectName
     $additionalArgs += "--report-trx"
     $additionalArgs += "--report-trx-filename"
     $additionalArgs += "${projectName}.trx"
     $additionalArgs += "--results-directory"
-    $additionalArgs += $testResultsDir
+    $additionalArgs += $projectResultsDir
 
-    & $dotnet test --project $Project --configuration "Release" $additionalArgs
+    $additionalArgs += "--coverage"
+    $additionalArgs += "--coverage-output-format"
+    $additionalArgs += "cobertura"
+    $additionalArgs += "--coverage-output"
+    $additionalArgs += "coverage.cobertura.xml"
+    $additionalArgs += "--coverage-settings"
+    $additionalArgs += (Join-Path $solutionPath "codecoverage.runsettings")
+
+    & $dotnet test --project $Project --configuration "Release" --no-build $additionalArgs
 
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet test failed with exit code $LASTEXITCODE"
     }
+}
+
+Write-Host "Building solution..." -ForegroundColor Green
+& $dotnet build --configuration "Release"
+if ($LASTEXITCODE -ne 0) {
+    throw "dotnet build failed with exit code $LASTEXITCODE"
 }
 
 Write-Host "Creating packages..." -ForegroundColor Green
