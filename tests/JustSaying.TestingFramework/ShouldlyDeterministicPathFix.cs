@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using Shouldly;
 using Shouldly.Configuration;
 
 namespace JustSaying.TestingFramework;
@@ -14,37 +13,14 @@ internal static class ShouldlyDeterministicPathFix
     internal static void Initialize()
     {
         ShouldlyConfiguration.ShouldMatchApprovedDefaults
-            .Configure(c => c.TestMethodFinder = new DeterministicPathTestMethodFinder())
-            .WithFilenameGenerator(ResolveApprovedFilename);
-    }
-
-    private static string ResolveApprovedFilename(
-        TestMethodInfo testMethodInfo,
-        string? discriminator,
-        string fileExtension,
-        string approvalFileSubFolder)
-    {
-        var sourceDir = testMethodInfo.SourceFileDirectory ?? string.Empty;
-
-        sourceDir = FixDeterministicPath(sourceDir);
-
-        if (!string.IsNullOrEmpty(approvalFileSubFolder))
-        {
-            sourceDir = Path.Combine(sourceDir, approvalFileSubFolder);
-        }
-
-        var filename = testMethodInfo.DeclaringTypeName + "." + testMethodInfo.MethodName;
-        if (!string.IsNullOrEmpty(discriminator))
-        {
-            filename += "." + discriminator;
-        }
-
-        return Path.Combine(sourceDir, filename + ".approved." + fileExtension);
+            .Configure(c => c.TestMethodFinder = new DeterministicPathTestMethodFinder());
     }
 
     internal static string FixDeterministicPath(string path)
     {
-        if (!path.StartsWith("/_/", StringComparison.Ordinal))
+        // Handle both forward-slash (Linux/macOS PDB) and backslash (Windows normalized) prefixes
+        if (!path.StartsWith("/_/", StringComparison.Ordinal) &&
+            !path.StartsWith("\\_\\", StringComparison.Ordinal))
             return path;
 
         var repoRoot = GetRepoRoot();
@@ -87,6 +63,10 @@ internal sealed class DeterministicPathTestMethodFinder : ITestMethodFinder
         typeof(TestMethodInfo).GetField("<SourceFileDirectory>k__BackingField",
             BindingFlags.NonPublic | BindingFlags.Instance);
 
+    private static readonly FieldInfo? SourceFileField =
+        typeof(TestMethodInfo).GetField("<SourceFileName>k__BackingField",
+            BindingFlags.NonPublic | BindingFlags.Instance);
+
     public TestMethodInfo GetTestMethodInfo(StackTrace stackTrace, int startAt)
     {
         for (var i = startAt; i < stackTrace.FrameCount; i++)
@@ -103,18 +83,32 @@ internal sealed class DeterministicPathTestMethodFinder : ITestMethodFinder
                 continue;
 
             var info = new TestMethodInfo(frame);
-
-            // Fix deterministic source paths
-            if (info.SourceFileDirectory?.StartsWith("/_/", StringComparison.Ordinal) == true)
-            {
-                var fixedDir = ShouldlyDeterministicPathFix.FixDeterministicPath(info.SourceFileDirectory);
-                SourceFileDirField?.SetValue(info, fixedDir);
-            }
-
+            FixDeterministicPaths(info);
             return info;
         }
 
         return new TestMethodInfo(stackTrace.GetFrame(startAt)!);
     }
+
+    private static void FixDeterministicPaths(TestMethodInfo info)
+    {
+        if (IsDeterministicPath(info.SourceFileDirectory))
+        {
+            var fixedDir = ShouldlyDeterministicPathFix.FixDeterministicPath(info.SourceFileDirectory!);
+            SourceFileDirField?.SetValue(info, fixedDir);
+        }
+
+        var sourceFile = (string?)SourceFileField?.GetValue(info);
+        if (IsDeterministicPath(sourceFile))
+        {
+            var fixedFile = ShouldlyDeterministicPathFix.FixDeterministicPath(sourceFile!);
+            SourceFileField?.SetValue(info, fixedFile);
+        }
+    }
+
+    private static bool IsDeterministicPath(string? path) =>
+        path != null &&
+        (path.StartsWith("/_/", StringComparison.Ordinal) ||
+         path.StartsWith("\\_\\", StringComparison.Ordinal));
 }
 #pragma warning restore CA2255
