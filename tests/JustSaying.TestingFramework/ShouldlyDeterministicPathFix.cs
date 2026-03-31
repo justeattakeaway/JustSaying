@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Shouldly;
 using Shouldly.Configuration;
 
 namespace JustSaying.TestingFramework;
