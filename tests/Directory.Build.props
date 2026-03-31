@@ -3,10 +3,4 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" PrivateAssets="All" />
   </ItemGroup>
-  <ItemGroup>
-    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
-      <_Parameter1>RepoRoot</_Parameter1>
-      <_Parameter2>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)../'))</_Parameter2>
-    </AssemblyAttribute>
-  </ItemGroup>
 </Project>
