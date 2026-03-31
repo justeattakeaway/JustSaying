@@ -1,6 +1,5 @@
 #nullable enable
 using System.Diagnostics;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using Shouldly;
 using Shouldly.Configuration;
@@ -8,6 +7,10 @@ using Shouldly.Configuration;
 namespace JustSaying.TestingFramework;
 
 #pragma warning disable CA2255
+/// <summary>
+/// Workaround for Shouldly not resolving deterministic source paths when tests
+/// run under MS CodeCoverage. See https://github.com/shouldly/shouldly/issues/1173
+/// </summary>
 internal static class ShouldlyDeterministicPathFix
 {
     [ModuleInitializer]
@@ -17,21 +20,22 @@ internal static class ShouldlyDeterministicPathFix
             .Configure(c => c.TestMethodFinder = new DeterministicPathTestMethodFinder());
     }
 
+    [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "<SourceFileDirectory>k__BackingField")]
+    internal static extern ref string? SourceFileDirectoryRef(TestMethodInfo info);
+
     internal static string FixDeterministicPath(string path)
     {
-        // Handle both forward-slash (Linux/macOS PDB) and backslash (Windows normalized) prefixes
-        if (!path.StartsWith("/_/", StringComparison.Ordinal) &&
-            !path.StartsWith("\\_\\", StringComparison.Ordinal))
+        if (!IsDeterministicPath(path))
             return path;
 
         var repoRoot = GetRepoRoot();
-        if (repoRoot != null)
-        {
-            return repoRoot + path.Substring(3);
-        }
-
-        return path;
+        return repoRoot != null ? repoRoot + path.Substring(3) : path;
     }
+
+    internal static bool IsDeterministicPath(string? path) =>
+        path != null &&
+        (path.StartsWith("/_/", StringComparison.Ordinal) ||
+         path.StartsWith("\\_\\", StringComparison.Ordinal));
 
     private static string? _cachedRepoRoot;
 
@@ -60,14 +64,6 @@ internal static class ShouldlyDeterministicPathFix
 
 internal sealed class DeterministicPathTestMethodFinder : ITestMethodFinder
 {
-    private static readonly FieldInfo? SourceFileDirField =
-        typeof(TestMethodInfo).GetField("<SourceFileDirectory>k__BackingField",
-            BindingFlags.NonPublic | BindingFlags.Instance);
-
-    private static readonly FieldInfo? SourceFileField =
-        typeof(TestMethodInfo).GetField("<SourceFileName>k__BackingField",
-            BindingFlags.NonPublic | BindingFlags.Instance);
-
     public TestMethodInfo GetTestMethodInfo(StackTrace stackTrace, int startAt)
     {
         for (var i = startAt; i < stackTrace.FrameCount; i++)
@@ -78,38 +74,22 @@ internal sealed class DeterministicPathTestMethodFinder : ITestMethodFinder
             var method = frame.GetMethod();
             if (method == null || method.DeclaringType == null) continue;
 
-            // Skip Shouldly internals
             var ns = method.DeclaringType.Namespace;
             if (ns != null && ns.StartsWith("Shouldly", StringComparison.Ordinal))
                 continue;
 
             var info = new TestMethodInfo(frame);
-            FixDeterministicPaths(info);
+
+            ref var sourceDir = ref ShouldlyDeterministicPathFix.SourceFileDirectoryRef(info);
+            if (ShouldlyDeterministicPathFix.IsDeterministicPath(sourceDir))
+            {
+                sourceDir = ShouldlyDeterministicPathFix.FixDeterministicPath(sourceDir!);
+            }
+
             return info;
         }
 
         return new TestMethodInfo(stackTrace.GetFrame(startAt)!);
     }
-
-    private static void FixDeterministicPaths(TestMethodInfo info)
-    {
-        if (IsDeterministicPath(info.SourceFileDirectory))
-        {
-            var fixedDir = ShouldlyDeterministicPathFix.FixDeterministicPath(info.SourceFileDirectory!);
-            SourceFileDirField?.SetValue(info, fixedDir);
-        }
-
-        var sourceFile = (string?)SourceFileField?.GetValue(info);
-        if (IsDeterministicPath(sourceFile))
-        {
-            var fixedFile = ShouldlyDeterministicPathFix.FixDeterministicPath(sourceFile!);
-            SourceFileField?.SetValue(info, fixedFile);
-        }
-    }
-
-    private static bool IsDeterministicPath(string? path) =>
-        path != null &&
-        (path.StartsWith("/_/", StringComparison.Ordinal) ||
-         path.StartsWith("\\_\\", StringComparison.Ordinal));
 }
 #pragma warning restore CA2255
