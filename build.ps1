@@ -107,7 +107,7 @@ function DotNetTest {
 
     $additionalArgs = @()
 
-    # Generate TRX test results for codecov
+    # Generate test results for codecov
     $testResultsDir = Join-Path $solutionPath "test-results"
     if (!(Test-Path $testResultsDir)) {
         New-Item -ItemType Directory -Path $testResultsDir -Force | Out-Null
@@ -121,6 +121,10 @@ function DotNetTest {
     $additionalArgs += "--results-directory"
     $additionalArgs += $projectResultsDir
 
+    # Enable TUnit's built-in JUnit reporter for Codecov Test Analytics
+    $env:TUNIT_ENABLE_JUNIT_REPORTER = "true"
+    $env:JUNIT_XML_OUTPUT_PATH = (Join-Path $projectResultsDir "${projectName}-junit.xml")
+
     $additionalArgs += "--coverage"
     $additionalArgs += "--coverage-output-format"
     $additionalArgs += "cobertura"
@@ -129,10 +133,15 @@ function DotNetTest {
     $additionalArgs += "--coverage-settings"
     $additionalArgs += (Join-Path $solutionPath "codecoverage.runsettings")
 
-    & $dotnet test --project $Project --configuration "Release" --no-build $additionalArgs
+    try {
+        & $dotnet test --project $Project --configuration "Release" --no-build $additionalArgs
 
-    if ($LASTEXITCODE -ne 0) {
-        throw "dotnet test failed with exit code $LASTEXITCODE"
+        if ($LASTEXITCODE -ne 0) {
+            throw "dotnet test failed with exit code $LASTEXITCODE"
+        }
+    }
+    finally {
+        $env:JUNIT_XML_OUTPUT_PATH = $null
     }
 }
 
