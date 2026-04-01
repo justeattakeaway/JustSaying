@@ -133,10 +133,15 @@ function DotNetTest {
     $additionalArgs += "--coverage-settings"
     $additionalArgs += (Join-Path $solutionPath "codecoverage.runsettings")
 
-    & $dotnet test --project $Project --configuration "Release" --no-build $additionalArgs
+    try {
+        & $dotnet test --project $Project --configuration "Release" --no-build $additionalArgs
 
-    if ($LASTEXITCODE -ne 0) {
-        throw "dotnet test failed with exit code $LASTEXITCODE"
+        if ($LASTEXITCODE -ne 0) {
+            throw "dotnet test failed with exit code $LASTEXITCODE"
+        }
+    }
+    finally {
+        $env:JUNIT_XML_OUTPUT_PATH = $null
     }
 }
 
