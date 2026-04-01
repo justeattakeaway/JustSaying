@@ -107,7 +107,7 @@ function DotNetTest {
 
     $additionalArgs = @()
 
-    # Generate TRX test results for codecov
+    # Generate test results for codecov
     $testResultsDir = Join-Path $solutionPath "test-results"
     if (!(Test-Path $testResultsDir)) {
         New-Item -ItemType Directory -Path $testResultsDir -Force | Out-Null
@@ -120,6 +120,10 @@ function DotNetTest {
     $additionalArgs += "${projectName}.trx"
     $additionalArgs += "--results-directory"
     $additionalArgs += $projectResultsDir
+
+    # Enable TUnit's built-in JUnit reporter for Codecov Test Analytics
+    $env:TUNIT_ENABLE_JUNIT_REPORTER = "true"
+    $env:JUNIT_XML_OUTPUT_PATH = (Join-Path $projectResultsDir "${projectName}-junit.xml")
 
     $additionalArgs += "--coverage"
     $additionalArgs += "--coverage-output-format"

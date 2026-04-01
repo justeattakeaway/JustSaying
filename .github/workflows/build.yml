@@ -83,7 +83,7 @@ jobs:
         shell: bash
         run: find test-results -mindepth 2 -type d -exec rm -rf {} + 2>/dev/null || true
 
-      - name: Upload coverage and test results to Codecov
+      - name: Upload coverage to Codecov
         if: ${{ !cancelled() }}
         uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
         env:
@@ -91,6 +91,17 @@ jobs:
         with:
           flags: ${{ matrix.os-name }}
           directory: test-results
+          verbose: true
+
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          report_type: test_results
+          flags: ${{ matrix.os-name }}
+          files: test-results/**/*-junit.xml
           verbose: true
 
       - name: Generate SBOM
