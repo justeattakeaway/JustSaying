@@ -8,22 +8,25 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.JustSayingBus;
 
-public abstract class GivenAServiceBus(ITestOutputHelper outputHelper) : IAsyncLifetime
+public abstract class GivenAServiceBus
 {
     protected IMessagingConfig Config;
     protected TrackingLoggingMonitor Monitor;
-    protected ILoggerFactory LoggerFactory = outputHelper.ToLoggerFactory();
+    protected ILoggerFactory LoggerFactory;
     private bool _recordThrownExceptions;
 
-    public ITestOutputHelper OutputHelper { get; private set; } = outputHelper;
+    protected TextWriter OutputHelper => TestContext.Current!.OutputWriter;
     protected Exception ThrownException { get; private set; }
 
     protected JustSaying.JustSayingBus SystemUnderTest { get; private set; }
 
     protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
 
-    public virtual async ValueTask InitializeAsync()
+    [Before(Test)]
+    public virtual async Task SetUp()
     {
+        LoggerFactory = OutputHelper.ToLoggerFactory();
+
         Given();
 
         try
@@ -35,11 +38,6 @@ public abstract class GivenAServiceBus(ITestOutputHelper outputHelper) : IAsyncL
         {
             ThrownException = ex;
         }
-    }
-
-    public virtual ValueTask DisposeAsync()
-    {
-        return ValueTask.CompletedTask;
     }
 
     protected virtual void Given()

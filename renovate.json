@@ -31,9 +31,9 @@
       "matchDatasources": [
         "nuget"
       ],
-      "groupName": "xunit",
+      "groupName": "TUnit",
       "matchPackageNames": [
-        "/^xunit/"
+        "/^TUnit/"
       ]
     }
   ]

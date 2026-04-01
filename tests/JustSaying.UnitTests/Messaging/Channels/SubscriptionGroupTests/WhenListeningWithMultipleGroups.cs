@@ -15,7 +15,7 @@ public class WhenListeningWithMultipleGroups : BaseSubscriptionGroupTests
     private readonly SqsSource _queueA;
     private readonly SqsSource _queueB;
 
-    public WhenListeningWithMultipleGroups(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
+    public WhenListeningWithMultipleGroups()
     {
         var queueA = new FakeSqsQueue(ct =>
                 Task.FromResult(new List<Message>
@@ -71,7 +71,7 @@ public class WhenListeningWithMultipleGroups : BaseSubscriptionGroupTests
         Queues.Add(_queueB);
     }
 
-    [Fact]
+    [Test]
     public void SubscriptionGroups_OverridesDefaultSettingsCorrectly()
     {
         var interrogationResult = SystemUnderTest.Interrogate();

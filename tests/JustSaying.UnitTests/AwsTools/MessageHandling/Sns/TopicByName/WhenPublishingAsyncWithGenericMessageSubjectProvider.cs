@@ -36,7 +36,7 @@ public class WhenPublishingAsyncWithGenericMessageSubjectProvider : WhenPublishi
         await SystemUnderTest.PublishAsync(new MessageWithTypeParameters<int, string>());
     }
 
-    [Fact]
+    [Test]
     public void MessageIsPublishedToSnsTopic()
     {
         Sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => B(x)));
@@ -47,13 +47,13 @@ public class WhenPublishingAsyncWithGenericMessageSubjectProvider : WhenPublishi
         return x.Message.Equals(Message, StringComparison.Ordinal);
     }
 
-    [Fact]
+    [Test]
     public void MessageSubjectIsObjectType()
     {
         Sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.Subject == new GenericMessageSubjectProvider().GetSubjectForType(typeof(MessageWithTypeParameters<int, string>))));
     }
 
-    [Fact]
+    [Test]
     public void MessageIsPublishedToCorrectLocation()
     {
         Sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.TopicArn == TopicArn));

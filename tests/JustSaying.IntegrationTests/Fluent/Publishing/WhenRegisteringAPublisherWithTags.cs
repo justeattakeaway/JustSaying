@@ -1,5 +1,6 @@
 using Amazon;
 using Amazon.SimpleNotificationService.Model;
+using JustSaying.IntegrationTests;
 using JustSaying.Messaging;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
@@ -7,9 +8,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenRegisteringAPublisherWithTags(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenRegisteringAPublisherWithTags : IntegrationTestBase
 {
-    [NotSimulatorFact]
+    [NotSimulatorSkip]
+    [Test]
     public async Task Then_A_Topic_Is_Created_With_The_Correct_Tags()
     {
         // Arrange

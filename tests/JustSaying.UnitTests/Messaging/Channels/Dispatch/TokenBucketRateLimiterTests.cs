@@ -4,23 +4,23 @@ namespace JustSaying.UnitTests.Messaging.Channels.Dispatch;
 
 public class TokenBucketRateLimiterTests
 {
-    [Theory]
-    [InlineData(0)]
-    [InlineData(-1)]
-    [InlineData(-100)]
+    [Test]
+    [Arguments(0)]
+    [Arguments(-1)]
+    [Arguments(-100)]
     public void Constructor_ThrowsForInvalidMaxPerSecond(int maxPerSecond)
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new TokenBucketRateLimiter(maxPerSecond));
+        Should.Throw<ArgumentOutOfRangeException>(() => new TokenBucketRateLimiter(maxPerSecond));
     }
 
-    [Fact]
+    [Test]
     public void Constructor_AcceptsPositiveValue()
     {
         using var limiter = new TokenBucketRateLimiter(1);
         // No exception
     }
 
-    [Fact]
+    [Test]
     public async Task WaitAsync_AllowsUpToMaxTokensImmediately()
     {
         const int max = 5;
@@ -33,7 +33,7 @@ public class TokenBucketRateLimiterTests
         }
     }
 
-    [Fact]
+    [Test]
     public async Task WaitAsync_BlocksWhenTokensExhausted()
     {
         const int max = 1;
@@ -44,11 +44,11 @@ public class TokenBucketRateLimiterTests
 
         // Next call should block
         using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
-        await Assert.ThrowsAsync<OperationCanceledException>(
+        await Should.ThrowAsync<OperationCanceledException>(
             () => limiter.WaitAsync(cts.Token));
     }
 
-    [Fact]
+    [Test]
     public async Task WaitAsync_TokensReplenishAfterOneSecond()
     {
         const int max = 1;
@@ -65,7 +65,7 @@ public class TokenBucketRateLimiterTests
         await limiter.WaitAsync(cts.Token);
     }
 
-    [Fact]
+    [Test]
     public async Task WaitAsync_ThrowsWhenCancelled()
     {
         const int max = 1;
@@ -77,21 +77,21 @@ public class TokenBucketRateLimiterTests
         using var cts = new CancellationTokenSource();
         await cts.CancelAsync();
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+        await Should.ThrowAsync<OperationCanceledException>(
             () => limiter.WaitAsync(cts.Token));
     }
 
-    [Fact]
+    [Test]
     public async Task WaitAsync_ThrowsAfterDisposal()
     {
         var limiter = new TokenBucketRateLimiter(1);
         limiter.Dispose();
 
-        await Assert.ThrowsAsync<ObjectDisposedException>(
+        await Should.ThrowAsync<ObjectDisposedException>(
             () => limiter.WaitAsync(CancellationToken.None));
     }
 
-    [Fact]
+    [Test]
     public void Dispose_CanBeCalledMultipleTimes()
     {
         var limiter = new TokenBucketRateLimiter(1);
@@ -99,7 +99,7 @@ public class TokenBucketRateLimiterTests
         limiter.Dispose(); // Should not throw
     }
 
-    [Fact]
+    [Test]
     public async Task Replenish_DoesNotThrowWhenDisposedDuringReplenishment()
     {
         // Consume a token so replenishment has work to do, then dispose
@@ -112,7 +112,7 @@ public class TokenBucketRateLimiterTests
         await Task.Delay(TimeSpan.FromMilliseconds(1200));
     }
 
-    [Fact]
+    [Test]
     public async Task Replenish_DoesNotReleaseWhenNoTokensConsumed()
     {
         // All tokens are still available so replenishment should be a no-op
@@ -130,7 +130,7 @@ public class TokenBucketRateLimiterTests
 
         // 6th should block — proves we didn't exceed max
         using var cts2 = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+        await Should.ThrowAsync<OperationCanceledException>(
             () => limiter.WaitAsync(cts2.Token));
     }
 }

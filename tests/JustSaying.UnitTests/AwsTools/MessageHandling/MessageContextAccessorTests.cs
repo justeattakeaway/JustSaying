@@ -5,15 +5,15 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling;
 
 public class MessageContextAccessorTests
 {
-    [Fact]
+    [Test]
     public void ContextIsNullByDefault()
     {
         var accessor = MakeAccessor();
 
-        Assert.Null(accessor.MessageContext);
+        accessor.MessageContext.ShouldBeNull();
     }
 
-    [Fact]
+    [Test]
     public void CanStoreAndRetrieveContext()
     {
         var data = MakeUniqueMessageContext();
@@ -25,7 +25,7 @@ public class MessageContextAccessorTests
         AssertSame(data, readData);
     }
 
-    [Fact]
+    [Test]
     public async Task CanStoreAndRetrieveAsync()
     {
         var data = MakeUniqueMessageContext();
@@ -37,7 +37,7 @@ public class MessageContextAccessorTests
         AssertSame(data, accessor.MessageContext);
     }
 
-    [Fact]
+    [Test]
     public async Task DifferentThreadsHaveDifferentContexts()
     {
         var data1 = MakeUniqueMessageContext();
@@ -49,7 +49,7 @@ public class MessageContextAccessorTests
         await Task.WhenAll(t1, t2);
     }
 
-    [Fact]
+    [Test]
     public async Task MultiThreads()
     {
         var tasks = new List<Task>();
@@ -64,7 +64,7 @@ public class MessageContextAccessorTests
         await Task.WhenAll(tasks);
     }
 
-    [Fact]
+    [Test]
     public async Task ThreadContextDoesNotEscape()
     {
         var data1 = MakeUniqueMessageContext();
@@ -72,11 +72,11 @@ public class MessageContextAccessorTests
         var t1 = Task.Run(async () => await ThreadLocalDataRemainsTheSame(data1));
 
         var accessor = MakeAccessor();
-        Assert.Null(accessor.MessageContext);
+        accessor.MessageContext.ShouldBeNull();
 
         await t1;
 
-        Assert.Null(accessor.MessageContext);
+        accessor.MessageContext.ShouldBeNull();
     }
 
     private static async Task ThreadLocalDataRemainsTheSame(MessageContext data)
@@ -96,13 +96,13 @@ public class MessageContextAccessorTests
 
     private static void AssertSame(MessageContext expected, MessageContext actual)
     {
-        Assert.NotNull(expected);
-        Assert.NotNull(actual);
+        expected.ShouldNotBeNull();
+        actual.ShouldNotBeNull();
 
-        Assert.Equal(expected, actual);
-        Assert.Equal(expected.Message, actual.Message);
-        Assert.Equal(expected.Message.Body, actual.Message.Body);
-        Assert.Equal(expected.QueueUri, actual.QueueUri);
+        actual.ShouldBe(expected);
+        actual.Message.ShouldBe(expected.Message);
+        actual.Message.Body.ShouldBe(expected.Message.Body);
+        actual.QueueUri.ShouldBe(expected.QueueUri);
     }
 
     private static MessageContext MakeUniqueMessageContext()

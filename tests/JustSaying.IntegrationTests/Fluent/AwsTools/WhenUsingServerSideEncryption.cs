@@ -4,9 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools;
 
-public class WhenUsingServerSideEncryption(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenUsingServerSideEncryption : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task Then_The_Message_Is_Handled()
     {
         // Arrange

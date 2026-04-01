@@ -4,9 +4,9 @@ using Newtonsoft.Json;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenInterrogatingTheBus(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenInterrogatingTheBus : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task Then_The_Interrogation_Result_Should_Be_Returned()
     {
         // Arrange

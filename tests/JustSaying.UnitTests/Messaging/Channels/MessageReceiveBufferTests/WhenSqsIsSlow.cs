@@ -16,12 +16,13 @@ public class WhenSqsIsSlow
 {
     protected class TestMessage : Message { }
 
-    private readonly MessageReceiveBuffer _messageReceiveBuffer;
-    private readonly FakeSqsQueue _queue;
+    private MessageReceiveBuffer _messageReceiveBuffer;
+    private FakeSqsQueue _queue;
 
-    public WhenSqsIsSlow(ITestOutputHelper testOutputHelper)
+    [Before(Test)]
+    public void Setup()
     {
-        var loggerFactory = testOutputHelper.ToLoggerFactory();
+        var loggerFactory = TestContext.Current!.OutputWriter.ToLoggerFactory();
 
         MiddlewareBase<ReceiveMessagesContext, IList<Message>> sqsMiddleware =
             new DelegateMiddleware<ReceiveMessagesContext, IList<Message>>();
@@ -75,7 +76,7 @@ public class WhenSqsIsSlow
         return messagesProcessed;
     }
 
-    [Fact]
+    [Test]
     public async Task All_Messages_Are_Processed()
     {
         using var cts = new CancellationTokenSource();

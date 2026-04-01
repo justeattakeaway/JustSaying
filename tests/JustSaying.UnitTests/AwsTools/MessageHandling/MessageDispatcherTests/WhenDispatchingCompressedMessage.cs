@@ -17,7 +17,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests;
 
 public class WhenDispatchingCompressedMessage
 {
-    [Fact]
+    [Test]
     public async Task ShouldDecompressMessage()
     {
         // Arrange

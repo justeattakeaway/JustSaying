@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.Fluent.Subscribing.SystemTextJson;
 
-public class WhenHandlingAMessageWithMixedAttributes(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenHandlingAMessageWithMixedAttributes : IntegrationTestBase
 {
     public class SimpleMessageWithMixedAttributesHandler(IMessageContextAccessor contextAccessor) : IHandlerAsync<SimpleMessage>
     {
@@ -21,7 +21,7 @@ public class WhenHandlingAMessageWithMixedAttributes(ITestOutputHelper outputHel
         public List<(MessageContext context, SimpleMessage message)> HandledMessages { get; } = [];
     }
 
-    [AwsFact]
+    [Test]
     public async Task Then_The_Attributes_Are_Returned()
     {
         OutputHelper.WriteLine($"Running {nameof(Then_The_Attributes_Are_Returned)} test");

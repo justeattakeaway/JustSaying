@@ -23,21 +23,21 @@ namespace JustSaying.UnitTests.Messaging.Channels;
 
 public class ChannelsTests
 {
-    private IMessageReceivePauseSignal MessageReceivePauseSignal { get; }
-    private ILoggerFactory LoggerFactory { get; }
-    private IMessageMonitor MessageMonitor { get; }
-    private ITestOutputHelper OutputHelper { get; }
+    private IMessageReceivePauseSignal MessageReceivePauseSignal { get; set; }
+    private ILoggerFactory LoggerFactory { get; set; }
+    private IMessageMonitor MessageMonitor { get; set; }
+    private TextWriter OutputHelper => TestContext.Current!.OutputWriter;
     private readonly TimeSpan _timeoutPeriod = TimeSpan.FromMilliseconds(50);
 
-    public ChannelsTests(ITestOutputHelper testOutputHelper)
+    [Before(Test)]
+    public void Setup()
     {
         MessageReceivePauseSignal = new MessageReceivePauseSignal();
-        OutputHelper = testOutputHelper;
-        LoggerFactory = new LoggerFactory().AddXUnit(testOutputHelper, LogLevel.Information);
+        LoggerFactory = OutputHelper.ToLoggerFactory();
         MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
     }
 
-    [Fact]
+    [Test]
     public async Task QueueCanBeAssignedToOnePump()
     {
         var sqsQueue = TestQueue();
@@ -58,11 +58,11 @@ public class ChannelsTests
         cts.Cancel();
 
         await multiplexerCompletion.HandleCancellation();
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer1Completion);
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => buffer1Completion);
+        await Should.ThrowAsync<OperationCanceledException>(() => consumer1Completion);
+        await Should.ThrowAsync<OperationCanceledException>(() => buffer1Completion);
     }
 
-    [Fact]
+    [Test]
     public async Task QueueCanBeAssignedToMultiplePumps()
     {
         var sqsQueue = TestQueue();
@@ -95,7 +95,7 @@ public class ChannelsTests
         results.Any().ShouldBeTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task MultipleQueuesCanBeAssignedToOnePump()
     {
         var sqsQueue1 = TestQueue();
@@ -131,7 +131,7 @@ public class ChannelsTests
         results.Any().ShouldBeTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task MultipleQueuesCanBeAssignedToMultiplePumps()
     {
         var sqsQueue1 = TestQueue();
@@ -176,9 +176,9 @@ public class ChannelsTests
         results.Any().ShouldBeTrue();
     }
 
-    [Theory]
-    [InlineData(5, 5, 2, 10)]
-    [InlineData(10, 20, 20, 50)]
+    [Test]
+    [Arguments(5, 5, 2, 10)]
+    [Arguments(10, 20, 20, 50)]
     public async Task WhenSubscriberNotStarted_BufferShouldFillUp_AndStopDownloading(int receivePrefetch, int receiveBufferSize, int multiplexerCapacity, int expectedDownloadCount)
     {
         var sqsSource = TestQueue();
@@ -209,7 +209,7 @@ public class ChannelsTests
         dispatcher.DispatchedMessages.Count.ShouldBe(0);
 
         // Starting the consumer after the token is cancelled will not dispatch messages
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer1.RunAsync(cts.Token));
+        await Should.ThrowAsync<OperationCanceledException>(() => consumer1.RunAsync(cts.Token));
 
         await Patiently.AssertThatAsync(OutputHelper,
             () =>
@@ -219,7 +219,7 @@ public class ChannelsTests
             });
     }
 
-    [Fact]
+    [Test]
     public async Task Can_Be_Set_Up_Using_SubscriptionBus()
     {
         var sqsQueue1 = TestQueue();
@@ -233,14 +233,15 @@ public class ChannelsTests
         var cts = new CancellationTokenSource();
         cts.CancelAfter(_timeoutPeriod);
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => bus.RunAsync(cts.Token));
+        await Should.ThrowAsync<OperationCanceledException>(() => bus.RunAsync(cts.Token));
     }
 
 
-    [Fact]
+    [Test]
     public async Task Sqs_Queue_Is_Not_Polled_After_Cancellation()
     {
         var cts = new CancellationTokenSource();
+        var firstPollReceived = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         int callCountBeforeCancelled = 0;
         int callCountAfterCancelled = 0;
@@ -253,6 +254,7 @@ public class ChannelsTests
             else
             {
                 callCountBeforeCancelled++;
+                firstPollReceived.TrySetResult();
             }
         });
 
@@ -261,18 +263,20 @@ public class ChannelsTests
 
         var runTask = bus.RunAsync(cts.Token);
 
-        cts.CancelAfter(_timeoutPeriod);
+        await firstPollReceived.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        cts.Cancel();
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => runTask);
+        await Should.ThrowAsync<OperationCanceledException>(() => runTask);
 
         callCountBeforeCancelled.ShouldBeGreaterThan(0);
         callCountAfterCancelled.ShouldBeLessThanOrEqualTo(1);
     }
 
-    [Fact]
+    [Test]
     public async Task Messages_Not_Dispatched_After_Cancellation()
     {
         var cts = new CancellationTokenSource();
+        var firstDispatchReceived = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         int dispatchedBeforeCancelled = 0;
         int dispatchedAfterCancelled = 0;
@@ -287,6 +291,7 @@ public class ChannelsTests
             else
             {
                 dispatchedBeforeCancelled++;
+                firstDispatchReceived.TrySetResult();
             }
         });
 
@@ -294,15 +299,16 @@ public class ChannelsTests
 
         var runTask = bus.RunAsync(cts.Token);
 
-        cts.CancelAfter(_timeoutPeriod);
+        await firstDispatchReceived.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        cts.Cancel();
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => runTask);
+        await Should.ThrowAsync<OperationCanceledException>(() => runTask);
 
         dispatchedBeforeCancelled.ShouldBeGreaterThan(0);
         dispatchedAfterCancelled.ShouldBe(0);
     }
 
-    [Fact]
+    [Test]
     public void SubscriptionGroup_StartingTwice_ShouldReturnSameCompletionTask()
     {
         var queue = TestQueue();
@@ -314,7 +320,7 @@ public class ChannelsTests
         var task1 = group.RunAsync(cts.Token);
         var task2 = group.RunAsync(cts.Token);
 
-        Assert.True(ReferenceEquals(task1, task2));
+        ReferenceEquals(task1, task2).ShouldBeTrue();
 
         cts.Cancel();
     }

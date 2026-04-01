@@ -12,9 +12,9 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing;
 /// concurrency of 2, the long running handler will consume one slot, and every other message will be
 /// processed in order in the other slot. The result should be exactly in-order delivery for this test.
 /// </summary>
-public sealed class WhenReceivingIsThrottled(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public sealed class WhenReceivingIsThrottled : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task Then_The_Messages_Are_Handled_With_Throttle()
     {
         // First handler takes ages all the others take 10 ms
@@ -25,7 +25,7 @@ public sealed class WhenReceivingIsThrottled(ITestOutputHelper outputHelper) : I
             .Select(i => new WaitingMessage(i, TimeSpan.FromMilliseconds(i == 0 ? waitOne : waitOthers)))
             .ToList();
 
-        var handler = new InspectableWaitingHandler(OutputHelper);
+        var handler = new InspectableWaitingHandler();
 
         // Arrange
         var services = GivenJustSaying()
@@ -90,8 +90,9 @@ public sealed class WhenReceivingIsThrottled(ITestOutputHelper outputHelper) : I
         }
     }
 
-    private class InspectableWaitingHandler(ITestOutputHelper outputHelper) : InspectableHandler<WaitingMessage>
+    private class InspectableWaitingHandler : InspectableHandler<WaitingMessage>
     {
+        private readonly TextWriter _outputHelper = TestContext.Current!.OutputWriter;
         private readonly TaskCompletionSource _firstMessageStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
         private readonly ConcurrentQueue<WaitingMessage> _completedMessages = new();
         private int _completedCount;
@@ -116,7 +117,7 @@ public sealed class WhenReceivingIsThrottled(ITestOutputHelper outputHelper) : I
         public override async Task<bool> Handle(WaitingMessage message)
         {
             await base.Handle(message);
-            outputHelper.WriteLine($"Running task {message.Order} which will wait for {message.TimeToWait.TotalMilliseconds}ms");
+            _outputHelper.WriteLine($"Running task {message.Order} which will wait for {message.TimeToWait.TotalMilliseconds}ms");
 
             // Signal that the first message has started (this allows the test to proceed)
             _firstMessageStarted.TrySetResult();

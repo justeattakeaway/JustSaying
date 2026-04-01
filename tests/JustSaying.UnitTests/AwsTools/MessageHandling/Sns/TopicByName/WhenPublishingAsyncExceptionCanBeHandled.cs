@@ -34,12 +34,11 @@ public class WhenPublishingAsyncExceptionCanBeHandled : WhenPublishingTestBase
         return Task.CompletedTask;
     }
 
-    [Fact]
+    [Test]
     public async Task FailSilently()
     {
-        var unexpectedException = await Record.ExceptionAsync(
+        await Should.NotThrowAsync(
             () => SystemUnderTest.PublishAsync(new SimpleMessage()));
-        unexpectedException.ShouldBeNull();
     }
 
     private static Task<PublishResponse> ThrowsException(CallInfo callInfo)

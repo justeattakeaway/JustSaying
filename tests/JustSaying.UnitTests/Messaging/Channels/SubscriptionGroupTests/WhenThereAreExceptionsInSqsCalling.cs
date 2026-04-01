@@ -4,7 +4,7 @@ using JustSaying.TestingFramework;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
-public class WhenThereAreExceptionsInSqsCalling(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
+public class WhenThereAreExceptionsInSqsCalling : BaseSubscriptionGroupTests
 {
     private ISqsQueue _queue;
     private int _callCount;
@@ -34,7 +34,7 @@ public class WhenThereAreExceptionsInSqsCalling(ITestOutputHelper testOutputHelp
         return Task.FromResult(_callCount > 1);
     }
 
-    [Fact]
+    [Test]
     public void QueueIsPolledMoreThanOnce()
     {
         _callCount.ShouldBeGreaterThan(1);

@@ -8,9 +8,9 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools;
 
-public class WhenUpdatingDeliveryDelay(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenUpdatingDeliveryDelay : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task Can_Update_Delivery_Delay()
     {
         // Arrange

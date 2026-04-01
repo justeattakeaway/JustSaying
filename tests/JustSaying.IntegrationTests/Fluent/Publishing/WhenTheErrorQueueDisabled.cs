@@ -4,9 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenTheErrorQueueDisabled(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenTheErrorQueueDisabled : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task Then_The_Error_Queue_Does_Not_Exist()
     {
         await ThenTheErrorQueueDoesNotExist<IMessagePublisher>();

@@ -10,13 +10,15 @@ namespace JustSaying.UnitTests.Messaging.Middleware;
 
 public class StopwatchMiddlewareTests
 {
-    private readonly InspectableHandler<OrderAccepted> _handler;
-    private readonly TrackingLoggingMonitor _monitor;
-    private readonly MiddlewareBase<HandleMessageContext, bool> _middleware;
+    private InspectableHandler<OrderAccepted> _handler;
+    private TrackingLoggingMonitor _monitor;
+    private MiddlewareBase<HandleMessageContext, bool> _middleware;
 
-    public StopwatchMiddlewareTests(ITestOutputHelper outputHelper)
+    [Before(Test)]
+    public void Setup()
     {
-        var loggerFactory = LoggerFactory.Create(lf => lf.AddXUnit(outputHelper).SetMinimumLevel(LogLevel.Information));
+        var outputHelper = TestContext.Current!.OutputWriter;
+        var loggerFactory = LoggerFactory.Create(lf => lf.AddTextWriter(outputHelper).SetMinimumLevel(LogLevel.Information));
 
         _handler = new InspectableHandler<OrderAccepted>();
         _monitor = new TrackingLoggingMonitor(loggerFactory.CreateLogger<TrackingLoggingMonitor>());
@@ -30,7 +32,7 @@ public class StopwatchMiddlewareTests
             .Build();
     }
 
-    [Fact]
+    [Test]
     public async Task WhenMiddlewareIsWrappedinStopWatch_InnerMiddlewareIsCalled()
     {
         var context = TestHandleContexts.From<OrderAccepted>();
@@ -41,7 +43,7 @@ public class StopwatchMiddlewareTests
         _handler.ReceivedMessages.ShouldHaveSingleItem().ShouldBeOfType<OrderAccepted>();
     }
 
-    [Fact]
+    [Test]
     public async Task WhenMiddlewareIsWrappedinStopWatch_MonitoringIsCalled()
     {
         var context = TestHandleContexts.From<OrderAccepted>();

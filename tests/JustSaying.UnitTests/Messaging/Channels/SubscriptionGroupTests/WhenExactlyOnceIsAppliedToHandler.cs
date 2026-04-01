@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
-public class WhenExactlyOnceIsAppliedToHandler(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
+public class WhenExactlyOnceIsAppliedToHandler : BaseSubscriptionGroupTests
 {
     private SqsSource _queue;
     private readonly int _expectedTimeout = 5;
@@ -32,7 +32,7 @@ public class WhenExactlyOnceIsAppliedToHandler(ITestOutputHelper testOutputHelpe
         var serviceResolver = new InMemoryServiceResolver(sc =>
             sc.AddSingleton<IMessageLockAsync>(_messageLock)
                 .AddSingleton<IHandlerAsync<SimpleMessage>>(Handler)
-                .AddLogging(x => x.AddXUnit(OutputHelper).SetMinimumLevel(LogLevel.Information)));
+                .AddLogging(x => x.AddTextWriter(OutputHelper).SetMinimumLevel(LogLevel.Information)));
 
         var middlewareBuilder = new HandlerMiddlewareBuilder(serviceResolver, serviceResolver);
 
@@ -58,16 +58,16 @@ public class WhenExactlyOnceIsAppliedToHandler(ITestOutputHelper testOutputHelpe
 
         await cts.CancelAsync();
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
+        await Should.ThrowAsync<OperationCanceledException>(() => completion);
     }
 
-    [Fact]
+    [Test]
     public void ProcessingIsPassedToTheHandler()
     {
         Handler.ReceivedMessages.ShouldNotBeEmpty();
     }
 
-    [Fact]
+    [Test]
     public void MessageIsLocked()
     {
         // this should be part of setup to make work

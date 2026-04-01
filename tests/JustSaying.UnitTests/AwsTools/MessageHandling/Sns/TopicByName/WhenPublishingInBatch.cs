@@ -44,13 +44,13 @@ public class WhenPublishingInBatch : WhenPublishingTestBase
         await SystemUnderTest.PublishAsync(messages);
     }
 
-    [Fact]
+    [Test]
     public void MultipleMessageIsPublishedToSnsTopic()
     {
         Sns.Received(100).PublishBatchAsync(Arg.Any<PublishBatchRequest>());
     }
 
-    [Fact]
+    [Test]
     public void MessageIsPublishedToSnsTopic()
     {
         Sns.Received().PublishBatchAsync(Arg.Is<PublishBatchRequest>(x => AssertMessageIsPublishedToSnsTopic(x)));
@@ -75,7 +75,7 @@ public class WhenPublishingInBatch : WhenPublishingTestBase
         return true;
     }
 
-    [Fact]
+    [Test]
     public void MessageSubjectIsObjectType()
     {
         Sns.Received().PublishBatchAsync(Arg.Is<PublishBatchRequest>(x => AssertMessageSubjectIsObjectType(x)));
@@ -95,7 +95,7 @@ public class WhenPublishingInBatch : WhenPublishingTestBase
         return true;
     }
 
-    [Fact]
+    [Test]
     public void MessageIsPublishedToCorrectLocation()
     {
         Sns.Received().PublishBatchAsync(Arg.Is<PublishBatchRequest>(x => x.TopicArn == TopicArn));

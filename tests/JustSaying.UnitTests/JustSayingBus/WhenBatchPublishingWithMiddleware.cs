@@ -6,7 +6,7 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.JustSayingBus;
 
-public class WhenBatchPublishingWithMiddleware(ITestOutputHelper outputHelper) : GivenAServiceBus(outputHelper)
+public class WhenBatchPublishingWithMiddleware : GivenAServiceBus
 {
     private readonly IMessageBatchPublisher _batchPublisher = Substitute.For<IMessageBatchPublisher, IMessagePublisher>();
     private PublishContext _capturedContext;
@@ -23,7 +23,7 @@ public class WhenBatchPublishingWithMiddleware(ITestOutputHelper outputHelper) :
         await SystemUnderTest.PublishAsync(messages, new PublishBatchMetadata(), CancellationToken.None);
     }
 
-    [Fact]
+    [Test]
     public void MiddlewareReceivesBatchContext()
     {
         _capturedContext.ShouldNotBeNull();
@@ -31,7 +31,7 @@ public class WhenBatchPublishingWithMiddleware(ITestOutputHelper outputHelper) :
         _capturedContext.Messages.Count.ShouldBe(3);
     }
 
-    [Fact]
+    [Test]
     public void BatchPublisherIsCalled()
     {
         _batchPublisher.Received().PublishAsync(

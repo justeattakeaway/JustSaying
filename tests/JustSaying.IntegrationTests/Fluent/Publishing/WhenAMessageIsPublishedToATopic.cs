@@ -6,9 +6,9 @@ using NSubstitute;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenAMessageIsPublishedToATopic(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenAMessageIsPublishedToATopic : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task Then_The_Message_Is_Handled()
     {
         // Arrange
@@ -43,10 +43,10 @@ public class WhenAMessageIsPublishedToATopic(ITestOutputHelper outputHelper) : I
             });
     }
 
-    [AwsTheory]
-    [InlineData(10, 10)]
-    [InlineData(10, 20)]
-    [InlineData(5, 10)]
+    [Test]
+    [Arguments(10, 10)]
+    [Arguments(10, 20)]
+    [Arguments(5, 10)]
     public async Task Then_Multiple_Messages_Are_Handled(int maxBatchSize, int batchSize)
     {
         // Arrange
@@ -86,10 +86,10 @@ public class WhenAMessageIsPublishedToATopic(ITestOutputHelper outputHelper) : I
             });
     }
 
-    [AwsTheory]
-    [InlineData(10, 10)]
-    [InlineData(10, 20)]
-    [InlineData(5, 10)]
+    [Test]
+    [Arguments(10, 10)]
+    [Arguments(10, 20)]
+    [Arguments(5, 10)]
     public async Task Then_Multiple_Message_Types_Are_Handled(int maxBatchSize, int batchSize)
     {
         // Arrange

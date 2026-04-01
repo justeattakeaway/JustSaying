@@ -6,7 +6,7 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.JustSayingBus;
 
-public class WhenPublishingWithMiddleware(ITestOutputHelper outputHelper) : GivenAServiceBus(outputHelper)
+public class WhenPublishingWithMiddleware : GivenAServiceBus
 {
     private readonly IMessagePublisher _publisher = Substitute.For<IMessagePublisher>();
     private bool _middlewareInvoked;
@@ -22,13 +22,13 @@ public class WhenPublishingWithMiddleware(ITestOutputHelper outputHelper) : Give
         await SystemUnderTest.PublishAsync(new SimpleMessage());
     }
 
-    [Fact]
+    [Test]
     public void MiddlewareIsInvoked()
     {
         _middlewareInvoked.ShouldBeTrue();
     }
 
-    [Fact]
+    [Test]
     public void PublisherIsStillCalled()
     {
         _publisher.Received().PublishAsync(

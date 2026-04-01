@@ -1,7 +1,0 @@
-{
-  "$schema": "https://xunit.net/schema/current/xunit.runner.schema.json",
-  "methodDisplay": "classAndMethod",
-  "methodDisplayOptions": "replaceUnderscoreWithSpace",
-  "parallelAlgorithm": "conservative",
-  "preEnumerateTheories": true
-}

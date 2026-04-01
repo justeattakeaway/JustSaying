@@ -42,13 +42,13 @@ public class WhenPublishingInBatch : WhenPublishingTestBase
         await SystemUnderTest.PublishAsync(_messages);
     }
 
-    [Fact]
+    [Test]
     public void MultipleMessagesIsPublishedToQueue()
     {
         Sqs.Received(100).SendMessageBatchAsync(Arg.Any<SendMessageBatchRequest>());
     }
 
-    [Fact]
+    [Test]
     public void MessageIsPublishedToQueue()
     {
         Sqs.Received().SendMessageBatchAsync(Arg.Is<SendMessageBatchRequest>(x => AssertMessageIsPublishedToQueue(x)));
@@ -76,7 +76,7 @@ public class WhenPublishingInBatch : WhenPublishingTestBase
         return true;
     }
 
-    [Fact]
+    [Test]
     public void MessageIsPublishedToCorrectLocation()
     {
         Sqs.Received().SendMessageBatchAsync(Arg.Is<SendMessageBatchRequest>(x => x.QueueUrl == Url));

@@ -5,25 +5,20 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.JustSayingBus;
 
-public abstract class GivenAServiceBusWithoutMonitoring : IAsyncLifetime
+public abstract class GivenAServiceBusWithoutMonitoring
 {
     protected IMessagingConfig Config;
     protected ILoggerFactory LoggerFactory;
 
     protected JustSaying.JustSayingBus SystemUnderTest { get; private set; }
 
-    public virtual async ValueTask InitializeAsync()
+    [Before(Test)]
+    public virtual async Task SetUp()
     {
         Given();
 
         SystemUnderTest = CreateSystemUnderTest();
         await WhenAsync().ConfigureAwait(false);
-    }
-
-
-    public virtual ValueTask DisposeAsync()
-    {
-        return ValueTask.CompletedTask;
     }
 
     protected virtual void Given()

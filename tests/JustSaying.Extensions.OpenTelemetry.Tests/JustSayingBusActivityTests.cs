@@ -12,10 +12,10 @@ using OpenTelemetry.Trace;
 
 namespace JustSaying.Extensions.OpenTelemetry.Tests;
 
-[Collection("Tracing")]
+[NotInParallel("Tracing")]
 public class JustSayingBusActivityTests
 {
-    [Fact]
+    [Test]
     public async Task PublishAsync_Creates_Producer_Activity_With_Correct_Tags()
     {
         // Arrange
@@ -51,7 +51,7 @@ public class JustSayingBusActivityTests
         activity.GetTagItem("messaging.message.type").ShouldBe(typeof(SimpleMessage).FullName);
     }
 
-    [Fact]
+    [Test]
     public async Task PublishAsync_Records_Error_On_Activity_When_Publish_Fails()
     {
         // Arrange
@@ -91,7 +91,7 @@ public class JustSayingBusActivityTests
         activity.Events.ShouldContain(e => e.Name == "exception");
     }
 
-    [Fact]
+    [Test]
     public async Task BatchPublishAsync_Creates_Producer_Activity_With_Correct_Tags()
     {
         // Arrange
@@ -131,7 +131,7 @@ public class JustSayingBusActivityTests
         activity.GetTagItem("messaging.batch.message_count").ShouldBe(2);
     }
 
-    [Fact]
+    [Test]
     public async Task BatchPublishAsync_Records_Error_On_Activity_When_Publish_Fails()
     {
         // Arrange

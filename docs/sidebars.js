@@ -39,6 +39,7 @@ const sidebars = {
         'messaging-configuration/README',
         'messaging-configuration/logging',
         'messaging-configuration/metrics',
+        'messaging-configuration/opentelemetry',
         'messaging-configuration/naming-conventions',
       ],
     },
@@ -87,6 +88,7 @@ const sidebars = {
         'publishing/withqueue',
         'publishing/write-configuration',
         'publishing/batch-publishing',
+        'publishing/middleware',
       ],
     },
     {

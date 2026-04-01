@@ -1,6 +1,7 @@
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -9,11 +10,11 @@ using NSubstitute.ExceptionExtensions;
 
 namespace JustSaying.UnitTests.AwsTools.TopicCreation;
 
-public class WhenCreatingTopicWithNoPermissions(ITestOutputHelper outputHelper)
+public class WhenCreatingTopicWithNoPermissions
 {
-    private ITestOutputHelper OutputHelper { get; } = outputHelper;
+    private TextWriter OutputHelper => TestContext.Current!.OutputWriter;
 
-    [Fact]
+    [Test]
     public async Task Arn_Still_Retrieved_When_It_Already_Exists()
     {
         // Arrange
@@ -34,7 +35,7 @@ public class WhenCreatingTopicWithNoPermissions(ITestOutputHelper outputHelper)
         topic.Arn.ShouldNotBeNull();
     }
 
-    [Fact]
+    [Test]
     public async Task Cannot_Create_Topic_Because_Not_Authorized()
     {
         // Arrange
@@ -49,7 +50,7 @@ public class WhenCreatingTopicWithNoPermissions(ITestOutputHelper outputHelper)
             loggerFactory);
 
         // Act and Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => topic.CreateAsync(CancellationToken.None));
+        await Should.ThrowAsync<InvalidOperationException>(() => topic.CreateAsync(CancellationToken.None));
     }
 
     private static IAmazonSimpleNotificationService CreateSnsClient(bool exists)

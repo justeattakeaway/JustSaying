@@ -4,35 +4,35 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
 public class SubscriptionGroupSettingsTests
 {
-    [Fact]
+    [Test]
     public void DefaultConcurrencyLimitType_IsInFlightMessages()
     {
         var builder = new SubscriptionGroupSettingsBuilder();
 
-        Assert.Equal(ConcurrencyLimitType.InFlightMessages, builder.ConcurrencyLimitType);
+        builder.ConcurrencyLimitType.ShouldBe(ConcurrencyLimitType.InFlightMessages);
     }
 
-    [Fact]
+    [Test]
     public void WithDefaultConcurrencyLimit_SingleArg_SetsTypeToInFlightMessages()
     {
         var builder = new SubscriptionGroupSettingsBuilder()
             .WithDefaultConcurrencyLimit(10);
 
-        Assert.Equal(10, builder.ConcurrencyLimit);
-        Assert.Equal(ConcurrencyLimitType.InFlightMessages, builder.ConcurrencyLimitType);
+        builder.ConcurrencyLimit.ShouldBe(10);
+        builder.ConcurrencyLimitType.ShouldBe(ConcurrencyLimitType.InFlightMessages);
     }
 
-    [Fact]
+    [Test]
     public void WithDefaultConcurrencyLimit_MessagesPerSecond_SetsBothValues()
     {
         var builder = new SubscriptionGroupSettingsBuilder()
             .WithDefaultConcurrencyLimit(100, ConcurrencyLimitType.MessagesPerSecond);
 
-        Assert.Equal(100, builder.ConcurrencyLimit);
-        Assert.Equal(ConcurrencyLimitType.MessagesPerSecond, builder.ConcurrencyLimitType);
+        builder.ConcurrencyLimit.ShouldBe(100);
+        builder.ConcurrencyLimitType.ShouldBe(ConcurrencyLimitType.MessagesPerSecond);
     }
 
-    [Fact]
+    [Test]
     public void PerGroupOverride_TakesPrecedenceOverDefault()
     {
         var defaults = new SubscriptionGroupSettingsBuilder()
@@ -43,11 +43,11 @@ public class SubscriptionGroupSettingsTests
 
         var settings = configBuilder.Build(defaults);
 
-        Assert.Equal(200, settings.ConcurrencyLimit);
-        Assert.Equal(ConcurrencyLimitType.MessagesPerSecond, settings.ConcurrencyLimitType);
+        settings.ConcurrencyLimit.ShouldBe(200);
+        settings.ConcurrencyLimitType.ShouldBe(ConcurrencyLimitType.MessagesPerSecond);
     }
 
-    [Fact]
+    [Test]
     public void PerGroupWithNoOverride_UsesDefault()
     {
         var defaults = new SubscriptionGroupSettingsBuilder()
@@ -57,11 +57,11 @@ public class SubscriptionGroupSettingsTests
 
         var settings = configBuilder.Build(defaults);
 
-        Assert.Equal(50, settings.ConcurrencyLimit);
-        Assert.Equal(ConcurrencyLimitType.MessagesPerSecond, settings.ConcurrencyLimitType);
+        settings.ConcurrencyLimit.ShouldBe(50);
+        settings.ConcurrencyLimitType.ShouldBe(ConcurrencyLimitType.MessagesPerSecond);
     }
 
-    [Fact]
+    [Test]
     public void PerGroupOverridesOnlyLimit_InheritsTypeFromDefault()
     {
         var defaults = new SubscriptionGroupSettingsBuilder()
@@ -73,7 +73,7 @@ public class SubscriptionGroupSettingsTests
 
         var settings = configBuilder.Build(defaults);
 
-        Assert.Equal(100, settings.ConcurrencyLimit);
-        Assert.Equal(ConcurrencyLimitType.InFlightMessages, settings.ConcurrencyLimitType);
+        settings.ConcurrencyLimit.ShouldBe(100);
+        settings.ConcurrencyLimitType.ShouldBe(ConcurrencyLimitType.InFlightMessages);
     }
 }

@@ -16,13 +16,14 @@ public class WhenReceivingShouldStop
 {
     private class TestMessage : Message { }
 
-    private readonly MessageReceivePauseSignal _messageReceivePauseSignal;
-    private readonly MessageReceiveBuffer _messageReceiveBuffer;
-    private readonly FakeSqsQueue _queue;
+    private MessageReceivePauseSignal _messageReceivePauseSignal;
+    private MessageReceiveBuffer _messageReceiveBuffer;
+    private FakeSqsQueue _queue;
 
-    public WhenReceivingShouldStop(ITestOutputHelper testOutputHelper)
+    [Before(Test)]
+    public void Setup()
     {
-        var loggerFactory = testOutputHelper.ToLoggerFactory();
+        var loggerFactory = TestContext.Current!.OutputWriter.ToLoggerFactory();
 
         MiddlewareBase<ReceiveMessagesContext, IList<Message>> sqsMiddleware =
             new DelegateMiddleware<ReceiveMessagesContext, IList<Message>>();
@@ -74,7 +75,7 @@ public class WhenReceivingShouldStop
         return messagesProcessed;
     }
 
-    [Fact]
+    [Test]
     public async Task No_Messages_Are_Processed()
     {
         // Signal stop receiving messages
@@ -100,7 +101,7 @@ public class WhenReceivingShouldStop
         messagesRead.ShouldBe(0);
     }
 
-    [Fact]
+    [Test]
     public async Task All_Messages_Are_Processed_After_Starting()
     {
         // Signal stop receiving messages

@@ -14,13 +14,13 @@ using NSubstitute;
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools;
 
-public class WhenUsingABasicThrottle(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenUsingABasicThrottle : IntegrationTestBase
 {
     protected override TimeSpan Timeout => TimeSpan.FromMinutes(5);
 
-    [AwsTheory]
-    [InlineData(100)]
-    [InlineData(1000)]
+    [Test]
+    [Arguments(100)]
+    [Arguments(1000)]
     public async Task Messages_Are_Throttled_But_Still_Delivered(int throttleMessageCount)
     {
         // Arrange
@@ -58,7 +58,7 @@ public class WhenUsingABasicThrottle(ITestOutputHelper outputHelper) : Integrati
             }
         }
 
-        Assert.True(await queue.ExistsAsync(CancellationToken.None), "The queue was not created.");
+        (await queue.ExistsAsync(CancellationToken.None)).ShouldBeTrue("The queue was not created.");
 
         OutputHelper.WriteLine($"{DateTime.Now} - Adding {throttleMessageCount} messages to the queue.");
 
@@ -127,6 +127,6 @@ public class WhenUsingABasicThrottle(ITestOutputHelper outputHelper) : Integrati
         OutputHelper.WriteLine($"{DateTime.Now} - Took {timeToProcess.TotalMilliseconds} ms");
         OutputHelper.WriteLine($"{DateTime.Now} - Throughput {(float)count / timeToProcess.TotalMilliseconds * 1000} messages/second");
 
-        Assert.Equal(throttleMessageCount, count);
+        count.ShouldBe(throttleMessageCount);
     }
 }

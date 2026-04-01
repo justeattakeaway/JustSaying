@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing;
 
-public class WhenApplyingDefaultMiddlewares(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenApplyingDefaultMiddlewares : IntegrationTestBase
 {
     class OuterTestMiddleware : InspectableMiddleware<SimpleMessage>
     { }
@@ -16,7 +16,7 @@ public class WhenApplyingDefaultMiddlewares(ITestOutputHelper outputHelper) : In
     class AfterTestMiddleware : InspectableMiddleware<SimpleMessage>
     { }
 
-    [AwsFact]
+    [Test]
     public async Task Then_The_Defaults_Are_The_Defaults_For_Sure()
     {
         // Arrange
@@ -44,7 +44,7 @@ public class WhenApplyingDefaultMiddlewares(ITestOutputHelper outputHelper) : In
         json.ShouldMatchApproved(c => c.SubFolder("Approvals"));
     }
 
-    [AwsFact]
+    [Test]
     public async Task Then_The_Builder_Should_Put_User_Middlewares_In_The_Correct_Order()
     {
         // Arrange

@@ -8,9 +8,9 @@ using Newtonsoft.Json;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenAMessageIsPublishedToATenantedTopic(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenAMessageIsPublishedToATenantedTopic : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task Then_The_Message_Is_Handled()
     {
         // Arrange
@@ -77,7 +77,7 @@ public class WhenAMessageIsPublishedToATenantedTopic(ITestOutputHelper outputHel
         json.ShouldMatchApproved(opt => opt.SubFolder("Approvals"));
     }
 
-    [AwsFact]
+    [Test]
     public async Task Then_The_Message_Is_Handled_For_Batch()
     {
         // Arrange

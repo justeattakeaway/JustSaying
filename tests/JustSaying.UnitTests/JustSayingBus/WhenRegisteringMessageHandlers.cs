@@ -12,7 +12,7 @@ using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<J
 
 namespace JustSaying.UnitTests.JustSayingBus;
 
-public class WhenRegisteringMessageHandlers(ITestOutputHelper outputHelper) : GivenAServiceBus(outputHelper)
+public class WhenRegisteringMessageHandlers : GivenAServiceBus
 {
     private ISqsQueue _queue;
     private IHandlerAsync<Message> _handler1;
@@ -46,7 +46,7 @@ public class WhenRegisteringMessageHandlers(ITestOutputHelper outputHelper) : Gi
         await SystemUnderTest.StartAsync(cts.Token);
     }
 
-    [Fact]
+    [Test]
     public void HandlersAreAdded()
     {
         SystemUnderTest.MiddlewareMap.Contains(_queue.QueueName, typeof(Message)).ShouldBeTrue();

@@ -4,10 +4,10 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.Messaging;
 
-public static class MessagePublisherExtensionsTests
+public class MessagePublisherExtensionsTests
 {
-    [Fact]
-    public static async Task ArgumentsAreCheckedForNull()
+    [Test]
+    public async Task ArgumentsAreCheckedForNull()
     {
         // Arrange
         var message = Substitute.For<Message>();
@@ -16,15 +16,15 @@ public static class MessagePublisherExtensionsTests
         var batchMetadata = new PublishBatchMetadata();
 
         // Act and Assert
-        await Assert.ThrowsAsync<ArgumentNullException>("publisher", () => (null as IMessagePublisher).PublishAsync(messages));
-        await Assert.ThrowsAsync<ArgumentNullException>("publisher", () => (null as IMessagePublisher).PublishAsync(messages, CancellationToken.None));
-        await Assert.ThrowsAsync<ArgumentNullException>("publisher", () => (null as IMessagePublisher).PublishAsync(message, metadata));
-        await Assert.ThrowsAsync<ArgumentNullException>("publisher", () => (null as IMessagePublisher).PublishAsync(messages, batchMetadata));
-        await Assert.ThrowsAsync<ArgumentNullException>("publisher", () => (null as IMessageBatchPublisher).PublishAsync(messages, CancellationToken.None));
+        (await Should.ThrowAsync<ArgumentNullException>(() => (null as IMessagePublisher).PublishAsync(messages))).ParamName.ShouldBe("publisher");
+        (await Should.ThrowAsync<ArgumentNullException>(() => (null as IMessagePublisher).PublishAsync(messages, CancellationToken.None))).ParamName.ShouldBe("publisher");
+        (await Should.ThrowAsync<ArgumentNullException>(() => (null as IMessagePublisher).PublishAsync(message, metadata))).ParamName.ShouldBe("publisher");
+        (await Should.ThrowAsync<ArgumentNullException>(() => (null as IMessagePublisher).PublishAsync(messages, batchMetadata))).ParamName.ShouldBe("publisher");
+        (await Should.ThrowAsync<ArgumentNullException>(() => (null as IMessageBatchPublisher).PublishAsync(messages, CancellationToken.None))).ParamName.ShouldBe("publisher");
     }
 
-    [Fact]
-    public static async Task MessagesAreBatchedIfAlsoABatchPublisher()
+    [Test]
+    public async Task MessagesAreBatchedIfAlsoABatchPublisher()
     {
         // Arrange
         var publisher = Substitute.For<IMessagePublisher, IMessageBatchPublisher>();
@@ -40,8 +40,8 @@ public static class MessagePublisherExtensionsTests
         await publisher.Received(0).PublishAsync(Arg.Any<Message>(), Arg.Any<PublishMetadata>(), Arg.Any<CancellationToken>());
     }
 
-    [Fact]
-    public static async Task MessagesAreSerializedIfNotABatchPublisher()
+    [Test]
+    public async Task MessagesAreSerializedIfNotABatchPublisher()
     {
         // Arrange
         var publisher = Substitute.For<IMessagePublisher>();

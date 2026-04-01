@@ -3,7 +3,7 @@ using JustSaying.TestingFramework;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
-public class WhenMessageHandlingFails(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
+public class WhenMessageHandlingFails : BaseSubscriptionGroupTests
 {
     private FakeSqsQueue _queue;
 
@@ -16,19 +16,19 @@ public class WhenMessageHandlingFails(ITestOutputHelper testOutputHelper) : Base
         Handler.ShouldSucceed = false;
     }
 
-    [Fact]
+    [Test]
     public void MessageHandlerWasCalled()
     {
         Handler.ReceivedMessages.ShouldNotBeEmpty();
     }
 
-    [Fact]
+    [Test]
     public void FailedMessageIsNotRemovedFromQueue()
     {
         _queue.DeleteMessageRequests.ShouldBeEmpty();
     }
 
-    [Fact]
+    [Test]
     public void ExceptionIsNotLoggedToMonitor()
     {
         Monitor.HandledExceptions.ShouldBeEmpty();

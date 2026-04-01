@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.Fluent.Subscribing.Newtonsoft;
 
-public class WhenHandlingAMessageWithBinaryAttributes(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenHandlingAMessageWithBinaryAttributes : IntegrationTestBase
 {
     public class SimpleMessageWithBinaryAttributesHandler(IMessageContextAccessor contextAccessor) : IHandlerAsync<SimpleMessage>
     {
@@ -22,7 +22,7 @@ public class WhenHandlingAMessageWithBinaryAttributes(ITestOutputHelper outputHe
         public List<(MessageContext context, SimpleMessage message)> HandledMessages { get; } = new List<(MessageContext, SimpleMessage)>();
     }
 
-    [AwsFact]
+    [Test]
     public async Task Then_The_Attributes_Are_Returned()
     {
         OutputHelper.WriteLine($"Running {nameof(Then_The_Attributes_Are_Returned)} test");

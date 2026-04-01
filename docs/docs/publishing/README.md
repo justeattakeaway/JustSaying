@@ -55,3 +55,4 @@ For detailed configuration options, see:
 - [Configuration](configuration.md) - Overview of publication configuration
 - [Write Configuration](write-configuration.md) - Encryption, compression, and advanced options
 - [Batch Publishing](batch-publishing.md) - Publishing multiple messages efficiently
+- [Publish Middleware](middleware.md) - Add cross-cutting concerns to publish operations

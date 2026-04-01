@@ -7,7 +7,7 @@ public class DefaultNamingConventionsTests
 {
     private readonly DefaultNamingConventions Sut = new();
 
-    [Fact]
+    [Test]
     public void WhenGeneratingTopicName_ForNonGenericType_ThenTheCorrectNameShouldBeReturned()
     {
         // Arrange + Act
@@ -17,7 +17,7 @@ public class DefaultNamingConventionsTests
         result.ShouldBe("simplemessage");
     }
 
-    [Fact]
+    [Test]
     public void WhenGeneratingTopicName_ForGenericType_ThenTheCorrectNameShouldBeReturned()
     {
         // Arrange + Act
@@ -27,7 +27,7 @@ public class DefaultNamingConventionsTests
         result.ShouldBe("listliststring");
     }
 
-    [Fact]
+    [Test]
     public void WhenGeneratingTopicName_ForTypeWithLongName_ThenTheLengthShouldBe256()
     {
         // Arrange + Act
@@ -41,7 +41,7 @@ public class DefaultNamingConventionsTests
         result.Length.ShouldBe(256);
     }
 
-    [Fact]
+    [Test]
     public void WhenGeneratingQueueName_ForNonGenericType_ThenTheCorrectNameShouldBeReturned()
     {
         // Arrange + Act
@@ -51,7 +51,7 @@ public class DefaultNamingConventionsTests
         result.ShouldBe("simplemessage");
     }
 
-    [Fact]
+    [Test]
     public void WhenGeneratingQueueName_ForGenericType_ThenTheCorrectNameShouldBeReturned()
     {
         // Arrange + Act
@@ -61,7 +61,7 @@ public class DefaultNamingConventionsTests
         result.ShouldBe("liststring");
     }
 
-    [Fact]
+    [Test]
     public void WhenGeneratingQueueName_ForTypeWithLongName_ThenTheLengthShouldBe80()
     {
         // Arrange + Act

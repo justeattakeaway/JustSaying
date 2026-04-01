@@ -8,7 +8,7 @@ using OpenTelemetry.Trace;
 
 namespace JustSaying.Extensions.OpenTelemetry.Tests;
 
-[Collection("Tracing")]
+[NotInParallel("Tracing")]
 public class OpenTelemetryBuilderExtensionsTests : IDisposable
 {
     private readonly List<Activity> _exportedActivities = [];
@@ -32,7 +32,7 @@ public class OpenTelemetryBuilderExtensionsTests : IDisposable
             .Build();
     }
 
-    [Fact]
+    [Test]
     public void Registers_Both_ActivitySource_And_Meter()
     {
         // Act - emit a trace
@@ -52,7 +52,7 @@ public class OpenTelemetryBuilderExtensionsTests : IDisposable
         _exportedMetrics.ShouldContain(m => m.Name == "messaging.client.sent.messages");
     }
 
-    [Fact]
+    [Test]
     public void AddJustSayingInstrumentation_Throws_When_Builder_Is_Null()
     {
         OpenTelemetryBuilder builder = null;
@@ -60,7 +60,7 @@ public class OpenTelemetryBuilderExtensionsTests : IDisposable
         Should.Throw<ArgumentNullException>(() => builder.AddJustSayingInstrumentation());
     }
 
-    [Fact]
+    [Test]
     public void AddJustSayingInstrumentation_Registers_Via_OpenTelemetryBuilder()
     {
         // Arrange - use IServiceCollection to get a real OpenTelemetryBuilder
@@ -78,7 +78,7 @@ public class OpenTelemetryBuilderExtensionsTests : IDisposable
         meterProvider.ShouldNotBeNull();
     }
 
-    [Fact]
+    [Test]
     public void AddJustSayingInstrumentation_Captures_Activities_Via_OpenTelemetryBuilder()
     {
         // Arrange - wire up via the OpenTelemetryBuilder path (the IServiceCollection / hosting path)

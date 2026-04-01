@@ -4,9 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenCreatingAMessagePublisher(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenCreatingAMessagePublisher : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task Then_The_Queues_Exist()
     {
         // Arrange

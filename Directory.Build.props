@@ -1,6 +1,5 @@
 <Project>
   <ItemGroup>
-    <PackageReference Include="coverlet.msbuild" PrivateAssets="All" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
     <PackageReference Include="ReportGenerator" PrivateAssets="All" />
     <PackageReference Include="MinVer" PrivateAssets="All" />
@@ -55,11 +54,6 @@
     <!-- HACK Workaround flaky build in CI for Linux -->
     <BuildInParallel Condition=" '$(OS)' != 'Windows_NT' and '$(CI)' != '' ">false</BuildInParallel>
     <ContinuousIntegrationBuild Condition=" '$(CI)' == 'true' ">true</ContinuousIntegrationBuild>
-  </PropertyGroup>
-  <PropertyGroup>
-    <CollectCoverage Condition=" '$(CollectCoverage)' == '' ">true</CollectCoverage>
-    <CoverletOutputFormat>cobertura,json</CoverletOutputFormat>
-    <Exclude>[*.Benchmarks]*,[*Sample*]*,[*Test*]*,[xunit.*]*</Exclude>
   </PropertyGroup>
   <!-- Keys used by InternalsVisibleTo attributes. -->
   <PropertyGroup>

@@ -8,7 +8,7 @@ using JustSaying.TestingFramework;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
-public class WhenThereAreExceptionsInMessageProcessing(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
+public class WhenThereAreExceptionsInMessageProcessing : BaseSubscriptionGroupTests
 {
     private ISqsQueue _queue;
     private int _callCount;
@@ -41,7 +41,7 @@ public class WhenThereAreExceptionsInMessageProcessing(ITestOutputHelper testOut
         return Task.FromResult(_callCount > 1);
     }
 
-    [Fact]
+    [Test]
     public void TheListenerDoesNotDie()
     {
         _callCount.ShouldBeGreaterThan(1);

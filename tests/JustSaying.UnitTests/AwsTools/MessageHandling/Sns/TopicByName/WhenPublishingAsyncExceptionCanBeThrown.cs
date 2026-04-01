@@ -34,13 +34,13 @@ public class WhenPublishingAsyncExceptionCanBeThrown : WhenPublishingTestBase
         return Task.CompletedTask;
     }
 
-    [Fact]
+    [Test]
     public async Task ExceptionIsThrown()
     {
         await Should.ThrowAsync<PublishException>(() => SystemUnderTest.PublishAsync(new SimpleMessage()));
     }
 
-    [Fact]
+    [Test]
     public async Task ExceptionContainsContext()
     {
         try
