@@ -51,7 +51,7 @@
     <PackageVersion Include="OpenTelemetry.Exporter.InMemory" Version="1.15.1" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
-    <PackageVersion Include="Scalar.AspNetCore" Version="2.13.18" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.13.20" />
     <PackageVersion Include="TUnit" Version="1.28.7" />
     <PackageVersion Include="TUnit.Core" Version="1.28.7" />
     <PackageVersion Include="TUnit.Assertions" Version="1.28.7" />
