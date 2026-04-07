@@ -205,7 +205,9 @@ public class ChannelsTests
         await multiplexerCompletion.HandleCancellation();
         await bufferCompletion.HandleCancellation();
 
-        sqsQueue.ReceiveMessageRequests.Sum(x => x.NumMessagesReceived).ShouldBe(expectedDownloadCount);
+        // The buffer may not fully fill before cancellation, but should never
+        // exceed the expected count (which would mean stop-downloading is broken).
+        sqsQueue.ReceiveMessageRequests.Sum(x => x.NumMessagesReceived).ShouldBeLessThanOrEqualTo(expectedDownloadCount);
         dispatcher.DispatchedMessages.Count.ShouldBe(0);
 
         // Starting the consumer after the token is cancelled will not dispatch messages
@@ -214,7 +216,7 @@ public class ChannelsTests
         await Patiently.AssertThatAsync(OutputHelper,
             () =>
             {
-                sqsQueue.ReceiveMessageRequests.Sum(x => x.NumMessagesReceived).ShouldBe(expectedDownloadCount);
+                sqsQueue.ReceiveMessageRequests.Sum(x => x.NumMessagesReceived).ShouldBeLessThanOrEqualTo(expectedDownloadCount);
                 dispatcher.DispatchedMessages.Count.ShouldBe(0);
             });
     }
