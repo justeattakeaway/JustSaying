@@ -1,5 +1,6 @@
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.Logging;
@@ -7,22 +8,25 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.JustSayingBus;
 
-public abstract class GivenAServiceBus(ITestOutputHelper outputHelper) : IAsyncLifetime
+public abstract class GivenAServiceBus
 {
     protected IMessagingConfig Config;
     protected TrackingLoggingMonitor Monitor;
-    protected ILoggerFactory LoggerFactory = outputHelper.ToLoggerFactory();
+    protected ILoggerFactory LoggerFactory;
     private bool _recordThrownExceptions;
 
-    public ITestOutputHelper OutputHelper { get; private set; } = outputHelper;
+    protected TextWriter OutputHelper => TestContext.Current!.OutputWriter;
     protected Exception ThrownException { get; private set; }
 
     protected JustSaying.JustSayingBus SystemUnderTest { get; private set; }
 
     protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
 
-    public virtual async Task InitializeAsync()
+    [Before(Test)]
+    public virtual async Task SetUp()
     {
+        LoggerFactory = OutputHelper.ToLoggerFactory();
+
         Given();
 
         try
@@ -36,11 +40,6 @@ public abstract class GivenAServiceBus(ITestOutputHelper outputHelper) : IAsyncL
         }
     }
 
-    public virtual Task DisposeAsync()
-    {
-        return Task.CompletedTask;
-    }
-
     protected virtual void Given()
     {
         Config = Substitute.For<IMessagingConfig>();
@@ -51,10 +50,9 @@ public abstract class GivenAServiceBus(ITestOutputHelper outputHelper) : IAsyncL
 
     private JustSaying.JustSayingBus CreateSystemUnderTest()
     {
-        var serializerRegister = new FakeSerializationRegister();
         var messageReceivePauseSignal = new MessageReceivePauseSignal();
         var bus = new JustSaying.JustSayingBus(Config,
-            serializerRegister,
+            new NewtonsoftSerializationFactory(),
             messageReceivePauseSignal,
             LoggerFactory,
             Monitor);

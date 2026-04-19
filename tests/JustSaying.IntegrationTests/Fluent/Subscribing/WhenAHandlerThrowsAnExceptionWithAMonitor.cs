@@ -7,9 +7,9 @@ using NSubstitute;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing;
 
-public class WhenAHandlerThrowsAnExceptionWithAMonitor(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenAHandlerThrowsAnExceptionWithAMonitor : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task Then_The_Message_Is_Handled()
     {
         // Arrange

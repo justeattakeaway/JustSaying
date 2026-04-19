@@ -7,9 +7,9 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools;
 
-public class WhenCreatingQueueTwice(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenCreatingQueueTwice : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task Then_An_Exception_Is_Not_Thrown()
     {
         // Arrange

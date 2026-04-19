@@ -5,15 +5,14 @@ using Newtonsoft.Json;
 
 namespace JustSaying.UnitTests.Messaging.Serialization.SystemTextJson;
 
-#pragma warning disable CS0618 // Type or member is obsolete
-public class WhenUsingCustomSettings : XBehaviourTest<SystemTextJsonSerializer>
+public class WhenUsingCustomSettings : XBehaviourTest<SystemTextJsonMessageBodySerializer<MessageWithEnum>>
 {
     private MessageWithEnum _messageOut;
     private string _jsonMessage;
 
-    protected override SystemTextJsonSerializer CreateSystemUnderTest()
+    protected override SystemTextJsonMessageBodySerializer<MessageWithEnum> CreateSystemUnderTest()
     {
-        return new SystemTextJsonSerializer(new JsonSerializerOptions());
+        return new SystemTextJsonMessageBodySerializer<MessageWithEnum>(new JsonSerializerOptions());
     }
 
     protected override void Given()
@@ -21,9 +20,9 @@ public class WhenUsingCustomSettings : XBehaviourTest<SystemTextJsonSerializer>
         _messageOut = new MessageWithEnum() { EnumVal = Value.Two };
     }
 
-    public string GetMessageInContext(MessageWithEnum message)
+    private string GetMessageInContext(MessageWithEnum message)
     {
-        var context = new { Subject = message.GetType().Name, Message = SystemUnderTest.Serialize(message, false, message.GetType().Name) };
+        var context = new { Subject = message.GetType().Name, Message = SystemUnderTest.Serialize(message) };
         return JsonConvert.SerializeObject(context);
     }
 
@@ -32,17 +31,16 @@ public class WhenUsingCustomSettings : XBehaviourTest<SystemTextJsonSerializer>
         _jsonMessage = GetMessageInContext(_messageOut);
     }
 
-    [Fact]
+    [Test]
     public void MessageHasBeenCreated()
     {
         _messageOut.ShouldNotBeNull();
     }
 
-    [Fact]
+    [Test]
     public void EnumsAreNotRepresentedAsStrings()
     {
         _jsonMessage.ShouldContain("EnumVal");
         _jsonMessage.ShouldNotContain("Two");
     }
 }
-#pragma warning restore CS0618

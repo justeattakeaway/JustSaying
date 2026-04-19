@@ -1,6 +1,7 @@
 using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Messaging.Middleware;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
@@ -36,11 +37,13 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
     /// </summary>
     private string TopicName { get; set; } = string.Empty;
 
+    private Action<PublishMiddlewareBuilder> MiddlewareConfiguration { get; set; }
+
     /// <summary>
     /// Function that will produce a topic name dynamically from a Message at publish time.
     /// If the topic doesn't exist, it will be created at that point.
     /// </summary>
-    public Func<Message,string> TopicNameCustomizer { get; set; }
+    public Func<Message, string> TopicNameCustomizer { get; set; }
 
     /// <summary>
     /// Configures the SNS write configuration.
@@ -148,7 +151,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
     /// </para>
     /// </param>
     /// <returns>
-    /// The current <see cref="TopicSubscriptionBuilder{T}"/>.
+    /// The current <see cref="TopicPublicationBuilder{T}"/>.
     /// </returns>
     public TopicPublicationBuilder<T> WithTopicName(Func<Message, string> topicNameCustomizer)
     {
@@ -156,11 +159,24 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
         return this;
     }
 
+    /// <summary>
+    /// Configures the publish middleware pipeline for this publication.
+    /// </summary>
+    /// <param name="middlewareConfiguration">A delegate to configure the publish middleware pipeline.</param>
+    /// <returns>The current <see cref="TopicPublicationBuilder{T}"/>.</returns>
+    public TopicPublicationBuilder<T> WithMiddlewareConfiguration(
+        Action<PublishMiddlewareBuilder> middlewareConfiguration)
+    {
+        MiddlewareConfiguration = middlewareConfiguration;
+        return this;
+    }
+
     /// <inheritdoc />
     void IPublicationBuilder<T>.Configure(
         JustSayingBus bus,
         IAwsClientFactoryProxy proxy,
-        ILoggerFactory loggerFactory)
+        ILoggerFactory loggerFactory,
+        IServiceResolver serviceResolver)
     {
         var logger = loggerFactory.CreateLogger<TopicPublicationBuilder<T>>();
 
@@ -171,6 +187,8 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
 
         var writeConfiguration = new SnsWriteConfiguration();
         ConfigureWrites?.Invoke(writeConfiguration);
+        writeConfiguration.CompressionOptions ??= bus.Config.DefaultCompressionOptions;
+        CompressionEncodingValidator.ValidateEncoding(bus.CompressionRegistry, writeConfiguration.CompressionOptions);
 
         var client = proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region));
 
@@ -188,7 +206,13 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
 
         bus.AddStartupTask(config.StartupTask);
         bus.AddMessagePublisher<T>(config.Publisher);
+        bus.AddMessageBatchPublisher<T>(config.BatchPublisher);
 
-        bus.SerializationRegister.AddSerializer<T>();
+        if (MiddlewareConfiguration != null)
+        {
+            var middlewareBuilder = new PublishMiddlewareBuilder(serviceResolver);
+            middlewareBuilder.Configure(MiddlewareConfiguration);
+            bus.AddPublishMiddleware<T>(middlewareBuilder.Build());
+        }
     }
 }

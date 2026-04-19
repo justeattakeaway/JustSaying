@@ -7,7 +7,8 @@ namespace JustSaying.Messaging.Channels.Dispatch;
 internal class MultiplexerSubscriber(
     IMessageDispatcher dispatcher,
     string subscriberId,
-    ILogger<MultiplexerSubscriber> logger) : IMultiplexerSubscriber
+    ILogger<MultiplexerSubscriber> logger,
+    IRateLimiter rateLimiter = null) : IMultiplexerSubscriber
 {
     private IAsyncEnumerable<IQueueMessageContext> _messageSource;
 
@@ -28,6 +29,11 @@ internal class MultiplexerSubscriber(
                            stoppingToken))
         {
             stoppingToken.ThrowIfCancellationRequested();
+
+            if (rateLimiter != null)
+            {
+                await rateLimiter.WaitAsync(stoppingToken).ConfigureAwait(false);
+            }
 
             await dispatcher.DispatchMessageAsync(messageContext, stoppingToken)
                 .ConfigureAwait(false);

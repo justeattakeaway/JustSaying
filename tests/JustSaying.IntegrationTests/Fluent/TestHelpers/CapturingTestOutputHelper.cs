@@ -1,22 +1,25 @@
+#nullable enable
 using System.Text;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing;
 
-public class CapturingTestOutputHelper(ITestOutputHelper inner) : ITestOutputHelper
+public class CapturingTestOutputHelper(TextWriter inner) : TextWriter
 {
     private readonly StringBuilder _sb = new();
 
     public string Output => _sb.ToString();
 
-    public void WriteLine(string message)
+    public override Encoding Encoding => inner.Encoding;
+
+    public override void Write(string? value)
     {
-        _sb.AppendLine(message);
-        inner.WriteLine(message);
+        _sb.Append(value);
+        inner.Write(value);
     }
 
-    public void WriteLine(string format, params object[] args)
+    public override void WriteLine(string? value)
     {
-        _sb.AppendLine(string.Format(format, args));
-        inner.WriteLine(format, args);
+        _sb.AppendLine(value);
+        inner.WriteLine(value);
     }
 }

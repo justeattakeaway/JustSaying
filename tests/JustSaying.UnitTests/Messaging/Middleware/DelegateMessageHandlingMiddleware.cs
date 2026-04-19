@@ -6,7 +6,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling;
 /// <summary>
 /// A utility middleware that removes the need for handler boilerplate, and creates an inline handler pipeline
 /// </summary>
-/// <typeparam name="T"></typeparam>
+/// <typeparam name="T">The type of the message.</typeparam>
 public class DelegateMessageHandlingMiddleware<TMessage>(Func<TMessage, Task<bool>> func) : MiddlewareBase<HandleMessageContext, bool> where TMessage : Message
 {
     private readonly Func<TMessage, Task<bool>> _func = func;
@@ -16,7 +16,7 @@ public class DelegateMessageHandlingMiddleware<TMessage>(Func<TMessage, Task<boo
         Func<CancellationToken, Task<bool>> func,
         CancellationToken stoppingToken)
     {
-        if(context == null) throw new ArgumentNullException(nameof(context));
+        if (context == null) throw new ArgumentNullException(nameof(context));
 
         return await _func(context.MessageAs<TMessage>());
     }

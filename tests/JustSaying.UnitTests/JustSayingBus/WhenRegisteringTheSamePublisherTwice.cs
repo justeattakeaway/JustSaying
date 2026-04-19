@@ -5,7 +5,7 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.JustSayingBus;
 
-public class WhenRegisteringTheSamePublisherTwice(ITestOutputHelper outputHelper) : GivenAServiceBus(outputHelper)
+public class WhenRegisteringTheSamePublisherTwice : GivenAServiceBus
 {
     private IMessagePublisher _publisher;
 
@@ -24,14 +24,14 @@ public class WhenRegisteringTheSamePublisherTwice(ITestOutputHelper outputHelper
         return Task.CompletedTask;
     }
 
-    [Fact]
+    [Test]
     public void NoExceptionIsThrown()
     {
         // Specifying failover regions mean that messages can be registered more than once.
         ThrownException.ShouldBeNull();
     }
 
-    [Fact]
+    [Test]
     public void AndInterrogationShowsNonDuplicatedPublishers()
     {
         dynamic response = SystemUnderTest.Interrogate();

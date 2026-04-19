@@ -19,7 +19,7 @@ jobs:
 
     - name: Generate GitHub application token
       id: generate-application-token
-      uses: peter-murray/workflow-application-token-action@dc0413987a085fa17d19df9e47d4677cf81ffef3 # v3.0.0
+      uses: peter-murray/workflow-application-token-action@d17e3a9a36850ea89f35db16c1067dd2b68ee343 # v4.0.1
       with:
         application_id: ${{ secrets.REVIEWER_APPLICATION_ID }}
         application_private_key: ${{ secrets.REVIEWER_APPLICATION_PRIVATE_KEY }}
@@ -101,7 +101,7 @@ jobs:
         "is-trusted-update=$isTrusted" >> $env:GITHUB_OUTPUT
 
     - name: Checkout code
-      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       # As long as it's not already approved, approve the pull request and enable auto-merge.
       # Our CI tests coupled with required statuses should ensure that the changes compile

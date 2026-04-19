@@ -16,7 +16,7 @@ public class PublishMetadata
             DataType = "Binary"
         };
 
-        MessageAttributes[key] = mav;
+        AddMessageAttribute(key, mav);
 
         return this;
     }

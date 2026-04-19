@@ -15,7 +15,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups;
 /// <param name="groupName">The name of the subscription group.</param>
 public class SubscriptionGroupConfigBuilder(string groupName)
 {
-    private readonly List<ISqsQueue> _sqsQueues = [];
+    private readonly List<SqsSource> _sqsSources = [];
     private readonly string _groupName = groupName ?? throw new ArgumentNullException(nameof(groupName));
 
     private int? _bufferSize;
@@ -24,16 +24,17 @@ public class SubscriptionGroupConfigBuilder(string groupName)
     private int? _concurrencyLimit;
     private int? _multiplexerCapacity;
     private int? _prefetch;
+    private ConcurrencyLimitType? _concurrencyLimitType;
 
     /// <summary>
     /// Adds an <see cref="ISqsQueue"/> to be consumed by this <see cref="ISubscriptionGroup"/>.
     /// </summary>
     /// <param name="sqsQueue">The queue to be consumed, assumed to already be created and ready.</param>
     /// <returns>This builder object.</returns>
-    public SubscriptionGroupConfigBuilder AddQueue(ISqsQueue sqsQueue)
+    internal SubscriptionGroupConfigBuilder AddQueue(SqsSource sqsQueue)
     {
         if (sqsQueue == null) throw new ArgumentNullException(nameof(sqsQueue));
-        _sqsQueues.Add(sqsQueue);
+        _sqsSources.Add(sqsQueue);
         return this;
     }
 
@@ -42,10 +43,10 @@ public class SubscriptionGroupConfigBuilder(string groupName)
     /// </summary>
     /// <param name="sqsQueues">The queues to be consumed, assumed to already be created and ready.</param>
     /// <returns>This builder object.</returns>
-    public SubscriptionGroupConfigBuilder AddQueues(IEnumerable<ISqsQueue> sqsQueues)
+    internal SubscriptionGroupConfigBuilder AddQueues(IEnumerable<SqsSource> sqsQueues)
     {
         if (sqsQueues == null) throw new ArgumentNullException(nameof(sqsQueues));
-        _sqsQueues.AddRange(sqsQueues);
+        _sqsSources.AddRange(sqsQueues);
         return this;
     }
 
@@ -57,6 +58,21 @@ public class SubscriptionGroupConfigBuilder(string groupName)
     public SubscriptionGroupConfigBuilder WithConcurrencyLimit(int concurrencyLimit)
     {
         _concurrencyLimit = concurrencyLimit;
+        _concurrencyLimitType = ConcurrencyLimitType.InFlightMessages;
+        return this;
+    }
+
+    /// <summary>
+    /// Specifies the maximum number of messages that may be processed by this <see cref="ISubscriptionGroup"/>,
+    /// with the specified <see cref="ConcurrencyLimitType"/> controlling how the limit is applied.
+    /// </summary>
+    /// <param name="concurrencyLimit">The concurrency limit value.</param>
+    /// <param name="limitType">How the limit is applied. See <see cref="ConcurrencyLimitType"/> for details.</param>
+    /// <returns>This builder object.</returns>
+    public SubscriptionGroupConfigBuilder WithConcurrencyLimit(int concurrencyLimit, ConcurrencyLimitType limitType)
+    {
+        _concurrencyLimit = concurrencyLimit;
+        _concurrencyLimitType = limitType;
         return this;
     }
 
@@ -133,12 +149,13 @@ public class SubscriptionGroupConfigBuilder(string groupName)
         var settings = new SubscriptionGroupSettings(
             _groupName,
             _concurrencyLimit ?? defaults.ConcurrencyLimit,
+            _concurrencyLimitType ?? defaults.ConcurrencyLimitType,
             _bufferSize ?? defaults.BufferSize,
             _receiveBufferReadTimeout ?? defaults.ReceiveBufferReadTimeout,
             _receiveMessagesWaitTime ?? defaults.ReceiveMessagesWaitTime,
             _multiplexerCapacity ?? defaults.MultiplexerCapacity,
             _prefetch ?? defaults.Prefetch,
-            _sqsQueues);
+            _sqsSources);
 
         settings.Validate();
 

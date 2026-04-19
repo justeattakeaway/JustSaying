@@ -4,10 +4,17 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenTheErrorQueueDisabled(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenTheErrorQueueDisabled : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task Then_The_Error_Queue_Does_Not_Exist()
+    {
+        await ThenTheErrorQueueDoesNotExist<IMessagePublisher>();
+        await ThenTheErrorQueueDoesNotExist<IMessageBatchPublisher>();
+    }
+
+    private async Task ThenTheErrorQueueDoesNotExist<T>()
+        where  T: IStartable
     {
         // Arrange
         var completionSource = new TaskCompletionSource<object>();
@@ -24,7 +31,7 @@ public class WhenTheErrorQueueDisabled(ITestOutputHelper outputHelper) : Integra
             .BuildServiceProvider();
 
         // Act - Force queue creation
-        IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
+        var publisher = serviceProvider.GetRequiredService<T>();
         await publisher.StartAsync(CancellationToken.None);
 
         // Assert

@@ -1,14 +1,16 @@
 using Amazon.SQS.Util;
 using JustSaying.AwsTools;
+using JustSaying.Messaging;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using NSubstitute;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing;
 
-public class AddressPubSub(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class AddressPubSub : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task SimplePubSubWorks()
     {
         IAwsClientFactory clientFactory = CreateClientFactory();
@@ -57,7 +59,7 @@ public class AddressPubSub(ITestOutputHelper outputHelper) : IntegrationTestBase
             });
     }
 
-    [AwsFact]
+    [Test]
     public async Task CanSubscribeUsingQueueArn()
     {
         IAwsClientFactory clientFactory = CreateClientFactory();
@@ -107,7 +109,7 @@ public class AddressPubSub(ITestOutputHelper outputHelper) : IntegrationTestBase
             });
     }
 
-    [AwsFact]
+    [Test]
     public async Task CanPublishUsingQueueUrl()
     {
         IAwsClientFactory clientFactory = CreateClientFactory();
@@ -152,7 +154,7 @@ public class AddressPubSub(ITestOutputHelper outputHelper) : IntegrationTestBase
             });
     }
 
-    [AwsFact]
+    [Test]
     public async Task CanPublishUsingTopicArnWithoutStartingBusAndWithNoRegion()
     {
         IAwsClientFactory clientFactory = CreateClientFactory();
@@ -160,14 +162,15 @@ public class AddressPubSub(ITestOutputHelper outputHelper) : IntegrationTestBase
         var topicResponse = await snsClient.CreateTopicAsync(UniqueName);
 
         var services = new ServiceCollection()
-            .AddLogging((p) => p.AddXUnit(OutputHelper, o => o.IncludeScopes = true).SetMinimumLevel(LogLevel.Debug))
+            .AddLogging((p) => p.AddTextWriter(OutputHelper, o => o.IncludeScopes = true).SetMinimumLevel(LogLevel.Debug))
             .AddJustSaying(
                 (builder, serviceProvider) =>
                 {
                     builder.Client((options) =>
                     {
-                        options.WithSessionCredentials(AccessKeyId, SecretAccessKey, SessionToken)
-                            .WithServiceUri(ServiceUri);
+                        options.WithClientFactory(() => clientFactory);
+                        // options.WithSessionCredentials(AccessKeyId, SecretAccessKey, SessionToken)
+                        //     .WithServiceUri(ServiceUri);
                     });
                 })
             .ConfigureJustSaying(builder =>
@@ -191,5 +194,50 @@ public class AddressPubSub(ITestOutputHelper outputHelper) : IntegrationTestBase
                 // Assert does not throw
                 await publisher.PublishAsync(message, cancellationToken);
             });
+
+        await WhenBatchAsync(
+            services,
+            async (publisher, listener, serviceProvider, cancellationToken) =>
+            {
+                // Assert does not throw
+                await publisher.PublishAsync([message], cancellationToken);
+            });
+    }
+
+    [Test]
+    public async Task CanPublishUsingTopicArnWithoutStartingBusAndWithNoRegionWithPublisherWrapper()
+    {
+        // Arrange
+        IAwsClientFactory clientFactory = CreateClientFactory();
+        var snsClient = clientFactory.GetSnsClient(Region);
+        var topicResponse = await snsClient.CreateTopicAsync(UniqueName);
+
+        var services = new ServiceCollection()
+            .AddLogging((p) => p.AddTextWriter(OutputHelper, o => o.IncludeScopes = true).SetMinimumLevel(LogLevel.Debug))
+            .AddTransient((_) => Substitute.For<IMessagePublisher>())
+            .AddJustSaying(
+                (builder, serviceProvider) =>
+                {
+                    builder.Client((options) =>
+                    {
+                        options.WithClientFactory(() => new LocalAwsClientFactory(Bus));
+                        // options.WithSessionCredentials(AccessKeyId, SecretAccessKey, SessionToken)
+                        //        .WithServiceUri(ServiceUri);
+                    });
+                })
+            .ConfigureJustSaying(builder =>
+                builder
+                    .Publications(c =>
+                        c.WithTopicArn<SimpleMessage>(topicResponse.TopicArn)
+                    )
+            );
+
+        using var provider = services.BuildServiceProvider();
+
+        // Act
+        var publisher = provider.GetRequiredService<IMessageBatchPublisher>();
+
+        // Assert
+        publisher.ShouldNotBeNull();
     }
 }

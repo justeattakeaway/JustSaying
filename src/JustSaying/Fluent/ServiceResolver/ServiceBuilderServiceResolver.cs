@@ -1,7 +1,6 @@
 using System.Collections.Concurrent;
 using JustSaying.AwsTools;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 
@@ -42,11 +41,6 @@ internal class ServiceBuilderServiceResolver(ServicesBuilder builder) : IService
             _serviceLookup[typeof(IMessageMonitor)] = builder.MessageMonitoring();
         }
 
-        if (builder.SerializationRegister != null)
-        {
-            _serviceLookup[typeof(IMessageSerializationRegister)] = builder.SerializationRegister();
-        }
-
         if (builder.MessageContextAccessor != null)
         {
             _serviceLookup[typeof(IMessageContextAccessor)] = builder.MessageContextAccessor();
@@ -57,7 +51,7 @@ internal class ServiceBuilderServiceResolver(ServicesBuilder builder) : IService
 
     public T ResolveOptionalService<T>() where T : class
     {
-        if(!_built) Build();
+        if (!_built) Build();
 
         Type typeofT = typeof(T);
         if (_serviceLookup.TryGetValue(typeofT, out object result))

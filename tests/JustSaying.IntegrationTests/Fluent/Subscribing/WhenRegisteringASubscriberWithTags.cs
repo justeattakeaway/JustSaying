@@ -3,16 +3,18 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
+using JustSaying.IntegrationTests;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing;
 
-public class WhenRegisteringASubscriberWithTags(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenRegisteringASubscriberWithTags : IntegrationTestBase
 {
     private const string QueueName = "simple-message-queue-with-tags";
 
-    [NotSimulatorFact]
+    [NotSimulatorSkip]
+    [Test]
     public async Task Then_A_Queue_For_Topic_Subscription_Is_Created_With_The_Correct_Tags()
     {
         // Arrange
@@ -35,7 +37,8 @@ public class WhenRegisteringASubscriberWithTags(ITestOutputHelper outputHelper) 
                 }));
     }
 
-    [NotSimulatorFact]
+    [NotSimulatorSkip]
+    [Test]
     public async Task Then_A_Queue_Subscription_Is_Created_With_The_Correct_Tags()
     {
         // Arrange

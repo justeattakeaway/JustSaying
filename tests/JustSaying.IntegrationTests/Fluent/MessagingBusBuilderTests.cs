@@ -1,37 +1,43 @@
 using JustSaying.Fluent;
+using JustSaying.IntegrationTests.Fluent;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
+using LocalSqsSnsMessaging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.IntegrationTests;
 
-public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
+public class MessagingBusBuilderTests
 {
-    private ITestOutputHelper OutputHelper { get; } = outputHelper;
+    private TextWriter OutputHelper => TestContext.Current!.OutputWriter;
 
     private class QueueStore(ILogger<TestMessageStore<QueueMessage>> logger) : TestMessageStore<QueueMessage>(logger)
     {
     }
 
-    [AwsFact]
+    [Test]
     public async Task Can_Create_Messaging_Bus_Fluently_For_A_Queue()
     {
         var queueName = Guid.NewGuid().ToString();
 
         // Arrange
+        var bus = new InMemoryAwsBus();
         var services = new ServiceCollection()
-            .AddLogging((p) => p.AddXUnit(OutputHelper))
+            .AddLogging((p) => p.AddTextWriter(OutputHelper))
             .AddJustSaying(
                 (builder) =>
                 {
                     builder.Client((options) =>
-                            options.WithBasicCredentials("accessKey", "secretKey")
-                                .WithServiceUri(TestEnvironment.SimulatorUrl))
+                            options.WithClientFactory(() => new LocalAwsClientFactory(bus))
+                            // TODO Add back LocalStack config for running in CI
+                            // options.WithBasicCredentials("accessKey", "secretKey")
+                            //     .WithServiceUri(TestEnvironment.SimulatorUrl)
+                            )
                         .Messaging((options) => options.WithRegion("eu-west-1"))
-                        .Publications((options) => options.WithQueue<QueueMessage>(o => o.WithName(queueName)))
+                        .Publications((options) => options.WithQueue<QueueMessage>(o => o.WithQueueName(queueName)))
                         .Subscriptions((options) => options.ForQueue<QueueMessage>(o => o.WithQueueName(queueName)))
                         .Services((options) => options.WithMessageMonitoring(() => new MyMonitor()));
                 })
@@ -60,21 +66,25 @@ public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
             () => store.Messages.Any(msg => msg.Id == message.Id));
     }
 
-    [AwsFact]
+    [Test]
     public async Task Can_Create_Messaging_Bus_Fluently_For_A_Topic()
     {
         var topicName = Guid.NewGuid().ToString();
 
         // Arrange
+        var bus = new InMemoryAwsBus();
         var services = new ServiceCollection()
-            .AddLogging((p) => p.AddXUnit(OutputHelper))
+            .AddLogging((p) => p.AddTextWriter(OutputHelper))
             .AddJustSaying(
                 (builder) =>
                 {
                     builder
                         .Client((options) =>
-                            options.WithBasicCredentials("accessKey", "secretKey")
-                                .WithServiceUri(TestEnvironment.SimulatorUrl))
+                                options.WithClientFactory(() => new LocalAwsClientFactory(bus))
+                            // TODO Add back LocalStack config for running in CI
+                            // options.WithBasicCredentials("accessKey", "secretKey")
+                            //     .WithServiceUri(TestEnvironment.SimulatorUrl)
+                            )
                         .Messaging((options) => options.WithRegion("eu-west-1"))
                         .Publications((options) => options.WithTopic<TopicMessage>())
                         .Subscriptions((options) => options.ForTopic<TopicMessage>(cfg => cfg.WithQueueName(topicName)));
@@ -103,12 +113,58 @@ public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
             () => store.Messages.Any(msg => msg.Id == message.Id));
     }
 
-    [AwsFact]
+    [Test]
+    public async Task Can_Create_Messaging_Bus_Fluently_For_A_Topic_Address()
+    {
+        var topicName = Guid.NewGuid().ToString();
+
+        // Arrange
+        var bus = new InMemoryAwsBus();
+        var services = new ServiceCollection()
+            .AddLogging((p) => p.AddTextWriter(OutputHelper))
+            .AddJustSaying(
+                (builder) =>
+                {
+                    builder
+                        .Client((options) =>
+                            options.WithClientFactory(() => new LocalAwsClientFactory(bus)))
+                            // TODO Add back LocalStack config for running in CI
+                            // options.WithBasicCredentials("accessKey", "secretKey")
+                            //     .WithServiceUri(TestEnvironment.SimulatorUrl))
+                        .Messaging((options) => options.WithRegion("eu-west-1"))
+                        .Publications((options) => options.WithTopic<TopicMessage>())
+                        .Subscriptions((options) => options.ForTopic<TopicMessage>(cfg => cfg.WithQueueName(topicName)));
+                })
+            .AddSingleton<IMessageStore<TopicMessage>, TestMessageStore<TopicMessage>>()
+            .AddJustSayingHandler<TopicMessage, MessageStoringHandler<TopicMessage>>();
+
+        IServiceProvider serviceProvider = services.BuildServiceProvider();
+
+        IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
+        IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
+
+        using var source = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+
+        // Act
+        await listener.StartAsync(source.Token);
+        await publisher.StartAsync(source.Token);
+
+        var message = new TopicMessage();
+
+        await publisher.PublishAsync(message, source.Token);
+
+        var store = serviceProvider.GetService<IMessageStore<TopicMessage>>();
+
+        await Patiently.AssertThatAsync(OutputHelper,
+            () => store.Messages.Any(msg => msg.Id == message.Id));
+    }
+
+    [Test]
     public async Task Can_Create_Messaging_Bus()
     {
         // Arrange
         var services = new ServiceCollection()
-            .AddLogging((p) => p.AddXUnit(OutputHelper))
+            .AddLogging((p) => p.AddTextWriter(OutputHelper))
             .AddJustSaying("eu-west-1")
             .AddJustSayingHandler<QueueMessage, InspectableHandler<QueueMessage>>();
 
@@ -124,12 +180,12 @@ public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
         await publisher.StartAsync(source.Token);
     }
 
-    [AwsFact]
+    [Test]
     public async Task Can_Create_Messaging_Bus_With_Contributors()
     {
         // Arrange
         var services = new ServiceCollection()
-            .AddLogging((p) => p.AddXUnit(OutputHelper))
+            .AddLogging((p) => p.AddTextWriter(OutputHelper))
             .AddJustSaying()
             .AddSingleton<IMessageBusConfigurationContributor, AwsContributor>()
             .AddSingleton<IMessageBusConfigurationContributor, MessagingContributor>()
@@ -169,9 +225,14 @@ public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
     {
         public void Configure(MessagingBusBuilder builder)
         {
+            var bus = new InMemoryAwsBus();
             builder.Client(
-                (options) => options.WithSessionCredentials("accessKeyId", "secretKeyId", "token")
-                    .WithServiceUri(TestEnvironment.SimulatorUrl));
+                (options) =>
+                    options.WithClientFactory(() => new LocalAwsClientFactory(bus))
+                    // TODO Add back LocalStack config for running in CI
+                    // options.WithSessionCredentials("accessKeyId", "secretKeyId", "token")
+                    // .WithServiceUri(TestEnvironment.SimulatorUrl)
+                );
         }
     }
 
@@ -192,7 +253,7 @@ public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
 
         public void Configure(MessagingBusBuilder builder)
         {
-            builder.Publications((p) => p.WithQueue<QueueMessage>(options => options.WithName(QueueName)))
+            builder.Publications((p) => p.WithQueue<QueueMessage>(options => options.WithQueueName(QueueName)))
                 .Subscriptions((p) => p.ForQueue<QueueMessage>(cfg => cfg.WithQueueName(QueueName)));
         }
     }

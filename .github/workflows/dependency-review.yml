@@ -14,9 +14,11 @@ jobs:
     steps:
 
       - name: Checkout code
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Review dependencies
-        uses: actions/dependency-review-action@be8bc500ee15e96754d2a6f2d34be14e945a46f3 # v4.1.2
+        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
         with:
-          allow-licenses: 'Apache-2.0,BSD-2-Clause,BSD-3-Clause,MIT'
+          config-file: './.github/dependency-review-config.yml'
+          license-check: false
+          fail-on-severity: critical

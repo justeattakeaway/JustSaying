@@ -1,4 +1,5 @@
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.IntegrationTests;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
@@ -10,9 +11,10 @@ using Newtonsoft.Json.Linq;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing;
 
-public class WhenHandlingMultipleTopics(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenHandlingMultipleTopics : IntegrationTestBase
 {
-    [NotSimulatorFact]
+    [NotSimulatorSkip]
+    [Test]
     public async Task Sqs_Policy_Is_Applied_With_Wildcard()
     {
         // Arrange
@@ -38,7 +40,7 @@ public class WhenHandlingMultipleTopics(ITestOutputHelper outputHelper) : Integr
 
                 dynamic policyJson = JObject.Parse(queue.Policy);
 
-                policyJson.Statement.Count.ShouldBe(1, $"Expecting 1 statement in Sqs policy but found {policyJson.Statement.Count}.");
+                ((int)policyJson.Statement.Count).ShouldBe(1, $"Expecting 1 statement in Sqs policy but found {policyJson.Statement.Count}.");
             });
     }
 

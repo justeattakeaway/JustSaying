@@ -255,26 +255,27 @@ public abstract class SqsQueueByNameBase : ISqsQueue
 
     private static RedrivePolicy ExtractRedrivePolicyFromQueueAttributes(Dictionary<string, string> queueAttributes)
     {
-        if (!queueAttributes.TryGetValue(JustSayingConstants.AttributeRedrivePolicy, out var redrivePolicy))
+        if (queueAttributes is not null && queueAttributes.TryGetValue(JustSayingConstants.AttributeRedrivePolicy, out string redrivePolicy))
         {
-            return null;
+            return RedrivePolicy.ConvertFromString(redrivePolicy);
         }
 
-        return RedrivePolicy.ConvertFromString(redrivePolicy);
+        return null;
     }
 
     private static ServerSideEncryption ExtractServerSideEncryptionFromQueueAttributes(Dictionary<string, string> queueAttributes)
     {
-        if (!queueAttributes.TryGetValue(JustSayingConstants.AttributeEncryptionKeyId, out var encryptionKeyId))
+        if (queueAttributes is not null && queueAttributes.TryGetValue(JustSayingConstants.AttributeEncryptionKeyId, out var encryptionKeyId))
         {
-            return null;
+            return new ServerSideEncryption
+            {
+                KmsMasterKeyId = encryptionKeyId,
+                KmsDataKeyReusePeriod = queueAttributes[JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId].FromSecondsString()
+            };
         }
 
-        return new ServerSideEncryption
-        {
-            KmsMasterKeyId = encryptionKeyId,
-            KmsDataKeyReusePeriod = queueAttributes[JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId].FromSecondsString()
-        };
+        return null;
+
     }
 
     public virtual InterrogationResult Interrogate()

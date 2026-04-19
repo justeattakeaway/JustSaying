@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.Fluent.Subscribing.SystemTextJson;
 
-public class WhenHandlingAMessageWithStringAttributes(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenHandlingAMessageWithStringAttributes : IntegrationTestBase
 {
     public class SimpleMessageWithStringAttributesHandler(IMessageContextAccessor contextAccessor) : IHandlerAsync<SimpleMessage>
     {
@@ -22,7 +22,7 @@ public class WhenHandlingAMessageWithStringAttributes(ITestOutputHelper outputHe
         public List<(MessageContext context, SimpleMessage message)> HandledMessages { get; } = new List<(MessageContext, SimpleMessage)>();
     }
 
-    [AwsFact]
+    [Test]
     public async Task Then_The_Attributes_Are_Returned()
     {
         OutputHelper.WriteLine($"Running {nameof(Then_The_Attributes_Are_Returned)} test");
@@ -33,7 +33,6 @@ public class WhenHandlingAMessageWithStringAttributes(ITestOutputHelper outputHe
         var services = GivenJustSaying()
             .ConfigureJustSaying((builder) => builder
                 .WithLoopbackTopic<SimpleMessage>(UniqueName))
-            .AddSingleton<IMessageSerializationFactory, SystemTextJsonSerializationFactory>()
             .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 
         await WhenAsync(

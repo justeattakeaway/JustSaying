@@ -1,0 +1,13 @@
+coverage:
+  status:
+    project:
+      default:
+        threshold: 1%
+    patch:
+      default:
+        threshold: 1%
+
+ignore:
+  - "samples/**"
+  - "docs/**"
+  - "**/*.md"

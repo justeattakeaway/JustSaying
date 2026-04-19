@@ -23,12 +23,14 @@ $libraryProjects = @(
     (Join-Path $solutionPath "src" "JustSaying.Models" "JustSaying.Models.csproj"),
     (Join-Path $solutionPath "src" "JustSaying.Extensions.Aws" "JustSaying.Extensions.Aws.csproj"),
     (Join-Path $solutionPath "src" "JustSaying.Extensions.DependencyInjection.Microsoft" "JustSaying.Extensions.DependencyInjection.Microsoft.csproj"),
-    (Join-Path $solutionPath "src" "JustSaying.Extensions.DependencyInjection.StructureMap" "JustSaying.Extensions.DependencyInjection.StructureMap.csproj")
+    (Join-Path $solutionPath "src" "JustSaying.Extensions.DependencyInjection.StructureMap" "JustSaying.Extensions.DependencyInjection.StructureMap.csproj"),
+    (Join-Path $solutionPath "src" "JustSaying.Extensions.OpenTelemetry" "JustSaying.Extensions.OpenTelemetry.csproj")
 )
 
 $testProjects = @(
     (Join-Path $solutionPath "tests" "JustSaying.UnitTests" "JustSaying.UnitTests.csproj"),
-    (Join-Path $solutionPath "tests" "JustSaying.Extensions.DependencyInjection.StructureMap.Tests" "JustSaying.Extensions.DependencyInjection.StructureMap.Tests.csproj")
+    (Join-Path $solutionPath "tests" "JustSaying.Extensions.DependencyInjection.StructureMap.Tests" "JustSaying.Extensions.DependencyInjection.StructureMap.Tests.csproj"),
+    (Join-Path $solutionPath "tests" "JustSaying.Extensions.OpenTelemetry.Tests" "JustSaying.Extensions.OpenTelemetry.Tests.csproj")
 )
 
 if ($EnableIntegrationTests -eq $true) {
@@ -93,7 +95,7 @@ if (($installDotNetSdk -eq $true) -And ($null -eq $env:TF_BUILD)) {
 function DotNetPack {
     param([string]$Project)
 
-    & $dotnet pack $Project
+    & $dotnet pack $Project --no-build
 
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet pack failed with exit code $LASTEXITCODE"
@@ -105,30 +107,54 @@ function DotNetTest {
 
     $additionalArgs = @()
 
-    if (![string]::IsNullOrEmpty($env:GITHUB_SHA)) {
-        $additionalArgs += "--logger"
-        $additionalArgs += "GitHubActions;report-warnings=false"
+    # Generate test results for codecov
+    $testResultsDir = Join-Path $solutionPath "test-results"
+    if (!(Test-Path $testResultsDir)) {
+        New-Item -ItemType Directory -Path $testResultsDir -Force | Out-Null
     }
 
-    & $dotnet test $Project --configuration "Release" $additionalArgs
+    $projectName = [System.IO.Path]::GetFileNameWithoutExtension($Project)
+    $projectResultsDir = Join-Path $testResultsDir $projectName
+    $additionalArgs += "--report-trx"
+    $additionalArgs += "--report-trx-filename"
+    $additionalArgs += "${projectName}.trx"
+    $additionalArgs += "--results-directory"
+    $additionalArgs += $projectResultsDir
 
-    if ($LASTEXITCODE -ne 0) {
-        throw "dotnet test failed with exit code $LASTEXITCODE"
+    # Enable TUnit's built-in JUnit reporter for Codecov Test Analytics
+    $env:TUNIT_ENABLE_JUNIT_REPORTER = "true"
+    $env:JUNIT_XML_OUTPUT_PATH = (Join-Path $projectResultsDir "${projectName}-junit.xml")
+
+    $additionalArgs += "--coverage"
+    $additionalArgs += "--coverage-output-format"
+    $additionalArgs += "cobertura"
+    $additionalArgs += "--coverage-output"
+    $additionalArgs += "coverage.cobertura.xml"
+    $additionalArgs += "--coverage-settings"
+    $additionalArgs += (Join-Path $solutionPath "codecoverage.runsettings")
+
+    try {
+        & $dotnet test --project $Project --configuration "Release" --no-build $additionalArgs
+
+        if ($LASTEXITCODE -ne 0) {
+            throw "dotnet test failed with exit code $LASTEXITCODE"
+        }
     }
+    finally {
+        $env:JUNIT_XML_OUTPUT_PATH = $null
+    }
+}
+
+Write-Host "Building solution..." -ForegroundColor Green
+& $dotnet build --configuration "Release"
+if ($LASTEXITCODE -ne 0) {
+    throw "dotnet build failed with exit code $LASTEXITCODE"
 }
 
 Write-Host "Creating packages..." -ForegroundColor Green
 
 ForEach ($libraryProject in $libraryProjects) {
     DotNetPack $libraryProject
-}
-
-if (($null -ne $env:CI) -And ($EnableIntegrationTests -eq $true)) {
-    $LocalStackImage = "localstack/localstack:3.0.2"
-    $LocalStackPort = "4566"
-    & docker pull --quiet $LocalStackImage
-    & docker run --detach --name localstack --publish "${LocalStackPort}:${LocalStackPort}" $LocalStackImage
-    $env:AWS_SERVICE_URL = "http://localhost:$LocalStackPort"
 }
 
 if (-Not $SkipTests) {

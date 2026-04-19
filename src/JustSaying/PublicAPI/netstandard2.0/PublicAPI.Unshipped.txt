@@ -1,7 +1,4 @@
-JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer<T>
-JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer<T>.Deserialize(string message, System.Type type) -> JustSaying.Models.Message
-JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer<T>.GetMessageAttributes(string message) -> JustSaying.Messaging.MessageHandling.MessageAttributes
-JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer<T>.GetMessageSubject(string sqsMessage) -> string
-JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer<T>.Serialize(JustSaying.Models.Message message, bool serializeForSnsPublishing, string subject) -> string
-JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer<T>.SystemTextJsonSerializer() -> void
-JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer<T>.SystemTextJsonSerializer(System.Text.Json.JsonSerializerOptions options) -> void
+JustSaying.AwsTools.MessageHandling.PublishException.PublishException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+JustSaying.AwsTools.QueueCreation.ConfigurationErrorsException.ConfigurationErrorsException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+JustSaying.HandlerNotRegisteredWithContainerException.HandlerNotRegisteredWithContainerException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+JustSaying.Messaging.MessageSerialization.MessageFormatNotSupportedException.MessageFormatNotSupportedException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void

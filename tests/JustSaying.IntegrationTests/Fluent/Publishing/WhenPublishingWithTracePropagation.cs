@@ -1,0 +1,88 @@
+using System.Collections.Concurrent;
+using System.Diagnostics;
+using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.Monitoring;
+using JustSaying.TestingFramework;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace JustSaying.IntegrationTests.Fluent.Publishing;
+
+public class WhenPublishingWithTracePropagation : IntegrationTestBase
+{
+    [Test]
+    public async Task Then_Trace_Context_Is_Propagated_With_Link()
+    {
+        var handler = new InspectableHandler<SimpleMessage>();
+        var activities = new ConcurrentBag<Activity>();
+
+        using var activityListener = CreateListener(activities);
+
+        var services = GivenJustSaying()
+            .AddSingleton<IHandlerAsync<SimpleMessage>>(handler)
+            .ConfigureJustSaying(builder =>
+                builder.WithLoopbackTopic<SimpleMessage>(UniqueName));
+
+        await WhenAsync(services, async (publisher, listener, cancellationToken) =>
+        {
+            await listener.StartAsync(cancellationToken);
+            await publisher.StartAsync(cancellationToken);
+
+            await publisher.PublishAsync(new SimpleMessage { Content = "trace-test" }, cancellationToken);
+
+            await Patiently.AssertThatAsync(OutputHelper,
+                () => handler.ReceivedMessages.Count.ShouldBe(1));
+
+            // Wait for both activities to be captured (consumer activity may still be completing)
+            await Patiently.AssertThatAsync(OutputHelper,
+                () => activities.Any(a => a.Kind == ActivityKind.Producer)
+                      && activities.Any(a => a.Kind == ActivityKind.Consumer));
+        });
+
+        // Find the matched producer/consumer pair: the consumer links back to the producer.
+        // Match by SpanId (unique per activity) rather than TraceId, because an ambient
+        // parent activity from the test framework can cause all activities to share a TraceId.
+        var (producerActivity, consumerActivity) = FindActivityPair(activities,
+            (producer, consumer) => consumer.Links.Any(l => l.Context.SpanId == producer.SpanId));
+
+        producerActivity.Kind.ShouldBe(ActivityKind.Producer);
+        consumerActivity.Kind.ShouldBe(ActivityKind.Consumer);
+
+        // The consumer should link back to the producer's span
+        var link = consumerActivity.Links.ShouldHaveSingleItem();
+        link.Context.TraceId.ShouldBe(producerActivity.TraceId);
+        link.Context.SpanId.ShouldBe(producerActivity.SpanId);
+    }
+
+    private static (Activity Producer, Activity Consumer) FindActivityPair(
+        ConcurrentBag<Activity> activities,
+        Func<Activity, Activity, bool> matchPredicate)
+    {
+        var producers = activities.Where(a => a.Kind == ActivityKind.Producer);
+        foreach (var producer in producers)
+        {
+            var consumer = activities.FirstOrDefault(a =>
+                a.Kind == ActivityKind.Consumer
+                && matchPredicate(producer, a));
+            if (consumer != null)
+            {
+                return (producer, consumer);
+            }
+        }
+
+        throw new InvalidOperationException(
+            "No matching producer/consumer activity pair found. " +
+            $"Activities captured: {string.Join(", ", activities.Select(a => $"{a.OperationName} ({a.Kind}, {a.TraceId})"))}");
+    }
+
+    private static ActivityListener CreateListener(ConcurrentBag<Activity> activities)
+    {
+        var listener = new ActivityListener
+        {
+            ShouldListenTo = source => source.Name == JustSayingDiagnostics.ActivitySourceName,
+            Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllDataAndRecorded,
+            ActivityStarted = activity => activities.Add(activity)
+        };
+        ActivitySource.AddActivityListener(listener);
+        return listener;
+    }
+}

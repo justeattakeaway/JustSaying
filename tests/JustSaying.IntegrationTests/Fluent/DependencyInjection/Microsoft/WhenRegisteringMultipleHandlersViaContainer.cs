@@ -5,9 +5,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.DependencyInjection.Microsoft;
 
-public class WhenRegisteringMultipleHandlersViaContainer(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenRegisteringMultipleHandlersViaContainer : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public void Then_An_Exception_Is_Thrown()
     {
         // Arrange
@@ -21,7 +21,7 @@ public class WhenRegisteringMultipleHandlersViaContainer(ITestOutputHelper outpu
             .BuildServiceProvider();
 
         // Act and Assert
-        var exception = Assert.Throws<NotSupportedException>(() => serviceProvider.GetService<IMessagingBus>());
+        var exception = Should.Throw<NotSupportedException>(() => serviceProvider.GetService<IMessagingBus>());
         exception.Message.ShouldBe("2 handlers for message type JustSaying.IntegrationTests.TestHandlers.OrderPlaced are registered. Only one handler is supported per message type.");
     }
 }

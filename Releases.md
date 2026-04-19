@@ -1,3 +1,5 @@
+# Releases
+
 ## About Versioning
 
 JustSaying adopts [SemVer 2.0](https://semver.org/spec/v2.0.0.html), and uses [MinVer](https://github.com/adamralph/minver) to achieve this. [See here](https://github.com/adamralph/minver#how-it-works) for more information on how it works.

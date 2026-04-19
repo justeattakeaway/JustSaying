@@ -5,9 +5,9 @@ using NSubstitute;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenAMessageIsPublishedToAQueueWithSystemTextJson(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenAMessageIsPublishedToAQueueWithSystemTextJson : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task Then_The_Message_Is_Handled()
     {
         // Arrange
@@ -17,7 +17,6 @@ public class WhenAMessageIsPublishedToAQueueWithSystemTextJson(ITestOutputHelper
         var services = GivenJustSaying()
             .ConfigureJustSaying(
                 (builder) => builder.WithLoopbackQueue<SimpleMessage>(UniqueName))
-            .AddSingleton<IMessageSerializationFactory, SystemTextJsonSerializationFactory>()
             .AddSingleton(handler);
 
         string content = Guid.NewGuid().ToString();

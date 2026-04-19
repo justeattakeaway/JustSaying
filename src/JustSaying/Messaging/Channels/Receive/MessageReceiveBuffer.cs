@@ -1,8 +1,11 @@
+using System.Diagnostics;
 using System.Threading.Channels;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.Channels.Context;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Middleware.Receive;
@@ -37,7 +40,7 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
         int bufferSize,
         TimeSpan readTimeout,
         TimeSpan sqsWaitTime,
-        ISqsQueue sqsQueue,
+        SqsSource sqsSource,
         MiddlewareBase<ReceiveMessagesContext, IList<Message>> sqsMiddleware,
         IMessageReceivePauseSignal messageReceivePauseSignal,
         IMessageMonitor monitor,
@@ -47,8 +50,8 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
         _bufferSize = bufferSize;
         _readTimeout = readTimeout;
         _sqsWaitTime = sqsWaitTime;
-        if (sqsQueue == null) throw new ArgumentNullException(nameof(sqsQueue));
-        _sqsQueueReader = new SqsQueueReader(sqsQueue);
+        if (sqsSource == null) throw new ArgumentNullException(nameof(sqsSource));
+        _sqsQueueReader = new SqsQueueReader(sqsSource.SqsQueue, sqsSource.MessageConverter);
         _sqsMiddleware = sqsMiddleware ?? throw new ArgumentNullException(nameof(sqsMiddleware));
         _messageReceivePauseSignal = messageReceivePauseSignal;
         _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
@@ -92,19 +95,31 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
                 }
 
                 IList<Message> messages;
+                var receiveWatch = Stopwatch.StartNew();
                 using (_monitor.MeasureReceive(_sqsQueueReader.QueueName, _sqsQueueReader.RegionSystemName))
                 {
                     messages = await GetMessagesAsync(_prefetch, stoppingToken).ConfigureAwait(false);
+                }
 
-                    if (messages == null)
-                    {
-                        continue;
-                    }
+                receiveWatch.Stop();
+                JustSayingDiagnostics.ClientOperationDuration.Record(
+                    receiveWatch.Elapsed.TotalSeconds,
+                    new KeyValuePair<string, object>("messaging.operation.type", "receive"),
+                    new KeyValuePair<string, object>("messaging.destination.name", _sqsQueueReader.QueueName));
+                if (messages is not null)
+                {
+                    JustSayingDiagnostics.MessagesReceived.Add(messages.Count,
+                        new KeyValuePair<string, object>("messaging.destination.name", _sqsQueueReader.QueueName));
                 }
 
                 if (_logger.IsEnabled(LogLevel.Trace))
                 {
-                    _logger.LogTrace("Downloaded {MessageCount} messages from queue {QueueName}.", messages.Count, _sqsQueueReader.QueueName);
+                    _logger.LogTrace("Downloaded {MessageCount} messages from queue {QueueName}.", messages?.Count ?? 0, _sqsQueueReader.QueueName);
+                }
+
+                if (messages is null)
+                {
+                    continue;
                 }
 
                 foreach (Message message in messages)
@@ -141,8 +156,6 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
                 QueueName = _sqsQueueReader.QueueName,
                 RegionName = _sqsQueueReader.RegionSystemName,
             };
-
-            _requestMessageAttributeNames.Add("content");
 
             messages = await _sqsMiddleware.RunAsync(context,
                     async ct =>

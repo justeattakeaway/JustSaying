@@ -2,6 +2,10 @@ using Amazon;
 using Amazon.SQS;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Messaging;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
@@ -32,6 +36,7 @@ public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
 
     private Action<HandlerMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
+    private IMessageBodySerializer MessageBodySerializer { get; set; }
 
     /// <summary>
     /// Configures the SQS read configuration.
@@ -53,6 +58,12 @@ public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
     public ISubscriptionBuilder<T> WithMiddlewareConfiguration(Action<HandlerMiddlewareBuilder> middlewareConfiguration)
     {
         MiddlewareConfiguration = middlewareConfiguration;
+        return this;
+    }
+
+    public ISubscriptionBuilder<T> WithMessageBodySerializer(IMessageBodySerializer messageBodySerializer)
+    {
+        MessageBodySerializer = messageBodySerializer;
         return this;
     }
 
@@ -80,7 +91,12 @@ public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         attachedQueueConfig.SubscriptionGroupName ??= queue.QueueName;
         attachedQueueConfig.Validate();
 
-        bus.AddQueue(attachedQueueConfig.SubscriptionGroupName, queue);
+        var serializer = MessageBodySerializer ?? bus.MessageBodySerializerFactory.GetSerializer<T>();
+        var compressionRegistry = bus.CompressionRegistry;
+        var messageConverter = new InboundMessageConverter(serializer, compressionRegistry, attachedQueueConfig.RawMessageDelivery);
+        var sqsSource = new SqsSource { SqsQueue = queue, MessageConverter = messageConverter };
+
+        bus.AddQueue(attachedQueueConfig.SubscriptionGroupName, sqsSource);
 
         logger.LogInformation(
             "Created SQS queue subscription for '{MessageType}' on '{QueueName}'",

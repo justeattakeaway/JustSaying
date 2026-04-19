@@ -51,7 +51,7 @@ public class DefaultNamingConventions : ITopicNamingConvention, IQueueNamingConv
             return friendlyName;
         }
 
-        if (type.GetTypeInfo().IsGenericType)
+        if (type.IsGenericType)
         {
             var indexOfBacktick = friendlyName.IndexOf('`');
 

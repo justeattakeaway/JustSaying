@@ -57,7 +57,7 @@ public sealed class FakeAmazonSqs(Func<IEnumerable<ReceiveMessageResponse>> getM
     public Task<ChangeMessageVisibilityResponse> ChangeMessageVisibilityAsync(
         string queueUrl,
         string receiptHandle,
-        int visibilityTimeout,
+        int? visibilityTimeout,
         CancellationToken cancellationToken = default)
     {
         return Task.FromResult(new ChangeMessageVisibilityResponse());
@@ -237,7 +237,7 @@ public sealed class FakeAmazonSqs(Func<IEnumerable<ReceiveMessageResponse>> getM
         ReceiveMessageRequest request,
         CancellationToken cancellationToken = default)
     {
-        await Task.Delay(50, cancellationToken);
+        await Task.Yield();
 
         ReceiveMessageRequests.Add(request);
 

@@ -8,9 +8,9 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools;
 
-public class WhenCreatingAQueueWithNoErrorQueue(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenCreatingAQueueWithNoErrorQueue : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task Then_The_Error_Queue_Is_Not_Created()
     {
         // Arrange

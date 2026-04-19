@@ -27,12 +27,12 @@ jobs:
     steps:
 
     - name: Checkout code
-      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
     - name: Add actionlint problem matcher
       run: echo "::add-matcher::.github/actionlint-matcher.json"
 
     - name: Lint workflows
-      uses: docker://rhysd/actionlint@sha256:2eb91a78b5a19140be099c7b4262d298c2567f2a9f27e10ed2a4323c5bcface8 # v1.6.26
+      uses: docker://rhysd/actionlint@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
       with:
         args: -color

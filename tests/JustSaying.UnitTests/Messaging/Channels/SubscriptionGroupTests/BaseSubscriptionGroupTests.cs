@@ -1,8 +1,9 @@
 using Amazon.SQS.Model;
-using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
+using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware;
 using JustSaying.TestingFramework;
@@ -14,33 +15,30 @@ using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<J
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
-public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
+public abstract class BaseSubscriptionGroupTests
 {
-    protected IList<ISqsQueue> Queues;
+    protected IList<SqsSource> Queues;
     protected MiddlewareMap MiddlewareMap;
     protected TrackingLoggingMonitor Monitor;
-    protected FakeSerializationRegister SerializationRegister;
     protected int ConcurrencyLimit = 8;
-    protected ITestOutputHelper OutputHelper { get; }
+    protected TextWriter OutputHelper => TestContext.Current!.OutputWriter;
 
     protected HandleMessageMiddleware Middleware;
     protected InspectableHandler<SimpleMessage> Handler;
     protected ISubscriptionGroup SystemUnderTest { get; private set; }
-    protected ILoggerFactory LoggerFactory { get; }
-    protected ILogger Logger { get; }
+    protected ILoggerFactory LoggerFactory { get; private set; }
+    protected ILogger Logger { get; private set; }
+    protected CancellationTokenSource CancellationTokenSource { get; } = new();
 
-    private readonly IMessageReceivePauseSignal _messageReceivePauseSignal;
+    private IMessageReceivePauseSignal _messageReceivePauseSignal;
 
-    public BaseSubscriptionGroupTests(ITestOutputHelper testOutputHelper)
+    [Before(Test)]
+    public async Task SetUp()
     {
         _messageReceivePauseSignal = new MessageReceivePauseSignal();
-        OutputHelper = testOutputHelper;
-        LoggerFactory = testOutputHelper.ToLoggerFactory();
+        LoggerFactory = OutputHelper.ToLoggerFactory();
         Logger = LoggerFactory.CreateLogger(GetType());
-    }
 
-    public async Task InitializeAsync()
-    {
         GivenInternal();
 
         SystemUnderTest = CreateSystemUnderTest();
@@ -48,14 +46,24 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
         await WhenAsync().ConfigureAwait(false);
     }
 
+    [After(Test)]
+    public async Task TearDown()
+    {
+        LoggerFactory?.Dispose();
+    }
+
     private void GivenInternal()
     {
-        Queues = new List<ISqsQueue>();
+        Queues = [];
         Handler = new InspectableHandler<SimpleMessage>();
         Monitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
-        SerializationRegister = new FakeSerializationRegister();
         MiddlewareMap = new MiddlewareMap();
-        CompletionMiddleware = new AwaitableMiddleware(OutputHelper);
+        CompletionMiddleware = new AwaitableMiddleware(OutputHelper, MessagesToWaitFor);
+        SetupMessage = new SimpleMessage
+        {
+            RaisingComponent = "Component",
+            Id = Guid.NewGuid()
+        };
 
         var testResolver = new InMemoryServiceResolver(OutputHelper, Monitor,
             sc => sc.AddSingleton<IHandlerAsync<SimpleMessage>>(Handler));
@@ -68,6 +76,8 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
         Given();
     }
 
+    public SimpleMessage SetupMessage { get; private set; }
+    public int MessagesToWaitFor { get; protected set; } = 1;
     public AwaitableMiddleware CompletionMiddleware { get; set; }
 
     protected abstract void Given();
@@ -75,34 +85,34 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
     // Default implementation
     protected virtual async Task WhenAsync()
     {
-        foreach (ISqsQueue queue in Queues)
+        foreach (SqsSource queue in Queues)
         {
-            MiddlewareMap.Add<SimpleMessage>(queue.QueueName, Middleware);
+            MiddlewareMap.Add<SimpleMessage>(queue.SqsQueue.QueueName, Middleware);
         }
 
         var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-        var completion = SystemUnderTest.RunAsync(cts.Token);
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token, CancellationTokenSource.Token);
+        var completion = SystemUnderTest.RunAsync(linkedCts.Token);
 
         await Patiently.AssertThatAsync(OutputHelper,
-            () => Until() || cts.IsCancellationRequested);
+            async () => cts.IsCancellationRequested || await UntilAsync());
 
-        cts.Cancel();
+        await cts.CancelAsync();
         await completion.HandleCancellation();
     }
 
-    protected virtual bool Until()
+    protected virtual async Task<bool> UntilAsync()
     {
         OutputHelper.WriteLine("Checking if middleware chain has completed");
-        return CompletionMiddleware.Complete?.IsCompleted ?? false;
+        await (CompletionMiddleware.Complete ?? Task.CompletedTask).WaitAsync(TimeSpan.FromSeconds(5)).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+        return CompletionMiddleware.Complete is not null;
     }
 
     private ISubscriptionGroup CreateSystemUnderTest()
     {
-        Logger.LogInformation("Creating MessageDispatcher with serialization register type {Type}",
-            SerializationRegister.GetType().FullName);
+        Logger.LogInformation("Creating MessageDispatcher");
 
         var dispatcher = new MessageDispatcher(
-            SerializationRegister,
             Monitor,
             MiddlewareMap,
             LoggerFactory);
@@ -125,35 +135,33 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
     {
         return new Dictionary<string, SubscriptionGroupConfigBuilder>
         {
-            { "test", new SubscriptionGroupConfigBuilder("test").AddQueues(Queues) },
+            ["test"] = new SubscriptionGroupConfigBuilder("test").AddQueues(Queues)
         };
     }
 
-    protected static FakeSqsQueue CreateSuccessfulTestQueue(string queueName, params Message[] messages)
+    protected SqsSource CreateSuccessfulTestQueue(string queueName, params Message[] messages)
     {
         return CreateSuccessfulTestQueue(queueName, messages.AsEnumerable());
     }
 
-    protected static FakeSqsQueue CreateSuccessfulTestQueue(string queueName, IEnumerable<Message> messages)
+    protected SqsSource CreateSuccessfulTestQueue(string queueName, IEnumerable<Message> messages)
     {
         return CreateSuccessfulTestQueue(queueName, ct => Task.FromResult(messages));
     }
 
-    protected static FakeSqsQueue CreateSuccessfulTestQueue(
+    protected SqsSource CreateSuccessfulTestQueue(
         string queueName,
         Func<CancellationToken, Task<IEnumerable<Message>>> messageProducer)
     {
-        var sqsQueue = new FakeSqsQueue( messageProducer,
-            queueName);
+        var sqsQueue = new FakeSqsQueue(messageProducer, queueName);
 
-        return sqsQueue;
-    }
-
-    public Task DisposeAsync()
-    {
-        LoggerFactory?.Dispose();
-
-        return Task.CompletedTask;
+        return new SqsSource
+        {
+            SqsQueue = sqsQueue,
+            MessageConverter = new InboundMessageConverter(new FakeBodyDeserializer(
+                    SetupMessage),
+                new MessageCompressionRegistry(), false)
+        };
     }
 
     protected class TestMessage : Message

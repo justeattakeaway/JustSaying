@@ -3,7 +3,7 @@ using JustSaying.AwsTools.MessageHandling;
 namespace JustSaying.Messaging.Channels.SubscriptionGroups;
 
 /// <summary>
-/// The settings used by <see cref="SubscriptionGroupFactory"/> to be create
+/// The settings used by <see cref="SubscriptionGroupFactory"/> to create
 /// a <see cref="ISubscriptionGroup"/>.
 /// </summary>
 public sealed class SubscriptionGroupSettings : ISubscriptionGroupSettings
@@ -11,20 +11,22 @@ public sealed class SubscriptionGroupSettings : ISubscriptionGroupSettings
     internal SubscriptionGroupSettings(
         string name,
         int concurrencyLimit,
+        ConcurrencyLimitType concurrencyLimitType,
         int bufferSize,
         TimeSpan receiveBufferReadTimeout,
         TimeSpan receiveMessagesWaitTime,
         int multiplexerCapacity,
         int prefetch,
-        IReadOnlyCollection<ISqsQueue> queues)
+        IReadOnlyCollection<SqsSource> queueSources)
     {
         ConcurrencyLimit = concurrencyLimit;
+        ConcurrencyLimitType = concurrencyLimitType;
         BufferSize = bufferSize;
         ReceiveBufferReadTimeout = receiveBufferReadTimeout;
         ReceiveMessagesWaitTime = receiveMessagesWaitTime;
         MultiplexerCapacity = multiplexerCapacity;
         Prefetch = prefetch;
-        Queues = queues;
+        QueueSources = queueSources;
         Name = name;
     }
 
@@ -60,12 +62,17 @@ public sealed class SubscriptionGroupSettings : ISubscriptionGroupSettings
     public int Prefetch { get; }
 
     /// <summary>
+    /// Gets the type of concurrency limiting applied to message processing.
+    /// </summary>
+    public ConcurrencyLimitType ConcurrencyLimitType { get; }
+
+    /// <summary>
     /// The name of the created <see cref="ISubscriptionGroup"/>.
     /// </summary>
     public string Name { get; }
 
     /// <summary>
-    /// A collection of <see cref="ISqsQueue"/> to read messages from.
+    /// A collection of <see cref="SqsSource"/> to read messages from.
     /// </summary>
-    public IReadOnlyCollection<ISqsQueue> Queues { get; }
+    public IReadOnlyCollection<SqsSource> QueueSources { get; }
 }

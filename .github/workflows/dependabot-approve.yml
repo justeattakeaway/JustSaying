@@ -13,23 +13,24 @@ jobs:
     steps:
 
       - name: Get dependabot metadata
-        uses: dependabot/fetch-metadata@c9c4182bf1b97f5224aee3906fd373f6b61b4526 # v1.6.0
+        uses: dependabot/fetch-metadata@ffa630c65fa7e0ecfa0625b5ceda64399aea1b36 # v3.0.0
         id: dependabot-metadata
 
       - name: Generate GitHub application token
         id: generate-application-token
-        uses: peter-murray/workflow-application-token-action@dc0413987a085fa17d19df9e47d4677cf81ffef3 # v3.0.0
+        uses: peter-murray/workflow-application-token-action@d17e3a9a36850ea89f35db16c1067dd2b68ee343 # v4.0.1
         with:
           application_id: ${{ secrets.REVIEWER_APPLICATION_ID }}
           application_private_key: ${{ secrets.REVIEWER_APPLICATION_PRIVATE_KEY }}
           permissions: "contents:write, pull_requests:write"
 
       - name: Checkout code
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Approve pull request and enable auto-merge
         shell: bash
         if: |
+          contains(steps.dependabot-metadata.outputs.dependency-names, 'actions/attest-build-provenance') ||
           contains(steps.dependabot-metadata.outputs.dependency-names, 'actions/cache') ||
           contains(steps.dependabot-metadata.outputs.dependency-names, 'actions/checkout') ||
           contains(steps.dependabot-metadata.outputs.dependency-names, 'actions/dependency-review-action') ||

@@ -1,8 +1,11 @@
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
+using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
@@ -13,20 +16,20 @@ namespace JustSaying.UnitTests.Messaging.Channels;
 
 public class ErrorHandlingTests
 {
-    private IMessageReceivePauseSignal MessageReceivePauseSignal { get; }
-    private ILoggerFactory LoggerFactory { get; }
-    private IMessageMonitor MessageMonitor { get; }
-    private readonly ITestOutputHelper _outputHelper;
+    private IMessageReceivePauseSignal MessageReceivePauseSignal { get; set; }
+    private ILoggerFactory LoggerFactory { get; set; }
+    private IMessageMonitor MessageMonitor { get; set; }
+    private TextWriter OutputHelper => TestContext.Current!.OutputWriter;
 
-    public ErrorHandlingTests(ITestOutputHelper testOutputHelper)
+    [Before(Test)]
+    public void Setup()
     {
-        _outputHelper = testOutputHelper;
         MessageReceivePauseSignal = new MessageReceivePauseSignal();
-        LoggerFactory = testOutputHelper.ToLoggerFactory();
+        LoggerFactory = OutputHelper.ToLoggerFactory();
         MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
     }
 
-    [Fact]
+    [Test]
     public async Task Sqs_Client_Throwing_Exceptions_Continues_To_Request_Messages()
     {
         // Arrange
@@ -40,8 +43,6 @@ public class ErrorHandlingTests
         }
         var queue = new FakeSqsQueue(ct => Task.FromResult(GetMessages()));
 
-
-        var queues = new List<ISqsQueue> { queue };
         IMessageDispatcher dispatcher =
             new FakeDispatcher(() =>
             {
@@ -52,7 +53,13 @@ public class ErrorHandlingTests
             .WithDefaultConcurrencyLimit(8);
         var settings = new Dictionary<string, SubscriptionGroupConfigBuilder>
         {
-            { "test", new SubscriptionGroupConfigBuilder("test").AddQueues(queues) },
+            {
+                "test", new SubscriptionGroupConfigBuilder("test").AddQueue(new SqsSource
+                {
+                    SqsQueue = queue,
+                    MessageConverter = new InboundMessageConverter(SimpleMessage.Serializer, new MessageCompressionRegistry(), false)
+                })
+            }
         };
 
         var subscriptionGroupFactory = new SubscriptionGroupFactory(
@@ -68,7 +75,7 @@ public class ErrorHandlingTests
         // Act
         var runTask = collection.RunAsync(cts.Token);
 
-        await Patiently.AssertThatAsync(_outputHelper,
+        await Patiently.AssertThatAsync(OutputHelper,
             () =>
             {
                 messagesRequested.ShouldBeGreaterThan(1, $"but was {messagesRequested}");
@@ -79,7 +86,7 @@ public class ErrorHandlingTests
         await runTask.HandleCancellation();
     }
 
-    [Fact]
+    [Test]
     public async Task Message_Processing_Throwing_Exceptions_Continues_To_Request_Messages()
     {
         // Arrange
@@ -93,7 +100,6 @@ public class ErrorHandlingTests
         }
         var queue = new FakeSqsQueue(ct => Task.FromResult(GetMessages()));
 
-        var queues = new List<ISqsQueue> { queue };
         IMessageDispatcher dispatcher =
             new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
 
@@ -101,7 +107,11 @@ public class ErrorHandlingTests
             .WithDefaultConcurrencyLimit(1);
         var settings = new Dictionary<string, SubscriptionGroupConfigBuilder>
         {
-            { "test", new SubscriptionGroupConfigBuilder("test").AddQueues(queues) },
+            { "test", new SubscriptionGroupConfigBuilder("test").AddQueue(new SqsSource
+            {
+                SqsQueue = queue,
+                MessageConverter = new InboundMessageConverter(SimpleMessage.Serializer, new MessageCompressionRegistry(), false)
+            }) },
         };
 
         var subscriptionGroupFactory = new SubscriptionGroupFactory(
@@ -117,7 +127,7 @@ public class ErrorHandlingTests
         // Act
         var runTask = collection.RunAsync(cts.Token);
 
-        await Patiently.AssertThatAsync(_outputHelper,
+        await Patiently.AssertThatAsync(OutputHelper,
             () =>
             {
                 messagesRequested.ShouldBeGreaterThan(1);

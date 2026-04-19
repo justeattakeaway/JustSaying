@@ -7,14 +7,14 @@ namespace JustSaying.UnitTests.Messaging.Middleware;
 
 public class MiddlewareMapTests
 {
-    [Fact]
+    [Test]
     public void EmptyMapDoesNotContain()
     {
         var map = CreateMiddlewareMap();
         map.Contains("queue", typeof(SimpleMessage)).ShouldBeFalse();
     }
 
-    [Fact]
+    [Test]
     public void EmptyMapReturnsNullMiddleware()
     {
         var map = CreateMiddlewareMap();
@@ -24,7 +24,7 @@ public class MiddlewareMapTests
         handler.ShouldBeNull();
     }
 
-    [Fact]
+    [Test]
     public void MiddlewareIsReturnedForMatchingType()
     {
         var map = CreateMiddlewareMap();
@@ -37,7 +37,7 @@ public class MiddlewareMapTests
         handler.ShouldNotBeNull();
     }
 
-    [Fact]
+    [Test]
     public void MiddlewareContainsKeyForMatchingTypeOnly()
     {
         var map = CreateMiddlewareMap();
@@ -48,7 +48,7 @@ public class MiddlewareMapTests
         map.Contains("queue", typeof(AnotherSimpleMessage)).ShouldBeFalse();
     }
 
-    [Fact]
+    [Test]
     public void MiddlewareIsNotReturnedForNonMatchingType()
     {
         var map = CreateMiddlewareMap();
@@ -60,7 +60,7 @@ public class MiddlewareMapTests
         handler.ShouldBeNull();
     }
 
-    [Fact]
+    [Test]
     public void MultipleMiddlewareForATypeAreNotSupported()
     {
         HandleMessageMiddleware fn1 = new DelegateMessageHandlingMiddleware<SimpleMessage>(m => Task.FromResult(true));
@@ -75,7 +75,7 @@ public class MiddlewareMapTests
         map.Get("queue", typeof(SimpleMessage)).ShouldBe(fn2);
     }
 
-    [Fact]
+    [Test]
     public void MultipleMiddlewareForATypeWithOtherHandlersAreNotSupported()
     {
         HandleMessageMiddleware fn1 = new DelegateMessageHandlingMiddleware<SimpleMessage>(m => Task.FromResult(true));
@@ -92,7 +92,7 @@ public class MiddlewareMapTests
         map.Get("queue", typeof(AnotherSimpleMessage)).ShouldBe(fn3);
     }
 
-    [Fact]
+    [Test]
     public void MiddlewareIsNotReturnedForAnotherQueue()
     {
         string queue1 = "queue1";
@@ -107,7 +107,7 @@ public class MiddlewareMapTests
         handler.ShouldBeNull();
     }
 
-    [Fact]
+    [Test]
     public void MiddlewareContainsKeyForMatchingQueueOnly()
     {
         string queue1 = "queue1";
@@ -121,7 +121,7 @@ public class MiddlewareMapTests
         map.Contains(queue2, typeof(AnotherSimpleMessage)).ShouldBeFalse();
     }
 
-    [Fact]
+    [Test]
     public void MiddlewareHandlerIsReturnedForQueue()
     {
         string queue1 = "queue1";
