@@ -1,5 +1,9 @@
 using System.Text.Json;
 using JustSaying.Models;
+#if NET8_0_OR_GREATER
+using System.Runtime.CompilerServices;
+using JustSaying.Extensions;
+#endif
 
 namespace JustSaying.Messaging.MessageSerialization;
 
@@ -33,7 +37,21 @@ public sealed class SystemTextJsonMessageBodySerializer<T> : IMessageBodySeriali
     /// <returns>A JSON string representation of the message.</returns>
     public string Serialize(Message message)
     {
+#if NET8_0_OR_GREATER
+        if (RuntimeFeature.IsDynamicCodeSupported)
+        {
+#pragma warning disable IL3050
+#pragma warning disable IL2026
+            return JsonSerializer.Serialize(message, message.GetType(), _options);
+#pragma warning restore IL2026
+#pragma warning restore IL3050
+        }
+
+        var jsonTypeInfo = _options.GetTypeInfo<T>();
+        return JsonSerializer.Serialize((T)message, jsonTypeInfo);
+#else
         return JsonSerializer.Serialize(message, message.GetType(), _options);
+#endif
     }
 
     /// <summary>
@@ -43,6 +61,20 @@ public sealed class SystemTextJsonMessageBodySerializer<T> : IMessageBodySeriali
     /// <returns>A deserialized message of type <typeparamref name="T"/>.</returns>
     public Message Deserialize(string messageBody)
     {
+#if NET8_0_OR_GREATER
+        if (RuntimeFeature.IsDynamicCodeSupported)
+        {
+#pragma warning disable IL3050
+#pragma warning disable IL2026
+            return JsonSerializer.Deserialize<T>(messageBody, _options);
+#pragma warning restore IL2026
+#pragma warning restore IL3050
+        }
+
+        var jsonTypeInfo = _options.GetTypeInfo<T>();
+        return JsonSerializer.Deserialize(messageBody, jsonTypeInfo);
+#else
         return JsonSerializer.Deserialize<T>(messageBody, _options);
+#endif
     }
 }

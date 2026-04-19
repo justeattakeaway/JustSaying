@@ -13,14 +13,14 @@ public sealed partial class JsonSerializerOptionsExtensionsTests
         TypeInfoResolver = TestSerializerContext.Default,
     };
 
-    [Fact]
+    [Test]
     public void GetTypeInfo_ReturnsExpectedValue_WhenOptionsContainTypeInfo()
     {
         var result = _sut.GetTypeInfo<TestContainedClass>();
         result.ShouldBeOfType<JsonTypeInfo<TestContainedClass>>();
     }
 
-    [Fact]
+    [Test]
     public void GetTypeInfo_ThrowsNotSupportedException_WhenOptionsDoNotContainTypeInfo()
     {
         var testAction = () => _sut.GetTypeInfo<TestNotContainedClass>();
