@@ -1,11 +1,17 @@
+using System.Text.Json;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 
-namespace JustSaying.UnitTests.Messaging.Serialization.SystemTextJson_1;
+namespace JustSaying.UnitTests.Messaging.Serialization.SystemTextJson;
 
 public class WhenAskingForANewSerializer : XBehaviourTest<SystemTextJsonSerializationFactory>
 {
-    private IMessageSerializer _result;
+    private IMessageBodySerializer _result;
+
+    protected override SystemTextJsonSerializationFactory CreateSystemUnderTest()
+    {
+        return new SystemTextJsonSerializationFactory(new JsonSerializerOptions());
+    }
 
     protected override void Given()
     {
@@ -16,7 +22,7 @@ public class WhenAskingForANewSerializer : XBehaviourTest<SystemTextJsonSerializ
         _result = SystemUnderTest.GetSerializer<SimpleMessage>();
     }
 
-    [Fact]
+    [Test]
     public void OneIsProvided()
     {
         _result.ShouldNotBeNull();
