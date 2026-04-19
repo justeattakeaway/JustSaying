@@ -3,6 +3,7 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware.Logging;
 using JustSaying.Messaging.Middleware.PostProcessing;
 using JustSaying.Messaging.Monitoring;
+using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -12,14 +13,14 @@ public class InMemoryServiceResolver : IServiceResolver, IHandlerResolver
 {
     private readonly IServiceProvider _provider;
 
-    private static readonly Action<IServiceCollection, ITestOutputHelper, IMessageMonitor> Configure = (sc, outputHelper, monitor) =>
-        sc.AddLogging(l => l.AddXUnit(outputHelper))
+    private static readonly Action<IServiceCollection, TextWriter, IMessageMonitor> Configure = (sc, outputHelper, monitor) =>
+        sc.AddLogging(l => l.AddTextWriter(outputHelper).SetMinimumLevel(LogLevel.Information))
             .AddSingleton(monitor)
             .AddSingleton<LoggingMiddleware>()
             .AddSingleton<SqsPostProcessorMiddleware>()
             .AddSingleton<IMessageContextAccessor>(new MessageContextAccessor());
 
-    public InMemoryServiceResolver(ITestOutputHelper outputHelper, IMessageMonitor monitor, Action<IServiceCollection> configure = null) :
+    public InMemoryServiceResolver(TextWriter outputHelper, IMessageMonitor monitor, Action<IServiceCollection> configure = null) :
         this(sc =>
         {
             Configure(sc, outputHelper, monitor);

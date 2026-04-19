@@ -2,19 +2,14 @@ using JustSaying.TestingFramework;
 
 namespace JustSaying.IntegrationTests;
 
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-public sealed class NotSimulatorFactAttribute : FactAttribute
+/// <summary>
+/// Skips the test when running against a simulator/in-memory bus or when no real AWS credentials are available.
+/// </summary>
+public sealed class NotSimulatorSkipAttribute()
+    : SkipAttribute(TestEnvironment.IsSimulatorConfigured
+        ? "This test is not supported using an AWS simulator."
+        : "This test requires AWS credentials to be configured.")
 {
-    public NotSimulatorFactAttribute()
-        : base()
-    {
-        if (TestEnvironment.IsSimulatorConfigured)
-        {
-            Skip = "This test is not supported using an AWS simulator.";
-        }
-        else if (!TestEnvironment.HasCredentials)
-        {
-            Skip = "This test requires AWS credentials to be configured.";
-        }
-    }
+    public override Task<bool> ShouldSkip(TestRegisteredContext context)
+        => Task.FromResult(TestEnvironment.IsSimulatorConfigured || !TestEnvironment.HasCredentials);
 }

@@ -37,21 +37,21 @@ public class WhenFetchingQueueByName
         _log = Substitute.For<ILoggerFactory>();
     }
 
-    [Fact]
+    [Test]
     public async Task IncorrectQueueNameDoNotMatch()
     {
         var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue-name1", _client, RetryCount, _log);
         (await sqsQueueByName.ExistsAsync(CancellationToken.None)).ShouldBeFalse();
     }
 
-    [Fact]
+    [Test]
     public async Task IncorrectPartialQueueNameDoNotMatch()
     {
         var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue", _client, RetryCount, _log);
         (await sqsQueueByName.ExistsAsync(CancellationToken.None)).ShouldBeFalse();
     }
 
-    [Fact]
+    [Test]
     public async Task CorrectQueueNameShouldMatch()
     {
         var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue-name", _client, RetryCount, _log);

@@ -4,7 +4,7 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.JustSayingBus;
 
-public class WhenAddingAPublisherWithNoTopic(ITestOutputHelper outputHelper) : GivenAServiceBus(outputHelper)
+public class WhenAddingAPublisherWithNoTopic : GivenAServiceBus
 {
     protected override void Given()
     {
@@ -18,7 +18,7 @@ public class WhenAddingAPublisherWithNoTopic(ITestOutputHelper outputHelper) : G
         return Task.CompletedTask;
     }
 
-    [Fact]
+    [Test]
     public void ExceptionThrown()
     {
         ThrownException.ShouldNotBeNull();

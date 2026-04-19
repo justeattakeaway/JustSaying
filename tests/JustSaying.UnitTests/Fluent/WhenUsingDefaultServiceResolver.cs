@@ -11,55 +11,49 @@ public class WhenUsingDefaultServiceResolver
 {
     private readonly DefaultServiceResolver _sut = new();
 
-    [Fact]
+    [Test]
     public void ShouldResolveILoggerFactoryToNullLoggerFactory()
     {
         _sut.ResolveService<ILoggerFactory>().ShouldBeOfType<NullLoggerFactory>();
     }
 
-    [Fact]
+    [Test]
     public void ShouldResolveIAwsClientFactoryProxyToAwsClientFactoryProxy()
     {
         _sut.ResolveService<IAwsClientFactoryProxy>().ShouldBeOfType<AwsClientFactoryProxy>();
     }
 
-    [Fact]
+    [Test]
     public void ShouldResolveIHandlerResolverAsNull()
     {
         _sut.ResolveOptionalService<IHandlerResolver>().ShouldBeNull();
     }
 
-    [Fact]
+    [Test]
     public void ShouldResolveIMessagingConfigToMessagingConfig()
     {
         _sut.ResolveService<IMessagingConfig>().ShouldBeOfType<MessagingConfig>();
     }
 
-    [Fact]
+    [Test]
     public void ShouldResolveIMessageSerializationFactoryToNewtonsoftSerializationFactory()
     {
-        _sut.ResolveService<IMessageSerializationFactory>().ShouldBeOfType<NewtonsoftSerializationFactory>();
+        _sut.ResolveService<IMessageBodySerializationFactory>().ShouldBeOfType<NewtonsoftSerializationFactory>();
     }
 
-    [Fact]
-    public void ShouldResolveIMessageSerializationRegisterToMessageSerializationRegister()
-    {
-        _sut.ResolveService<IMessageSerializationRegister>().ShouldBeOfType<MessageSerializationRegister>();
-    }
-
-    [Fact]
+    [Test]
     public void ShouldResolveIMessageSubjectProviderToNonGenericMessageSubjectProvider()
     {
         _sut.ResolveService<IMessageSubjectProvider>().ShouldBeOfType<NonGenericMessageSubjectProvider>();
     }
 
-    [Fact]
+    [Test]
     public void ShouldResolveITopicNamingConventionToDefaultNamingConvention()
     {
         _sut.ResolveService<ITopicNamingConvention>().ShouldBeOfType<DefaultNamingConventions>();
     }
 
-    [Fact]
+    [Test]
     public void ShouldResolveIQueueNamingConventionToDefaultNamingConvention()
     {
         _sut.ResolveService<IQueueNamingConvention>().ShouldBeOfType<DefaultNamingConventions>();

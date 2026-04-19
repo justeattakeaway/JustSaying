@@ -9,12 +9,12 @@ public class NonGenericMessageSubjectProviderTests
     class Foo { }
 #pragma warning restore CA1812
 
-    [Fact]
+    [Test]
     public void GetSubjectForType_ReturnsTypeName() =>
         new NonGenericMessageSubjectProvider().GetSubjectForType(typeof(Foo))
             .ShouldBe("Foo");
 
-    [Fact]
+    [Test]
     public void GetSubjectForType_IgnoresAnyTypeParameters() =>
         new NonGenericMessageSubjectProvider().GetSubjectForType(typeof(List<Foo>))
             .ShouldBe("List`1");

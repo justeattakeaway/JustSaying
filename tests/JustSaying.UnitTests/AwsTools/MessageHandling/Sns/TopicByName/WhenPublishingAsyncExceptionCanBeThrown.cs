@@ -2,6 +2,7 @@ using Amazon.Runtime;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -12,12 +13,12 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName;
 
 public class WhenPublishingAsyncExceptionCanBeThrown : WhenPublishingTestBase
 {
-    private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
     private const string TopicArn = "topicarn";
 
     private protected override Task<SnsMessagePublisher> CreateSystemUnderTestAsync()
     {
-        var topic = new SnsMessagePublisher(TopicArn, Sns, _serializationRegister, NullLoggerFactory.Instance, Substitute.For<IMessageSubjectProvider>(), (_, _) => false);
+        var messageConverter = CreateConverter();
+        var topic = new SnsMessagePublisher(TopicArn, Sns, messageConverter, NullLoggerFactory.Instance, (_, _) => false, null);
         return Task.FromResult(topic);
     }
 
@@ -33,13 +34,13 @@ public class WhenPublishingAsyncExceptionCanBeThrown : WhenPublishingTestBase
         return Task.CompletedTask;
     }
 
-    [Fact]
+    [Test]
     public async Task ExceptionIsThrown()
     {
         await Should.ThrowAsync<PublishException>(() => SystemUnderTest.PublishAsync(new SimpleMessage()));
     }
 
-    [Fact]
+    [Test]
     public async Task ExceptionContainsContext()
     {
         try

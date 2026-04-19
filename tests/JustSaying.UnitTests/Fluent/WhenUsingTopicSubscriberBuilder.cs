@@ -8,23 +8,23 @@ public class WhenUsingTopicSubscriberBuilder
 {
     private readonly TopicSubscriptionBuilder<Order> _sut = new();
 
-    [Theory]
-    [InlineData("")]
-    [InlineData(null)]
+    [Test]
+    [Arguments("")]
+    [Arguments(null)]
     public void ShouldThrowArgumentExceptionWhenAddingInvalidTag(string actualTagKey)
     {
         // Act + Assert
         Should.Throw<ArgumentException>(() => _sut.WithTag(actualTagKey));
     }
 
-    [Fact]
+    [Test]
     public void ShouldThrowArgumentExceptionWhenWriteConfigurationBuilderIsNull()
     {
         // Act + Assert
         Should.Throw<ArgumentNullException>(() => _sut.WithReadConfiguration((Action<SqsReadConfigurationBuilder>) null));
     }
 
-    [Fact]
+    [Test]
     public void ShouldThrowArgumentExceptionWhenWriteConfigurationIsNull()
     {
         // Act + Assert

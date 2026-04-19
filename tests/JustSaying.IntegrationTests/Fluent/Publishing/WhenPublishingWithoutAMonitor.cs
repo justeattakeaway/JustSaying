@@ -7,9 +7,9 @@ using NSubstitute;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenPublishingWithoutAMonitor(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenPublishingWithoutAMonitor : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task A_Message_Can_Still_Be_Published_To_A_Queue()
     {
         // Arrange
@@ -24,7 +24,7 @@ public class WhenPublishingWithoutAMonitor(ITestOutputHelper outputHelper) : Int
         await AssertMessagePublishedAndReceivedAsync(services, handler, completionSource);
     }
 
-    [AwsFact]
+    [Test]
     public async Task A_Message_Can_Still_Be_Published_To_A_Topic()
     {
         // Arrange
@@ -82,5 +82,87 @@ public class WhenPublishingWithoutAMonitor(ITestOutputHelper outputHelper) : Int
         }
 
         await handler.Received(1).Handle(Arg.Is<T>((p) => p.UniqueKey() == message.UniqueKey()));
+    }
+
+    [Test]
+    public async Task A_Batch_Message_Can_Still_Be_Published_To_A_Queue()
+    {
+        const int batchSize = 10;
+
+        // Arrange
+        var completionSource = new TaskCompletionSource<object>();
+        var handler = CreateHandler<SimpleMessage>(completionSource, batchSize);
+
+        IServiceCollection services = GivenJustSaying()
+            .ConfigureJustSaying((builder) => builder.WithLoopbackQueue<SimpleMessage>(UniqueName))
+            .AddSingleton(handler);
+
+        // Act and Assert
+        await AssertBatchMessagePublishedAndReceivedAsync(services, handler, completionSource, batchSize);
+    }
+
+    [Test]
+    public async Task A_Batch_Message_Can_Still_Be_Published_To_A_Topic()
+    {
+        const int batchSize = 10;
+        // Arrange
+        var completionSource = new TaskCompletionSource<object>();
+        var handler = CreateHandler<SimpleMessage>(completionSource, batchSize);
+
+        IServiceCollection services = Given(
+                (builder) =>
+                {
+                    builder.Publications((publication) => publication.WithTopic<SimpleMessage>());
+
+                    builder.Messaging(
+                        (config) => config.WithPublishFailureBackoff(TimeSpan.FromMilliseconds(1))
+                            .WithPublishFailureReattempts(1));
+
+                    builder.Subscriptions(
+                        (subscription) => subscription.ForTopic<SimpleMessage>(
+                            (topic) => topic.WithQueueName(UniqueName)));
+                })
+            .AddSingleton(handler);
+
+        // Act and Assert
+        await AssertBatchMessagePublishedAndReceivedAsync(services, handler, completionSource, batchSize);
+    }
+
+    private async Task AssertBatchMessagePublishedAndReceivedAsync<T>(
+        IServiceCollection services,
+        IHandlerAsync<T> handler,
+        TaskCompletionSource<object> completionSource,
+        int batchSize)
+        where T : Message, new()
+    {
+        IServiceProvider serviceProvider = services.BuildServiceProvider();
+
+        var publisher = serviceProvider.GetRequiredService<IMessageBatchPublisher>();
+        IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
+
+        using var source = new CancellationTokenSource(Timeout);
+        await listener.StartAsync(source.Token);
+        await publisher.StartAsync(source.Token);
+
+
+        var messages = new List<Message>();
+        for (int i = 0; i < batchSize; i++)
+        {
+            messages.Add(new T());
+        }
+        // Act
+        await publisher.PublishAsync(messages, source.Token);
+
+        // Assert
+        try
+        {
+            completionSource.Task.Wait(source.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // Ignore
+        }
+
+        await handler.Received(batchSize).Handle(Arg.Is<T>((p) => messages.Any(x => x.UniqueKey() == p.UniqueKey())));
     }
 }

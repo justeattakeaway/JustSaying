@@ -4,18 +4,18 @@ using JustSaying.TestingFramework;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
-public class WhenThereAreExceptionsInSqsCalling(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
+public class WhenThereAreExceptionsInSqsCalling : BaseSubscriptionGroupTests
 {
     private ISqsQueue _queue;
     private int _callCount;
 
     protected override void Given()
     {
-        _queue = CreateSuccessfulTestQueue("TestQueue", ExceptionOnFirstCall());
-        Queues.Add(_queue);
+        var sqsSource = CreateSuccessfulTestQueue("TestQueue", ExceptionOnFirstCall());
+        _queue = sqsSource.SqsQueue as FakeSqsQueue;
+        Queues.Add(sqsSource);
 
-        SerializationRegister.DefaultDeserializedMessage =
-            () => throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing");
+        // setup deserializer failure
     }
 
     private IEnumerable<Message> ExceptionOnFirstCall()
@@ -29,12 +29,12 @@ public class WhenThereAreExceptionsInSqsCalling(ITestOutputHelper testOutputHelp
         yield break;
     }
 
-    protected override bool Until()
+    protected override Task<bool> UntilAsync()
     {
-        return _callCount > 1;
+        return Task.FromResult(_callCount > 1);
     }
 
-    [Fact]
+    [Test]
     public void QueueIsPolledMoreThanOnce()
     {
         _callCount.ShouldBeGreaterThan(1);

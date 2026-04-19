@@ -1,17 +1,21 @@
 using System.Diagnostics;
+using Amazon;
 using Amazon.Runtime;
+using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
+using LocalSqsSnsMessaging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 
 namespace JustSaying.IntegrationTests.Fluent;
 
-public abstract class IntegrationTestBase(ITestOutputHelper outputHelper)
+public abstract class IntegrationTestBase
 {
     protected virtual string AccessKeyId { get; } = "accessKeyId";
 
@@ -19,9 +23,10 @@ public abstract class IntegrationTestBase(ITestOutputHelper outputHelper)
 
     protected virtual string SessionToken { get; } = "token";
 
-    protected ITestOutputHelper OutputHelper { get; } = outputHelper;
+    protected TextWriter OutputHelper => TestContext.Current!.OutputWriter;
 
-    protected ILoggerFactory LoggerFactory { get; } = Microsoft.Extensions.Logging.LoggerFactory.Create(lf => lf.AddXUnit(outputHelper));
+    protected ILoggerFactory LoggerFactory => _loggerFactory ??= Microsoft.Extensions.Logging.LoggerFactory.Create(lf => lf.AddTextWriter(OutputHelper));
+    private ILoggerFactory _loggerFactory;
 
     protected virtual string RegionName => Region.SystemName;
 
@@ -31,7 +36,9 @@ public abstract class IntegrationTestBase(ITestOutputHelper outputHelper)
 
     protected virtual bool IsSimulator => TestEnvironment.IsSimulatorConfigured;
 
-    protected virtual TimeSpan Timeout => TimeSpan.FromSeconds(Debugger.IsAttached ? 60 : 20);
+    protected virtual InMemoryAwsBus Bus { get; } = new InMemoryAwsBus();
+
+    protected virtual TimeSpan Timeout => TimeSpan.FromSeconds(Debugger.IsAttached ? 300 : 10);
 
     protected virtual string UniqueName { get; } = $"{Guid.NewGuid():N}-integration-tests";
 
@@ -50,8 +57,8 @@ public abstract class IntegrationTestBase(ITestOutputHelper outputHelper)
         LogLevel logLevel = levelOverride ?? LogLevel.Debug;
         return new ServiceCollection()
             .AddLogging((p) => p
-                .AddTest()
-                .AddXUnit(OutputHelper, o =>
+                .AddFakeLogging()
+                .AddTextWriter(OutputHelper, o =>
                 {
                     o.IncludeScopes = true;
                     o.Filter = (_, level) => level >= logLevel;
@@ -62,8 +69,7 @@ public abstract class IntegrationTestBase(ITestOutputHelper outputHelper)
                     builder.Messaging((options) => options.WithRegion(RegionName))
                         .Client((options) =>
                         {
-                            options.WithSessionCredentials(AccessKeyId, SecretAccessKey, SessionToken)
-                                .WithServiceUri(ServiceUri);
+                            options.WithClientFactory(() => new LocalAwsClientFactory(Bus));
                         });
                     builder.Subscriptions(sub => sub.WithDefaults(x => x.WithDefaultConcurrencyLimit(10)));
 
@@ -73,18 +79,24 @@ public abstract class IntegrationTestBase(ITestOutputHelper outputHelper)
 
     protected virtual IAwsClientFactory CreateClientFactory()
     {
-        var credentials = new SessionAWSCredentials(AccessKeyId, SecretAccessKey, SessionToken);
-        return new DefaultAwsClientFactory(credentials) { ServiceUri = ServiceUri };
+        return new LocalAwsClientFactory(Bus);
     }
 
-    protected IHandlerAsync<T> CreateHandler<T>(TaskCompletionSource<object> completionSource)
+    protected IHandlerAsync<T> CreateHandler<T>(TaskCompletionSource<object> completionSource, int expectedMessageCount = 1)
         where T : Message
     {
         IHandlerAsync<T> handler = Substitute.For<IHandlerAsync<T>>();
 
+        var counter = 0;
         handler.Handle(Arg.Any<T>())
             .Returns(true)
-            .AndDoes((_) => completionSource.TrySetResult(null));
+            .AndDoes(x =>
+            {
+                if (Interlocked.Increment(ref counter) == expectedMessageCount)
+                {
+                    completionSource.TrySetResult(null);
+                }
+            });
 
         return handler;
     }
@@ -101,6 +113,25 @@ public abstract class IntegrationTestBase(ITestOutputHelper outputHelper)
         IServiceProvider serviceProvider = services.BuildServiceProvider();
 
         IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
+        IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
+
+        await RunActionWithTimeout(async cancellationToken =>
+            await action(publisher, listener, serviceProvider, cancellationToken)
+                .ConfigureAwait(false));
+    }
+
+    protected async Task WhenBatchAsync(
+        IServiceCollection services,
+        Func<IMessageBatchPublisher, IMessagingBus, CancellationToken, Task> action)
+        => await WhenBatchAsync(services, async (p, b, _, c) => await action(p, b, c));
+
+    protected async Task WhenBatchAsync(
+        IServiceCollection services,
+        Func<IMessageBatchPublisher, IMessagingBus, IServiceProvider, CancellationToken, Task> action)
+    {
+        IServiceProvider serviceProvider = services.BuildServiceProvider();
+
+        var publisher = serviceProvider.GetRequiredService<IMessageBatchPublisher>();
         IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
 
         await RunActionWithTimeout(async cancellationToken =>
@@ -129,5 +160,24 @@ public abstract class IntegrationTestBase(ITestOutputHelper outputHelper)
         }
 
         await actionTask;
+    }
+
+    protected async Task<string> GivenAnExistingTopic(string topicName, CancellationToken cancellationToken)
+    {
+        var client = CreateClientFactory().GetSnsClient(Region);
+
+        var createTopicRequest = new CreateTopicRequest
+        {
+            Name = topicName,
+        };
+        var response = await client.CreateTopicAsync(createTopicRequest, cancellationToken);
+
+        var policyDetails = new SnsPolicyDetails
+        {
+            SourceArn = response.TopicArn,
+        };
+        await SnsPolicy.SaveAsync(policyDetails, client);
+
+        return response.TopicArn;
     }
 }

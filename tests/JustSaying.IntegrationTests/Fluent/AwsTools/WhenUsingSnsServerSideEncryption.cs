@@ -1,14 +1,16 @@
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.IntegrationTests;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools;
 
-public class WhenUsingSnsServerSideEncryption(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenUsingSnsServerSideEncryption : IntegrationTestBase
 {
-    [NotSimulatorFact]
+    [NotSimulatorSkip]
+    [Test]
     public async Task Then_The_Message_Is_Published()
     {
         // Arrange

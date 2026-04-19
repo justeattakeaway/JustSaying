@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\JustSaying\JustSaying.csproj" />
@@ -8,10 +8,11 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AutoFixture" />
-    <PackageReference Include="MartinCostello.Logging.XUnit" />
+    <PackageReference Include="LocalSqsSnsMessaging" />
     <PackageReference Include="Microsoft.Extensions.Logging" />
     <PackageReference Include="NSubstitute" />
     <PackageReference Include="Shouldly" />
-    <PackageReference Include="xunit" />
+    <PackageReference Include="TUnit.Core" />
+    <PackageReference Include="TUnit.Assertions" />
   </ItemGroup>
 </Project>

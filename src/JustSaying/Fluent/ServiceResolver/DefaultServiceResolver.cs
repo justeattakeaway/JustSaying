@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using JustSaying.AwsTools;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Naming;
@@ -35,7 +36,7 @@ internal sealed class DefaultServiceResolver : IServiceResolver
         {
             return null; // Special case - must be provided by the consumer
         }
-        else if (desiredType == typeof(IMessagingConfig))
+        else if (desiredType == typeof(IMessagingConfig) || desiredType == typeof(IPublishBatchConfiguration))
         {
             return new MessagingConfig();
         }
@@ -43,7 +44,7 @@ internal sealed class DefaultServiceResolver : IServiceResolver
         {
             return new NullOpMessageMonitor();
         }
-        else if (desiredType == typeof(IMessageSerializationFactory))
+        else if (desiredType == typeof(IMessageBodySerializationFactory))
         {
 
 #if NET8_0_OR_GREATER
@@ -63,11 +64,9 @@ internal sealed class DefaultServiceResolver : IServiceResolver
             return new NewtonsoftSerializationFactory();
 #endif
         }
-        else if (desiredType == typeof(IMessageSerializationRegister))
+        else if (desiredType == typeof(MessageCompressionRegistry))
         {
-            return new MessageSerializationRegister(
-                ResolveService<IMessageSubjectProvider>(),
-                ResolveService<IMessageSerializationFactory>());
+            return new MessageCompressionRegistry([new GzipMessageBodyCompression()]);
         }
         else if (desiredType == typeof(IMessageSubjectProvider))
         {

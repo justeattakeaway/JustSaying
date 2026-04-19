@@ -1,7 +1,9 @@
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
@@ -13,21 +15,20 @@ namespace JustSaying.UnitTests.Messaging.Channels;
 
 public class SubscriptionGroupCollectionTests
 {
-    private IMessageReceivePauseSignal MessageReceivePauseSignal { get; }
-    private ILoggerFactory LoggerFactory { get; }
-    private IMessageMonitor MessageMonitor { get; }
-    private readonly ITestOutputHelper _outputHelper;
+    private IMessageReceivePauseSignal MessageReceivePauseSignal { get; set; }
+    private ILoggerFactory LoggerFactory { get; set; }
+    private IMessageMonitor MessageMonitor { get; set; }
+    private TextWriter OutputHelper => TestContext.Current!.OutputWriter;
 
-
-    public SubscriptionGroupCollectionTests(ITestOutputHelper testOutputHelper)
+    [Before(Test)]
+    public void Setup()
     {
         MessageReceivePauseSignal = new MessageReceivePauseSignal();
-        _outputHelper = testOutputHelper;
-        LoggerFactory = testOutputHelper.ToLoggerFactory();
+        LoggerFactory = OutputHelper.ToLoggerFactory();
         MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
     }
 
-    [Fact]
+    [Test]
     public async Task Add_Different_Handler_Per_Queue()
     {
         // Arrange
@@ -40,22 +41,31 @@ public class SubscriptionGroupCollectionTests
 
         var middleware1 = new InspectableMiddleware<TestJustSayingMessage>();
         var middleware2 = new InspectableMiddleware<TestJustSayingMessage>();
+        var messageConverter = new InboundMessageConverter(TestJustSayingMessage.Serializer, new MessageCompressionRegistry(), false);
 
         bus.AddMessageMiddleware<TestJustSayingMessage>(queueName1, middleware1);
         bus.AddMessageMiddleware<TestJustSayingMessage>(queueName2, middleware2);
 
-        ISqsQueue queue1 = TestQueue(bus.SerializationRegister, queueName1);
-        ISqsQueue queue2 = TestQueue(bus.SerializationRegister, queueName2);
+        ISqsQueue queue1 = await TestQueue(queueName1);
+        ISqsQueue queue2 = await TestQueue(queueName2);
 
-        bus.AddQueue(group1, queue1);
-        bus.AddQueue(group2, queue2);
+        bus.AddQueue(group1, new SqsSource
+        {
+            SqsQueue = queue1,
+            MessageConverter = messageConverter
+        });
+        bus.AddQueue(group2, new SqsSource
+        {
+            SqsQueue = queue2,
+            MessageConverter = messageConverter
+        });
 
         using var cts = new CancellationTokenSource();
 
         // Act
         await bus.StartAsync(cts.Token);
 
-        await Patiently.AssertThatAsync(_outputHelper,
+        await Patiently.AssertThatAsync(OutputHelper,
             () =>
             {
                 middleware1.Handler.ReceivedMessages.Count.ShouldBeGreaterThan(0);
@@ -81,11 +91,8 @@ public class SubscriptionGroupCollectionTests
     private JustSaying.JustSayingBus CreateBus()
     {
         var config = Substitute.For<IMessagingConfig>();
-        var serializationRegister = new MessageSerializationRegister(
-            new NonGenericMessageSubjectProvider(),
-            new NewtonsoftSerializationFactory());
 
-        var bus = new JustSaying.JustSayingBus(config, serializationRegister, MessageReceivePauseSignal, LoggerFactory, MessageMonitor);
+        var bus = new JustSaying.JustSayingBus(config, new NewtonsoftSerializationFactory(), MessageReceivePauseSignal, LoggerFactory, MessageMonitor);
 
         var defaultSubscriptionSettings = new SubscriptionGroupSettingsBuilder()
             .WithDefaultMultiplexerCapacity(1)
@@ -98,8 +105,7 @@ public class SubscriptionGroupCollectionTests
         return bus;
     }
 
-    private static FakeSqsQueue TestQueue(
-        IMessageSerializationRegister messageSerializationRegister,
+    private static async Task<FakeSqsQueue> TestQueue(
         string queueName,
         Action spy = null)
     {
@@ -108,10 +114,15 @@ public class SubscriptionGroupCollectionTests
             QueueName = queueName,
         };
 
-        var messages = new List<Message>
-        {
-            new TestMessage { Body = messageSerializationRegister.Serialize(message, false) },
-        };
+        var messageConverter = new OutboundMessageConverter(
+            PublishDestinationType.Queue,
+            new SystemTextJsonMessageBodySerializer<TestJustSayingMessage>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions),
+            new MessageCompressionRegistry(),
+            new PublishCompressionOptions(),
+            "TestJustSayingMessage",
+            false);
+
+        List<Message> messages = [new TestMessage { Body = (await messageConverter.ConvertToOutboundMessageAsync(message, null)).Body }];
 
         var queue = new FakeSqsQueue(async ct =>
         {
@@ -134,6 +145,8 @@ public class SubscriptionGroupCollectionTests
     private class TestJustSayingMessage : JustSaying.Models.Message
     {
         public string QueueName { get; set; }
+
+        public static IMessageBodySerializer Serializer => new SystemTextJsonMessageBodySerializer<TestJustSayingMessage>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions);
 
         public override string ToString()
         {

@@ -6,9 +6,9 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing;
 
-public class WhenAHandlerThrowsAnExceptionWithNoMonitor(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenAHandlerThrowsAnExceptionWithNoMonitor : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task Then_The_Message_Is_Handled()
     {
         // Arrange
@@ -18,7 +18,7 @@ public class WhenAHandlerThrowsAnExceptionWithNoMonitor(ITestOutputHelper output
 
         var services = GivenJustSaying()
             .ConfigureJustSaying((builder) => builder.Publications((options) =>
-                options.WithQueue<SimpleMessage>(qo => qo.WithName(UniqueName))))
+                options.WithQueue<SimpleMessage>(qo => qo.WithQueueName(UniqueName))))
             .ConfigureJustSaying(
                 (builder) => builder.Subscriptions(
                         (options) => options.ForQueue<SimpleMessage>(

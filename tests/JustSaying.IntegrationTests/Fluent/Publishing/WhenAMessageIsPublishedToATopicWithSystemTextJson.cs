@@ -1,3 +1,4 @@
+using System.Text.Json;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
@@ -5,9 +6,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenAMessageIsPublishedToATopicWithSystemTextJson(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenAMessageIsPublishedToATopicWithSystemTextJson : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task Then_The_Message_Is_Handled()
     {
         // Arrange
@@ -16,7 +17,7 @@ public class WhenAMessageIsPublishedToATopicWithSystemTextJson(ITestOutputHelper
         var services = GivenJustSaying()
             .ConfigureJustSaying(
                 (builder) => builder.WithLoopbackTopic<SimpleMessage>(UniqueName))
-            .AddSingleton<IMessageSerializationFactory, SystemTextJsonSerializationFactory>()
+            .AddSingleton<IMessageBodySerializationFactory>(x => new SystemTextJsonSerializationFactory(new JsonSerializerOptions()))
             .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 
         string content = Guid.NewGuid().ToString();

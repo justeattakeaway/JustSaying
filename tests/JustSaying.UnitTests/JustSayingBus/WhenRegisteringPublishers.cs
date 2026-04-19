@@ -6,7 +6,7 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.JustSayingBus;
 
-public class WhenRegisteringPublishers(ITestOutputHelper outputHelper) : GivenAServiceBus(outputHelper)
+public class WhenRegisteringPublishers : GivenAServiceBus
 {
     private IMessagePublisher _publisher;
 
@@ -29,7 +29,7 @@ public class WhenRegisteringPublishers(ITestOutputHelper outputHelper) : GivenAS
         await SystemUnderTest.PublishAsync(new OrderRejected());
     }
 
-    [Fact]
+    [Test]
     public void AcceptedOrderWasPublishedOnce()
     {
         _publisher.Received(1).PublishAsync(
@@ -38,7 +38,7 @@ public class WhenRegisteringPublishers(ITestOutputHelper outputHelper) : GivenAS
             Arg.Any<CancellationToken>());
     }
 
-    [Fact]
+    [Test]
     public void RejectedOrderWasPublishedTwice()
     {
         _publisher.Received(2).PublishAsync(
@@ -47,7 +47,7 @@ public class WhenRegisteringPublishers(ITestOutputHelper outputHelper) : GivenAS
             Arg.Any<CancellationToken>());
     }
 
-    [Fact]
+    [Test]
     public void AndInterrogationShowsPublishersHaveBeenSet()
     {
         dynamic response = SystemUnderTest.Interrogate();

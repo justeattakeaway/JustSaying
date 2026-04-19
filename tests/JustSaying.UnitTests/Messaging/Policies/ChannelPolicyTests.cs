@@ -1,8 +1,11 @@
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
+using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware.Receive;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
@@ -15,28 +18,26 @@ namespace JustSaying.UnitTests.Messaging.Policies;
 
 public class ChannelPolicyTests
 {
-    private IMessageReceivePauseSignal MessageReceivePauseSignal { get; }
-    private ILoggerFactory LoggerFactory { get; }
-    private IMessageMonitor MessageMonitor { get; }
-    private readonly ITestOutputHelper _outputHelper;
+    private IMessageReceivePauseSignal MessageReceivePauseSignal { get; set; }
+    private ILoggerFactory LoggerFactory { get; set; }
+    private IMessageMonitor MessageMonitor { get; set; }
+    private TextWriter OutputHelper => TestContext.Current!.OutputWriter;
 
-    public ChannelPolicyTests(ITestOutputHelper testOutputHelper)
+    [Before(Test)]
+    public void Setup()
     {
         MessageReceivePauseSignal = new MessageReceivePauseSignal();
-        _outputHelper = testOutputHelper;
-        LoggerFactory = testOutputHelper.ToLoggerFactory();
+        LoggerFactory = OutputHelper.ToLoggerFactory();
         MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
     }
 
-    [Fact]
+    [Test]
     public async Task ErrorHandlingAroundSqs_WithCustomPolicy_CanSwallowExceptions()
     {
         // Arrange
         int queueCalledCount = 0;
         int dispatchedMessageCount = 0;
         var sqsQueue = TestQueue(() => Interlocked.Increment(ref queueCalledCount));
-
-        var queues = new List<ISqsQueue> { sqsQueue };
 
         var config = new SubscriptionGroupSettingsBuilder()
             .WithDefaultConcurrencyLimit(8);
@@ -45,7 +46,13 @@ public class ChannelPolicyTests
 
         var settings = new Dictionary<string, SubscriptionGroupConfigBuilder>
         {
-            { "test", new SubscriptionGroupConfigBuilder("test").AddQueues(queues) },
+            {
+                "test", new SubscriptionGroupConfigBuilder("test").AddQueue(new SqsSource
+                {
+                    SqsQueue = sqsQueue,
+                    MessageConverter = new InboundMessageConverter(SimpleMessage.Serializer, new MessageCompressionRegistry(), false)
+                })
+            }
         };
 
         IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref dispatchedMessageCount));
@@ -61,7 +68,7 @@ public class ChannelPolicyTests
         var cts = new CancellationTokenSource();
         var completion = collection.RunAsync(cts.Token);
 
-        await Patiently.AssertThatAsync(_outputHelper,
+        await Patiently.AssertThatAsync(OutputHelper,
             () =>
             {
                 queueCalledCount.ShouldBeGreaterThan(1);

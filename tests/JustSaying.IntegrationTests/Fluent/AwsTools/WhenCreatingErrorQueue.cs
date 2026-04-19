@@ -7,9 +7,9 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools;
 
-public class WhenCreatingErrorQueue(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenCreatingErrorQueue : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task Then_The_Message_Retention_Period_Is_Updated()
     {
         // Arrange

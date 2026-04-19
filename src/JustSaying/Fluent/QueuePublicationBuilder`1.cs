@@ -2,6 +2,8 @@ using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Messaging;
+using JustSaying.Messaging.Middleware;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
@@ -26,6 +28,10 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
     /// Gets or sets a delegate to a method to use to configure SQS writes.
     /// </summary>
     private Action<SqsWriteConfiguration> ConfigureWrites { get; set; }
+
+    private string QueueName { get; set; } = string.Empty;
+
+    private Action<PublishMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
     /// <summary>
     /// Configures the SQS write configuration.
@@ -72,20 +78,34 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
     /// <summary>
     /// Configures the SQS Queue name, rather than using the naming convention.
     /// </summary>
-    /// <param name="queueName">The name of the queue to subscribe to.</param>
+    /// <param name="name">The name of the queue to subscribe to.</param>
     /// <returns>
     /// The current <see cref="QueuePublicationBuilder{T}"/>.
     /// </returns>
-    public QueuePublicationBuilder<T> WithName(string queueName)
+    public QueuePublicationBuilder<T> WithQueueName(string name)
     {
-        return WithWriteConfiguration(r => r.WithQueueName(queueName));
+        QueueName = name ?? throw new ArgumentNullException(nameof(name));
+        return this;
+    }
+
+    /// <summary>
+    /// Configures the publish middleware pipeline for this publication.
+    /// </summary>
+    /// <param name="middlewareConfiguration">A delegate to configure the publish middleware pipeline.</param>
+    /// <returns>The current <see cref="QueuePublicationBuilder{T}"/>.</returns>
+    public QueuePublicationBuilder<T> WithMiddlewareConfiguration(
+        Action<PublishMiddlewareBuilder> middlewareConfiguration)
+    {
+        MiddlewareConfiguration = middlewareConfiguration;
+        return this;
     }
 
     /// <inheritdoc />
     void IPublicationBuilder<T>.Configure(
         JustSayingBus bus,
         IAwsClientFactoryProxy proxy,
-        ILoggerFactory loggerFactory)
+        ILoggerFactory loggerFactory,
+        IServiceResolver serviceResolver)
     {
         var logger = loggerFactory.CreateLogger<QueuePublicationBuilder<T>>();
 
@@ -95,21 +115,28 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
         var config = bus.Config;
         var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
 
-        var writeConfiguration = new SqsWriteConfiguration();
+        var writeConfiguration = new SqsWriteConfiguration
+        {
+            QueueName = QueueName
+        };
         ConfigureWrites?.Invoke(writeConfiguration);
         writeConfiguration.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
-
-        bus.SerializationRegister.AddSerializer<T>();
 
         var regionEndpoint = RegionEndpoint.GetBySystemName(region);
         var sqsClient = proxy.GetAwsClientFactory().GetSqsClient(regionEndpoint);
 
+        var compressionRegistry = bus.CompressionRegistry;
+        var compressionOptions = writeConfiguration.CompressionOptions;
+        var subjectProvider = bus.Config.MessageSubjectProvider;
+        var subject = subjectProvider.GetSubjectForType(typeof(T));
+
         var eventPublisher = new SqsMessagePublisher(
             sqsClient,
-            bus.SerializationRegister,
+            new OutboundMessageConverter(PublishDestinationType.Queue, bus.MessageBodySerializerFactory.GetSerializer<T>(), compressionRegistry, compressionOptions, subject, writeConfiguration.IsRawMessage),
             loggerFactory)
         {
-            MessageResponseLogger = config.MessageResponseLogger
+            MessageResponseLogger = config.MessageResponseLogger,
+            MessageBatchResponseLogger = bus.PublishBatchConfiguration?.MessageBatchResponseLogger
         };
 
 #pragma warning disable 618
@@ -134,6 +161,13 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
         bus.AddStartupTask(StartupTask);
 
         bus.AddMessagePublisher<T>(eventPublisher);
+
+        if (MiddlewareConfiguration != null)
+        {
+            var middlewareBuilder = new PublishMiddlewareBuilder(serviceResolver);
+            middlewareBuilder.Configure(MiddlewareConfiguration);
+            bus.AddPublishMiddleware<T>(middlewareBuilder.Build());
+        }
 
         logger.LogInformation(
             "Created SQS publisher for message type '{MessageType}' on queue '{QueueName}'.",

@@ -6,7 +6,7 @@ using JustSaying.Naming;
 
 namespace JustSaying;
 
-public class MessagingConfig : IMessagingConfig
+public class MessagingConfig : IMessagingConfig, IPublishBatchConfiguration
 {
     public MessagingConfig()
     {
@@ -16,16 +16,19 @@ public class MessagingConfig : IMessagingConfig
         MessageSubjectProvider = new NonGenericMessageSubjectProvider();
         TopicNamingConvention = new DefaultNamingConventions();
         QueueNamingConvention = new DefaultNamingConventions();
+        DefaultCompressionOptions = new PublishCompressionOptions();
     }
 
     public int PublishFailureReAttempts { get; set; }
     public TimeSpan PublishFailureBackoff { get; set; }
     public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
+    public Action<MessageBatchResponse, IReadOnlyCollection<Message>> MessageBatchResponseLogger { get; set; }
     public IReadOnlyCollection<string> AdditionalSubscriberAccounts { get; set; }
     public string Region { get; set; }
     public IMessageSubjectProvider MessageSubjectProvider { get; set; }
     public ITopicNamingConvention TopicNamingConvention { get; set; }
     public IQueueNamingConvention QueueNamingConvention { get; set; }
+    public PublishCompressionOptions DefaultCompressionOptions { get; set; }
 
     public virtual void Validate()
     {

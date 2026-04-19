@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.Json;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
@@ -13,13 +14,13 @@ using NSubstitute;
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools;
 
-public class WhenUsingABasicThrottle(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenUsingABasicThrottle : IntegrationTestBase
 {
     protected override TimeSpan Timeout => TimeSpan.FromMinutes(5);
 
-    [AwsTheory]
-    [InlineData(100)]
-    [InlineData(1000)]
+    [Test]
+    [Arguments(100)]
+    [Arguments(1000)]
     public async Task Messages_Are_Throttled_But_Still_Delivered(int throttleMessageCount)
     {
         // Arrange
@@ -40,7 +41,7 @@ public class WhenUsingABasicThrottle(ITestOutputHelper outputHelper) : Integrati
         {
             await queue.CreateAsync(new SqsBasicConfiguration());
 
-            if (!IsSimulator)
+            if (ServiceUri is not null)
             {
                 // Wait for up to 60 secs for queue creation to be guaranteed completed by AWS
                 using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(1));
@@ -57,7 +58,7 @@ public class WhenUsingABasicThrottle(ITestOutputHelper outputHelper) : Integrati
             }
         }
 
-        Assert.True(await queue.ExistsAsync(CancellationToken.None), "The queue was not created.");
+        (await queue.ExistsAsync(CancellationToken.None)).ShouldBeTrue("The queue was not created.");
 
         OutputHelper.WriteLine($"{DateTime.Now} - Adding {throttleMessageCount} messages to the queue.");
 
@@ -72,7 +73,7 @@ public class WhenUsingABasicThrottle(ITestOutputHelper outputHelper) : Integrati
             {
                 var batchEntry = new SendMessageBatchRequestEntry
                 {
-                    MessageBody = $$"""{"Subject":"SimpleMessage", "Message": { "Content": "{{entriesAdded}}"} }""",
+                    MessageBody = $$"""{"Subject":"SimpleMessage", "Message": "{{JsonEncodedText.Encode($$"""{ "Content": "{{entriesAdded}}" }""")}}" }""",
                     Id = Guid.NewGuid().ToString()
                 };
 
@@ -105,7 +106,7 @@ public class WhenUsingABasicThrottle(ITestOutputHelper outputHelper) : Integrati
             async (publisher, listener, cancellationToken) =>
             {
                 var stopwatch = Stopwatch.StartNew();
-                var delay = IsSimulator ? TimeSpan.FromMilliseconds(100) : TimeSpan.FromSeconds(5);
+                var delay = (ServiceUri is null) ? TimeSpan.FromMilliseconds(100) : TimeSpan.FromSeconds(5);
 
                 await listener.StartAsync(cancellationToken);
 
@@ -126,6 +127,6 @@ public class WhenUsingABasicThrottle(ITestOutputHelper outputHelper) : Integrati
         OutputHelper.WriteLine($"{DateTime.Now} - Took {timeToProcess.TotalMilliseconds} ms");
         OutputHelper.WriteLine($"{DateTime.Now} - Throughput {(float)count / timeToProcess.TotalMilliseconds * 1000} messages/second");
 
-        Assert.Equal(throttleMessageCount, count);
+        count.ShouldBe(throttleMessageCount);
     }
 }

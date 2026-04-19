@@ -3,6 +3,7 @@ using Amazon.Runtime;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
@@ -14,7 +15,6 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName;
 
 public class WhenPublishingAsyncResultLoggerIsCalled : WhenPublishingTestBase
 {
-    private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
     private const string TopicArn = "topicarn";
 
     private const string MessageId = "TestMessage12345";
@@ -25,7 +25,8 @@ public class WhenPublishingAsyncResultLoggerIsCalled : WhenPublishingTestBase
 
     private protected override Task<SnsMessagePublisher> CreateSystemUnderTestAsync()
     {
-        var topic = new SnsMessagePublisher(TopicArn, Sns, _serializationRegister, NullLoggerFactory.Instance, Substitute.For<IMessageSubjectProvider>())
+        var messageConverter = CreateConverter();
+        var topic = new SnsMessagePublisher(TopicArn, Sns, messageConverter, NullLoggerFactory.Instance, null, null)
         {
             MessageResponseLogger = (r, m) =>
             {
@@ -65,20 +66,20 @@ public class WhenPublishingAsyncResultLoggerIsCalled : WhenPublishingTestBase
         return Task.FromResult(response);
     }
 
-    [Fact]
+    [Test]
     public void ResponseLoggerIsCalled()
     {
         _response.ShouldNotBeNull();
     }
 
-    [Fact]
+    [Test]
     public void ResponseIsForwardedToResponseLogger()
     {
         _response.MessageId.ShouldBe(MessageId);
         _response.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
-    [Fact]
+    [Test]
     public void ResponseShouldContainMetadata()
     {
         _response.ResponseMetadata.ShouldNotBeNull();
@@ -86,7 +87,7 @@ public class WhenPublishingAsyncResultLoggerIsCalled : WhenPublishingTestBase
         _response.ResponseMetadata.RequestId.ShouldBe(RequestId);
     }
 
-    [Fact]
+    [Test]
     public void MessageIsForwardedToResponseLogger()
     {
         _message.ShouldNotBeNull();

@@ -1,8 +1,10 @@
+*.binlog
 *.cache
 *.coverage
 *.idea
 *.log
 *.orig
+*.scip
 *.sublime-workspace
 *.suo
 *.user
@@ -26,3 +28,7 @@ TestResult.xml
 UpgradeLog*.htm
 !3rdparty/*/bin
 *.received.txt
+test-results
+TestResults
+# Generated during CI for SCIP indexing (converted from JustSaying.slnx)
+JustSaying.sln

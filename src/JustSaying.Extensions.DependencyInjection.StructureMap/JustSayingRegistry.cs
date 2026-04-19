@@ -2,13 +2,16 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
 using JustSaying.Messaging.Channels.Receive;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware.Logging;
 using JustSaying.Messaging.Middleware.PostProcessing;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Naming;
+using Newtonsoft.Json;
 using StructureMap;
+using StructureMap.Pipeline;
 
 namespace JustSaying;
 
@@ -29,9 +32,11 @@ internal sealed class JustSayingRegistry : Registry
 
         For<IAwsClientFactory>().Use<DefaultAwsClientFactory>().Singleton();
         For<IAwsClientFactoryProxy>().Use((p) => new AwsClientFactoryProxy(p.GetInstance<IAwsClientFactory>)).Singleton();
-        For<IMessagingConfig>().Use<MessagingConfig>().Singleton();
+        For<MessagingConfig>().Use<MessagingConfig>().Singleton();
+        For<IMessagingConfig>().Use(context => context.GetInstance<MessagingConfig>()).Singleton();
+        For<IPublishBatchConfiguration>().Use<MessagingConfig>(context => context.GetInstance<MessagingConfig>()).Singleton();
         For<IMessageMonitor>().Use<NullOpMessageMonitor>().Singleton();
-        For<IMessageSerializationFactory>().Use<NewtonsoftSerializationFactory>().Singleton();
+        For<IMessageBodySerializationFactory>().Use<NewtonsoftSerializationFactory>(() => new NewtonsoftSerializationFactory(null)).Singleton();
         For<IMessageSubjectProvider>().Use<GenericMessageSubjectProvider>().Singleton();
         For<IVerifyAmazonQueues>().Use<AmazonQueueCreator>().Singleton();
 
@@ -39,20 +44,10 @@ internal sealed class JustSayingRegistry : Registry
         For<IMessageContextAccessor>().Use(context => context.GetInstance<MessageContextAccessor>());
         For<IMessageContextReader>().Use(context => context.GetInstance<MessageContextAccessor>());
 
-        For<LoggingMiddleware>().Transient();
-        For<SqsPostProcessorMiddleware>().Transient();
-
-        For<IMessageSerializationRegister>()
-            .Use(
-                nameof(IMessageSerializationRegister),
-                (p) =>
-                {
-                    var config = p.GetInstance<IMessagingConfig>();
-                    var serializerFactory = p.GetInstance<IMessageSerializationFactory>();
-                    return new MessageSerializationRegister(config.MessageSubjectProvider, serializerFactory);
-                })
-            .Singleton();
-
+        For<LoggingMiddleware>().AlwaysUnique();
+        For<SqsPostProcessorMiddleware>().AlwaysUnique();
+        For<IMessageBodyCompression>().Add<GzipMessageBodyCompression>().Singleton();
+        For<MessageCompressionRegistry>().Singleton();
         For<IMessageReceivePauseSignal>().Use<MessageReceivePauseSignal>().Singleton();
 
         For<DefaultNamingConventions>().Singleton();

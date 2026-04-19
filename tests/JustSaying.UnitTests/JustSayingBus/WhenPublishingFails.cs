@@ -5,7 +5,7 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.JustSayingBus;
 
-public class WhenPublishingFails(ITestOutputHelper outputHelper) : GivenAServiceBus(outputHelper)
+public class WhenPublishingFails : GivenAServiceBus
 {
     private readonly IMessagePublisher _publisher = Substitute.For<IMessagePublisher>();
     private const int PublishAttempts = 2;
@@ -34,7 +34,7 @@ public class WhenPublishingFails(ITestOutputHelper outputHelper) : GivenAService
         await SystemUnderTest.PublishAsync(new SimpleMessage(), cts.Token);
     }
 
-    [Fact]
+    [Test]
     public void EventPublicationWasAttemptedTheConfiguredNumberOfTimes()
     {
         _publisher

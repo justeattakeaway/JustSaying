@@ -1,4 +1,6 @@
+using System.Text.Json;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware;
 using JustSaying.TestingFramework;
@@ -9,15 +11,19 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
-public class WhenExactlyOnceIsAppliedToHandler(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
+public class WhenExactlyOnceIsAppliedToHandler : BaseSubscriptionGroupTests
 {
-    private ISqsQueue _queue;
+    private SqsSource _queue;
     private readonly int _expectedTimeout = 5;
     private FakeMessageLock _messageLock;
 
     protected override void Given()
     {
-        _queue = CreateSuccessfulTestQueue("TestQueue", new TestMessage());
+        _queue = CreateSuccessfulTestQueue("TestQueue",
+            new TestMessage
+            {
+                Body = $$"""{"Subject":"SimpleMessage", "Message": "{{JsonEncodedText.Encode("""{ "Content": "Hi"} }""")}}"}"""
+            });
 
         Queues.Add(_queue);
 
@@ -26,7 +32,7 @@ public class WhenExactlyOnceIsAppliedToHandler(ITestOutputHelper testOutputHelpe
         var serviceResolver = new InMemoryServiceResolver(sc =>
             sc.AddSingleton<IMessageLockAsync>(_messageLock)
                 .AddSingleton<IHandlerAsync<SimpleMessage>>(Handler)
-                .AddLogging(x => x.AddXUnit(OutputHelper)));
+                .AddLogging(x => x.AddTextWriter(OutputHelper).SetMinimumLevel(LogLevel.Information)));
 
         var middlewareBuilder = new HandlerMiddlewareBuilder(serviceResolver, serviceResolver);
 
@@ -41,34 +47,34 @@ public class WhenExactlyOnceIsAppliedToHandler(ITestOutputHelper testOutputHelpe
 
     protected override async Task WhenAsync()
     {
-        MiddlewareMap.Add<SimpleMessage>(_queue.QueueName, Middleware);
+        MiddlewareMap.Add<SimpleMessage>(_queue.SqsQueue.QueueName, Middleware);
 
         using var cts = new CancellationTokenSource();
 
         var completion = SystemUnderTest.RunAsync(cts.Token);
 
         // wait until it's done
-        await Patiently.AssertThatAsync(OutputHelper,
-            () => Handler.ReceivedMessages.Any());
+        await Patiently.AssertThatAsync(OutputHelper, () => !Handler.ReceivedMessages.IsEmpty);
 
-        cts.Cancel();
+        await cts.CancelAsync();
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
+        await Should.ThrowAsync<OperationCanceledException>(() => completion);
     }
 
-    [Fact]
+    [Test]
     public void ProcessingIsPassedToTheHandler()
     {
         Handler.ReceivedMessages.ShouldNotBeEmpty();
     }
 
-    [Fact]
+    [Test]
     public void MessageIsLocked()
     {
-        var messageId = SerializationRegister.DefaultDeserializedMessage().Id.ToString();
+        // this should be part of setup to make work
+        var messageId = SetupMessage.Id.ToString();
 
-        var tempLockRequests = _messageLock.MessageLockRequests.Where(lr => !lr.isPermanent);
-        tempLockRequests.Count().ShouldBeGreaterThan(0);
+        var tempLockRequests = _messageLock.MessageLockRequests.Where(lr => !lr.isPermanent).ToList();
+        tempLockRequests.Count.ShouldBeGreaterThan(0);
         tempLockRequests.ShouldAllBe(pair =>
             pair.key.Contains(messageId, StringComparison.OrdinalIgnoreCase) &&
             pair.howLong == TimeSpan.FromSeconds(_expectedTimeout));

@@ -1,20 +1,22 @@
 using System.Collections.Concurrent;
-using JustSaying.AwsTools.MessageHandling;
+using System.Diagnostics;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Extensions;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;
+using PublishMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.PublishContext, bool>;
 
 namespace JustSaying;
 
-public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposable
+public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBatchPublisher, IDisposable
 {
     private readonly ILogger _log;
     private readonly ILoggerFactory _loggerFactory;
@@ -26,53 +28,85 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
     private ConcurrentDictionary<string, SubscriptionGroupConfigBuilder> _subscriptionGroupSettings;
     private SubscriptionGroupSettingsBuilder _defaultSubscriptionGroupSettings;
     private readonly Dictionary<Type, IMessagePublisher> _publishersByType;
+    private readonly Dictionary<Type, IMessageBatchPublisher> _batchPublishersByType;
+    private readonly Dictionary<Type, PublishMessageMiddleware> _publishMiddlewareByType;
 
     public IMessagingConfig Config { get; }
+    public IPublishBatchConfiguration PublishBatchConfiguration { get; }
 
     private readonly IMessageReceivePauseSignal _messageReceivePauseSignal;
 
     private readonly IMessageMonitor _monitor;
 
     private ISubscriptionGroup SubscriptionGroups { get; set; }
-    public IMessageSerializationRegister SerializationRegister { get; }
 
     internal MiddlewareMap MiddlewareMap { get; }
+    internal PublishMessageMiddleware PublishMiddleware { get; set; }
+    internal MessageCompressionRegistry CompressionRegistry { get; }
+    internal IMessageBodySerializationFactory MessageBodySerializerFactory { get; set; }
 
     public Task Completion { get; private set; }
 
-    public JustSayingBus(
+    internal JustSayingBus(
         IMessagingConfig config,
-        IMessageSerializationRegister serializationRegister,
+        IMessageBodySerializationFactory serializationFactory,
         ILoggerFactory loggerFactory,
         IMessageMonitor monitor)
+        : this(config, serializationFactory, null, loggerFactory, monitor, config as IPublishBatchConfiguration)
+    {
+    }
+
+    internal JustSayingBus(
+        IMessagingConfig config,
+        IMessageBodySerializationFactory serializationFactory,
+        IMessageReceivePauseSignal messageReceivePauseSignal,
+        ILoggerFactory loggerFactory,
+        IMessageMonitor monitor,
+        IPublishBatchConfiguration publishBatchConfiguration)
     {
         _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
         _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
 
         _startupTasks = [];
         _log = _loggerFactory.CreateLogger("JustSaying");
+        _messageReceivePauseSignal = messageReceivePauseSignal;
 
         Config = config;
-        SerializationRegister = serializationRegister;
+        PublishBatchConfiguration = publishBatchConfiguration;
+        if (PublishBatchConfiguration == null)
+        {
+            if (config is IPublishBatchConfiguration batchConfig)
+            {
+                PublishBatchConfiguration = batchConfig;
+            }
+            else
+            {
+                PublishBatchConfiguration = new MessagingConfig();
+            }
+        }
+
         MiddlewareMap = new MiddlewareMap();
+        CompressionRegistry = new MessageCompressionRegistry([new GzipMessageBodyCompression()]);
+        MessageBodySerializerFactory = serializationFactory;
 
         _publishersByType = [];
-        _subscriptionGroupSettings =
-            new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(StringComparer.Ordinal);
+        _batchPublishersByType = [];
+        _publishMiddlewareByType = [];
+        _subscriptionGroupSettings = new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(StringComparer.Ordinal);
         _defaultSubscriptionGroupSettings = new SubscriptionGroupSettingsBuilder();
     }
 
-    public JustSayingBus(
+    internal JustSayingBus(
         IMessagingConfig config,
-        IMessageSerializationRegister serializationRegister,
+        IMessageBodySerializationFactory serializationFactory,
         IMessageReceivePauseSignal messageReceivePauseSignal,
         ILoggerFactory loggerFactory,
-        IMessageMonitor monitor) : this(config, serializationRegister, loggerFactory, monitor)
+        IMessageMonitor monitor) : this(config, serializationFactory, loggerFactory, monitor)
     {
         _messageReceivePauseSignal = messageReceivePauseSignal;
     }
 
-    public void AddQueue(string subscriptionGroup, ISqsQueue queue)
+    internal void AddQueue(string subscriptionGroup, SqsSource queue)
     {
         if (string.IsNullOrWhiteSpace(subscriptionGroup))
         {
@@ -108,7 +142,6 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
     public void AddMessageMiddleware<T>(string queueName, HandleMessageMiddleware middleware)
         where T : Message
     {
-        SerializationRegister.AddSerializer<T>();
         MiddlewareMap.Add<T>(queueName, middleware);
     }
 
@@ -121,8 +154,32 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
         }
 
         _publishersByType[typeof(T)] = messagePublisher;
+        if (messagePublisher is IMessageBatchPublisher batchPublisher)
+        {
+            _batchPublishersByType[typeof(T)] = batchPublisher;
+        }
     }
 
+    public void AddMessageBatchPublisher<T>(IMessageBatchPublisher messageBatchPublisher) where T : Message
+    {
+        if (PublishBatchConfiguration.PublishFailureReAttempts == 0)
+        {
+            _log.LogWarning("You have not set a re-attempt value for batch publish failures. If the publish location is not available you may lose messages.");
+        }
+
+        _batchPublishersByType[typeof(T)] = messageBatchPublisher;
+        if (messageBatchPublisher is IMessagePublisher messagePublisher)
+        {
+            _publishersByType[typeof(T)] = messagePublisher;
+        }
+    }
+
+    internal void AddPublishMiddleware<T>(PublishMessageMiddleware middleware) where T : Message
+    {
+        _publishMiddlewareByType[typeof(T)] = middleware;
+    }
+
+    /// <inheritdoc/>
     public async Task StartAsync(CancellationToken stoppingToken)
     {
         if (stoppingToken.IsCancellationRequested) return;
@@ -161,7 +218,6 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
     private async Task RunImplAsync(CancellationToken stoppingToken)
     {
         var dispatcher = new MessageDispatcher(
-            SerializationRegister,
             _monitor,
             MiddlewareMap,
             _loggerFactory);
@@ -184,27 +240,41 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
         }
         catch (OperationCanceledException)
         {
-            _log.LogDebug("Suppressed an exception of type {ExceptionType} which likely " +
-                          "means the bus is shutting down.", nameof(OperationCanceledException));
+            _log.LogDebug(
+                "Suppressed an exception of type {ExceptionType} which likely means the bus is shutting down.",
+                nameof(OperationCanceledException));
             // Don't bubble cancellation up to Completion task
         }
     }
 
+    /// <inheritdoc/>
     public async Task PublishAsync(Message message, CancellationToken cancellationToken)
         => await PublishAsync(message, null, cancellationToken).ConfigureAwait(false);
 
+    /// <inheritdoc/>
     public async Task PublishAsync(
         Message message,
         PublishMetadata metadata,
         CancellationToken cancellationToken)
     {
-        if (!_busStarted && _startupTasks.Count > 0)
+        EnsureStarted();
+
+        var middleware = GetPublishMiddlewareForMessage(message.GetType());
+        if (middleware != null)
         {
-            throw new InvalidOperationException($"There are pending startup tasks that must be executed by calling StartAsync before messages may be published. Bus started {_busStarted}, Count {_startupTasks.Count}");
+            var context = new Messaging.Middleware.PublishContext(message, metadata ?? new PublishMetadata());
+            await middleware.RunAsync(context, async ct =>
+            {
+                var publisher = GetPublisherForMessage(message);
+                await PublishAsync(publisher, message, context.Metadata, 0, ct)
+                    .ConfigureAwait(false);
+                return true;
+            }, cancellationToken).ConfigureAwait(false);
+            return;
         }
 
-        IMessagePublisher publisher = GetPublisherForMessage(message);
-        await PublishAsync(publisher, message, metadata, 0, cancellationToken)
+        var pub = GetPublisherForMessage(message);
+        await PublishAsync(pub, message, metadata, 0, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -241,6 +311,29 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
         CancellationToken cancellationToken)
     {
         attemptCount++;
+
+        var isFirstAttempt = attemptCount == 1;
+        Activity activity = null;
+        Stopwatch publishWatch = null;
+
+        if (isFirstAttempt)
+        {
+            var messageType = message.GetType();
+            activity = JustSayingDiagnostics.ActivitySource.StartActivity(
+                $"{messageType.Name} publish",
+                ActivityKind.Producer);
+
+            if (activity is not null)
+            {
+                activity.SetTag("messaging.operation.name", "publish");
+                activity.SetTag("messaging.operation.type", "send");
+                activity.SetTag("messaging.message.id", message.Id.ToString());
+                activity.SetTag("messaging.message.type", messageType.FullName);
+            }
+
+            publishWatch = Stopwatch.StartNew();
+        }
+
         try
         {
             using (_monitor.MeasurePublish())
@@ -248,6 +341,8 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
                 await publisher.PublishAsync(message, metadata, cancellationToken)
                     .ConfigureAwait(false);
             }
+
+            JustSayingDiagnostics.ClientSentMessages.Add(1);
         }
         catch (Exception ex)
         {
@@ -256,6 +351,21 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
             if (attemptCount >= Config.PublishFailureReAttempts)
             {
                 _monitor.IssuePublishingMessage();
+
+                if (activity is not null)
+                {
+                    activity.SetStatus(ActivityStatusCode.Error, ex.Message);
+                    activity.AddEvent(new ActivityEvent("exception",
+                        tags: new ActivityTagsCollection
+                        {
+                            { "exception.type", ex.GetType().FullName },
+                            { "exception.message", ex.Message },
+                            { "exception.stacktrace", ex.ToString() },
+                        }));
+                }
+
+                JustSayingDiagnostics.ClientSentMessages.Add(1,
+                    new KeyValuePair<string, object>("error.type", ex.GetType().FullName));
 
                 _log.LogError(
                     ex,
@@ -280,8 +390,20 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
             await PublishAsync(publisher, message, metadata, attemptCount, cancellationToken)
                 .ConfigureAwait(false);
         }
+        finally
+        {
+            if (isFirstAttempt)
+            {
+                publishWatch.Stop();
+                JustSayingDiagnostics.ClientOperationDuration.Record(
+                    publishWatch.Elapsed.TotalSeconds,
+                    new KeyValuePair<string, object>("messaging.operation.type", "send"));
+                activity?.Dispose();
+            }
+        }
     }
 
+    /// <inheritdoc/>
     public InterrogationResult Interrogate()
     {
         var publisherDescriptions =
@@ -296,9 +418,187 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
         });
     }
 
+    /// <inheritdoc/>
     public void Dispose()
     {
         _startLock?.Dispose();
         _loggerFactory?.Dispose();
+    }
+
+    /// <inheritdoc/>
+    public async Task PublishAsync(IEnumerable<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
+    {
+        EnsureStarted();
+
+        var messageList = messages.ToList();
+        var messageType = messageList.FirstOrDefault()?.GetType();
+        var middleware = messageType != null ? GetPublishMiddlewareForMessage(messageType) : null;
+
+        if (middleware != null)
+        {
+            var context = new Messaging.Middleware.PublishContext(messageList, metadata ?? new PublishBatchMetadata());
+            await middleware.RunAsync(context, async ct =>
+            {
+                var tasks = new List<Task>();
+                foreach (IGrouping<Type, Message> group in messageList.GroupBy(x => x.GetType()))
+                {
+                    IMessageBatchPublisher publisher = GetBatchPublishersForMessageType(group.Key);
+                    tasks.Add(PublishAsync(publisher, [..group], (PublishBatchMetadata)context.Metadata, 0, group.Key, ct));
+                }
+
+                await Task.WhenAll(tasks).ConfigureAwait(false);
+                return true;
+            }, cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        var batchTasks = new List<Task>();
+        foreach (IGrouping<Type, Message> group in messageList.GroupBy(x => x.GetType()))
+        {
+            IMessageBatchPublisher publisher = GetBatchPublishersForMessageType(group.Key);
+            batchTasks.Add(PublishAsync(publisher, [..group], metadata, 0, group.Key, cancellationToken));
+        }
+
+        await Task.WhenAll(batchTasks).ConfigureAwait(false);
+    }
+
+    private IMessageBatchPublisher GetBatchPublishersForMessageType(Type messageType)
+    {
+        if (_publishersByType.Count == 0)
+        {
+            const string errorMessage = "Error publishing message batch, no publishers registered. Has the bus been started?";
+            _log.LogError(errorMessage);
+            throw new InvalidOperationException(errorMessage);
+        }
+
+        if (!_batchPublishersByType.TryGetValue(messageType, out var publisher))
+        {
+            _log.LogError("Error publishing message batch. No publishers registered for message type '{MessageType}'.", messageType);
+            throw new InvalidOperationException($"Error publishing message batch, no publishers registered for message type '{messageType}'.");
+        }
+
+        return publisher;
+    }
+
+    private PublishMessageMiddleware GetPublishMiddlewareForMessage(Type messageType)
+    {
+        if (_publishMiddlewareByType.TryGetValue(messageType, out var perType))
+        {
+            return perType;
+        }
+
+        return PublishMiddleware;
+    }
+
+    private async Task PublishAsync(
+        IMessageBatchPublisher publisher,
+        List<Message> messages,
+        PublishBatchMetadata metadata,
+        int attemptCount,
+        Type messageType,
+        CancellationToken cancellationToken)
+    {
+        var batchSize = metadata?.BatchSize ?? 10;
+        batchSize = Math.Min(batchSize, 10);
+        attemptCount++;
+
+        var isFirstAttempt = attemptCount == 1;
+        Activity activity = null;
+        Stopwatch publishWatch = null;
+
+        if (isFirstAttempt)
+        {
+            activity = JustSayingDiagnostics.ActivitySource.StartActivity(
+                $"{messageType.Name} publish",
+                ActivityKind.Producer);
+
+            if (activity is not null)
+            {
+                activity.SetTag("messaging.operation.name", "publish");
+                activity.SetTag("messaging.operation.type", "send");
+                activity.SetTag("messaging.message.type", messageType.FullName);
+                activity.SetTag("messaging.batch.message_count", messages.Count);
+            }
+
+            publishWatch = Stopwatch.StartNew();
+        }
+
+        try
+        {
+            foreach (var chunk in messages.Chunk(batchSize))
+            {
+                try
+                {
+                    using (_monitor.MeasurePublish())
+                    {
+                        await publisher.PublishAsync(chunk, metadata, cancellationToken).ConfigureAwait(false);
+                    }
+
+                    JustSayingDiagnostics.ClientSentMessages.Add(chunk.Length);
+                }
+                catch (Exception ex)
+                {
+                    if (attemptCount >= PublishBatchConfiguration.PublishFailureReAttempts)
+                    {
+                        _monitor.IssuePublishingMessage();
+
+                        if (activity is not null)
+                        {
+                            activity.SetStatus(ActivityStatusCode.Error, ex.Message);
+                            activity.AddEvent(new ActivityEvent("exception",
+                                tags: new ActivityTagsCollection
+                                {
+                                    { "exception.type", ex.GetType().FullName },
+                                    { "exception.message", ex.Message },
+                                    { "exception.stacktrace", ex.ToString() },
+                                }));
+                        }
+
+                        JustSayingDiagnostics.ClientSentMessages.Add(chunk.Length,
+                            new KeyValuePair<string, object>("error.type", ex.GetType().FullName));
+
+                        _log.LogError(
+                            ex,
+                            "Failed to publish a message batch of type '{MessageType}'. Halting after attempt number {PublishAttemptCount}.",
+                            messageType,
+                            attemptCount);
+
+                        throw;
+                    }
+
+                    _log.LogWarning(
+                        ex,
+                        "Failed to publish a message batch of type '{MessageType}'. Retrying after attempt number {PublishAttemptCount} of {PublishFailureReattempts}.",
+                        messageType,
+                        attemptCount,
+                        PublishBatchConfiguration.PublishFailureReAttempts);
+
+                    var delayForAttempt = TimeSpan.FromMilliseconds(Config.PublishFailureBackoff.TotalMilliseconds * attemptCount);
+                    await Task.Delay(delayForAttempt, cancellationToken).ConfigureAwait(false);
+
+                    await PublishAsync(publisher, messages, metadata, attemptCount, messageType, cancellationToken).ConfigureAwait(false);
+                }
+            }
+
+        }
+        finally
+        {
+            if (isFirstAttempt)
+            {
+                publishWatch.Stop();
+                JustSayingDiagnostics.ClientOperationDuration.Record(
+                    publishWatch.Elapsed.TotalSeconds,
+                    new KeyValuePair<string, object>("messaging.operation.type", "send"));
+                activity?.Dispose();
+            }
+        }
+    }
+
+    private void EnsureStarted()
+    {
+        if (!_busStarted && _startupTasks.Count > 0)
+        {
+            throw new InvalidOperationException($"There are pending startup tasks that must be executed by calling {nameof(StartAsync)} before messages may be published.");
+        }
     }
 }

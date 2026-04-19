@@ -35,4 +35,9 @@ public interface ISubscriptionGroupSettings
     /// Gets the maxiumum number of messages to fetch from SQS in each request.
     /// </summary>
     public int Prefetch { get; }
+
+    /// <summary>
+    /// Gets the type of concurrency limiting applied to message processing.
+    /// </summary>
+    public ConcurrencyLimitType ConcurrencyLimitType { get; }
 }

@@ -8,9 +8,9 @@ using Newtonsoft.Json;
 
 namespace JustSaying.Fluent.Configuration;
 
-public class WhenUsingACustomSubjectProvider(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenUsingACustomSubjectProvider : IntegrationTestBase
 {
-    [AwsFact]
+    [Test]
     public async Task ThenItIsUsed()
     {
         // Arrange

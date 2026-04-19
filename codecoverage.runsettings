@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Configuration>
+  <CodeCoverage>
+    <EnableStaticInstrumentation>false</EnableStaticInstrumentation>
+    <EnableDynamicInstrumentation>true</EnableDynamicInstrumentation>
+    <ModulePaths>
+      <Include>
+        <ModulePath>.*JustSaying.*\.dll$</ModulePath>
+      </Include>
+      <Exclude>
+        <ModulePath>.*Tests\.dll$</ModulePath>
+        <ModulePath>.*\.TestingFramework\.dll$</ModulePath>
+        <ModulePath>.*\.Benchmarks\.dll$</ModulePath>
+        <ModulePath>.*\.Sample.*\.dll$</ModulePath>
+      </Exclude>
+    </ModulePaths>
+  </CodeCoverage>
+</Configuration>

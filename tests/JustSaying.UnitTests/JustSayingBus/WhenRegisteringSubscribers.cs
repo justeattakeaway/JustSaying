@@ -1,11 +1,15 @@
 using Amazon.SQS.Model;
+using JustSaying.Messaging;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 using Newtonsoft.Json;
 
 namespace JustSaying.UnitTests.JustSayingBus;
 
-public sealed class WhenRegisteringSubscribers(ITestOutputHelper outputHelper) : GivenAServiceBus(outputHelper), IDisposable
+public sealed class WhenRegisteringSubscribers : GivenAServiceBus, IDisposable
 {
     private FakeSqsQueue _queue1;
     private FakeSqsQueue _queue2;
@@ -36,8 +40,18 @@ public sealed class WhenRegisteringSubscribers(ITestOutputHelper outputHelper) :
         SystemUnderTest.AddMessageMiddleware<SimpleMessage>(_queue1.QueueName,
             new InspectableMiddleware<SimpleMessage>());
 
-        SystemUnderTest.AddQueue("groupA", _queue1);
-        SystemUnderTest.AddQueue("groupB", _queue2);
+        var messageConverter1 = new InboundMessageConverter(new SystemTextJsonMessageBodySerializer<OrderAccepted>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions), new MessageCompressionRegistry(), false);
+        var messageConverter2 = new InboundMessageConverter(new SystemTextJsonMessageBodySerializer<OrderRejected>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions), new MessageCompressionRegistry(), false);
+        SystemUnderTest.AddQueue("groupA", new SqsSource
+        {
+            SqsQueue = _queue1,
+            MessageConverter = messageConverter1
+        });
+        SystemUnderTest.AddQueue("groupB", new SqsSource
+        {
+            SqsQueue = _queue2,
+            MessageConverter = messageConverter2
+        });
 
         _cts = new CancellationTokenSource();
         _cts.CancelAfter(TimeSpan.FromSeconds(5));
@@ -45,7 +59,7 @@ public sealed class WhenRegisteringSubscribers(ITestOutputHelper outputHelper) :
         await SystemUnderTest.StartAsync(_cts.Token);
     }
 
-    [Fact]
+    [Test]
     public async Task SubscribersStartedUp()
     {
         await Patiently.AssertThatAsync(OutputHelper,
@@ -56,7 +70,7 @@ public sealed class WhenRegisteringSubscribers(ITestOutputHelper outputHelper) :
             });
     }
 
-    [Fact]
+    [Test]
     public void AndInterrogationShowsSubscribersHaveBeenSet()
     {
         dynamic response = SystemUnderTest.Interrogate();

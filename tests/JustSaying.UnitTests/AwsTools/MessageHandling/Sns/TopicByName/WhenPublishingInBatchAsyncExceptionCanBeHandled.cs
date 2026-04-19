@@ -1,0 +1,50 @@
+using Amazon.SimpleNotificationService.Model;
+using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging;
+using JustSaying.Messaging.Compression;
+using JustSaying.Messaging.MessageSerialization;
+using JustSaying.Models;
+using JustSaying.TestingFramework;
+using Microsoft.Extensions.Logging.Abstractions;
+using NSubstitute;
+using NSubstitute.Core;
+
+#pragma warning disable 618
+
+namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName;
+
+public class WhenPublishingInBatchAsyncExceptionCanBeHandled : WhenPublishingTestBase
+{
+    private const string TopicArn = "topicarn";
+
+    private protected override Task<SnsMessagePublisher> CreateSystemUnderTestAsync()
+    {
+        var messageConverter = CreateConverter();
+        var topic = new SnsMessagePublisher(TopicArn, Sns, messageConverter, NullLoggerFactory.Instance, null, (_, _) => true);
+        return Task.FromResult(topic);
+    }
+
+    protected override void Given()
+    {
+        Sns.FindTopicAsync("TopicName")
+            .Returns(new Topic { TopicArn = TopicArn });
+    }
+
+    protected override Task WhenAsync()
+    {
+        Sns.PublishBatchAsync(Arg.Any<PublishBatchRequest>()).Returns(ThrowsException);
+        return Task.CompletedTask;
+    }
+
+    [Test]
+    public async Task FailSilently()
+    {
+        await Should.NotThrowAsync(
+            () => SystemUnderTest.PublishAsync(new List<Message> { new SimpleMessage() }));
+    }
+
+    private static Task<PublishBatchResponse> ThrowsException(CallInfo callInfo)
+    {
+        throw new InternalErrorException("Operation timed out");
+    }
+}

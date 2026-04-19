@@ -1,5 +1,9 @@
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using JustSaying.UnitTests.AwsTools.MessageHandling;
 using NSubstitute;
@@ -8,7 +12,7 @@ using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<J
 
 namespace JustSaying.UnitTests.JustSayingBus;
 
-public class WhenRegisteringMessageHandlers(ITestOutputHelper outputHelper) : GivenAServiceBus(outputHelper)
+public class WhenRegisteringMessageHandlers : GivenAServiceBus
 {
     private ISqsQueue _queue;
     private IHandlerAsync<Message> _handler1;
@@ -30,7 +34,11 @@ public class WhenRegisteringMessageHandlers(ITestOutputHelper outputHelper) : Gi
 
     protected override async Task WhenAsync()
     {
-        SystemUnderTest.AddQueue(typeof(Message).FullName, _queue);
+        SystemUnderTest.AddQueue(typeof(Message).FullName, new SqsSource
+        {
+            SqsQueue = _queue,
+            MessageConverter = new InboundMessageConverter(new SystemTextJsonMessageBodySerializer<Message>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions), new MessageCompressionRegistry(), false)
+        });
         SystemUnderTest.AddMessageMiddleware<Message>(_queue.QueueName, _futureHandler1);
         SystemUnderTest.AddMessageMiddleware<Message2>(_queue.QueueName, _futureHandler2);
 
@@ -38,7 +46,7 @@ public class WhenRegisteringMessageHandlers(ITestOutputHelper outputHelper) : Gi
         await SystemUnderTest.StartAsync(cts.Token);
     }
 
-    [Fact]
+    [Test]
     public void HandlersAreAdded()
     {
         SystemUnderTest.MiddlewareMap.Contains(_queue.QueueName, typeof(Message)).ShouldBeTrue();

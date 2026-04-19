@@ -1,30 +1,34 @@
+using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.TestingFramework;
+
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
-public class WhenMessageHandlingFails(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
+public class WhenMessageHandlingFails : BaseSubscriptionGroupTests
 {
     private FakeSqsQueue _queue;
 
     protected override void Given()
     {
-        _queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), new TestMessage());
+        var sqsSource = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), new TestMessage());
+        _queue = sqsSource.SqsQueue as FakeSqsQueue;
 
-        Queues.Add(_queue);
+        Queues.Add(sqsSource);
         Handler.ShouldSucceed = false;
     }
 
-    [Fact]
+    [Test]
     public void MessageHandlerWasCalled()
     {
         Handler.ReceivedMessages.ShouldNotBeEmpty();
     }
 
-    [Fact]
+    [Test]
     public void FailedMessageIsNotRemovedFromQueue()
     {
         _queue.DeleteMessageRequests.ShouldBeEmpty();
     }
 
-    [Fact]
+    [Test]
     public void ExceptionIsNotLoggedToMonitor()
     {
         Monitor.HandledExceptions.ShouldBeEmpty();

@@ -15,7 +15,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups;
 /// <summary>
 /// Builds <see cref="ISubscriptionGroup"/>'s from the various components required.
 /// </summary>
-public class SubscriptionGroupFactory : ISubscriptionGroupFactory
+internal sealed class SubscriptionGroupFactory : ISubscriptionGroupFactory
 {
     private readonly IMessageDispatcher _messageDispatcher;
     private readonly IMessageReceivePauseSignal _messageReceivePauseSignal;
@@ -29,7 +29,7 @@ public class SubscriptionGroupFactory : ISubscriptionGroupFactory
     /// <param name="messageDispatcher">The <see cref="IMessageDispatcher"/> to use to dispatch messages.</param>
     /// <param name="monitor">The <see cref="IMessageMonitor"/> used by the <see cref="IMessageReceiveBuffer"/>.</param>
     /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> to use.</param>
-    public SubscriptionGroupFactory(
+    private SubscriptionGroupFactory(
         IMessageDispatcher messageDispatcher,
         IMessageMonitor monitor,
         ILoggerFactory loggerFactory)
@@ -83,7 +83,12 @@ public class SubscriptionGroupFactory : ISubscriptionGroupFactory
     {
         var multiplexer = CreateMultiplexer(settings.MultiplexerCapacity);
         ICollection<IMessageReceiveBuffer> receiveBuffers = CreateBuffers(receiveMiddleware, settings);
-        ICollection<IMultiplexerSubscriber> subscribers = CreateSubscribers(settings);
+
+        IRateLimiter rateLimiter = settings.ConcurrencyLimitType == ConcurrencyLimitType.MessagesPerSecond
+            ? new TokenBucketRateLimiter(settings.ConcurrencyLimit)
+            : null;
+
+        ICollection<IMultiplexerSubscriber> subscribers = CreateSubscribers(settings, rateLimiter);
 
         foreach (IMessageReceiveBuffer receiveBuffer in receiveBuffers)
         {
@@ -100,6 +105,7 @@ public class SubscriptionGroupFactory : ISubscriptionGroupFactory
             receiveBuffers,
             multiplexer,
             subscribers,
+            rateLimiter,
             _loggerFactory.CreateLogger<SubscriptionGroup>());
     }
 
@@ -111,7 +117,7 @@ public class SubscriptionGroupFactory : ISubscriptionGroupFactory
 
         var logger = _loggerFactory.CreateLogger<MessageReceiveBuffer>();
 
-        foreach (ISqsQueue queue in subscriptionGroupSettings.Queues)
+        foreach (SqsSource queue in subscriptionGroupSettings.QueueSources)
         {
             var buffer = new MessageReceiveBuffer(
                 subscriptionGroupSettings.Prefetch,
@@ -137,7 +143,7 @@ public class SubscriptionGroupFactory : ISubscriptionGroupFactory
             _loggerFactory.CreateLogger<MergingMultiplexer>());
     }
 
-    private List<IMultiplexerSubscriber> CreateSubscribers(SubscriptionGroupSettings settings)
+    private List<IMultiplexerSubscriber> CreateSubscribers(SubscriptionGroupSettings settings, IRateLimiter rateLimiter)
     {
         var logger = _loggerFactory.CreateLogger<MultiplexerSubscriber>();
 
@@ -145,7 +151,8 @@ public class SubscriptionGroupFactory : ISubscriptionGroupFactory
             .Select(index => (IMultiplexerSubscriber) new MultiplexerSubscriber(
                 _messageDispatcher,
                 $"{settings.Name}-subscriber-{index}",
-                logger))
+                logger,
+                rateLimiter))
             .ToList();
     }
 }

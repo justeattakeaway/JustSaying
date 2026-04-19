@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
@@ -8,21 +9,17 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling.Dispatch;
 
-public class MessageDispatcher : IMessageDispatcher
+internal sealed class MessageDispatcher : IMessageDispatcher
 {
-    private readonly IMessageSerializationRegister _serializationRegister;
     private readonly IMessageMonitor _messagingMonitor;
     private readonly MiddlewareMap _middlewareMap;
-
-    private static ILogger _logger;
+    private readonly ILogger _logger;
 
     public MessageDispatcher(
-        IMessageSerializationRegister serializationRegister,
         IMessageMonitor messagingMonitor,
         MiddlewareMap middlewareMap,
         ILoggerFactory loggerFactory)
     {
-        _serializationRegister = serializationRegister;
         _messagingMonitor = messagingMonitor;
         _middlewareMap = middlewareMap;
         _logger = loggerFactory.CreateLogger("JustSaying");
@@ -42,6 +39,7 @@ public class MessageDispatcher : IMessageDispatcher
 
         if (!success)
         {
+            _logger.LogTrace("DeserializeMessage failed. Message will not be dispatched.");
             return;
         }
 
@@ -66,9 +64,64 @@ public class MessageDispatcher : IMessageDispatcher
             messageContext.QueueUri,
             attributes);
 
-        await middleware.RunAsync(handleContext, null, cancellationToken)
-            .ConfigureAwait(false);
+        using var activity = StartConsumerActivity(messageContext, typedMessage, messageType, attributes);
 
+        try
+        {
+            await middleware.RunAsync(handleContext, null, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            if (activity is not null)
+            {
+                activity.SetStatus(ActivityStatusCode.Error, ex.Message);
+                activity.AddEvent(new ActivityEvent("exception",
+                    tags: new ActivityTagsCollection
+                    {
+                        { "exception.type", ex.GetType().FullName },
+                        { "exception.message", ex.Message },
+                        { "exception.stacktrace", ex.ToString() },
+                    }));
+            }
+
+            throw;
+        }
+    }
+
+    private static Activity StartConsumerActivity(
+        IQueueMessageContext messageContext,
+        Message typedMessage,
+        Type messageType,
+        MessageAttributes attributes)
+    {
+        var traceParent = attributes?.Get(MessageAttributeKeys.TraceParent)?.StringValue;
+        var traceState = attributes?.Get(MessageAttributeKeys.TraceState)?.StringValue;
+        ActivityContext parsed = default;
+        bool hasParsed = traceParent is not null
+            && ActivityContext.TryParse(traceParent, traceState, isRemote: true, out parsed);
+
+        var links = hasParsed
+            ? [new ActivityLink(parsed)]
+            : Array.Empty<ActivityLink>();
+        var activity = JustSayingDiagnostics.ActivitySource.StartActivity(
+            $"{messageContext.QueueName} process",
+            ActivityKind.Consumer,
+            default(ActivityContext),
+            tags: null,
+            links: links);
+
+        if (activity is not null)
+        {
+            activity.SetTag("messaging.system", "aws_sqs");
+            activity.SetTag("messaging.destination.name", messageContext.QueueName);
+            activity.SetTag("messaging.operation.name", "process");
+            activity.SetTag("messaging.operation.type", "process");
+            activity.SetTag("messaging.message.id", messageContext.Message.MessageId);
+            activity.SetTag("messaging.message.type", messageType.FullName);
+        }
+
+        return activity;
     }
 
     private async Task<(bool success, Message typedMessage, MessageAttributes attributes)>
@@ -76,10 +129,11 @@ public class MessageDispatcher : IMessageDispatcher
     {
         try
         {
-            _logger.LogDebug("Attempting to deserialize message with serialization register {Type}",
-                _serializationRegister.GetType().FullName);
-            var messageWithAttributes = _serializationRegister.DeserializeMessage(messageContext.Message.Body);
-            return (true, messageWithAttributes.Message, messageWithAttributes.MessageAttributes);
+            _logger.LogDebug("Attempting to deserialize message.");
+
+            var (message, attributes) = await messageContext.MessageConverter.ConvertToInboundMessageAsync(messageContext.Message, cancellationToken);
+
+            return (true, message, attributes);
         }
         catch (MessageFormatNotSupportedException ex)
         {
@@ -91,6 +145,11 @@ public class MessageDispatcher : IMessageDispatcher
             await messageContext.DeleteMessage(cancellationToken).ConfigureAwait(false);
             _messagingMonitor.HandleError(ex, messageContext.Message);
 
+            return (false, null, null);
+        }
+        catch (OperationCanceledException)
+        {
+            // Ignore cancellation
             return (false, null, null);
         }
         catch (Exception ex)
