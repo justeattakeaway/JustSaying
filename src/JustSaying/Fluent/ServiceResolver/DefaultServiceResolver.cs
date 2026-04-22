@@ -53,12 +53,12 @@ internal sealed class DefaultServiceResolver : IServiceResolver
 #pragma warning disable IL2026
 #pragma warning disable IL3050
                 return new NewtonsoftSerializationFactory();
+#pragma warning restore IL3050
 #pragma warning restore IL2026
-#pragma warning disable IL3050
             }
             else
             {
-                throw new NotSupportedException($"Newtonsoft.Json is not supported when compiled with the 'PublishTrimmed' option. Use {nameof(SystemTextJsonSerializationFactory)} instead.");
+                throw new NotSupportedException($"Newtonsoft.Json is not supported when dynamic code is unavailable (e.g. Native AOT). Use {nameof(SystemTextJsonSerializationFactory)} instead.");
             }
 #else
             return new NewtonsoftSerializationFactory();
