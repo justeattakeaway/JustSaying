@@ -13,7 +13,7 @@
     <PackageReference Include="AWSSDK.SQS" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />
-    <PackageReference Include="Newtonsoft.Json" VersionOverride="13.0.3" />
+    <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="TUnit" />
   </ItemGroup>
   <ItemGroup>

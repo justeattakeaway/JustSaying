@@ -14,7 +14,7 @@
     <PackageReference Include="AWSSDK.SimpleNotificationService" />
     <PackageReference Include="AWSSDK.SQS" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
-    <PackageReference Include="Newtonsoft.Json" VersionOverride="13.0.3" />
+    <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="StructureMap" />
     <PackageReference Include="TUnit" />
   </ItemGroup>

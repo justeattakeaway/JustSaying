@@ -7,8 +7,10 @@
     <UserSecretsId>JustSaying.Sample.Restaurant.OrderingApi</UserSecretsId>
     <!-- IL2026: AddJustSaying is annotated [RequiresUnreferencedCode] because the default
          IMessageBodySerializationFactory uses reflection. Wiring the sample up to a custom
-         AOT-safe factory is still an open task on the AOT PR. -->
-    <NoWarn>$(NoWarn);CA2007;IL2026</NoWarn>
+         AOT-safe factory is still an open task on the AOT PR.
+         IL3053: Newtonsoft.Json (a transitive reference) emits AOT analysis warnings from
+         inside its own assembly that can't be suppressed at our call sites. -->
+    <NoWarn>$(NoWarn);CA2007;IL2026;IL3053</NoWarn>
     <SignAssembly>false</SignAssembly>
   </PropertyGroup>
 
