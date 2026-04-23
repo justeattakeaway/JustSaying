@@ -27,6 +27,15 @@ var serializerOptions = new JsonSerializerOptions
 };
 builder.Services.TryAddSingleton<IMessageBodySerializationFactory>(_ => new SystemTextJsonSerializationFactory(serializerOptions));
 
+// ASP.NET's minimal-API JSON pipeline owns its own JsonSerializerOptions, separate
+// from JustSaying's. Plug ApplicationJsonContext into it too so request body binding
+// and response serialization are AOT-safe — without this, the default reflection-
+// based JsonTypeInfoResolver gets stripped at publish time and any POST throws.
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.TypeInfoResolverChain.Insert(0, ApplicationJsonContext.Default);
+});
+
 ConfigureJustSaying(builder.Services, configuration);
 
 // Added a message handler for message type for 'OrderReadyEvent' on topic 'orderreadyevent' and queue 'orderreadyevent'
