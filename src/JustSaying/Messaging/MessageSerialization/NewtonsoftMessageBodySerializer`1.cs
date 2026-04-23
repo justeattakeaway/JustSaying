@@ -43,6 +43,10 @@ public sealed class NewtonsoftMessageBodySerializer<T> : IMessageBodySerializer 
     /// Initializes a new instance of the <see cref="NewtonsoftMessageBodySerializer{T}"/> class with custom JSON serializer settings.
     /// </summary>
     /// <param name="settings">The custom <see cref="JsonSerializerSettings"/> to use for serialization and deserialization.</param>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode(NewtonsoftRequiresUnreferencedCodeMessage)]
+    [RequiresDynamicCode(NewtonsoftRequiresDynamicCodeMessage)]
+#endif
     public NewtonsoftMessageBodySerializer(JsonSerializerSettings settings)
     {
         _settings = settings;

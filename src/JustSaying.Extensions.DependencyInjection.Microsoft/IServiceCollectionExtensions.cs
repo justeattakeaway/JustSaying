@@ -24,6 +24,7 @@ namespace Microsoft.Extensions.DependencyInjection;
 public static class IServiceCollectionExtensions
 {
     private const string UnreferencedCodeMessage = "The default IMessageSerializationFactory implementation requires unreferenced code.";
+    private const string DynamicCodeMessage = "The default IMessageSerializationFactory implementation requires dynamic code.";
 
     /// <summary>
     /// Adds JustSaying services to the service collection.
@@ -37,6 +38,7 @@ public static class IServiceCollectionExtensions
     /// </exception>
 #if NET8_0_OR_GREATER
     [RequiresUnreferencedCode(UnreferencedCodeMessage)]
+    [RequiresDynamicCode(DynamicCodeMessage)]
 #endif
     public static IServiceCollection AddJustSaying(this IServiceCollection services)
     {
@@ -61,6 +63,7 @@ public static class IServiceCollectionExtensions
     /// </exception>
 #if NET8_0_OR_GREATER
     [RequiresUnreferencedCode(UnreferencedCodeMessage)]
+    [RequiresDynamicCode(DynamicCodeMessage)]
 #endif
     public static IServiceCollection AddJustSaying(this IServiceCollection services, string region)
     {
@@ -92,6 +95,7 @@ public static class IServiceCollectionExtensions
     /// </exception>
 #if NET8_0_OR_GREATER
     [RequiresUnreferencedCode(UnreferencedCodeMessage)]
+    [RequiresDynamicCode(DynamicCodeMessage)]
 #endif
     public static IServiceCollection AddJustSaying(this IServiceCollection services, Action<MessagingBusBuilder> configure)
     {
@@ -121,6 +125,7 @@ public static class IServiceCollectionExtensions
     /// </exception>
 #if NET8_0_OR_GREATER
     [RequiresUnreferencedCode(UnreferencedCodeMessage)]
+    [RequiresDynamicCode(DynamicCodeMessage)]
 #endif
     public static IServiceCollection AddJustSaying(this IServiceCollection services, Action<MessagingBusBuilder, IServiceProvider> configure)
     {

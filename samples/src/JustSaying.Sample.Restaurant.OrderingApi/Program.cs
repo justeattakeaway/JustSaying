@@ -89,6 +89,8 @@ await app.RunAsync();
 
 [UnconditionalSuppressMessage("Trimming", "IL2026",
     Justification = "We have replaced the default IMessageBodySerializationFactory with an AOT-safe SystemTextJson source-gen one above.")]
+[UnconditionalSuppressMessage("AOT", "IL3050",
+    Justification = "We have replaced the default IMessageBodySerializationFactory with an AOT-safe SystemTextJson source-gen one above.")]
 static void ConfigureJustSaying(IServiceCollection services, IConfiguration configuration)
 {
     services.AddJustSaying(config =>

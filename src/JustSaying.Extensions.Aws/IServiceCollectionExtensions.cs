@@ -16,6 +16,7 @@ namespace Microsoft.Extensions.DependencyInjection;
 public static class IServiceCollectionExtensions
 {
     private const string AttributeRequiresUnreferencedCodeMessage = "The AWSSDK.Extensions.NETCore.Setup package has not been updated to support Native AOT compilations";
+    private const string AttributeRequiresDynamicCodeMessage = "The AWSSDK.Extensions.NETCore.Setup package has not been updated to support Native AOT compilations";
 
     /// <summary>
     /// Adds JustSaying services to the service collection using AWS configuration.
@@ -31,6 +32,7 @@ public static class IServiceCollectionExtensions
     /// </exception>
 #if NET8_0_OR_GREATER
     [RequiresUnreferencedCode(AttributeRequiresUnreferencedCodeMessage)]
+    [RequiresDynamicCode(AttributeRequiresDynamicCodeMessage)]
 #endif
     public static void AddJustSayingWithAwsConfig(this IServiceCollection services, IConfiguration configuration, Action<MessagingBusBuilder> builderConfig)
     {
@@ -66,6 +68,7 @@ public static class IServiceCollectionExtensions
     /// </exception>
 #if NET8_0_OR_GREATER
     [RequiresUnreferencedCode(AttributeRequiresUnreferencedCodeMessage)]
+    [RequiresDynamicCode(AttributeRequiresDynamicCodeMessage)]
 #endif
     public static void AddJustSayingWithAwsConfig(this IServiceCollection services, IConfiguration configuration, Action<MessagingBusBuilder, IServiceProvider> builderConfig)
     {

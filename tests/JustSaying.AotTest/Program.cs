@@ -30,6 +30,8 @@ Console.WriteLine("JustSaying.AotTest: container built successfully under Native
 
 [UnconditionalSuppressMessage("Trimming", "IL2026",
     Justification = "We have replaced the default IMessageBodySerializationFactory with an AOT-safe SystemTextJson source-gen one above.")]
+[UnconditionalSuppressMessage("AOT", "IL3050",
+    Justification = "We have replaced the default IMessageBodySerializationFactory with an AOT-safe SystemTextJson source-gen one above.")]
 static void ConfigureJustSaying(IServiceCollection services)
 {
     services.AddJustSaying(config =>

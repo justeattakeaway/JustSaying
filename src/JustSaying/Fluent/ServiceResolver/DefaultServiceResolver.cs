@@ -50,7 +50,11 @@ internal sealed class DefaultServiceResolver : IServiceResolver
 #if NET8_0_OR_GREATER
             if (RuntimeFeature.IsDynamicCodeSupported)
             {
+#pragma warning disable IL2026
+#pragma warning disable IL3050
                 return new NewtonsoftSerializationFactory();
+#pragma warning restore IL3050
+#pragma warning restore IL2026
             }
             else
             {
