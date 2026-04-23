@@ -14,8 +14,8 @@
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageVersion Include="OpenTelemetry.Api" Version="1.15.3" />
-    <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="8.0.1" Condition=" '$(TargetFramework)' == 'net462' " />
-    <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="8.0.1" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
+    <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="10.0.7" Condition=" '$(TargetFramework)' == 'net462' " />
+    <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="10.0.7" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
     <PackageVersion Include="StructureMap" Version="4.6.0" />
   </ItemGroup>
   <ItemGroup Label="Aspire">
