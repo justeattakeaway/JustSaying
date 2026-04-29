@@ -1,4 +1,6 @@
+#if NET8_0_OR_GREATER
 using System.Runtime.CompilerServices;
+#endif
 using JustSaying.AwsTools;
 using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageSerialization;

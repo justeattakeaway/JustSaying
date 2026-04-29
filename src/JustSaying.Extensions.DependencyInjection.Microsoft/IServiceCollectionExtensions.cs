@@ -23,8 +23,8 @@ namespace Microsoft.Extensions.DependencyInjection;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class IServiceCollectionExtensions
 {
-    private const string UnreferencedCodeMessage = "The default IMessageSerializationFactory implementation requires unreferenced code.";
-    private const string DynamicCodeMessage = "The default IMessageSerializationFactory implementation requires dynamic code.";
+    private const string UnreferencedCodeMessage = "The default IMessageBodySerializationFactory implementation requires unreferenced code.";
+    private const string DynamicCodeMessage = "The default IMessageBodySerializationFactory implementation requires dynamic code.";
 
     /// <summary>
     /// Adds JustSaying services to the service collection.
