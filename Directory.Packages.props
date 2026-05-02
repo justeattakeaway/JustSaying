@@ -56,7 +56,7 @@
     <PackageVersion Include="TUnit.Core" Version="1.43.2" />
     <PackageVersion Include="TUnit.Assertions" Version="1.43.2" />
     <PackageVersion Include="TUnit.Engine" Version="1.43.2" />
-    <PackageVersion Include="TUnit.Logging.Microsoft" Version="1.43.2" />
+    <PackageVersion Include="TUnit.Logging.Microsoft" Version="1.43.11" />
   </ItemGroup>
   <ItemGroup Condition=" '$(IsShipping)' == 'true' ">
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="All" />
