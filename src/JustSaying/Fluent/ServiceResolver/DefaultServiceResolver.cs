@@ -1,3 +1,6 @@
+#if NET8_0_OR_GREATER
+using System.Runtime.CompilerServices;
+#endif
 using JustSaying.AwsTools;
 using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageSerialization;
@@ -45,7 +48,23 @@ internal sealed class DefaultServiceResolver : IServiceResolver
         }
         else if (desiredType == typeof(IMessageBodySerializationFactory))
         {
+
+#if NET8_0_OR_GREATER
+            if (RuntimeFeature.IsDynamicCodeSupported)
+            {
+#pragma warning disable IL2026
+#pragma warning disable IL3050
+                return new NewtonsoftSerializationFactory();
+#pragma warning restore IL3050
+#pragma warning restore IL2026
+            }
+            else
+            {
+                throw new NotSupportedException($"Newtonsoft.Json is not supported when dynamic code is unavailable (e.g. Native AOT). Use {nameof(SystemTextJsonSerializationFactory)} instead.");
+            }
+#else
             return new NewtonsoftSerializationFactory();
+#endif
         }
         else if (desiredType == typeof(MessageCompressionRegistry))
         {

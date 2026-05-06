@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <PublishAot>true</PublishAot>
+    <RootNamespace>JustSaying.AotTest</RootNamespace>
+    <SignAssembly>false</SignAssembly>
+    <NoWarn>$(NoWarn);CA2007</NoWarn>
+    <!-- Newtonsoft.Json (a transitive dependency) still produces some assembly-level
+         trim/AOT warnings even on 13.0.4 because the package only ships a net6.0 target
+         and not all internal reflection paths are annotated. Demote them from errors to
+         warnings so they remain visible in publish output — if a new dependency starts
+         emitting IL2104/IL3053 we'll see it in the log instead of having it silently
+         suppressed by NoWarn. Newtonsoft itself is replaced at runtime by an AOT-safe
+         System.Text.Json source-gen factory in Program.cs. -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);IL2104;IL3053</WarningsNotAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\JustSaying\JustSaying.csproj" />
+    <ProjectReference Include="..\..\src\JustSaying.Extensions.DependencyInjection.Microsoft\JustSaying.Extensions.DependencyInjection.Microsoft.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+  </ItemGroup>
+
+</Project>

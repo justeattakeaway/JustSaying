@@ -11,6 +11,11 @@ namespace StructureMap;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class ConfigurationExpressionExtensions
 {
+#if NET8_0_OR_GREATER
+    private const string UnreferencedCodeMessage = "StructureMap is not AOT-compatible and uses reflection over registered types.";
+    private const string DynamicCodeMessage = "StructureMap is not AOT-compatible and dynamically creates types at runtime.";
+#endif
+
     /// <summary>
     /// Adds JustSaying services to the registry.
     /// </summary>
@@ -18,6 +23,10 @@ public static class ConfigurationExpressionExtensions
     /// <exception cref="ArgumentNullException">
     /// <paramref name="registry"/> is <see langword="null"/>.
     /// </exception>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode(UnreferencedCodeMessage)]
+    [RequiresDynamicCode(DynamicCodeMessage)]
+#endif
     public static void AddJustSaying(this ConfigurationExpression registry)
     {
         if (registry == null)
@@ -36,6 +45,10 @@ public static class ConfigurationExpressionExtensions
     /// <exception cref="ArgumentNullException">
     /// <paramref name="registry"/> or <paramref name="region"/> is <see langword="null"/>.
     /// </exception>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode(UnreferencedCodeMessage)]
+    [RequiresDynamicCode(DynamicCodeMessage)]
+#endif
     public static void AddJustSaying(this ConfigurationExpression registry, string region)
     {
         if (registry == null)
@@ -61,6 +74,10 @@ public static class ConfigurationExpressionExtensions
     /// <exception cref="ArgumentNullException">
     /// <paramref name="registry"/> or <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode(UnreferencedCodeMessage)]
+    [RequiresDynamicCode(DynamicCodeMessage)]
+#endif
     public static void AddJustSaying(this ConfigurationExpression registry, Action<MessagingBusBuilder> configure)
     {
         if (registry == null)
@@ -84,6 +101,10 @@ public static class ConfigurationExpressionExtensions
     /// <exception cref="ArgumentNullException">
     /// <paramref name="registry"/> or <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode(UnreferencedCodeMessage)]
+    [RequiresDynamicCode(DynamicCodeMessage)]
+#endif
     public static void AddJustSaying(this ConfigurationExpression registry, Action<MessagingBusBuilder, IContext> configure)
     {
         if (registry == null)

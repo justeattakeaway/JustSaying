@@ -23,6 +23,10 @@ internal sealed class JustSayingRegistry : Registry
     /// <summary>
     /// Initializes a new instance of the <see cref="JustSayingRegistry"/> class.
     /// </summary>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("StructureMap is not AOT-compatible and uses reflection over registered types.")]
+    [RequiresDynamicCode("StructureMap is not AOT-compatible and dynamically creates types at runtime.")]
+#endif
     public JustSayingRegistry()
     {
         // Register as self so the same singleton instance implements two different interfaces
