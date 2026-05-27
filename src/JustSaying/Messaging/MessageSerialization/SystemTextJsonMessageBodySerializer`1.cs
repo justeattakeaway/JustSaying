@@ -18,6 +18,16 @@ public sealed class SystemTextJsonMessageBodySerializer<T> : IMessageBodySeriali
     /// <summary>
     /// Initializes a new instance of the <see cref="SystemTextJsonMessageBodySerializer{T}"/> class with default JSON serializer options.
     /// </summary>
+    /// <remarks>
+    /// The default options have no <see cref="System.Text.Json.Serialization.Metadata.JsonTypeInfoResolver"/>, so under Native AOT
+    /// the resulting serializer will throw <see cref="NotSupportedException"/> on first use. Use the
+    /// <see cref="SystemTextJsonMessageBodySerializer{T}(JsonSerializerOptions)"/> overload with a source-generated context to
+    /// remain AOT-compatible.
+    /// </remarks>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("The default JsonSerializerOptions have no TypeInfoResolver, so serialization falls back to reflection over message types that may be removed when trimming.")]
+    [RequiresDynamicCode("The default JsonSerializerOptions have no TypeInfoResolver, so serialization falls back to reflection-based metadata that requires dynamic code.")]
+#endif
     public SystemTextJsonMessageBodySerializer() : this(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions)
     { }
 
