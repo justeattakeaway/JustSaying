@@ -36,7 +36,11 @@ public sealed class NewtonsoftMessageBodySerializer<T> : IMessageBodySerializer 
     /// <param name="settings">The custom <see cref="JsonSerializerSettings"/> to use for serialization and deserialization.</param>
     public NewtonsoftMessageBodySerializer(JsonSerializerSettings settings)
     {
-        _settings = settings;
+        _settings = settings ?? new JsonSerializerSettings
+        {
+            NullValueHandling = NullValueHandling.Ignore,
+            Converters = [new Newtonsoft.Json.Converters.StringEnumConverter()]
+        };
     }
 
     /// <summary>
