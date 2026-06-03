@@ -1,4 +1,7 @@
 JustSaying.Fluent.PublicationsBuilder.WithPublishMiddleware<TMiddleware>() -> JustSaying.Fluent.PublicationsBuilder
+JustSaying.Fluent.PublicationsBuilder.WithQueueArn<T>(string queueArn, System.Action<JustSaying.Fluent.QueueAddressPublicationBuilder<T>> configure) -> JustSaying.Fluent.PublicationsBuilder
+JustSaying.Fluent.PublicationsBuilder.WithQueueUri<T>(System.Uri queueUrl, System.Action<JustSaying.Fluent.QueueAddressPublicationBuilder<T>> configure) -> JustSaying.Fluent.PublicationsBuilder
+JustSaying.Fluent.PublicationsBuilder.WithQueueUrl<T>(string queueUrl, System.Action<JustSaying.Fluent.QueueAddressPublicationBuilder<T>> configure) -> JustSaying.Fluent.PublicationsBuilder
 JustSaying.Messaging.Middleware.PublishContext
 JustSaying.Messaging.Middleware.PublishContext.Message.get -> JustSaying.Models.Message
 JustSaying.Messaging.Middleware.PublishContext.Messages.get -> System.Collections.Generic.IReadOnlyCollection<JustSaying.Models.Message>
@@ -39,9 +42,11 @@ JustSaying.AwsTools.QueueCreation.SqsWriteConfiguration.CompressionOptions.get -
 JustSaying.AwsTools.QueueCreation.SqsWriteConfiguration.CompressionOptions.set -> void
 JustSaying.Fluent.QueueAddressConfiguration.RawMessageDelivery.get -> bool
 JustSaying.Fluent.QueueAddressConfiguration.RawMessageDelivery.set -> void
+JustSaying.Fluent.QueueAddressPublicationBuilder<T>.CheckExistence() -> JustSaying.Fluent.QueueAddressPublicationBuilder<T>
 JustSaying.Fluent.QueueAddressPublicationBuilder<T>.WithCompression(JustSaying.AwsTools.MessageHandling.PublishCompressionOptions compressionOptions) -> JustSaying.Fluent.QueueAddressPublicationBuilder<T>
 JustSaying.Fluent.QueueAddressPublicationBuilder<T>.WithRawMessages() -> JustSaying.Fluent.QueueAddressPublicationBuilder<T>
 JustSaying.Fluent.QueueAddressPublicationBuilder<T>.WithSubject(string subject) -> JustSaying.Fluent.QueueAddressPublicationBuilder<T>
+JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>.CheckExistence() -> JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>
 JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>.WithMessageBodySerializer(JustSaying.Messaging.MessageSerialization.IMessageBodySerializer messageBodySerializer) -> JustSaying.Fluent.ISubscriptionBuilder<T>
 JustSaying.Fluent.QueuePublicationBuilder<T>.WithQueueName(string name) -> JustSaying.Fluent.QueuePublicationBuilder<T>
 JustSaying.Fluent.TopicAddressPublicationBuilder<T>.WithCompression(JustSaying.AwsTools.MessageHandling.PublishCompressionOptions compressionOptions) -> JustSaying.Fluent.TopicAddressPublicationBuilder<T>

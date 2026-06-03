@@ -58,6 +58,11 @@ config.Publications(x =>
 
     // Existing queue by URL
     x.WithQueueUrl<ProcessPaymentCommand>("https://sqs.us-east-1.amazonaws.com/123456789012/my-queue");
+
+    // Existing queue by URL, checked when the bus starts
+    x.WithQueueUrl<ProcessPaymentCommand>(
+        "https://sqs.us-east-1.amazonaws.com/123456789012/my-queue",
+        cfg => cfg.CheckExistence());
 });
 ```
 
@@ -86,8 +91,13 @@ Use **queues** when:
 - `WithQueue<T>()` - Create/use a queue with name from naming convention
 - `WithQueue<T>(Action<QueuePublicationBuilder<T>>)` - Configure queue publication
 - `WithQueueArn<T>(string)` - Publish to existing queue by ARN
+- `WithQueueArn<T>(string, Action<QueueAddressPublicationBuilder<T>>)` - Publish to existing queue by ARN with configuration
 - `WithQueueUrl<T>(string)` - Publish to existing queue by URL
+- `WithQueueUrl<T>(string, Action<QueueAddressPublicationBuilder<T>>)` - Publish to existing queue by URL with configuration
 - `WithQueueUri<T>(Uri)` - Publish to existing queue by URI
+- `WithQueueUri<T>(Uri, Action<QueueAddressPublicationBuilder<T>>)` - Publish to existing queue by URI with configuration
+
+For existing queues, the queue address configuration supports `CheckExistence()`, which verifies the queue during bus startup.
 
 ## Further Reading
 
@@ -95,4 +105,3 @@ Use **queues** when:
 - [WithQueue](withqueue.md) - Detailed queue publication configuration
 - [Write Configuration](write-configuration.md) - Encryption, compression, and advanced options
 - [Batch Publishing](batch-publishing.md) - Publishing multiple messages efficiently
-

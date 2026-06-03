@@ -23,6 +23,7 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
     private string _subject;
     private bool _subjectSet;
     private bool _isRawMessage;
+    private bool _shouldCheckExistence;
 
     private Action<PublishMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
@@ -70,6 +71,18 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
     }
 
     /// <summary>
+    /// Checks that the configured SQS queue exists before the bus starts publishing messages.
+    /// </summary>
+    /// <returns>
+    /// The current <see cref="QueueAddressPublicationBuilder{T}"/>.
+    /// </returns>
+    public QueueAddressPublicationBuilder<T> CheckExistence()
+    {
+        _shouldCheckExistence = true;
+        return this;
+    }
+
+    /// <summary>
     /// Configures the publish middleware pipeline for this publication.
     /// </summary>
     /// <param name="middlewareConfiguration">A delegate to configure the publish middleware pipeline.</param>
@@ -92,10 +105,24 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
         var compressionOptions = _compressionOptions ?? bus.Config.DefaultCompressionOptions;
         var subjectProvider = bus.Config.MessageSubjectProvider;
         var subject = _subjectSet ? _subject : subjectProvider.GetSubjectForType(typeof(T));
+        var sqsClient = proxy.GetAwsClientFactory().GetSqsClient(RegionEndpoint.GetBySystemName(_queueAddress.RegionName));
+
+        if (_shouldCheckExistence)
+        {
+            var queue = new QueueAddressQueue(_queueAddress, sqsClient);
+            bus.AddStartupTask(async cancellationToken =>
+            {
+                if (!await queue.ExistsAsync(cancellationToken).ConfigureAwait(false))
+                {
+                    throw new InvalidOperationException(
+                        $"SQS queue '{queue.QueueName}' with URL '{queue.Uri}' does not exist.");
+                }
+            });
+        }
 
         var eventPublisher = new SqsMessagePublisher(
             _queueAddress.QueueUrl,
-            proxy.GetAwsClientFactory().GetSqsClient(RegionEndpoint.GetBySystemName(_queueAddress.RegionName)),
+            sqsClient,
             new OutboundMessageConverter(PublishDestinationType.Queue, bus.MessageBodySerializerFactory.GetSerializer<T>(), new MessageCompressionRegistry([new GzipMessageBodyCompression()]), compressionOptions, subject, _isRawMessage),
             loggerFactory)
         {

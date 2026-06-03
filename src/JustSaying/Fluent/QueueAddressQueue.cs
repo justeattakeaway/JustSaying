@@ -1,6 +1,7 @@
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Extensions;
 using JustSaying.Messaging.Interrogation;
@@ -39,6 +40,25 @@ internal sealed class QueueAddressQueue : ISqsQueue
     public string RegionSystemName { get; }
     public Uri Uri { get; }
     public string Arn { get; }
+
+    internal async Task<bool> ExistsAsync(CancellationToken cancellationToken)
+    {
+        var request = new GetQueueAttributesRequest
+        {
+            QueueUrl = Uri.AbsoluteUri,
+            AttributeNames = [JustSayingConstants.AttributeArn]
+        };
+
+        try
+        {
+            var response = await _client.GetQueueAttributesAsync(request, cancellationToken).ConfigureAwait(false);
+            return response != null;
+        }
+        catch (QueueDoesNotExistException)
+        {
+            return false;
+        }
+    }
 
     public Task DeleteMessageAsync(string queueUrl, string receiptHandle, CancellationToken cancellationToken)
         => _client.DeleteMessageAsync(queueUrl, receiptHandle, cancellationToken);
