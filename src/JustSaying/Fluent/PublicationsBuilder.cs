@@ -74,7 +74,7 @@ public sealed class PublicationsBuilder
     }
 
     /// <summary>
-    /// Configures a publisher for a pre-existing topic.
+    /// Configures a publisher for a pre-existing queue.
     /// </summary>
     /// <param name="queueArn">The ARN of the queue to publish to.</param>
     /// <typeparam name="T">The type of the message to publish to.</typeparam>
@@ -85,7 +85,7 @@ public sealed class PublicationsBuilder
         => WithQueueArn<T>(queueArn, null);
 
     /// <summary>
-    /// Configures a publisher for a pre-existing topic.
+    /// Configures a publisher for a pre-existing queue.
     /// </summary>
     /// <param name="queueArn">The ARN of the queue to publish to.</param>
     /// <param name="configure">An optional delegate to configure a queue publication.</param>
@@ -106,7 +106,7 @@ public sealed class PublicationsBuilder
     }
 
     /// <summary>
-    /// Configures a publisher for a pre-existing topic.
+    /// Configures a publisher for a pre-existing queue.
     /// </summary>
     /// <param name="queueUrl">The URL of the queue to publish to.</param>
     /// <typeparam name="T">The type of the message to publish to.</typeparam>
@@ -117,7 +117,7 @@ public sealed class PublicationsBuilder
         => WithQueueUrl<T>(queueUrl, null);
 
     /// <summary>
-    /// Configures a publisher for a pre-existing topic.
+    /// Configures a publisher for a pre-existing queue.
     /// </summary>
     /// <param name="queueUrl">The URL of the queue to publish to.</param>
     /// <param name="configure">An optional delegate to configure a queue publication.</param>
@@ -138,7 +138,7 @@ public sealed class PublicationsBuilder
     }
 
     /// <summary>
-    /// Configures a publisher for a pre-existing topic.
+    /// Configures a publisher for a pre-existing queue.
     /// </summary>
     /// <param name="queueUrl">The URL of the queue to publish to.</param>
     /// <typeparam name="T">The type of the message to publish to.</typeparam>
@@ -149,7 +149,7 @@ public sealed class PublicationsBuilder
         => WithQueueUri<T>(queueUrl, null);
 
     /// <summary>
-    /// Configures a publisher for a pre-existing topic.
+    /// Configures a publisher for a pre-existing queue.
     /// </summary>
     /// <param name="queueUrl">The URL of the queue to publish to.</param>
     /// <param name="configure">An optional delegate to configure a queue publication.</param>
