@@ -23,6 +23,9 @@ namespace Microsoft.Extensions.DependencyInjection;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class IServiceCollectionExtensions
 {
+    private const string UnreferencedCodeMessage = "The default IMessageBodySerializationFactory implementation requires unreferenced code.";
+    private const string DynamicCodeMessage = "The default IMessageBodySerializationFactory implementation requires dynamic code.";
+
     /// <summary>
     /// Adds JustSaying services to the service collection.
     /// </summary>
@@ -33,6 +36,10 @@ public static class IServiceCollectionExtensions
     /// <exception cref="ArgumentNullException">
     /// <paramref name="services"/> is <see langword="null"/>.
     /// </exception>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode(UnreferencedCodeMessage)]
+    [RequiresDynamicCode(DynamicCodeMessage)]
+#endif
     public static IServiceCollection AddJustSaying(this IServiceCollection services)
     {
         if (services == null)
@@ -54,6 +61,10 @@ public static class IServiceCollectionExtensions
     /// <exception cref="ArgumentNullException">
     /// <paramref name="services"/> or <paramref name="region"/> is <see langword="null"/>.
     /// </exception>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode(UnreferencedCodeMessage)]
+    [RequiresDynamicCode(DynamicCodeMessage)]
+#endif
     public static IServiceCollection AddJustSaying(this IServiceCollection services, string region)
     {
         if (services == null)
@@ -63,7 +74,7 @@ public static class IServiceCollectionExtensions
 
         if (string.IsNullOrWhiteSpace(region))
         {
-            throw new ArgumentException("region must not be null or empty" ,nameof(region));
+            throw new ArgumentException("region must not be null or empty", nameof(region));
         }
 
         return services.AddJustSaying(
@@ -82,6 +93,10 @@ public static class IServiceCollectionExtensions
     /// <exception cref="ArgumentNullException">
     /// <paramref name="services"/> or <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode(UnreferencedCodeMessage)]
+    [RequiresDynamicCode(DynamicCodeMessage)]
+#endif
     public static IServiceCollection AddJustSaying(this IServiceCollection services, Action<MessagingBusBuilder> configure)
     {
         if (services == null)
@@ -108,6 +123,10 @@ public static class IServiceCollectionExtensions
     /// <exception cref="ArgumentNullException">
     /// <paramref name="services"/> or <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode(UnreferencedCodeMessage)]
+    [RequiresDynamicCode(DynamicCodeMessage)]
+#endif
     public static IServiceCollection AddJustSaying(this IServiceCollection services, Action<MessagingBusBuilder, IServiceProvider> configure)
     {
         if (services == null)
@@ -213,7 +232,11 @@ public static class IServiceCollectionExtensions
     /// <exception cref="ArgumentNullException">
     /// <paramref name="services"/> is <see langword="null"/>.
     /// </exception>
+#if NET8_0_OR_GREATER
+    public static IServiceCollection AddJustSayingHandler<TMessage, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(this IServiceCollection services)
+#else
     public static IServiceCollection AddJustSayingHandler<TMessage, THandler>(this IServiceCollection services)
+#endif
         where TMessage : Message
         where THandler : class, IHandlerAsync<TMessage>
     {
