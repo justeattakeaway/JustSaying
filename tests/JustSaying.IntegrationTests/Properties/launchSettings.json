@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "InMemory": {
+      "commandName": "Project",
+      "comment": "Default mode. Runs the integration tests against the in-memory LocalSqsSnsMessaging bus; no container is started."
+    },
+    "Floci": {
+      "commandName": "Project",
+      "comment": "Runs the integration tests against the floci AWS emulator, started in a container by the Aspire test host. Requires Docker to be running.",
+      "environmentVariables": {
+        "USE_FLOCI": "1"
+      }
+    }
+  }
+}

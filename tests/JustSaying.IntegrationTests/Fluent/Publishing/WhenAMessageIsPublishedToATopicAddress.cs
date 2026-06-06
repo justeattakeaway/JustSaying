@@ -46,10 +46,10 @@ public class WhenAMessageIsPublishedToATopicAddress : IntegrationTestBase
 
                 await publisher.PublishAsync(message, cancellationToken);
 
-                json = string.Join($"{Environment.NewLine}{Environment.NewLine}",
+                json = ScrubArns(string.Join($"{Environment.NewLine}{Environment.NewLine}",
                         listenerJson,
                         publisherJson)
-                    .Replace(UniqueName, "integrationTestQueueName", StringComparison.Ordinal);
+                    .Replace(UniqueName, "integrationTestQueueName", StringComparison.Ordinal));
 
                 await Patiently.AssertThatAsync(OutputHelper,
                     () =>

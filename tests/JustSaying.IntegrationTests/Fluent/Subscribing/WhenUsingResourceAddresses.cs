@@ -220,7 +220,7 @@ public class AddressPubSub : IntegrationTestBase
                 {
                     builder.Client((options) =>
                     {
-                        options.WithClientFactory(() => new LocalAwsClientFactory(Bus));
+                        options.WithClientFactory(CreateClientFactory);
                         // options.WithSessionCredentials(AccessKeyId, SecretAccessKey, SessionToken)
                         //        .WithServiceUri(ServiceUri);
                     });

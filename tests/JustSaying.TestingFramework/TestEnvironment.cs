@@ -56,6 +56,21 @@ public static class TestEnvironment
     }
 
     /// <summary>
+    /// Gets a value indicating whether the integration tests should run against the floci
+    /// local AWS emulator (started in a container via Aspire) instead of the in-memory
+    /// <c>LocalSqsSnsMessaging</c> bus.
+    /// </summary>
+    /// <remarks>
+    /// Enabled by setting the <c>USE_FLOCI</c> environment variable to <c>1</c>. When enabled,
+    /// the tests use real AWS SDK clients pointed at the floci container. Floci reads the access
+    /// key id as an account id when it is exactly 12 digits, which lets us give each test its own
+    /// account for isolation when running concurrently. The container endpoint is supplied at
+    /// runtime by the Aspire test host, not via an environment variable.
+    /// </remarks>
+    public static bool UseFloci =>
+        string.Equals(Environment.GetEnvironmentVariable("USE_FLOCI"), "1", StringComparison.Ordinal);
+
+    /// <summary>
     /// Gets a value indicating whether AWS credentials are configured.
     /// </summary>
     public static bool HasCredentials => !string.IsNullOrEmpty(AccessKey) && !string.IsNullOrEmpty(SecretKey);

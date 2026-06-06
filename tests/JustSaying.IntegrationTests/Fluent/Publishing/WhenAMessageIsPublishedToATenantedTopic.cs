@@ -58,7 +58,7 @@ public class WhenAMessageIsPublishedToATenantedTopic : IntegrationTestBase
 
                 var publisherJson = JsonConvert.SerializeObject(publisher.Interrogate(), Formatting.Indented);
 
-                json = publisherJson.Replace(UniqueName, "integrationTestQueueName", StringComparison.Ordinal);
+                json = ScrubArns(publisherJson.Replace(UniqueName, "integrationTestQueueName", StringComparison.Ordinal));
 
                 await waitForSixMessages;
 
@@ -127,7 +127,7 @@ public class WhenAMessageIsPublishedToATenantedTopic : IntegrationTestBase
 
                 var publisherJson = JsonConvert.SerializeObject(publisher.Interrogate(), Formatting.Indented);
 
-                json = publisherJson.Replace(UniqueName, "integrationTestQueueName", StringComparison.Ordinal);
+                json = ScrubArns(publisherJson.Replace(UniqueName, "integrationTestQueueName", StringComparison.Ordinal));
 
                 // Assert
                 await Patiently.AssertThatAsync(OutputHelper,
