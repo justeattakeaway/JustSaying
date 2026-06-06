@@ -1,0 +1,5 @@
+{
+  "appHost": {
+    "path": "samples/src/apphost.cs"
+  }
+}
