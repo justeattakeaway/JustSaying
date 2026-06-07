@@ -41,5 +41,3 @@ npm run deploy
 ```
 
 This will deploy the documentation to the `gh-pages` branch.
-
-

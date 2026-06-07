@@ -3,7 +3,7 @@
 
 # Publish Middleware
 
-Publish middleware allows you to add cross-cutting concerns to your publish operations, such as tracing, logging, or metadata enrichment. It follows the same `MiddlewareBase<TContext, TOut>` pattern used for [handler middleware](/subscriptions/middleware/README), but wraps `PublishAsync` and `PublishBatchAsync` calls instead of message handling.
+Publish middleware allows you to add cross-cutting concerns to your publish operations, such as tracing, logging, or metadata enrichment. It follows the same `MiddlewareBase<TContext, TOut>` pattern used for [handler middleware](/subscriptions/middleware), but wraps `PublishAsync` and `PublishBatchAsync` calls instead of message handling.
 
 ## How It Works
 
