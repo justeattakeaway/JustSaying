@@ -72,4 +72,57 @@ public class WhenUsingQueueAddressPublicationBuilder : IntegrationTestBase
         // Assert
         exception.Message.ShouldBe($"SQS queue '{missingQueueName}' with URL '{missingQueueUrl}' does not exist.");
     }
+
+    [Test]
+    public async Task WithQueueArnWithQueueExistenceCheckThrowsWhenQueueDoesNotExist()
+    {
+        // Arrange
+        var missingQueueName = $"{Guid.NewGuid():N}-does-not-exist";
+        var missingQueueArn = $"arn:aws:sqs:{RegionName}:000000000000:{missingQueueName}";
+        var expectedQueueUrl = $"https://sqs.{RegionName}.amazonaws.com/000000000000/{missingQueueName}";
+
+        var services = GivenJustSaying()
+            .ConfigureJustSaying(builder =>
+                builder.Publications(c => c.WithQueueArn<SimpleMessage>(
+                    missingQueueArn,
+                    queue => queue.WithQueueExistenceCheck())));
+
+        using var provider = services.BuildServiceProvider();
+        var publisher = provider.GetRequiredService<IMessagePublisher>();
+
+        // Act
+        var exception = await Should.ThrowAsync<InvalidOperationException>(
+            () => publisher.StartAsync(CancellationToken.None));
+
+        // Assert
+        exception.Message.ShouldBe($"SQS queue '{missingQueueName}' with URL '{expectedQueueUrl}' does not exist.");
+    }
+
+    [Test]
+    public async Task WithQueueUriWithQueueExistenceCheckThrowsWhenQueueDoesNotExist()
+    {
+        // Arrange - point at a queue that is never created, but using a URL the simulator understands.
+        IAwsClientFactory clientFactory = CreateClientFactory();
+        var sqsClient = clientFactory.GetSqsClient(Region);
+        var existingQueueResponse = await sqsClient.CreateQueueAsync(UniqueName);
+
+        var missingQueueName = $"{Guid.NewGuid():N}-does-not-exist";
+        var missingQueueUri = new Uri(existingQueueResponse.QueueUrl.Replace(UniqueName, missingQueueName));
+
+        var services = GivenJustSaying()
+            .ConfigureJustSaying(builder =>
+                builder.Publications(c => c.WithQueueUri<SimpleMessage>(
+                    missingQueueUri,
+                    queue => queue.WithQueueExistenceCheck())));
+
+        using var provider = services.BuildServiceProvider();
+        var publisher = provider.GetRequiredService<IMessagePublisher>();
+
+        // Act
+        var exception = await Should.ThrowAsync<InvalidOperationException>(
+            () => publisher.StartAsync(CancellationToken.None));
+
+        // Assert
+        exception.Message.ShouldBe($"SQS queue '{missingQueueName}' with URL '{missingQueueUri}' does not exist.");
+    }
 }

@@ -7,7 +7,7 @@
 
 #### Creates a direct subscription to a queue, without a topic. This can be useful for direct 'command' style scenarios where the destination queue is already known at publish time.
 
-* A queue will be created for message of type `T`, using the supplied `IQueueNamingConvention`, applied to the message type `T`. 
+* A queue will be created for message of type `T`, using the supplied `IQueueNamingConvention`, applied to the message type `T`.
   * This convention can be overridden on a case-by-case basis using `WithName` in the queue configuration.
 * A dead letter queue will be created, named after the queue name above with an `_error` suffix.
 
@@ -60,7 +60,7 @@ When subscribing to an existing queue with `ForQueueArn`, `ForQueueUrl`, or `For
 
 #### `WithQueueExistenceCheck()`
 
-Verify that the existing SQS queue can be found before the bus starts receiving messages. If the queue does not exist, startup fails with a clear exception instead of repeatedly failing receive requests.
+Verify that the existing SQS queue can be found before the bus starts receiving messages. If the queue does not exist, startup fails with a clear exception instead of repeatedly failing receive requests. Note this check requires the `sqs:GetQueueAttributes` permission.
 
 ```csharp
 x.ForQueueArn<OrderReadyEvent>(

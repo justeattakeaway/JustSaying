@@ -51,8 +51,8 @@ internal sealed class QueueAddressQueue : ISqsQueue
 
         try
         {
-            var response = await _client.GetQueueAttributesAsync(request, cancellationToken).ConfigureAwait(false);
-            return response != null;
+            await _client.GetQueueAttributesAsync(request, cancellationToken).ConfigureAwait(false);
+            return true;
         }
         catch (QueueDoesNotExistException)
         {
