@@ -30,7 +30,7 @@ Queue subscriptions can also target existing queues by ARN, URL, or URI:
 ```csharp
 subscriptionConfig.ForQueueArn<OrderReadyEvent>(
     "arn:aws:sqs:us-east-1:123456789012:existing-queue",
-    cfg => cfg.CheckExistence());
+    cfg => cfg.WithQueueExistenceCheck());
 ```
 
-Use `CheckExistence()` when you want JustSaying to verify an existing queue during bus startup.
+Use `WithQueueExistenceCheck()` when you want JustSaying to verify an existing queue during bus startup.

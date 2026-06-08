@@ -38,7 +38,7 @@ public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
 
     private IMessageBodySerializer MessageBodySerializer { get; set; }
 
-    private bool ShouldCheckExistence { get; set; }
+    private bool ShouldCheckQueueExistence { get; set; }
 
     /// <summary>
     /// Configures the SQS read configuration.
@@ -62,9 +62,9 @@ public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
     /// <returns>
     /// The current <see cref="QueueAddressSubscriptionBuilder{T}"/>.
     /// </returns>
-    public QueueAddressSubscriptionBuilder<T> CheckExistence()
+    public QueueAddressSubscriptionBuilder<T> WithQueueExistenceCheck()
     {
-        ShouldCheckExistence = true;
+        ShouldCheckQueueExistence = true;
         return this;
     }
 
@@ -105,7 +105,7 @@ public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         attachedQueueConfig.SubscriptionGroupName ??= queue.QueueName;
         attachedQueueConfig.Validate();
 
-        if (ShouldCheckExistence)
+        if (ShouldCheckQueueExistence)
         {
             bus.AddStartupTask(async cancellationToken =>
             {

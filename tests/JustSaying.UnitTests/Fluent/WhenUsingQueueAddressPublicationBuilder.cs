@@ -21,7 +21,7 @@ public class WhenUsingQueueAddressPublicationBuilder
     private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
 
     [Test]
-    public async Task DoesNotCheckExistenceByDefault()
+    public async Task DoesNotCheckQueueExistenceByDefault()
     {
         var bus = BuildBus(checkExistence: false);
 
@@ -32,7 +32,7 @@ public class WhenUsingQueueAddressPublicationBuilder
     }
 
     [Test]
-    public async Task CheckExistenceChecksQueueAttributesBeforeStarting()
+    public async Task WithQueueExistenceCheckChecksQueueAttributesBeforeStarting()
     {
         _sqs.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>(), Arg.Any<CancellationToken>())
             .Returns(new GetQueueAttributesResponse());
@@ -48,7 +48,7 @@ public class WhenUsingQueueAddressPublicationBuilder
     }
 
     [Test]
-    public async Task CheckExistenceThrowsWhenQueueDoesNotExist()
+    public async Task WithQueueExistenceCheckThrowsWhenQueueDoesNotExist()
     {
         _sqs.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<GetQueueAttributesResponse>(new QueueDoesNotExistException("Queue does not exist.")));
@@ -76,7 +76,7 @@ public class WhenUsingQueueAddressPublicationBuilder
                 {
                     if (checkExistence)
                     {
-                        queue.CheckExistence();
+                        queue.WithQueueExistenceCheck();
                     }
                 }))
             .BuildPublisher();

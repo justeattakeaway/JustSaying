@@ -29,7 +29,7 @@ public class WhenUsingQueueAddressSubscriptionBuilder
     }
 
     [Test]
-    public async Task DoesNotCheckExistenceByDefault()
+    public async Task DoesNotCheckQueueExistenceByDefault()
     {
         using var cancellation = new CancellationTokenSource();
         var bus = BuildBus(checkExistence: false);
@@ -49,7 +49,7 @@ public class WhenUsingQueueAddressSubscriptionBuilder
     }
 
     [Test]
-    public async Task CheckExistenceChecksQueueAttributesBeforeStarting()
+    public async Task WithQueueExistenceCheckChecksQueueAttributesBeforeStarting()
     {
         using var cancellation = new CancellationTokenSource();
         _sqs.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>(), Arg.Any<CancellationToken>())
@@ -74,7 +74,7 @@ public class WhenUsingQueueAddressSubscriptionBuilder
     }
 
     [Test]
-    public async Task CheckExistenceThrowsWhenQueueDoesNotExist()
+    public async Task WithQueueExistenceCheckThrowsWhenQueueDoesNotExist()
     {
         _sqs.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<GetQueueAttributesResponse>(new QueueDoesNotExistException("Queue does not exist.")));
@@ -110,7 +110,7 @@ public class WhenUsingQueueAddressSubscriptionBuilder
 
                     if (checkExistence)
                     {
-                        queue.CheckExistence();
+                        queue.WithQueueExistenceCheck();
                     }
                 }))
             .BuildSubscribers();

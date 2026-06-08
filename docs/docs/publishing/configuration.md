@@ -62,7 +62,7 @@ config.Publications(x =>
     // Existing queue by URL, checked when the bus starts
     x.WithQueueUrl<ProcessPaymentCommand>(
         "https://sqs.us-east-1.amazonaws.com/123456789012/my-queue",
-        cfg => cfg.CheckExistence());
+        cfg => cfg.WithQueueExistenceCheck());
 });
 ```
 
@@ -97,7 +97,7 @@ Use **queues** when:
 - `WithQueueUri<T>(Uri)` - Publish to existing queue by URI
 - `WithQueueUri<T>(Uri, Action<QueueAddressPublicationBuilder<T>>)` - Publish to existing queue by URI with configuration
 
-For existing queues, the queue address configuration supports `CheckExistence()`, which verifies the queue during bus startup.
+For existing queues, the queue address configuration supports `WithQueueExistenceCheck()`, which verifies the queue during bus startup.
 
 ## Further Reading
 

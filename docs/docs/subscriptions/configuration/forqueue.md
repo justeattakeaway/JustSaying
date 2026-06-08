@@ -58,14 +58,14 @@ x.ForQueueUri<OrderReadyEvent>(new Uri("https://sqs.us-east-1.amazonaws.com/1234
 
 When subscribing to an existing queue with `ForQueueArn`, `ForQueueUrl`, or `ForQueueUri`, you can pass a configuration lambda.
 
-#### `CheckExistence()`
+#### `WithQueueExistenceCheck()`
 
 Verify that the existing SQS queue can be found before the bus starts receiving messages. If the queue does not exist, startup fails with a clear exception instead of repeatedly failing receive requests.
 
 ```csharp
 x.ForQueueArn<OrderReadyEvent>(
     "arn:aws:sqs:us-east-1:123456789012:existing-queue",
-    cfg => cfg.CheckExistence());
+    cfg => cfg.WithQueueExistenceCheck());
 ```
 
 #### `WithReadConfiguration(Action<QueueAddressConfiguration> configure)`
@@ -77,7 +77,7 @@ x.ForQueueUrl<OrderReadyEvent>(
     "https://sqs.us-east-1.amazonaws.com/123456789012/my-queue",
     cfg =>
     {
-        cfg.CheckExistence();
+        cfg.WithQueueExistenceCheck();
         cfg.WithReadConfiguration(read => read.RawMessageDelivery = true);
     });
 ```

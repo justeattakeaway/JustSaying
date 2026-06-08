@@ -23,7 +23,7 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
     private string _subject;
     private bool _subjectSet;
     private bool _isRawMessage;
-    private bool _shouldCheckExistence;
+    private bool _shouldCheckQueueExistence;
 
     private Action<PublishMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
@@ -76,9 +76,9 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
     /// <returns>
     /// The current <see cref="QueueAddressPublicationBuilder{T}"/>.
     /// </returns>
-    public QueueAddressPublicationBuilder<T> CheckExistence()
+    public QueueAddressPublicationBuilder<T> WithQueueExistenceCheck()
     {
-        _shouldCheckExistence = true;
+        _shouldCheckQueueExistence = true;
         return this;
     }
 
@@ -107,7 +107,7 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
         var subject = _subjectSet ? _subject : subjectProvider.GetSubjectForType(typeof(T));
         var sqsClient = proxy.GetAwsClientFactory().GetSqsClient(RegionEndpoint.GetBySystemName(_queueAddress.RegionName));
 
-        if (_shouldCheckExistence)
+        if (_shouldCheckQueueExistence)
         {
             var queue = new QueueAddressQueue(_queueAddress, sqsClient);
             bus.AddStartupTask(async cancellationToken =>

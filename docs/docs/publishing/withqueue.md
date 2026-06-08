@@ -53,14 +53,14 @@ config.Publications(x =>
 });
 ```
 
-You can also pass a configuration lambda for existing queues. Use `CheckExistence()` to verify that the queue exists when the bus starts. Note this check requires the `sqs.GetQueueAttributes` permission.
+You can also pass a configuration lambda for existing queues. Use `WithQueueExistenceCheck()` to verify that the queue exists when the bus starts. Note this check requires the `sqs.GetQueueAttributes` permission.
 
 ```csharp
 config.Publications(x =>
 {
     x.WithQueueArn<ProcessPaymentCommand>(
         "arn:aws:sqs:us-east-1:123456789012:existing-queue",
-        cfg => cfg.CheckExistence());
+        cfg => cfg.WithQueueExistenceCheck());
 });
 ```
 
@@ -82,7 +82,7 @@ config.Publications(x =>
 {
     x.WithQueueUrl<ProcessPaymentCommand>(
         "https://sqs.us-east-1.amazonaws.com/123456789012/my-queue",
-        cfg => cfg.CheckExistence());
+        cfg => cfg.WithQueueExistenceCheck());
 });
 ```
 
@@ -104,7 +104,7 @@ config.Publications(x =>
 {
     x.WithQueueUri<ProcessPaymentCommand>(
         new Uri("https://sqs.us-east-1.amazonaws.com/123456789012/my-queue"),
-        cfg => cfg.CheckExistence());
+        cfg => cfg.WithQueueExistenceCheck());
 });
 ```
 
@@ -154,14 +154,14 @@ x.WithQueue<ProcessPaymentCommand>(cfg =>
 
 When using the configuration lambda with `WithQueueArn`, `WithQueueUrl`, or `WithQueueUri`, the following option is available:
 
-#### `CheckExistence()`
+#### `WithQueueExistenceCheck()`
 
 Verify that the existing SQS queue can be found before the bus starts. If the queue does not exist, startup fails with a clear exception instead of waiting until publish attempts fail.
 
 ```csharp
 x.WithQueueArn<ProcessPaymentCommand>(
     "arn:aws:sqs:us-east-1:123456789012:existing-queue",
-    cfg => cfg.CheckExistence());
+    cfg => cfg.WithQueueExistenceCheck());
 ```
 
 ## When to Use Queues
