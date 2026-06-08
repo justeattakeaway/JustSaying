@@ -74,7 +74,7 @@ public sealed class PublicationsBuilder
     }
 
     /// <summary>
-    /// Configures a publisher for a pre-existing topic.
+    /// Configures a publisher for a pre-existing queue.
     /// </summary>
     /// <param name="queueArn">The ARN of the queue to publish to.</param>
     /// <typeparam name="T">The type of the message to publish to.</typeparam>
@@ -82,10 +82,23 @@ public sealed class PublicationsBuilder
     /// <exception cref="ArgumentNullException"></exception>
     public PublicationsBuilder WithQueueArn<T>(string queueArn)
         where T : Message
+        => WithQueueArn<T>(queueArn, null);
+
+    /// <summary>
+    /// Configures a publisher for a pre-existing queue.
+    /// </summary>
+    /// <param name="queueArn">The ARN of the queue to publish to.</param>
+    /// <param name="configure">An optional delegate to configure a queue publication.</param>
+    /// <typeparam name="T">The type of the message to publish to.</typeparam>
+    /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
+    /// <exception cref="ArgumentNullException"></exception>
+    public PublicationsBuilder WithQueueArn<T>(string queueArn, Action<QueueAddressPublicationBuilder<T>> configure)
+        where T : Message
     {
         if (queueArn == null) throw new ArgumentNullException(nameof(queueArn));
 
         var builder = new QueueAddressPublicationBuilder<T>(QueueAddress.FromArn(queueArn));
+        configure?.Invoke(builder);
 
         Publications.Add(builder);
 
@@ -93,7 +106,7 @@ public sealed class PublicationsBuilder
     }
 
     /// <summary>
-    /// Configures a publisher for a pre-existing topic.
+    /// Configures a publisher for a pre-existing queue.
     /// </summary>
     /// <param name="queueUrl">The URL of the queue to publish to.</param>
     /// <typeparam name="T">The type of the message to publish to.</typeparam>
@@ -101,10 +114,23 @@ public sealed class PublicationsBuilder
     /// <exception cref="ArgumentNullException"></exception>
     public PublicationsBuilder WithQueueUrl<T>(string queueUrl)
         where T : Message
+        => WithQueueUrl<T>(queueUrl, null);
+
+    /// <summary>
+    /// Configures a publisher for a pre-existing queue.
+    /// </summary>
+    /// <param name="queueUrl">The URL of the queue to publish to.</param>
+    /// <param name="configure">An optional delegate to configure a queue publication.</param>
+    /// <typeparam name="T">The type of the message to publish to.</typeparam>
+    /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
+    /// <exception cref="ArgumentNullException"></exception>
+    public PublicationsBuilder WithQueueUrl<T>(string queueUrl, Action<QueueAddressPublicationBuilder<T>> configure)
+        where T : Message
     {
         if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
 
         var builder = new QueueAddressPublicationBuilder<T>(QueueAddress.FromUrl(queueUrl));
+        configure?.Invoke(builder);
 
         Publications.Add(builder);
 
@@ -112,7 +138,7 @@ public sealed class PublicationsBuilder
     }
 
     /// <summary>
-    /// Configures a publisher for a pre-existing topic.
+    /// Configures a publisher for a pre-existing queue.
     /// </summary>
     /// <param name="queueUrl">The URL of the queue to publish to.</param>
     /// <typeparam name="T">The type of the message to publish to.</typeparam>
@@ -120,10 +146,23 @@ public sealed class PublicationsBuilder
     /// <exception cref="ArgumentNullException"></exception>
     public PublicationsBuilder WithQueueUri<T>(Uri queueUrl)
         where T : Message
+        => WithQueueUri<T>(queueUrl, null);
+
+    /// <summary>
+    /// Configures a publisher for a pre-existing queue.
+    /// </summary>
+    /// <param name="queueUrl">The URL of the queue to publish to.</param>
+    /// <param name="configure">An optional delegate to configure a queue publication.</param>
+    /// <typeparam name="T">The type of the message to publish to.</typeparam>
+    /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
+    /// <exception cref="ArgumentNullException"></exception>
+    public PublicationsBuilder WithQueueUri<T>(Uri queueUrl, Action<QueueAddressPublicationBuilder<T>> configure)
+        where T : Message
     {
         if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
 
         var builder = new QueueAddressPublicationBuilder<T>(QueueAddress.FromUri(queueUrl));
+        configure?.Invoke(builder);
 
         Publications.Add(builder);
 

@@ -38,6 +38,8 @@ public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
 
     private IMessageBodySerializer MessageBodySerializer { get; set; }
 
+    private bool ShouldCheckQueueExistence { get; set; }
+
     /// <summary>
     /// Configures the SQS read configuration.
     /// </summary>
@@ -51,6 +53,18 @@ public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
     public QueueAddressSubscriptionBuilder<T> WithReadConfiguration(Action<QueueAddressConfiguration> configure)
     {
         ConfigureReads = configure ?? throw new ArgumentNullException(nameof(configure));
+        return this;
+    }
+
+    /// <summary>
+    /// Checks that the configured SQS queue exists before the bus starts receiving messages.
+    /// </summary>
+    /// <returns>
+    /// The current <see cref="QueueAddressSubscriptionBuilder{T}"/>.
+    /// </returns>
+    public QueueAddressSubscriptionBuilder<T> WithQueueExistenceCheck()
+    {
+        ShouldCheckQueueExistence = true;
         return this;
     }
 
@@ -90,6 +104,18 @@ public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
 
         attachedQueueConfig.SubscriptionGroupName ??= queue.QueueName;
         attachedQueueConfig.Validate();
+
+        if (ShouldCheckQueueExistence)
+        {
+            bus.AddStartupTask(async cancellationToken =>
+            {
+                if (!await queue.ExistsAsync(cancellationToken).ConfigureAwait(false))
+                {
+                    throw new InvalidOperationException(
+                        $"SQS queue '{queue.QueueName}' with URL '{queue.Uri}' does not exist.");
+                }
+            });
+        }
 
         var serializer = MessageBodySerializer ?? bus.MessageBodySerializerFactory.GetSerializer<T>();
         var compressionRegistry = bus.CompressionRegistry;

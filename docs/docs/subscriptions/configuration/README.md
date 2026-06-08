@@ -19,9 +19,18 @@ services.AddJustSaying((MessagingBusBuilder config) =>
 });
 ```
 
-The `subscriptionConfig` builder provides methods to describe the topology of your messaging setup. 
+The `subscriptionConfig` builder provides methods to describe the topology of your messaging setup.
 
 ### [ForTopic&lt;T&gt;](/subscriptions/configuration/fortopic)
 
 ### [ForQueue&lt;T&gt;](/subscriptions/configuration/forqueue)
 
+Queue subscriptions can also target existing queues by ARN, URL, or URI:
+
+```csharp
+subscriptionConfig.ForQueueArn<OrderReadyEvent>(
+    "arn:aws:sqs:us-east-1:123456789012:existing-queue",
+    cfg => cfg.WithQueueExistenceCheck());
+```
+
+Use `WithQueueExistenceCheck()` when you want JustSaying to verify an existing queue during bus startup. Note this check requires the `sqs:GetQueueAttributes` permission.
