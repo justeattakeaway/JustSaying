@@ -169,8 +169,6 @@ public class AddressPubSub : IntegrationTestBase
                     builder.Client((options) =>
                     {
                         options.WithClientFactory(() => clientFactory);
-                        // options.WithSessionCredentials(AccessKeyId, SecretAccessKey, SessionToken)
-                        //     .WithServiceUri(ServiceUri);
                     });
                 })
             .ConfigureJustSaying(builder =>
@@ -221,8 +219,6 @@ public class AddressPubSub : IntegrationTestBase
                     builder.Client((options) =>
                     {
                         options.WithClientFactory(CreateClientFactory);
-                        // options.WithSessionCredentials(AccessKeyId, SecretAccessKey, SessionToken)
-                        //        .WithServiceUri(ServiceUri);
                     });
                 })
             .ConfigureJustSaying(builder =>
