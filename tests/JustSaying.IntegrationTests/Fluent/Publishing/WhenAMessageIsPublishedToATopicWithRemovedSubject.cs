@@ -12,7 +12,7 @@ public class WhenAMessageIsPublishedToATopicWithRemovedSubject : IntegrationTest
     {
         // Arrange
         var handler = new InspectableHandler<SimpleMessage>();
-        var awsClientFactory = new InspectableClientFactory(new LocalAwsClientFactory(Bus));
+        var awsClientFactory = new InspectableClientFactory(CreateClientFactory());
 
         var services = GivenJustSaying()
             .ConfigureJustSaying(

@@ -1,19 +1,25 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <Sdk Name="Aspire.AppHost.Sdk" Version="13.3.5" />
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <NoWarn>$(NoWarn);CA1001;CA1034;CA1707;CA1812;CA1822;CA2007</NoWarn>
+    <NoWarn>$(NoWarn);CA1001;CA1034;CA1707;CA1812;CA1822;CA2007;ASPIRE002</NoWarn>
     <RootNamespace>JustSaying</RootNamespace>
     <TargetFramework>net10.0</TargetFramework>
+    <!-- This is a test project that uses Aspire's testing host to spin up floci,
+         not an Aspire AppHost itself. -->
+    <IsAspireHost>false</IsAspireHost>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\JustSaying.TestingFramework\JustSaying.TestingFramework.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" />
+    <PackageReference Include="Aspire.Hosting.Testing" />
     <PackageReference Include="AWSSDK.SimpleNotificationService" />
     <PackageReference Include="AWSSDK.SQS" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />
-    <PackageReference Include="Newtonsoft.Json" VersionOverride="13.0.3" />
+    <PackageReference Include="Newtonsoft.Json" VersionOverride="13.0.4" />
     <PackageReference Include="TUnit" />
   </ItemGroup>
   <ItemGroup>

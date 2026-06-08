@@ -1,4 +1,4 @@
-#:sdk Aspire.AppHost.Sdk@13.3.5
+#:sdk Aspire.AppHost.Sdk@13.4.2
 #:property SignAssembly=false
 #:project JustSaying.Sample.Restaurant.OrderingApi/JustSaying.Sample.Restaurant.OrderingApi.csproj
 #:project JustSaying.Sample.Restaurant.KitchenConsole/JustSaying.Sample.Restaurant.KitchenConsole.csproj

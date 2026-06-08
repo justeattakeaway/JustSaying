@@ -6,6 +6,12 @@ namespace JustSaying.TestingFramework;
 
 public static class Patiently
 {
+    // A real floci container is slower to deliver than the instant in-memory bus,
+    // so polling assertions get more headroom in floci mode. This only affects how
+    // long a not-yet-satisfied assertion waits before failing; an assertion that
+    // passes returns immediately, so the in-memory path is unaffected.
+    private static TimeSpan DefaultTimeout => TestEnvironment.UseFloci ? 20.Seconds() : 5.Seconds();
+
     public static async Task AssertThatAsync(
         Action func,
         [System.Runtime.CompilerServices.CallerMemberName]
@@ -32,7 +38,7 @@ public static class Patiently
         string memberName = "",
         [System.Runtime.CompilerServices.CallerArgumentExpression("func")]
         string assertionExpression = "")
-        => await AssertThatAsyncInner(output, func, 5.Seconds(), memberName, assertionExpression).ConfigureAwait(false);
+        => await AssertThatAsyncInner(output, func, DefaultTimeout, memberName, assertionExpression).ConfigureAwait(false);
 
     public static async Task AssertThatAsync(
         TextWriter output,
@@ -45,7 +51,7 @@ public static class Patiently
         => await AssertThatAsyncInner(output, func, timeout, memberName, assertionExpression).ConfigureAwait(false);
 
     public static async Task AssertThatAsync(TextWriter output, Func<Task<bool>> func) =>
-        await AssertThatAsync(output, func, 5.Seconds()).ConfigureAwait(false);
+        await AssertThatAsync(output, func, DefaultTimeout).ConfigureAwait(false);
 
     public static async Task AssertThatAsync(
         TextWriter output,

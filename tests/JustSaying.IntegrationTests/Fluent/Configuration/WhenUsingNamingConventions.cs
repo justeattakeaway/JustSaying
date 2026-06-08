@@ -53,10 +53,10 @@ public class WhenUsingNamingConventions : IntegrationTestBase
                 var listenerJson = JsonConvert.SerializeObject(listener.Interrogate(), Formatting.Indented);
                 var publisherJson = JsonConvert.SerializeObject(publisher.Interrogate(), Formatting.Indented);
 
-                json = string.Join($"{Environment.NewLine}{Environment.NewLine}",
+                json = ScrubArns(string.Join($"{Environment.NewLine}{Environment.NewLine}",
                         listenerJson,
                         publisherJson)
-                    .Replace(UniqueName, "integrationTestQueueName", StringComparison.Ordinal);
+                    .Replace(UniqueName, "integrationTestQueueName", StringComparison.Ordinal));
             });
 
         json.ShouldMatchApproved(opt => opt.SubFolder("Approvals"));
