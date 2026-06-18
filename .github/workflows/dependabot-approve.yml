@@ -18,14 +18,14 @@ jobs:
 
       - name: Generate GitHub application token
         id: generate-application-token
-        uses: peter-murray/workflow-application-token-action@d17e3a9a36850ea89f35db16c1067dd2b68ee343 # v4.0.1
+        uses: peter-murray/workflow-application-token-action@cb731e00cb6754f584507134ff389dfb3dc42bbc # v5.1.0
         with:
           application_id: ${{ secrets.REVIEWER_APPLICATION_ID }}
           application_private_key: ${{ secrets.REVIEWER_APPLICATION_PRIVATE_KEY }}
           permissions: "contents:write, pull_requests:write"
 
       - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - name: Approve pull request and enable auto-merge
         shell: bash

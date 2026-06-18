@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   update-sdk:
-    uses: martincostello/update-dotnet-sdk/.github/workflows/update-dotnet-sdk.yml@7f7b459c48652a0e24f154bbe6dc16a5c7409b1b # v5.0.2
+    uses: martincostello/update-dotnet-sdk/.github/workflows/update-dotnet-sdk.yml@65c17eb6cecd15acfc1be78fffc0456add88690d # v6.1.0
     with:
       exclude-nuget-packages: 'Microsoft.Extensions.DependencyInjection.Abstractions,Microsoft.Extensions.Logging.Abstractions'
       include-nuget-packages: 'Microsoft.AspNetCore.,Microsoft.Extensions.,Microsoft.NET.Test.Sdk'

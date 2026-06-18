@@ -1,24 +1,23 @@
-#:sdk Aspire.AppHost.Sdk@13.1.0
+#:sdk Aspire.AppHost.Sdk@13.4.2
 #:property SignAssembly=false
 #:project JustSaying.Sample.Restaurant.OrderingApi/JustSaying.Sample.Restaurant.OrderingApi.csproj
 #:project JustSaying.Sample.Restaurant.KitchenConsole/JustSaying.Sample.Restaurant.KitchenConsole.csproj
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-var localstack = builder.AddContainer("localstack", "localstack/localstack", "latest")
-    .WithHttpEndpoint(port: 4566, targetPort: 4566, name: "gateway")
-    .WithEnvironment("DEBUG", "1");
+var floci = builder.AddContainer("floci", "floci/floci", "latest")
+    .WithHttpEndpoint(port: 4566, targetPort: 4566, name: "gateway");
 
-var localstackEndpoint = localstack.GetEndpoint("gateway");
+var flociEndpoint = floci.GetEndpoint("gateway");
 
 builder.AddProject<Projects.JustSaying_Sample_Restaurant_OrderingApi>("ordering-api")
-    .WaitFor(localstack)
-    .WithEnvironment("AWSServiceUrl", localstackEndpoint)
+    .WaitFor(floci)
+    .WithEnvironment("AWSServiceUrl", flociEndpoint)
     .WithEnvironment("AWSRegion", "eu-west-1");
 
 builder.AddProject<Projects.JustSaying_Sample_Restaurant_KitchenConsole>("kitchen-console")
-    .WaitFor(localstack)
-    .WithEnvironment("AWSServiceUrl", localstackEndpoint)
+    .WaitFor(floci)
+    .WithEnvironment("AWSServiceUrl", flociEndpoint)
     .WithEnvironment("AWSRegion", "eu-west-1");
 
 builder.Build().Run();

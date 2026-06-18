@@ -49,7 +49,11 @@ public sealed class NewtonsoftMessageBodySerializer<T> : IMessageBodySerializer 
 #endif
     public NewtonsoftMessageBodySerializer(JsonSerializerSettings settings)
     {
-        _settings = settings;
+        _settings = settings ?? new JsonSerializerSettings
+        {
+            NullValueHandling = NullValueHandling.Ignore,
+            Converters = [new Newtonsoft.Json.Converters.StringEnumConverter()]
+        };
     }
 
     /// <summary>

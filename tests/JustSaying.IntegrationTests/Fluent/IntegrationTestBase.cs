@@ -6,6 +6,7 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.IntegrationTests.Aspire;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
 using LocalSqsSnsMessaging;
@@ -17,6 +18,13 @@ namespace JustSaying.IntegrationTests.Fluent;
 
 public abstract class IntegrationTestBase
 {
+    /// <summary>
+    /// The Aspire fixture that hosts the floci container when floci mode is enabled.
+    /// Shared across the whole test session, and a no-op in the default in-memory mode.
+    /// </summary>
+    [ClassDataSource<AspireFixture>(Shared = SharedType.PerTestSession)]
+    public required AspireFixture AspireFixture { get; init; }
+
     protected virtual string AccessKeyId { get; } = "accessKeyId";
 
     protected virtual string SecretAccessKey { get; } = "secretAccessKey";
@@ -38,9 +46,25 @@ public abstract class IntegrationTestBase
 
     protected virtual InMemoryAwsBus Bus { get; } = new InMemoryAwsBus();
 
-    protected virtual TimeSpan Timeout => TimeSpan.FromSeconds(Debugger.IsAttached ? 300 : 10);
+    /// <summary>
+    /// A unique 12-digit AWS account id used for this test instance.
+    /// When tests run against floci, this is supplied as the access key so floci
+    /// gives each test its own isolated account.
+    /// </summary>
+    protected virtual string AccountId { get; } = GenerateAccountId();
+
+    protected virtual TimeSpan Timeout => TimeSpan.FromSeconds(
+        Debugger.IsAttached ? 300 : (TestEnvironment.UseFloci ? 30 : 10));
 
     protected virtual string UniqueName { get; } = $"{Guid.NewGuid():N}-integration-tests";
+
+    private static string GenerateAccountId()
+    {
+        Span<byte> bytes = stackalloc byte[8];
+        System.Security.Cryptography.RandomNumberGenerator.Fill(bytes);
+        ulong value = BitConverter.ToUInt64(bytes) % 1_000_000_000_000UL;
+        return value.ToString("D12", System.Globalization.CultureInfo.InvariantCulture);
+    }
 
     protected IServiceCollection GivenJustSaying(LogLevel? levelOverride = null)
         => Given((_) => { }, levelOverride);
@@ -69,7 +93,7 @@ public abstract class IntegrationTestBase
                     builder.Messaging((options) => options.WithRegion(RegionName))
                         .Client((options) =>
                         {
-                            options.WithClientFactory(() => new LocalAwsClientFactory(Bus));
+                            options.WithClientFactory(CreateClientFactory);
                         });
                     builder.Subscriptions(sub => sub.WithDefaults(x => x.WithDefaultConcurrencyLimit(10)));
 
@@ -79,8 +103,28 @@ public abstract class IntegrationTestBase
 
     protected virtual IAwsClientFactory CreateClientFactory()
     {
+        if (TestEnvironment.UseFloci)
+        {
+            var port = AspireFixture.ServicePort
+                ?? throw new InvalidOperationException("USE_FLOCI is set but the floci container endpoint has not been allocated.");
+            var serviceUri = new Uri($"http://localhost:{port}", UriKind.Absolute);
+            return new FlociAwsClientFactory(serviceUri, AccountId, RegionName);
+        }
+
         return new LocalAwsClientFactory(Bus);
     }
+
+    // Normalize the region and account id inside ARNs so approval snapshots
+    // match regardless of which backend the test ran against. The in-memory
+    // bus produces "arn:aws:{service}:us-east-1:000000000000:..." while floci
+    // produces ARNs with the test's random 12-digit account id and configured
+    // region.
+    private static readonly System.Text.RegularExpressions.Regex ArnRegex =
+        new("(arn:aws:[a-z0-9-]+):[a-z0-9-]+:[0-9]{12}:",
+            System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    protected static string ScrubArns(string value)
+        => value is null ? null : ArnRegex.Replace(value, "$1:us-east-1:000000000000:");
 
     protected IHandlerAsync<T> CreateHandler<T>(TaskCompletionSource<object> completionSource, int expectedMessageCount = 1)
         where T : Message

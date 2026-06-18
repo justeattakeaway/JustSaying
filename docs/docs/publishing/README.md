@@ -48,6 +48,14 @@ services.AddJustSaying(config =>
 - `WithQueueUrl<T>(url)` - Publish to an existing queue by URL
 - `WithQueueUri<T>(uri)` - Publish to an existing queue by URI
 
+Existing queue publishers can be configured with `WithQueueExistenceCheck()` to verify the existence of the queue during bus startup. Note this check requires the `sqs.GetQueueAttributes` permission.
+
+```csharp
+x.WithQueueArn<ProcessPaymentCommand>(
+    arn,
+    cfg => cfg.WithQueueExistenceCheck());
+```
+
 ## Further Configuration
 
 For detailed configuration options, see:
