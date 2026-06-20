@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <Sdk Name="Aspire.AppHost.Sdk" Version="13.4.5" />
+  <Sdk Name="Aspire.AppHost.Sdk" Version="13.4.6" />
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <NoWarn>$(NoWarn);CA1001;CA1034;CA1707;CA1812;CA1822;CA2007;ASPIRE002</NoWarn>
