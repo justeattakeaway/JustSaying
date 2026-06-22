@@ -26,6 +26,19 @@ public class MessagingConfig : IMessagingConfig, IPublishBatchConfiguration
     public IReadOnlyCollection<string> AdditionalSubscriberAccounts { get; set; }
     public string Region { get; set; }
     public IMessageSubjectProvider MessageSubjectProvider { get; set; }
+
+    private IMessageTypeRegistry _messageTypeRegistry;
+
+    /// <summary>
+    /// Gets or sets the registry that maps message types to their logical wire names and back. When
+    /// not set, a default registry backed by <see cref="MessageSubjectProvider"/> is created lazily
+    /// on first use, by which point the subject provider has been finalised.
+    /// </summary>
+    public IMessageTypeRegistry MessageTypeRegistry
+    {
+        get => _messageTypeRegistry ??= new MessageTypeRegistry(MessageSubjectProvider);
+        set => _messageTypeRegistry = value;
+    }
     public ITopicNamingConvention TopicNamingConvention { get; set; }
     public IQueueNamingConvention QueueNamingConvention { get; set; }
     public PublishCompressionOptions DefaultCompressionOptions { get; set; }
