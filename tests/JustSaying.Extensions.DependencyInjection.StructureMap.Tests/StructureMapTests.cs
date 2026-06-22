@@ -63,7 +63,7 @@ public class WhenUsingStructureMap
 
         // Act
         await publisher.PublishAsync(message, source.Token);
-        await batchPublisher.PublishAsync([message], source.Token);
+        await batchPublisher.PublishBatchAsync([message], source.Token);
 
         await Patiently.AssertThatAsync(outputWriter, () => handler.ReceivedMessages.Count > 1);
 
