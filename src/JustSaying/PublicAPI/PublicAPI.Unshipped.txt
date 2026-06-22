@@ -3,11 +3,7 @@ JustSaying.Fluent.PublicationsBuilder.WithQueueArn<T>(string queueArn, System.Ac
 JustSaying.Fluent.PublicationsBuilder.WithQueueUri<T>(System.Uri queueUrl, System.Action<JustSaying.Fluent.QueueAddressPublicationBuilder<T>> configure) -> JustSaying.Fluent.PublicationsBuilder
 JustSaying.Fluent.PublicationsBuilder.WithQueueUrl<T>(string queueUrl, System.Action<JustSaying.Fluent.QueueAddressPublicationBuilder<T>> configure) -> JustSaying.Fluent.PublicationsBuilder
 JustSaying.Messaging.Middleware.PublishContext
-JustSaying.Messaging.Middleware.PublishContext.Message.get -> JustSaying.Models.Message
-JustSaying.Messaging.Middleware.PublishContext.Messages.get -> System.Collections.Generic.IReadOnlyCollection<JustSaying.Models.Message>
 JustSaying.Messaging.Middleware.PublishContext.Metadata.get -> JustSaying.Messaging.PublishMetadata
-JustSaying.Messaging.Middleware.PublishContext.PublishContext(JustSaying.Models.Message message, JustSaying.Messaging.PublishMetadata metadata) -> void
-JustSaying.Messaging.Middleware.PublishContext.PublishContext(System.Collections.Generic.IReadOnlyCollection<JustSaying.Models.Message> messages, JustSaying.Messaging.PublishMetadata metadata) -> void
 JustSaying.Messaging.Middleware.PublishMiddlewareBuilder
 JustSaying.Messaging.Middleware.PublishMiddlewareBuilder.Build() -> JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.PublishContext, bool>
 JustSaying.Messaging.Middleware.PublishMiddlewareBuilder.Configure(System.Action<JustSaying.Messaging.Middleware.PublishMiddlewareBuilder> configure) -> JustSaying.Messaging.Middleware.PublishMiddlewareBuilder
@@ -47,7 +43,6 @@ JustSaying.Fluent.QueueAddressPublicationBuilder<T>.WithCompression(JustSaying.A
 JustSaying.Fluent.QueueAddressPublicationBuilder<T>.WithRawMessages() -> JustSaying.Fluent.QueueAddressPublicationBuilder<T>
 JustSaying.Fluent.QueueAddressPublicationBuilder<T>.WithSubject(string subject) -> JustSaying.Fluent.QueueAddressPublicationBuilder<T>
 JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>.WithQueueExistenceCheck() -> JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>
-JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>.WithMessageBodySerializer(JustSaying.Messaging.MessageSerialization.IMessageBodySerializer messageBodySerializer) -> JustSaying.Fluent.ISubscriptionBuilder<T>
 JustSaying.Fluent.QueuePublicationBuilder<T>.WithQueueName(string name) -> JustSaying.Fluent.QueuePublicationBuilder<T>
 JustSaying.Fluent.TopicAddressPublicationBuilder<T>.WithCompression(JustSaying.AwsTools.MessageHandling.PublishCompressionOptions compressionOptions) -> JustSaying.Fluent.TopicAddressPublicationBuilder<T>
 JustSaying.Fluent.TopicAddressPublicationBuilder<T>.WithSubject(string subject) -> JustSaying.Fluent.TopicAddressPublicationBuilder<T>
@@ -87,21 +82,11 @@ JustSaying.Messaging.IInboundMessageConverter
 JustSaying.Messaging.IInboundMessageConverter.ConvertToInboundMessageAsync(Amazon.SQS.Model.Message message, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<JustSaying.Messaging.MessageSerialization.InboundMessage>
 JustSaying.Messaging.MessageHandling.MessageAttributes.GetKeys() -> System.Collections.Generic.IReadOnlyCollection<string>
 JustSaying.Messaging.MessageSerialization.IMessageBodySerializationFactory
-JustSaying.Messaging.MessageSerialization.IMessageBodySerializationFactory.GetSerializer<T>() -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializer
-JustSaying.Messaging.MessageSerialization.IMessageBodySerializer
-JustSaying.Messaging.MessageSerialization.IMessageBodySerializer.Deserialize(string message) -> JustSaying.Models.Message
-JustSaying.Messaging.MessageSerialization.IMessageBodySerializer.Serialize(JustSaying.Models.Message message) -> string
 JustSaying.Messaging.MessageSerialization.InboundMessage
-JustSaying.Messaging.MessageSerialization.InboundMessage.Deconstruct(out JustSaying.Models.Message message, out JustSaying.Messaging.MessageHandling.MessageAttributes attributes) -> void
-JustSaying.Messaging.MessageSerialization.InboundMessage.InboundMessage(JustSaying.Models.Message message, JustSaying.Messaging.MessageHandling.MessageAttributes messageAttributes) -> void
-JustSaying.Messaging.MessageSerialization.InboundMessage.Message.get -> JustSaying.Models.Message
 JustSaying.Messaging.MessageSerialization.InboundMessage.MessageAttributes.get -> JustSaying.Messaging.MessageHandling.MessageAttributes
 JustSaying.Messaging.MessageSerialization.NewtonsoftMessageBodySerializer<T>
-JustSaying.Messaging.MessageSerialization.NewtonsoftMessageBodySerializer<T>.Deserialize(string message) -> JustSaying.Models.Message
 JustSaying.Messaging.MessageSerialization.NewtonsoftMessageBodySerializer<T>.NewtonsoftMessageBodySerializer() -> void
 JustSaying.Messaging.MessageSerialization.NewtonsoftMessageBodySerializer<T>.NewtonsoftMessageBodySerializer(Newtonsoft.Json.JsonSerializerSettings settings) -> void
-JustSaying.Messaging.MessageSerialization.NewtonsoftMessageBodySerializer<T>.Serialize(JustSaying.Models.Message message) -> string
-JustSaying.Messaging.MessageSerialization.NewtonsoftSerializationFactory.GetSerializer<T>() -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializer
 JustSaying.Messaging.MessageSerialization.NewtonsoftSerializationFactory.NewtonsoftSerializationFactory(Newtonsoft.Json.JsonSerializerSettings settings = null) -> void
 JustSaying.Messaging.MessageSerialization.OutboundMessage
 JustSaying.Messaging.MessageSerialization.OutboundMessage.Body.get -> string
@@ -111,11 +96,8 @@ JustSaying.Messaging.MessageSerialization.OutboundMessage.OutboundMessage(string
 JustSaying.Messaging.MessageSerialization.OutboundMessage.Subject.get -> string
 JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer
 JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer<T>
-JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer<T>.Deserialize(string messageBody) -> JustSaying.Models.Message
-JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer<T>.Serialize(JustSaying.Models.Message message) -> string
 JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer<T>.SystemTextJsonMessageBodySerializer() -> void
 JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer<T>.SystemTextJsonMessageBodySerializer(System.Text.Json.JsonSerializerOptions options) -> void
-JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializationFactory.GetSerializer<T>() -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializer
 JustSaying.MessagingConfig.DefaultCompressionOptions.get -> JustSaying.AwsTools.MessageHandling.PublishCompressionOptions
 JustSaying.MessagingConfig.DefaultCompressionOptions.set -> void
 JustSaying.Messaging.Monitoring.JustSayingDiagnostics
@@ -227,3 +209,53 @@ static JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerial
 *REMOVED*JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializationFactory.SystemTextJsonSerializationFactory() -> void
 *REMOVED*override JustSaying.AwsTools.QueueCreation.RedrivePolicy.ToString() -> string
 *REMOVED*static JustSaying.AwsTools.QueueCreation.RedrivePolicy.ConvertFromString(string policy) -> JustSaying.AwsTools.QueueCreation.RedrivePolicy
+JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.HandleException.get -> System.Func<System.Exception, object, bool>
+JustSaying.Fluent.MessagingConfigurationBuilder.WithMessageResponseLogger(System.Action<JustSaying.AwsTools.MessageHandling.MessageBatchResponse, System.Collections.Generic.IReadOnlyCollection<object>> logger) -> JustSaying.Fluent.MessagingConfigurationBuilder
+JustSaying.Fluent.MessagingConfigurationBuilder.WithMessageResponseLogger(System.Action<JustSaying.AwsTools.MessageHandling.MessageResponse, object> logger) -> JustSaying.Fluent.MessagingConfigurationBuilder
+JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>.WithMessageBodySerializer(JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<T> messageBodySerializer) -> JustSaying.Fluent.ISubscriptionBuilder<T>
+JustSaying.Fluent.SnsWriteConfigurationBuilder.WithErrorHandler(System.Func<System.Exception, object, bool> handler) -> JustSaying.Fluent.SnsWriteConfigurationBuilder
+JustSaying.Fluent.TopicAddressPublicationBuilder<T>.TopicAddressCustomizer.get -> System.Func<string, T, string>
+JustSaying.Fluent.TopicAddressPublicationBuilder<T>.WithExceptionHandler(System.Func<System.Exception, System.Collections.Generic.IReadOnlyCollection<T>, bool> exceptionBatchHandler) -> JustSaying.Fluent.TopicAddressPublicationBuilder<T>
+JustSaying.Fluent.TopicAddressPublicationBuilder<T>.WithExceptionHandler(System.Func<System.Exception, T, bool> exceptionHandler) -> JustSaying.Fluent.TopicAddressPublicationBuilder<T>
+JustSaying.Fluent.TopicAddressPublicationBuilder<T>.WithTopicAddress(System.Func<string, T, string> topicAddressCustomizer) -> JustSaying.Fluent.TopicAddressPublicationBuilder<T>
+JustSaying.Fluent.TopicPublicationBuilder<T>.TopicNameCustomizer.get -> System.Func<T, string>
+JustSaying.Fluent.TopicPublicationBuilder<T>.WithTopicName(System.Func<T, string> topicNameCustomizer) -> JustSaying.Fluent.TopicPublicationBuilder<T>
+JustSaying.IPublishBatchConfiguration.MessageBatchResponseLogger.get -> System.Action<JustSaying.AwsTools.MessageHandling.MessageBatchResponse, System.Collections.Generic.IReadOnlyCollection<object>>
+JustSaying.IPublishConfiguration.MessageResponseLogger.get -> System.Action<JustSaying.AwsTools.MessageHandling.MessageResponse, object>
+JustSaying.JustSayingBus.PublishAsync<TMessage>(TMessage message, JustSaying.Messaging.PublishMetadata metadata, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+JustSaying.JustSayingBus.PublishAsync<TMessage>(TMessage message, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+JustSaying.JustSayingBus.PublishBatchAsync<TMessage>(System.Collections.Generic.IEnumerable<TMessage> messages, JustSaying.Messaging.PublishBatchMetadata metadata, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+JustSaying.Messaging.IMessageBatchPublisher.PublishBatchAsync<TMessage>(System.Collections.Generic.IEnumerable<TMessage> messages, JustSaying.Messaging.PublishBatchMetadata metadata = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task
+JustSaying.Messaging.IMessagePublisher.PublishAsync<TMessage>(TMessage message, JustSaying.Messaging.PublishMetadata metadata, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+JustSaying.Messaging.IMessagePublisher.PublishAsync<TMessage>(TMessage message, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+JustSaying.Messaging.MessageProcessingStrategies.IMessageBackoffStrategy.GetBackoffDuration(object message, int approximateReceiveCount, System.Exception lastException = null) -> System.TimeSpan
+JustSaying.Messaging.MessageSerialization.IMessageBodySerializationFactory.GetSerializer<T>() -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<T>
+JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<TMessage>
+JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<TMessage>.Deserialize(string message) -> TMessage
+JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<TMessage>.Serialize(TMessage message) -> string
+JustSaying.Messaging.MessageSerialization.InboundMessage.Deconstruct(out object message, out JustSaying.Messaging.MessageHandling.MessageAttributes attributes) -> void
+JustSaying.Messaging.MessageSerialization.InboundMessage.InboundMessage(object message, JustSaying.Messaging.MessageHandling.MessageAttributes messageAttributes) -> void
+JustSaying.Messaging.MessageSerialization.InboundMessage.Message.get -> object
+JustSaying.Messaging.MessageSerialization.NewtonsoftMessageBodySerializer<T>.Deserialize(string message) -> T
+JustSaying.Messaging.MessageSerialization.NewtonsoftMessageBodySerializer<T>.Serialize(T message) -> string
+JustSaying.Messaging.MessageSerialization.NewtonsoftSerializationFactory.GetSerializer<T>() -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<T>
+JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer<T>.Deserialize(string messageBody) -> T
+JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer<T>.Serialize(T message) -> string
+JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializationFactory.GetSerializer<T>() -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<T>
+JustSaying.Messaging.Middleware.HandleMessageContext.HandleMessageContext(string queueName, Amazon.SQS.Model.Message rawMessage, object message, System.Type messageType, JustSaying.Messaging.Channels.Context.IMessageVisibilityUpdater visibilityUpdater, JustSaying.Messaging.Channels.Context.IMessageDeleter messageDeleter, System.Uri queueUri, JustSaying.Messaging.MessageHandling.MessageAttributes messageAttributes) -> void
+JustSaying.Messaging.Middleware.HandleMessageContext.Message.get -> object
+JustSaying.Messaging.Middleware.PublishContext.Message.get -> object
+JustSaying.Messaging.Middleware.PublishContext.Messages.get -> System.Collections.Generic.IReadOnlyCollection<object>
+JustSaying.Messaging.Middleware.PublishContext.PublishContext(object message, JustSaying.Messaging.PublishMetadata metadata) -> void
+JustSaying.Messaging.Middleware.PublishContext.PublishContext(System.Collections.Generic.IReadOnlyCollection<object> messages, JustSaying.Messaging.PublishMetadata metadata) -> void
+JustSaying.Messaging.Monitoring.IMessageMonitor.Handled(object message) -> void
+JustSaying.Messaging.Monitoring.NullOpMessageMonitor.Handled(object message) -> void
+JustSaying.MessagingConfig.MessageBatchResponseLogger.get -> System.Action<JustSaying.AwsTools.MessageHandling.MessageBatchResponse, System.Collections.Generic.IReadOnlyCollection<object>>
+JustSaying.MessagingConfig.MessageResponseLogger.get -> System.Action<JustSaying.AwsTools.MessageHandling.MessageResponse, object>
+static JustSaying.Messaging.MessagePublisherExtensions.PublishAsync<TMessage>(this JustSaying.Messaging.IMessagePublisher publisher, TMessage message) -> System.Threading.Tasks.Task
+static JustSaying.Messaging.MessagePublisherExtensions.PublishAsync<TMessage>(this JustSaying.Messaging.IMessagePublisher publisher, TMessage message, JustSaying.Messaging.PublishMetadata metadata) -> System.Threading.Tasks.Task
+static JustSaying.Messaging.MessagePublisherExtensions.PublishBatchAsync<TMessage>(this JustSaying.Messaging.IMessageBatchPublisher publisher, System.Collections.Generic.IEnumerable<TMessage> messages, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+static JustSaying.Messaging.MessagePublisherExtensions.PublishBatchAsync<TMessage>(this JustSaying.Messaging.IMessagePublisher publisher, System.Collections.Generic.IEnumerable<TMessage> messages) -> System.Threading.Tasks.Task
+static JustSaying.Messaging.MessagePublisherExtensions.PublishBatchAsync<TMessage>(this JustSaying.Messaging.IMessagePublisher publisher, System.Collections.Generic.IEnumerable<TMessage> messages, JustSaying.Messaging.PublishBatchMetadata metadata) -> System.Threading.Tasks.Task
+static JustSaying.Messaging.MessagePublisherExtensions.PublishBatchAsync<TMessage>(this JustSaying.Messaging.IMessagePublisher publisher, System.Collections.Generic.IEnumerable<TMessage> messages, JustSaying.Messaging.PublishBatchMetadata metadata, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+static JustSaying.Messaging.MessagePublisherExtensions.PublishBatchAsync<TMessage>(this JustSaying.Messaging.IMessagePublisher publisher, System.Collections.Generic.IEnumerable<TMessage> messages, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task

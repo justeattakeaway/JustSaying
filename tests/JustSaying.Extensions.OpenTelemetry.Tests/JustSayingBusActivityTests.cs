@@ -148,8 +148,8 @@ public class JustSayingBusActivityTests
         config.PublishFailureBackoff.Returns(TimeSpan.Zero);
 
         var publisher = Substitute.For<IMessagePublisher, IMessageBatchPublisher>();
-        ((IMessageBatchPublisher)publisher).PublishAsync(
-                Arg.Any<IReadOnlyCollection<Message>>(),
+        ((IMessageBatchPublisher)publisher).PublishBatchAsync(
+                Arg.Any<IEnumerable<Message>>(),
                 Arg.Any<PublishBatchMetadata>(),
                 Arg.Any<CancellationToken>())
             .Returns(Task.FromException(new InvalidOperationException("Batch publish failed")));
@@ -169,7 +169,7 @@ public class JustSayingBusActivityTests
 
         // Act
         await Should.ThrowAsync<InvalidOperationException>(
-            () => bus.PublishAsync(messages, null, CancellationToken.None));
+            () => bus.PublishBatchAsync(messages, null, CancellationToken.None));
         tracerProvider.ForceFlush();
 
         // Assert

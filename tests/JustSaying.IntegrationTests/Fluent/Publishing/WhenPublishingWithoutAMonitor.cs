@@ -151,7 +151,7 @@ public class WhenPublishingWithoutAMonitor : IntegrationTestBase
             messages.Add(new T());
         }
         // Act
-        await publisher.PublishAsync(messages, source.Token);
+        await publisher.PublishBatchAsync(messages, source.Token);
 
         // Assert
         try
