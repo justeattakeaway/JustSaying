@@ -23,6 +23,19 @@ await publisher.PublishBatchAsync(messages, metadata, cancellationToken);
 
 Rename batch calls accordingly. Single-message `PublishAsync` is unchanged.
 
+### The default serializer is now System.Text.Json
+
+The default message body serializer changes from **Newtonsoft.Json** to **System.Text.Json** (the source-generator-friendly path that enables Native AOT). This affects the default wire format — review for behavioural differences (for example, STScJ is stricter about types and handles some constructs differently).
+
+To keep using Newtonsoft.Json, opt back in explicitly:
+
+```csharp
+services.AddJustSaying(...)
+        // register the Newtonsoft factory before/after AddJustSaying as appropriate
+```
+
+…or via the fluent `WithMessageBodySerializer` / serialization-factory hook. Newtonsoft.Json remains fully supported as an opt-in; it is not Native-AOT-compatible.
+
 ### Serialization interface is generic
 
 `IMessageBodySerializer` is now the generic `IMessageBodySerializer<T>` on the public surface (an internal type-erased seam handles the runtime boundary). If you implement a custom serializer or serialization factory, update to the generic signatures. Routing and serialization remain by each message's runtime type, as in v8: a single (or batch) publish of a base-typed instance is still routed to, and serialized by, the publisher registered for its concrete type.
