@@ -13,7 +13,7 @@ public sealed class ExactlyOnceMiddleware<T>(IMessageLockAsync messageLock, Time
         if (context == null) throw new ArgumentNullException(nameof(context));
         if (func == null) throw new ArgumentNullException(nameof(func));
 
-        string lockKey = $"{context.Message.UniqueKey()}-{_lockSuffixKeyForHandler}";
+        string lockKey = $"{MessageIdentity.GetUniqueKey(context.Message)}-{_lockSuffixKeyForHandler}";
 
         MessageLockResponse lockResponse = await messageLock.TryAcquireLockAsync(lockKey, timeout).ConfigureAwait(false);
 
