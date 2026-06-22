@@ -269,3 +269,17 @@ JustSaying.Messaging.IMessageMetadataProvider.GetTimestamp(object message) -> Sy
 JustSaying.Messaging.IMessageMetadataProvider.TryGetDeduplicationKey(object message, out string deduplicationKey) -> bool
 JustSaying.MessagingConfig.MessageMetadataProvider.get -> JustSaying.Messaging.IMessageMetadataProvider
 JustSaying.MessagingConfig.MessageMetadataProvider.set -> void
+JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
+JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.Handling<TMessage>(System.Action<JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder> middlewareConfiguration = null) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
+JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.WithReadConfiguration(System.Action<JustSaying.AwsTools.QueueCreation.SqsReadConfiguration> configure) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
+JustSaying.Fluent.SubscriptionsBuilder.ForQueue(string queueName, System.Action<JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder> configure) -> JustSaying.Fluent.SubscriptionsBuilder
+JustSaying.Messaging.IMessageTypeDiscriminator
+JustSaying.Messaging.IMessageTypeDiscriminator.TryGetMessageTypeName(JustSaying.Messaging.MessageDiscriminationContext context, out string typeName) -> bool
+JustSaying.Messaging.MessageDiscriminationContext
+JustSaying.Messaging.MessageDiscriminationContext.Body.get -> string
+JustSaying.Messaging.MessageDiscriminationContext.MessageAttributes.get -> JustSaying.Messaging.MessageHandling.MessageAttributes
+JustSaying.Messaging.MessageDiscriminationContext.MessageDiscriminationContext(string body, string subject, JustSaying.Messaging.MessageHandling.MessageAttributes messageAttributes) -> void
+JustSaying.Messaging.MessageDiscriminationContext.Subject.get -> string
+JustSaying.Messaging.SubjectMessageTypeDiscriminator
+JustSaying.Messaging.SubjectMessageTypeDiscriminator.SubjectMessageTypeDiscriminator() -> void
+JustSaying.Messaging.SubjectMessageTypeDiscriminator.TryGetMessageTypeName(JustSaying.Messaging.MessageDiscriminationContext context, out string typeName) -> bool
