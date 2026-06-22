@@ -127,7 +127,7 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
 
         var compressionRegistry = bus.CompressionRegistry;
         var compressionOptions = writeConfiguration.CompressionOptions;
-        var subject = bus.Config.MessageTypeRegistry.GetLogicalName(typeof(T));
+        var subject = bus.MessageTypeRegistry.GetLogicalName(typeof(T));
 
         var eventPublisher = new SqsMessagePublisher(
             sqsClient,
