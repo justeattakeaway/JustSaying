@@ -4,16 +4,17 @@ using Microsoft.Extensions.Logging;
 // ReSharper disable once CheckNamespace
 namespace JustSaying.Messaging.Middleware;
 
-public sealed class ExactlyOnceMiddleware<T>(IMessageLockAsync messageLock, TimeSpan timeout, string handlerName, ILogger logger) : MiddlewareBase<HandleMessageContext, bool>
+public sealed class ExactlyOnceMiddleware<T>(IMessageLockAsync messageLock, TimeSpan timeout, string handlerName, Func<T, string> deduplicationKeySelector, ILogger logger) : MiddlewareBase<HandleMessageContext, bool>
 {
     private readonly string _lockSuffixKeyForHandler = $"{typeof(T).FullName.ToLowerInvariant()}-{handlerName}";
+    private readonly Func<T, string> _deduplicationKeySelector = deduplicationKeySelector ?? throw new ArgumentNullException(nameof(deduplicationKeySelector));
 
     protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
     {
         if (context == null) throw new ArgumentNullException(nameof(context));
         if (func == null) throw new ArgumentNullException(nameof(func));
 
-        string lockKey = $"{MessageIdentity.GetUniqueKey(context.Message)}-{_lockSuffixKeyForHandler}";
+        string lockKey = $"{_deduplicationKeySelector((T)context.Message)}-{_lockSuffixKeyForHandler}";
 
         MessageLockResponse lockResponse = await messageLock.TryAcquireLockAsync(lockKey, timeout).ConfigureAwait(false);
 
