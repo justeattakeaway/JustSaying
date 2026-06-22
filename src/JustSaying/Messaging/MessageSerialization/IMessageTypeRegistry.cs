@@ -11,7 +11,7 @@ namespace JustSaying.Messaging.MessageSerialization;
 /// other platforms on a queue that carries more than one event type).
 /// </para>
 /// </summary>
-public interface IMessageTypeRegistry
+internal interface IMessageTypeRegistry
 {
     /// <summary>
     /// Gets the logical name for the specified message type, recording the mapping so that the type

@@ -45,6 +45,14 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
     internal MessageCompressionRegistry CompressionRegistry { get; }
     internal IMessageBodySerializationFactory MessageBodySerializerFactory { get; set; }
 
+    private IMessageTypeRegistry _messageTypeRegistry;
+
+    /// <summary>
+    /// Maps message types to their logical wire name (the SNS subject). Created lazily from the
+    /// finalised <see cref="IMessagingConfig.MessageSubjectProvider"/>.
+    /// </summary>
+    internal IMessageTypeRegistry MessageTypeRegistry => _messageTypeRegistry ??= new MessageTypeRegistry(Config.MessageSubjectProvider);
+
     public Task Completion { get; private set; }
 
     internal JustSayingBus(
