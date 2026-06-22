@@ -269,3 +269,11 @@ JustSaying.Messaging.MessageSerialization.IMessageTypeRegistry.Register(System.T
 JustSaying.Messaging.MessageSerialization.IMessageTypeRegistry.TryResolveType(string logicalName, out System.Type messageType) -> bool
 JustSaying.MessagingConfig.MessageTypeRegistry.get -> JustSaying.Messaging.MessageSerialization.IMessageTypeRegistry
 JustSaying.MessagingConfig.MessageTypeRegistry.set -> void
+JustSaying.IMessagingConfig.MessageMetadataProvider.get -> JustSaying.Messaging.IMessageMetadataProvider
+JustSaying.IMessagingConfig.MessageMetadataProvider.set -> void
+JustSaying.Messaging.IMessageMetadataProvider
+JustSaying.Messaging.IMessageMetadataProvider.GetId(object message) -> string
+JustSaying.Messaging.IMessageMetadataProvider.GetTimestamp(object message) -> System.DateTimeOffset?
+JustSaying.Messaging.IMessageMetadataProvider.TryGetDeduplicationKey(object message, out string deduplicationKey) -> bool
+JustSaying.MessagingConfig.MessageMetadataProvider.get -> JustSaying.Messaging.IMessageMetadataProvider
+JustSaying.MessagingConfig.MessageMetadataProvider.set -> void

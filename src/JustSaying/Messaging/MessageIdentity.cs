@@ -19,7 +19,7 @@ internal static class MessageIdentity
     /// <see langword="null"/> if the payload does not expose one.
     /// </summary>
     public static string GetId(object message)
-        => message is Message typed ? typed.Id.ToString() : null;
+        => DefaultMessageMetadataProvider.Instance.GetId(message);
 
     /// <summary>
     /// Gets an identifier for a message suitable for use as a batch request entry identifier, which
