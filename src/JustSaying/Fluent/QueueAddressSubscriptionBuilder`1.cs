@@ -18,8 +18,7 @@ namespace JustSaying.Fluent;
 /// <typeparam name="T">
 /// The type of the message.
 /// </typeparam>
-public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
-    where T : Message
+public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T> where T : class
 {
     private readonly QueueAddress _queueAddress;
 
@@ -36,7 +35,7 @@ public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
 
     private Action<HandlerMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
-    private IMessageBodySerializer MessageBodySerializer { get; set; }
+    private IMessageBodySerializer<T> MessageBodySerializer { get; set; }
 
     private bool ShouldCheckQueueExistence { get; set; }
 
@@ -75,7 +74,7 @@ public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         return this;
     }
 
-    public ISubscriptionBuilder<T> WithMessageBodySerializer(IMessageBodySerializer messageBodySerializer)
+    public ISubscriptionBuilder<T> WithMessageBodySerializer(IMessageBodySerializer<T> messageBodySerializer)
     {
         MessageBodySerializer = messageBodySerializer;
         return this;
@@ -119,7 +118,7 @@ public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
 
         var serializer = MessageBodySerializer ?? bus.MessageBodySerializerFactory.GetSerializer<T>();
         var compressionRegistry = bus.CompressionRegistry;
-        var messageConverter = new InboundMessageConverter(serializer, compressionRegistry, attachedQueueConfig.RawMessageDelivery);
+        var messageConverter = new InboundMessageConverter(new ErasedMessageBodySerializer<T>(serializer), compressionRegistry, attachedQueueConfig.RawMessageDelivery);
         var sqsSource = new SqsSource { SqsQueue = queue, MessageConverter = messageConverter };
 
         bus.AddQueue(attachedQueueConfig.SubscriptionGroupName, sqsSource);

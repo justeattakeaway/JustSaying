@@ -3,6 +3,7 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
@@ -15,8 +16,7 @@ namespace JustSaying.Fluent;
 /// <typeparam name="T">
 /// The type of the message published to the queue.
 /// </typeparam>
-public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
-    where T : Message
+public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T : class
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="QueuePublicationBuilder{T}"/> class.
@@ -132,7 +132,7 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
 
         var eventPublisher = new SqsMessagePublisher(
             sqsClient,
-            new OutboundMessageConverter(PublishDestinationType.Queue, bus.MessageBodySerializerFactory.GetSerializer<T>(), compressionRegistry, compressionOptions, subject, writeConfiguration.IsRawMessage),
+            new OutboundMessageConverter(PublishDestinationType.Queue, new ErasedMessageBodySerializer<T>(bus.MessageBodySerializerFactory.GetSerializer<T>()), compressionRegistry, compressionOptions, subject, writeConfiguration.IsRawMessage),
             loggerFactory)
         {
             MessageResponseLogger = config.MessageResponseLogger,

@@ -2,7 +2,6 @@ using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
-using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent;
@@ -20,8 +19,8 @@ internal sealed class StaticAddressPublicationConfiguration(
         IOutboundMessageConverter messageConverter,
         ILoggerFactory loggerFactory,
         JustSayingBus bus,
-        Func<Exception, Message, bool> exceptionHandler,
-        Func<Exception, IReadOnlyCollection<Message>, bool> exceptionBatchHandler)
+        Func<Exception, object, bool> exceptionHandler,
+        Func<Exception, IReadOnlyCollection<object>, bool> exceptionBatchHandler)
     {
         var topicArn = Arn.Parse(topicAddress);
 

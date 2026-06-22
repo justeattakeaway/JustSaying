@@ -33,7 +33,7 @@ public class WhenPublishingAsyncResponseLoggerAsyncIsCalled : WhenPublishingTest
             MessageResponseLogger = (r, m) =>
             {
                 _response = r;
-                _message = m;
+                _message = (Message)m;
             }
         };
         return Task.FromResult(sqs);
