@@ -20,7 +20,7 @@ public static class RegistryExtensions
     /// <paramref name="registry"/> is <see langword="null"/>.
     /// </exception>
     public static void AddJustSayingHandler<TMessage, THandler>(this Registry registry)
-        where TMessage : Message
+        where TMessage : class
         where THandler : class, IHandlerAsync<TMessage>
     {
         if (registry == null)
