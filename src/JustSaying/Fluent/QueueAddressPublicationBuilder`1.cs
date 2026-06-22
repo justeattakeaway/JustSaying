@@ -123,7 +123,7 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T> w
         var eventPublisher = new SqsMessagePublisher(
             _queueAddress.QueueUrl,
             sqsClient,
-            new OutboundMessageConverter(PublishDestinationType.Queue, new ErasedMessageBodySerializer<T>(bus.MessageBodySerializerFactory.GetSerializer<T>()), new MessageCompressionRegistry([new GzipMessageBodyCompression()]), compressionOptions, subject, _isRawMessage),
+            new OutboundMessageConverter(PublishDestinationType.Queue, bus.MessageBodySerializerFactory.GetSerializer<T>().Erase(), new MessageCompressionRegistry([new GzipMessageBodyCompression()]), compressionOptions, subject, _isRawMessage),
             loggerFactory)
         {
             MessageResponseLogger = config.MessageResponseLogger

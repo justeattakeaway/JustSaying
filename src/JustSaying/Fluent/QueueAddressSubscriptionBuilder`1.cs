@@ -118,7 +118,7 @@ public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
 
         var serializer = MessageBodySerializer ?? bus.MessageBodySerializerFactory.GetSerializer<T>();
         var compressionRegistry = bus.CompressionRegistry;
-        var messageConverter = new InboundMessageConverter(new ErasedMessageBodySerializer<T>(serializer), compressionRegistry, attachedQueueConfig.RawMessageDelivery);
+        var messageConverter = new InboundMessageConverter(serializer.Erase(), compressionRegistry, attachedQueueConfig.RawMessageDelivery);
         var sqsSource = new SqsSource { SqsQueue = queue, MessageConverter = messageConverter };
 
         bus.AddQueue(attachedQueueConfig.SubscriptionGroupName, sqsSource);

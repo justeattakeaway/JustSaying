@@ -259,7 +259,7 @@ internal sealed class SqsMessagePublisher(
 
             var entry = new SendMessageBatchRequestEntry
             {
-                Id = MessageIdentity.GetUniqueKey(message),
+                Id = MessageIdentity.GetBatchEntryId(message),
                 MessageBody = messageBody
             };
 
