@@ -258,7 +258,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
     {
         EnsureStarted();
 
-        var messageType = typeof(TMessage);
+        var messageType = message.GetType();
         var middleware = GetPublishMiddlewareForMessage(messageType);
         if (middleware != null)
         {
@@ -313,7 +313,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         var isFirstAttempt = attemptCount == 1;
         Activity activity = null;
         Stopwatch publishWatch = null;
-        var messageType = typeof(TMessage);
+        var messageType = message.GetType();
 
         if (isFirstAttempt)
         {
@@ -432,25 +432,34 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
             return;
         }
 
-        var messageType = typeof(TMessage);
-        var middleware = GetPublishMiddlewareForMessage(messageType);
+        // Route by each message's runtime type, so a single batch may contain more than one message
+        // type, each fanned out to the publisher registered for it.
+        var middleware = GetPublishMiddlewareForMessage(messageList[0].GetType());
 
         if (middleware != null)
         {
             var context = new Messaging.Middleware.PublishContext(messageList, metadata ?? new PublishBatchMetadata());
             await middleware.RunAsync(context, async ct =>
             {
-                IMessageBatchPublisher publisher = GetBatchPublishersForMessageType(messageType);
-                await PublishAsync(publisher, messageList, (PublishBatchMetadata)context.Metadata, 0, messageType, ct)
-                    .ConfigureAwait(false);
+                await PublishGroupedByTypeAsync(messageList, (PublishBatchMetadata)context.Metadata, ct).ConfigureAwait(false);
                 return true;
             }, cancellationToken).ConfigureAwait(false);
             return;
         }
 
-        IMessageBatchPublisher batchPublisher = GetBatchPublishersForMessageType(messageType);
-        await PublishAsync(batchPublisher, messageList, metadata, 0, messageType, cancellationToken)
-            .ConfigureAwait(false);
+        await PublishGroupedByTypeAsync(messageList, metadata, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task PublishGroupedByTypeAsync<TMessage>(List<TMessage> messageList, PublishBatchMetadata metadata, CancellationToken cancellationToken) where TMessage : class
+    {
+        var tasks = new List<Task>();
+        foreach (var group in messageList.GroupBy(message => message.GetType()))
+        {
+            IMessageBatchPublisher publisher = GetBatchPublishersForMessageType(group.Key);
+            tasks.Add(PublishAsync(publisher, group.ToList(), metadata, 0, group.Key, cancellationToken));
+        }
+
+        await Task.WhenAll(tasks).ConfigureAwait(false);
     }
 
     private IMessageBatchPublisher GetBatchPublishersForMessageType(Type messageType)
