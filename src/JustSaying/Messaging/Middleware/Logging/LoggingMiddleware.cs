@@ -42,7 +42,7 @@ public sealed class LoggingMiddleware(ILoggerFactory loggerFactory) : Middleware
                     context.HandledException,
                     MessageTemplate,
                     "Succeeded",
-                    context.Message.Id,
+                    MessageIdentity.GetId(context.Message),
                     context.MessageType.FullName,
                     watch.ElapsedMilliseconds);
             }
@@ -52,7 +52,7 @@ public sealed class LoggingMiddleware(ILoggerFactory loggerFactory) : Middleware
                     context.HandledException,
                     MessageTemplate,
                     "Failed",
-                    context.Message.Id,
+                    MessageIdentity.GetId(context.Message),
                     context.MessageType.FullName,
                     watch.ElapsedMilliseconds);
             }

@@ -41,7 +41,7 @@ public class WhenPublishingInBatchDelayedMessage : WhenPublishingTestBase
 
     protected override async Task WhenAsync()
     {
-        await SystemUnderTest.PublishAsync(_messages, _metadata);
+        await SystemUnderTest.PublishBatchAsync(_messages, _metadata);
     }
 
     [Test]

@@ -29,13 +29,13 @@ public class WhenBatchPublishingWithPerTypeMiddleware : GivenAServiceBus
         await SystemUnderTest.StartAsync(cts.Token);
 
         // Batch of SimpleMessage — should use per-type middleware
-        await SystemUnderTest.PublishAsync(
+        await SystemUnderTest.PublishBatchAsync(
             new List<SimpleMessage> { new(), new() },
             new PublishBatchMetadata(),
             CancellationToken.None);
 
         // Batch of AnotherSimpleMessage — should use global middleware
-        await SystemUnderTest.PublishAsync(
+        await SystemUnderTest.PublishBatchAsync(
             new List<AnotherSimpleMessage> { new(), new() },
             new PublishBatchMetadata(),
             CancellationToken.None);
@@ -56,13 +56,13 @@ public class WhenBatchPublishingWithPerTypeMiddleware : GivenAServiceBus
     [Test]
     public void BothBatchPublishersAreCalled()
     {
-        _simpleBatchPublisher.Received().PublishAsync(
-            Arg.Any<IEnumerable<Message>>(),
+        _simpleBatchPublisher.Received().PublishBatchAsync(
+            Arg.Any<IEnumerable<SimpleMessage>>(),
             Arg.Any<PublishBatchMetadata>(),
             Arg.Any<CancellationToken>());
 
-        _anotherBatchPublisher.Received().PublishAsync(
-            Arg.Any<IEnumerable<Message>>(),
+        _anotherBatchPublisher.Received().PublishBatchAsync(
+            Arg.Any<IEnumerable<AnotherSimpleMessage>>(),
             Arg.Any<PublishBatchMetadata>(),
             Arg.Any<CancellationToken>());
     }
