@@ -140,7 +140,7 @@ public static class IServiceCollectionExtensions
         services.TryAddSingleton<IMessageContextAccessor>(serviceProvider => serviceProvider.GetRequiredService<MessageContextAccessor>());
         services.TryAddSingleton<IMessageContextReader>(serviceProvider => serviceProvider.GetRequiredService<MessageContextAccessor>());
 
-        services.TryAddSingleton<IMessageBodySerializationFactory, NewtonsoftSerializationFactory>();
+        services.TryAddSingleton<IMessageBodySerializationFactory>(_ => new SystemTextJsonSerializationFactory(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions));
         services.TryAddSingleton<IMessageSubjectProvider, GenericMessageSubjectProvider>();
         services.TryAddSingleton<IVerifyAmazonQueues, AmazonQueueCreator>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IMessageBodyCompression, GzipMessageBodyCompression>());
