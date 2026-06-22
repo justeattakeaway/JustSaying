@@ -89,6 +89,36 @@ public sealed class SubscriptionsBuilder
     }
 
     /// <summary>
+    /// Configures a subscription to a single queue that carries more than one message type. The type of
+    /// each inbound message is resolved from a discriminator on the wire (by default the SNS
+    /// <c>Subject</c>), so each message is dispatched to the handler registered for its own type.
+    /// </summary>
+    /// <param name="queueName">The name of the queue to subscribe to.</param>
+    /// <param name="configure">A delegate used to register the message types the queue carries.</param>
+    /// <returns>
+    /// The current <see cref="SubscriptionsBuilder"/>.
+    /// </returns>
+    /// <exception cref="ArgumentException">
+    /// <paramref name="queueName"/> is <see langword="null"/> or empty.
+    /// </exception>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="configure"/> is <see langword="null"/>.
+    /// </exception>
+    public SubscriptionsBuilder ForQueue(string queueName, Action<MultiTypeQueueSubscriptionBuilder> configure)
+    {
+        if (string.IsNullOrEmpty(queueName)) throw new ArgumentException("Parameter cannot be null or empty.", nameof(queueName));
+        if (configure == null) throw new ArgumentNullException(nameof(configure));
+
+        var builder = new MultiTypeQueueSubscriptionBuilder(queueName);
+
+        configure(builder);
+
+        Subscriptions.Add(builder);
+
+        return this;
+    }
+
+    /// <summary>
     /// Configures a queue subscription for a pre-existing queue.
     /// </summary>
     /// <param name="queueArn">The ARN of the queue to subscribe to.</param>
