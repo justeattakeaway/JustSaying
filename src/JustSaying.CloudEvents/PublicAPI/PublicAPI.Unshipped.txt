@@ -12,3 +12,6 @@ JustSaying.CloudEvents.CloudEventOptions.WithCloudEventType<TMessage>(string typ
 JustSaying.CloudEvents.CloudEventSerializationFactory
 JustSaying.CloudEvents.CloudEventSerializationFactory.CloudEventSerializationFactory(JustSaying.Messaging.MessageSerialization.IMessageBodySerializationFactory dataSerializerFactory, JustSaying.Messaging.IMessageMetadataProvider metadataProvider, JustSaying.CloudEvents.CloudEventOptions options) -> void
 JustSaying.CloudEvents.CloudEventSerializationFactory.GetSerializer<TMessage>() -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<TMessage>
+JustSaying.CloudEvents.CloudEventTypeDiscriminator
+JustSaying.CloudEvents.CloudEventTypeDiscriminator.CloudEventTypeDiscriminator() -> void
+JustSaying.CloudEvents.CloudEventTypeDiscriminator.TryGetMessageTypeName(JustSaying.Messaging.MessageDiscriminationContext context, out string typeName) -> bool

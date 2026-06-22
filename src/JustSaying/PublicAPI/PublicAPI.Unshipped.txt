@@ -271,7 +271,6 @@ JustSaying.Messaging.IMessageMetadataProvider.TryGetDeduplicationKey(object mess
 JustSaying.MessagingConfig.MessageMetadataProvider.get -> JustSaying.Messaging.IMessageMetadataProvider
 JustSaying.MessagingConfig.MessageMetadataProvider.set -> void
 JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
-JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.Handling<TMessage>(System.Action<JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder> middlewareConfiguration = null) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
 JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.WithReadConfiguration(System.Action<JustSaying.AwsTools.QueueCreation.SqsReadConfiguration> configure) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
 JustSaying.Fluent.SubscriptionsBuilder.ForQueue(string queueName, System.Action<JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder> configure) -> JustSaying.Fluent.SubscriptionsBuilder
 JustSaying.Messaging.IMessageTypeDiscriminator
@@ -284,6 +283,8 @@ JustSaying.Messaging.MessageDiscriminationContext.Subject.get -> string
 JustSaying.Messaging.SubjectMessageTypeDiscriminator
 JustSaying.Messaging.SubjectMessageTypeDiscriminator.SubjectMessageTypeDiscriminator() -> void
 JustSaying.Messaging.SubjectMessageTypeDiscriminator.TryGetMessageTypeName(JustSaying.Messaging.MessageDiscriminationContext context, out string typeName) -> bool
+JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.Handling<TMessage>(string typeName = null, System.Action<JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder> middlewareConfiguration = null) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
+JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.WithDiscriminator(JustSaying.Messaging.IMessageTypeDiscriminator discriminator) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
 *REMOVED*JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.HandleException.get -> System.Func<System.Exception, JustSaying.Models.Message, bool>
 *REMOVED*JustSaying.Fluent.MessagingConfigurationBuilder.WithMessageResponseLogger(System.Action<JustSaying.AwsTools.MessageHandling.MessageBatchResponse, System.Collections.Generic.IReadOnlyCollection<JustSaying.Models.Message>> logger) -> JustSaying.Fluent.MessagingConfigurationBuilder
 *REMOVED*JustSaying.Fluent.MessagingConfigurationBuilder.WithMessageResponseLogger(System.Action<JustSaying.AwsTools.MessageHandling.MessageResponse, JustSaying.Models.Message> logger) -> JustSaying.Fluent.MessagingConfigurationBuilder
