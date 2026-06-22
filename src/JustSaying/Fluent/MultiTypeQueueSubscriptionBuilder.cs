@@ -10,14 +10,16 @@ namespace JustSaying.Fluent;
 
 /// <summary>
 /// A builder for a subscription to a single queue that carries more than one message type. The type of
-/// each inbound message is resolved from a discriminator on the wire (by default the SNS
-/// <c>Subject</c>), so each message is deserialized and dispatched to the handler for its own type.
-/// This class cannot be inherited.
+/// each inbound message is resolved from a discriminator on the wire — by default the SNS
+/// <c>Subject</c>, but the chain is extensible (for example a CloudEvents <c>type</c> discriminator) —
+/// so each message is deserialized and dispatched to the handler for its own type. This class cannot
+/// be inherited.
 /// </summary>
 public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<object>
 {
     private readonly string _queueName;
     private readonly List<IMessageTypeRegistration> _registrations = [];
+    private readonly List<IMessageTypeDiscriminator> _discriminators = [];
     private Action<SqsReadConfiguration> _configureReads;
 
     internal MultiTypeQueueSubscriptionBuilder(string queueName)
@@ -29,12 +31,29 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
     /// Registers a message type that can arrive on this queue, along with its handler.
     /// </summary>
     /// <typeparam name="TMessage">The message type.</typeparam>
+    /// <param name="typeName">
+    /// The value the discriminator emits on the wire for this type (for example a CloudEvents
+    /// <c>type</c>). When <see langword="null"/>, the type's logical name (the SNS <c>Subject</c>) is used.
+    /// </param>
     /// <param name="middlewareConfiguration">An optional middleware configuration for this type's handler.</param>
     /// <returns>The current <see cref="MultiTypeQueueSubscriptionBuilder"/>.</returns>
-    public MultiTypeQueueSubscriptionBuilder Handling<TMessage>(Action<HandlerMiddlewareBuilder> middlewareConfiguration = null)
+    public MultiTypeQueueSubscriptionBuilder Handling<TMessage>(string typeName = null, Action<HandlerMiddlewareBuilder> middlewareConfiguration = null)
         where TMessage : class
     {
-        _registrations.Add(new MessageTypeRegistration<TMessage>(middlewareConfiguration));
+        _registrations.Add(new MessageTypeRegistration<TMessage>(typeName, middlewareConfiguration));
+        return this;
+    }
+
+    /// <summary>
+    /// Adds a discriminator to the chain used to resolve an inbound message's type. Discriminators are
+    /// tried in the order added; the first to yield a registered type name wins. When none are added,
+    /// the SNS <c>Subject</c> is used.
+    /// </summary>
+    /// <param name="discriminator">The discriminator to add.</param>
+    /// <returns>The current <see cref="MultiTypeQueueSubscriptionBuilder"/>.</returns>
+    public MultiTypeQueueSubscriptionBuilder WithDiscriminator(IMessageTypeDiscriminator discriminator)
+    {
+        _discriminators.Add(discriminator ?? throw new ArgumentNullException(nameof(discriminator)));
         return this;
     }
 
@@ -51,7 +70,7 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
 
     /// <inheritdoc />
     ISubscriptionBuilder<object> ISubscriptionBuilder<object>.WithMiddlewareConfiguration(Action<HandlerMiddlewareBuilder> middlewareConfiguration)
-        => throw new NotSupportedException($"Configure middleware per message type via {nameof(Handling)}<T>(configure) on a multi-type queue subscription.");
+        => throw new NotSupportedException($"Configure middleware per message type via {nameof(Handling)}<T>(typeName, configure) on a multi-type queue subscription.");
 
     /// <inheritdoc />
     void ISubscriptionBuilder<object>.Configure(
@@ -90,12 +109,14 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
         var serializersByName = new Dictionary<string, IMessageBodySerializer>(StringComparer.Ordinal);
         foreach (var registration in _registrations)
         {
-            var logicalName = bus.MessageTypeRegistry.GetLogicalName(registration.MessageType);
-            serializersByName[logicalName] = registration.CreateErasedSerializer(bus);
+            var typeName = registration.TypeName ?? bus.MessageTypeRegistry.GetLogicalName(registration.MessageType);
+            serializersByName[typeName] = registration.CreateErasedSerializer(bus);
             registration.RegisterHandler(bus, handlerResolver, serviceResolver, subscriptionConfig.QueueName);
         }
 
-        var discriminators = new IMessageTypeDiscriminator[] { new SubjectMessageTypeDiscriminator() };
+        var discriminators = _discriminators.Count > 0
+            ? _discriminators.ToArray()
+            : [new SubjectMessageTypeDiscriminator()];
         var serializerResolver = new DiscriminatingInboundMessageSerializerResolver(discriminators, serializersByName);
 
         bus.AddQueue(subscriptionConfig.SubscriptionGroupName, new SqsSource
@@ -114,15 +135,19 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
     {
         Type MessageType { get; }
 
+        string TypeName { get; }
+
         IMessageBodySerializer CreateErasedSerializer(JustSayingBus bus);
 
         void RegisterHandler(JustSayingBus bus, IHandlerResolver handlerResolver, IServiceResolver serviceResolver, string queueName);
     }
 
-    private sealed class MessageTypeRegistration<TMessage>(Action<HandlerMiddlewareBuilder> middlewareConfiguration)
+    private sealed class MessageTypeRegistration<TMessage>(string typeName, Action<HandlerMiddlewareBuilder> middlewareConfiguration)
         : IMessageTypeRegistration where TMessage : class
     {
         public Type MessageType => typeof(TMessage);
+
+        public string TypeName => typeName;
 
         public IMessageBodySerializer CreateErasedSerializer(JustSayingBus bus)
             => bus.MessageBodySerializerFactory.GetSerializer<TMessage>().Erase();
