@@ -116,7 +116,7 @@ public class SubscriptionGroupCollectionTests
 
         var messageConverter = new OutboundMessageConverter(
             PublishDestinationType.Queue,
-            new SystemTextJsonMessageBodySerializer<TestJustSayingMessage>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions),
+            new SystemTextJsonMessageBodySerializer<TestJustSayingMessage>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions).Erase(),
             new MessageCompressionRegistry(),
             new PublishCompressionOptions(),
             "TestJustSayingMessage",
@@ -146,7 +146,7 @@ public class SubscriptionGroupCollectionTests
     {
         public string QueueName { get; set; }
 
-        public static IMessageBodySerializer Serializer => new SystemTextJsonMessageBodySerializer<TestJustSayingMessage>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions);
+        public static IMessageBodySerializer Serializer => new SystemTextJsonMessageBodySerializer<TestJustSayingMessage>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions).Erase();
 
         public override string ToString()
         {

@@ -33,7 +33,7 @@ public class WhenPublishingInBatchAsyncResponseLoggerAsyncIsCalled : WhenPublish
             MessageBatchResponseLogger = (r, m) =>
             {
                 _response = r;
-                _message = m;
+                _message = m.Cast<Message>().ToList();
             }
         };
         return Task.FromResult(sqs);
@@ -59,7 +59,7 @@ public class WhenPublishingInBatchAsyncResponseLoggerAsyncIsCalled : WhenPublish
 
     protected override async Task WhenAsync()
     {
-        await SystemUnderTest.PublishAsync(_testMessages);
+        await SystemUnderTest.PublishBatchAsync(_testMessages);
     }
 
     private Task<SendMessageBatchResponse> PublishResult(CallInfo arg)

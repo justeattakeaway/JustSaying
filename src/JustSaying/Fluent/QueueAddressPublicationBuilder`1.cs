@@ -2,6 +2,7 @@ using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Models;
@@ -15,8 +16,7 @@ namespace JustSaying.Fluent;
 /// <typeparam name="T">
 /// The type of the message published to the queue.
 /// </typeparam>
-public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
-    where T : Message
+public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T> where T : class
 {
     private readonly QueueAddress _queueAddress;
     private PublishCompressionOptions _compressionOptions;
@@ -123,7 +123,7 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
         var eventPublisher = new SqsMessagePublisher(
             _queueAddress.QueueUrl,
             sqsClient,
-            new OutboundMessageConverter(PublishDestinationType.Queue, bus.MessageBodySerializerFactory.GetSerializer<T>(), new MessageCompressionRegistry([new GzipMessageBodyCompression()]), compressionOptions, subject, _isRawMessage),
+            new OutboundMessageConverter(PublishDestinationType.Queue, new ErasedMessageBodySerializer<T>(bus.MessageBodySerializerFactory.GetSerializer<T>()), new MessageCompressionRegistry([new GzipMessageBodyCompression()]), compressionOptions, subject, _isRawMessage),
             loggerFactory)
         {
             MessageResponseLogger = config.MessageResponseLogger

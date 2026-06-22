@@ -35,7 +35,7 @@ public class WhenSubscriberIsSlow
                 Interlocked.Increment(ref _callCount);
                 return Task.FromResult(messages.AsEnumerable());
             }),
-            MessageConverter = new InboundMessageConverter(SimpleMessage.Serializer, new MessageCompressionRegistry(), false)
+            MessageConverter = new InboundMessageConverter(SimpleMessage.Serializer.Erase(), new MessageCompressionRegistry(), false)
         };
 
         var monitor = new TrackingLoggingMonitor(
