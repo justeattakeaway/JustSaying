@@ -111,14 +111,14 @@ public class JustSayingBusActivityTests
             NullLoggerFactory.Instance, monitor);
         bus.AddMessagePublisher<SimpleMessage>(publisher);
 
-        var messages = new List<Message>
+        var messages = new List<SimpleMessage>
         {
             new SimpleMessage { Id = Guid.NewGuid() },
             new SimpleMessage { Id = Guid.NewGuid() }
         };
 
         // Act
-        await bus.PublishAsync(messages, null, CancellationToken.None);
+        await bus.PublishBatchAsync(messages, null, CancellationToken.None);
         tracerProvider.ForceFlush();
 
         // Assert
@@ -149,7 +149,7 @@ public class JustSayingBusActivityTests
 
         var publisher = Substitute.For<IMessagePublisher, IMessageBatchPublisher>();
         ((IMessageBatchPublisher)publisher).PublishBatchAsync(
-                Arg.Any<IEnumerable<Message>>(),
+                Arg.Any<IEnumerable<SimpleMessage>>(),
                 Arg.Any<PublishBatchMetadata>(),
                 Arg.Any<CancellationToken>())
             .Returns(Task.FromException(new InvalidOperationException("Batch publish failed")));
@@ -161,7 +161,7 @@ public class JustSayingBusActivityTests
             NullLoggerFactory.Instance, monitor);
         bus.AddMessagePublisher<SimpleMessage>(publisher);
 
-        var messages = new List<Message>
+        var messages = new List<SimpleMessage>
         {
             new SimpleMessage { Id = Guid.NewGuid() },
             new SimpleMessage { Id = Guid.NewGuid() }
