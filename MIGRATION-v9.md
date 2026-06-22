@@ -23,16 +23,9 @@ await publisher.PublishBatchAsync(messages, metadata, cancellationToken);
 
 Rename batch calls accordingly. Single-message `PublishAsync` is unchanged.
 
-### Serialization is generic; polymorphism is explicit
+### Serialization interface is generic
 
-`IMessageBodySerializer` is now the generic `IMessageBodySerializer<T>` on the public surface (an internal type-erased seam handles the runtime boundary). Serialization is by the **declared type `T`**, not the runtime type.
-
-- If you relied on derived-type properties being serialized when publishing a base type, opt in with System.Text.Json polymorphism (`[JsonPolymorphic]` / `[JsonDerivedType]`). The previous implicit behaviour was already lossy on the receive side; the attributes round-trip a discriminator correctly.
-
-### Routing by declared type; homogeneous batches
-
-- Publishing routes by `typeof(T)` (the static type), not the runtime type of the instance.
-- A single `PublishBatchAsync<T>` call publishes one message type; mixed-type batches are no longer split by runtime type within one call.
+`IMessageBodySerializer` is now the generic `IMessageBodySerializer<T>` on the public surface (an internal type-erased seam handles the runtime boundary). If you implement a custom serializer or serialization factory, update to the generic signatures. Routing and serialization remain by each message's runtime type, as in v8: a single (or batch) publish of a base-typed instance is still routed to, and serialized by, the publisher registered for its concrete type.
 
 ## Exactly-once handling requires a stable key for non-`Message` payloads
 
