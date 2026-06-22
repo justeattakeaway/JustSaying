@@ -261,6 +261,20 @@ static JustSaying.Messaging.MessagePublisherExtensions.PublishBatchAsync<TMessag
 static JustSaying.Messaging.MessagePublisherExtensions.PublishBatchAsync<TMessage>(this JustSaying.Messaging.IMessagePublisher publisher, System.Collections.Generic.IEnumerable<TMessage> messages, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
 JustSaying.Messaging.Middleware.ExactlyOnceMiddleware<T>.ExactlyOnceMiddleware(JustSaying.Messaging.MessageHandling.IMessageLockAsync messageLock, System.TimeSpan timeout, string handlerName, System.Func<T, string> deduplicationKeySelector, Microsoft.Extensions.Logging.ILogger logger) -> void
 static JustSaying.Messaging.Middleware.ExactlyOnceHandlerMiddlewareBuilderExtensions.UseExactlyOnce<TMessage>(this JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder builder, string lockKey, System.TimeSpan? lockDuration = null, System.Func<TMessage, string> deduplicationKeySelector = null) -> JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder
+JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
+JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.Handling<TMessage>(System.Action<JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder> middlewareConfiguration = null) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
+JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.WithReadConfiguration(System.Action<JustSaying.AwsTools.QueueCreation.SqsReadConfiguration> configure) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
+JustSaying.Fluent.SubscriptionsBuilder.ForQueue(string queueName, System.Action<JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder> configure) -> JustSaying.Fluent.SubscriptionsBuilder
+JustSaying.Messaging.IMessageTypeDiscriminator
+JustSaying.Messaging.IMessageTypeDiscriminator.TryGetMessageTypeName(JustSaying.Messaging.MessageDiscriminationContext context, out string typeName) -> bool
+JustSaying.Messaging.MessageDiscriminationContext
+JustSaying.Messaging.MessageDiscriminationContext.Body.get -> string
+JustSaying.Messaging.MessageDiscriminationContext.MessageAttributes.get -> JustSaying.Messaging.MessageHandling.MessageAttributes
+JustSaying.Messaging.MessageDiscriminationContext.MessageDiscriminationContext(string body, string subject, JustSaying.Messaging.MessageHandling.MessageAttributes messageAttributes) -> void
+JustSaying.Messaging.MessageDiscriminationContext.Subject.get -> string
+JustSaying.Messaging.SubjectMessageTypeDiscriminator
+JustSaying.Messaging.SubjectMessageTypeDiscriminator.SubjectMessageTypeDiscriminator() -> void
+JustSaying.Messaging.SubjectMessageTypeDiscriminator.TryGetMessageTypeName(JustSaying.Messaging.MessageDiscriminationContext context, out string typeName) -> bool
 *REMOVED*JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.HandleException.get -> System.Func<System.Exception, JustSaying.Models.Message, bool>
 *REMOVED*JustSaying.Fluent.MessagingConfigurationBuilder.WithMessageResponseLogger(System.Action<JustSaying.AwsTools.MessageHandling.MessageBatchResponse, System.Collections.Generic.IReadOnlyCollection<JustSaying.Models.Message>> logger) -> JustSaying.Fluent.MessagingConfigurationBuilder
 *REMOVED*JustSaying.Fluent.MessagingConfigurationBuilder.WithMessageResponseLogger(System.Action<JustSaying.AwsTools.MessageHandling.MessageResponse, JustSaying.Models.Message> logger) -> JustSaying.Fluent.MessagingConfigurationBuilder
