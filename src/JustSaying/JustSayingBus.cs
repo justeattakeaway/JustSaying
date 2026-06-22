@@ -325,7 +325,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
             {
                 activity.SetTag("messaging.operation.name", "publish");
                 activity.SetTag("messaging.operation.type", "send");
-                activity.SetTag("messaging.message.id", MessageIdentity.GetId(message));
+                activity.SetTag("messaging.message.id", Config.MessageMetadataProvider.GetId(message));
                 activity.SetTag("messaging.message.type", messageType.FullName);
             }
 

@@ -1,5 +1,6 @@
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using JustSaying.Naming;
@@ -38,6 +39,18 @@ public class MessagingConfig : IMessagingConfig, IPublishBatchConfiguration
     {
         get => _messageTypeRegistry ??= new MessageTypeRegistry(MessageSubjectProvider);
         set => _messageTypeRegistry = value;
+    }
+
+    private IMessageMetadataProvider _messageMetadataProvider;
+
+    /// <summary>
+    /// Gets or sets the provider used to read intrinsic metadata (id, timestamp, deduplication key)
+    /// from message payloads. Defaults to a provider that reads <see cref="Message"/> metadata.
+    /// </summary>
+    public IMessageMetadataProvider MessageMetadataProvider
+    {
+        get => _messageMetadataProvider ??= DefaultMessageMetadataProvider.Instance;
+        set => _messageMetadataProvider = value;
     }
     public ITopicNamingConvention TopicNamingConvention { get; set; }
     public IQueueNamingConvention QueueNamingConvention { get; set; }
