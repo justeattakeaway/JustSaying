@@ -22,28 +22,15 @@ internal static class MessageIdentity
         => message is Message typed ? typed.Id.ToString() : null;
 
     /// <summary>
-    /// Gets a unique key for a message, suitable for use as a batch request entry identifier or for
-    /// deduplication. Falls back to a fresh <see cref="Guid"/> for payloads that do not derive from
-    /// <see cref="Message"/>, which guarantees uniqueness within a batch but is not stable across
-    /// publishes.
+    /// Gets an identifier for a message suitable for use as a batch request entry identifier, which
+    /// only needs to be unique <em>within a single batch request</em>. Falls back to a fresh
+    /// <see cref="Guid"/> for payloads that do not derive from <see cref="Message"/>.
+    /// <para>
+    /// This is deliberately <em>not</em> suitable for deduplication: the fallback is not stable
+    /// across publishes. Features that need a stable key (such as exactly-once handling) must obtain
+    /// it explicitly rather than calling this method.
+    /// </para>
     /// </summary>
-    public static string GetUniqueKey(object message)
+    public static string GetBatchEntryId(object message)
         => message is Message typed ? typed.UniqueKey() : Guid.NewGuid().ToString();
-
-    /// <summary>
-    /// Attempts to get a stable unique key for a message, returning <see langword="false"/> when the
-    /// payload does not expose one. Used by features such as exactly-once handling that cannot
-    /// function without a caller-provided identity.
-    /// </summary>
-    public static bool TryGetUniqueKey(object message, out string uniqueKey)
-    {
-        if (message is Message typed)
-        {
-            uniqueKey = typed.UniqueKey();
-            return true;
-        }
-
-        uniqueKey = null;
-        return false;
-    }
 }
