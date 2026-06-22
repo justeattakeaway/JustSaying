@@ -133,8 +133,7 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T> w
         var compressionRegistry = bus.CompressionRegistry;
         var compressionOptions = _compressionOptions ?? bus.Config.DefaultCompressionOptions;
         var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
-        var subjectProvider = bus.Config.MessageSubjectProvider;
-        var subject = _subjectSet ? _subject : subjectProvider.GetSubjectForType(typeof(T));
+        var subject = _subjectSet ? _subject : bus.Config.MessageTypeRegistry.GetLogicalName(typeof(T));
 
         CompressionEncodingValidator.ValidateEncoding(bus.CompressionRegistry, compressionOptions);
 

@@ -8,6 +8,7 @@ public interface IMessagingConfig : IPublishConfiguration
 {
     string Region { get; set; }
     IMessageSubjectProvider MessageSubjectProvider { get; set; }
+    IMessageTypeRegistry MessageTypeRegistry { get; set; }
     ITopicNamingConvention TopicNamingConvention { get; set; }
     IQueueNamingConvention QueueNamingConvention { get; set; }
     PublishCompressionOptions DefaultCompressionOptions { get; set; }

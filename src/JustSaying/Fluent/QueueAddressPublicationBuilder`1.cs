@@ -103,8 +103,7 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T> w
 
         var config = bus.Config;
         var compressionOptions = _compressionOptions ?? bus.Config.DefaultCompressionOptions;
-        var subjectProvider = bus.Config.MessageSubjectProvider;
-        var subject = _subjectSet ? _subject : subjectProvider.GetSubjectForType(typeof(T));
+        var subject = _subjectSet ? _subject : bus.Config.MessageTypeRegistry.GetLogicalName(typeof(T));
         var sqsClient = proxy.GetAwsClientFactory().GetSqsClient(RegionEndpoint.GetBySystemName(_queueAddress.RegionName));
 
         if (_shouldCheckQueueExistence)
