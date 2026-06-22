@@ -265,7 +265,7 @@ internal sealed class SnsMessagePublisher(
 
             PublishBatchRequestEntry request = new()
             {
-                Id = MessageIdentity.GetUniqueKey(message),
+                Id = MessageIdentity.GetBatchEntryId(message),
                 Subject = subject,
                 Message = messageToSend,
             };
