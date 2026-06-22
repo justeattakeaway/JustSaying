@@ -593,7 +593,6 @@ JustSaying.Messaging.Middleware.ErrorHandling.ErrorHandlerMiddleware.ErrorHandle
 JustSaying.Messaging.Middleware.ErrorHandling.ErrorHandlerMiddlewareBuilderExtensions
 JustSaying.Messaging.Middleware.ExactlyOnceHandlerMiddlewareBuilderExtensions
 JustSaying.Messaging.Middleware.ExactlyOnceMiddleware<T>
-JustSaying.Messaging.Middleware.ExactlyOnceMiddleware<T>.ExactlyOnceMiddleware(JustSaying.Messaging.MessageHandling.IMessageLockAsync messageLock, System.TimeSpan timeout, string handlerName, Microsoft.Extensions.Logging.ILogger logger) -> void
 JustSaying.Messaging.Middleware.HandleMessageContext
 JustSaying.Messaging.Middleware.HandleMessageContext.HandledException.get -> System.Exception
 JustSaying.Messaging.Middleware.HandleMessageContext.MessageAttributes.get -> JustSaying.Messaging.MessageHandling.MessageAttributes
@@ -743,7 +742,6 @@ static JustSaying.Messaging.MessageProcessingStrategies.MessageDefaults.MaxAmazo
 static JustSaying.Messaging.MessageProcessingStrategies.MessageDefaults.ParallelHandlerExecutionPerCore.get -> int
 static JustSaying.Messaging.Middleware.Backoff.BackoffMiddlewareBuilderExtensions.UseBackoff(this JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder builder, JustSaying.Messaging.MessageProcessingStrategies.IMessageBackoffStrategy backoffStrategy) -> JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder
 static JustSaying.Messaging.Middleware.ErrorHandling.ErrorHandlerMiddlewareBuilderExtensions.UseErrorHandler(this JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder builder) -> JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder
-static JustSaying.Messaging.Middleware.ExactlyOnceHandlerMiddlewareBuilderExtensions.UseExactlyOnce<TMessage>(this JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder builder, string lockKey, System.TimeSpan? lockDuration = null) -> JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder
 static JustSaying.Messaging.Middleware.HandleMessageContextExtensions.MessageAs<TMessage>(this JustSaying.Messaging.Middleware.HandleMessageContext context) -> TMessage
 static JustSaying.Messaging.Middleware.HandlerMiddlewareBuilderExtensions.UseDefaults<TMessage>(this JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder builder, System.Type handlerType) -> JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder
 static JustSaying.Messaging.Middleware.HandlerMiddlewareBuilderExtensions.UseHandler<TMessage>(this JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder builder, System.Func<JustSaying.HandlerResolutionContext, JustSaying.Messaging.MessageHandling.IHandlerAsync<TMessage>> handler) -> JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder

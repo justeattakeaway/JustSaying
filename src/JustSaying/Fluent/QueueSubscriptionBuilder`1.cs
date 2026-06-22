@@ -188,7 +188,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
 
         var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
         var compressionRegistry = bus.CompressionRegistry;
-        bus.AddQueue(subscriptionConfig.SubscriptionGroupName, new SqsSource { MessageConverter = new InboundMessageConverter(new ErasedMessageBodySerializer<T>(serializer), compressionRegistry, subscriptionConfig.RawMessageDelivery), SqsQueue = queue.Queue });
+        bus.AddQueue(subscriptionConfig.SubscriptionGroupName, new SqsSource { MessageConverter = new InboundMessageConverter(serializer.Erase(), compressionRegistry, subscriptionConfig.RawMessageDelivery), SqsQueue = queue.Queue });
 
         logger.LogInformation(
             "Created SQS subscriber for message type '{MessageType}' on queue '{QueueName}'.",

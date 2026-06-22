@@ -147,7 +147,7 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T> w
             => StaticAddressPublicationConfiguration.Build<T>(
                 topicArn,
                 proxy.GetAwsClientFactory(),
-                new OutboundMessageConverter(PublishDestinationType.Topic, new ErasedMessageBodySerializer<T>(serializer), compressionRegistry, compressionOptions, subject, true),
+                new OutboundMessageConverter(PublishDestinationType.Topic, serializer.Erase(), compressionRegistry, compressionOptions, subject, true),
                 loggerFactory,
                 bus,
                 exceptionHandler,
