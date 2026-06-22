@@ -36,9 +36,9 @@ public class WhenUsingDefaultServiceResolver
     }
 
     [Test]
-    public void ShouldResolveIMessageSerializationFactoryToNewtonsoftSerializationFactory()
+    public void ShouldResolveIMessageSerializationFactoryToSystemTextJsonSerializationFactory()
     {
-        _sut.ResolveService<IMessageBodySerializationFactory>().ShouldBeOfType<NewtonsoftSerializationFactory>();
+        _sut.ResolveService<IMessageBodySerializationFactory>().ShouldBeOfType<SystemTextJsonSerializationFactory>();
     }
 
     [Test]
