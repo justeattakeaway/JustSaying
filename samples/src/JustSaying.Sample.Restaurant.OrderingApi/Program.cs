@@ -1,8 +1,12 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using JustSaying.Messaging;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Sample.Restaurant.Models;
 using JustSaying.Sample.Restaurant.OrderingApi;
 using JustSaying.Sample.Restaurant.OrderingApi.Handlers;
 using JustSaying.Sample.Restaurant.OrderingApi.Models;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Scalar.AspNetCore;
 
 Console.Title = "OrderingApi";
@@ -11,6 +15,21 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 
 var configuration = builder.Configuration;
+
+// Wire JustSaying for AOT-ready serialization: register a source-generated System.Text.Json
+// factory before AddJustSaying so it wins the default registration, and plug the same context
+// into ASP.NET's minimal-API JSON pipeline. (See tests/JustSaying.AotTest for a full publish ->
+// subscribe -> handle round trip running as a native-AOT binary.)
+var serializerOptions = new JsonSerializerOptions
+{
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    TypeInfoResolver = ApplicationJsonContext.Default,
+};
+builder.Services.TryAddSingleton<IMessageBodySerializationFactory>(_ => new SystemTextJsonSerializationFactory(serializerOptions));
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.TypeInfoResolverChain.Insert(0, ApplicationJsonContext.Default);
+});
 
 builder.Services.AddJustSaying(config =>
 {
