@@ -44,6 +44,7 @@ JustSaying.Fluent.QueueAddressPublicationBuilder<T>.WithRawMessages() -> JustSay
 JustSaying.Fluent.QueueAddressPublicationBuilder<T>.WithSubject(string subject) -> JustSaying.Fluent.QueueAddressPublicationBuilder<T>
 JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>.WithQueueExistenceCheck() -> JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>
 JustSaying.Fluent.QueuePublicationBuilder<T>.WithQueueName(string name) -> JustSaying.Fluent.QueuePublicationBuilder<T>
+JustSaying.Fluent.QueuePublicationBuilder<T>.WithRawMessages() -> JustSaying.Fluent.QueuePublicationBuilder<T>
 JustSaying.Fluent.TopicAddressPublicationBuilder<T>.WithCompression(JustSaying.AwsTools.MessageHandling.PublishCompressionOptions compressionOptions) -> JustSaying.Fluent.TopicAddressPublicationBuilder<T>
 JustSaying.Fluent.TopicAddressPublicationBuilder<T>.WithSubject(string subject) -> JustSaying.Fluent.TopicAddressPublicationBuilder<T>
 JustSaying.IMessagingConfig.DefaultCompressionOptions.get -> JustSaying.AwsTools.MessageHandling.PublishCompressionOptions
