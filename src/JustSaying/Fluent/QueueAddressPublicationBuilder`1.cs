@@ -119,10 +119,15 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T> w
             });
         }
 
+        var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
+        // A self-describing serializer (for example CloudEvents) already carries the message's type
+        // metadata, so the {Message, Subject} queue envelope would just double-wrap it.
+        var isRawMessage = _isRawMessage || serializer is ISelfDescribingMessageBodySerializer;
+
         var eventPublisher = new SqsMessagePublisher(
             _queueAddress.QueueUrl,
             sqsClient,
-            new OutboundMessageConverter(PublishDestinationType.Queue, bus.MessageBodySerializerFactory.GetSerializer<T>().Erase(), new MessageCompressionRegistry([new GzipMessageBodyCompression()]), compressionOptions, subject, _isRawMessage),
+            new OutboundMessageConverter(PublishDestinationType.Queue, serializer.Erase(), new MessageCompressionRegistry([new GzipMessageBodyCompression()]), compressionOptions, subject, isRawMessage),
             loggerFactory)
         {
             MessageResponseLogger = config.MessageResponseLogger
