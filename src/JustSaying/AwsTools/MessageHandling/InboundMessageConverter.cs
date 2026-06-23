@@ -10,13 +10,18 @@ namespace JustSaying.Messaging;
 
 internal sealed class InboundMessageConverter : IInboundMessageConverter
 {
-    private readonly IMessageBodySerializer _bodySerializer;
+    private readonly IInboundMessageSerializerResolver _serializerResolver;
     private readonly MessageCompressionRegistry _compressionRegistry;
     private readonly bool _isRawMessage;
 
     public InboundMessageConverter(IMessageBodySerializer bodySerializer, MessageCompressionRegistry compressionRegistry, bool isRawMessage)
+        : this(new SingleInboundMessageSerializerResolver(bodySerializer), compressionRegistry, isRawMessage)
     {
-        _bodySerializer = bodySerializer;
+    }
+
+    public InboundMessageConverter(IInboundMessageSerializerResolver serializerResolver, MessageCompressionRegistry compressionRegistry, bool isRawMessage)
+    {
+        _serializerResolver = serializerResolver;
         _compressionRegistry = compressionRegistry;
         _isRawMessage = isRawMessage;
     }
@@ -26,16 +31,26 @@ internal sealed class InboundMessageConverter : IInboundMessageConverter
         string body = message.Body;
         var attributes = GetMessageAttributes(message, body);
 
+        string subject = null;
         if (body is not null && !_isRawMessage)
         {
             var jsonNode = JsonNode.Parse(body);
-            if (jsonNode is JsonObject jsonObject && jsonObject.TryGetPropertyValue("Message", out var messageNode))
+            if (jsonNode is JsonObject jsonObject)
             {
-                body = messageNode?.GetValue<string>();
+                if (jsonObject.TryGetPropertyValue("Message", out var messageNode))
+                {
+                    body = messageNode?.GetValue<string>();
+                }
+
+                if (jsonObject.TryGetPropertyValue("Subject", out var subjectNode))
+                {
+                    subject = subjectNode?.GetValue<string>();
+                }
             }
         }
         body = ApplyBodyDecompression(body, attributes);
-        var result = _bodySerializer.Deserialize(body);
+        var serializer = _serializerResolver.Resolve(body, subject, attributes);
+        var result = serializer.Deserialize(body);
         return new ValueTask<InboundMessage>(new InboundMessage(result, attributes));
     }
 

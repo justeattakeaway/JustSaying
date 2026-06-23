@@ -44,6 +44,7 @@ JustSaying.Fluent.QueueAddressPublicationBuilder<T>.WithRawMessages() -> JustSay
 JustSaying.Fluent.QueueAddressPublicationBuilder<T>.WithSubject(string subject) -> JustSaying.Fluent.QueueAddressPublicationBuilder<T>
 JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>.WithQueueExistenceCheck() -> JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>
 JustSaying.Fluent.QueuePublicationBuilder<T>.WithQueueName(string name) -> JustSaying.Fluent.QueuePublicationBuilder<T>
+JustSaying.Fluent.QueuePublicationBuilder<T>.WithRawMessages() -> JustSaying.Fluent.QueuePublicationBuilder<T>
 JustSaying.Fluent.TopicAddressPublicationBuilder<T>.WithCompression(JustSaying.AwsTools.MessageHandling.PublishCompressionOptions compressionOptions) -> JustSaying.Fluent.TopicAddressPublicationBuilder<T>
 JustSaying.Fluent.TopicAddressPublicationBuilder<T>.WithSubject(string subject) -> JustSaying.Fluent.TopicAddressPublicationBuilder<T>
 JustSaying.IMessagingConfig.DefaultCompressionOptions.get -> JustSaying.AwsTools.MessageHandling.PublishCompressionOptions
@@ -233,6 +234,7 @@ JustSaying.Messaging.MessageSerialization.IMessageBodySerializationFactory.GetSe
 JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<TMessage>
 JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<TMessage>.Deserialize(string message) -> TMessage
 JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<TMessage>.Serialize(TMessage message) -> string
+JustSaying.Messaging.MessageSerialization.ISelfDescribingMessageBodySerializer
 JustSaying.Messaging.MessageSerialization.InboundMessage.Deconstruct(out object message, out JustSaying.Messaging.MessageHandling.MessageAttributes attributes) -> void
 JustSaying.Messaging.MessageSerialization.InboundMessage.InboundMessage(object message, JustSaying.Messaging.MessageHandling.MessageAttributes messageAttributes) -> void
 JustSaying.Messaging.MessageSerialization.InboundMessage.Message.get -> object
@@ -261,14 +263,6 @@ static JustSaying.Messaging.MessagePublisherExtensions.PublishBatchAsync<TMessag
 static JustSaying.Messaging.MessagePublisherExtensions.PublishBatchAsync<TMessage>(this JustSaying.Messaging.IMessagePublisher publisher, System.Collections.Generic.IEnumerable<TMessage> messages, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
 JustSaying.Messaging.Middleware.ExactlyOnceMiddleware<T>.ExactlyOnceMiddleware(JustSaying.Messaging.MessageHandling.IMessageLockAsync messageLock, System.TimeSpan timeout, string handlerName, System.Func<T, string> deduplicationKeySelector, Microsoft.Extensions.Logging.ILogger logger) -> void
 static JustSaying.Messaging.Middleware.ExactlyOnceHandlerMiddlewareBuilderExtensions.UseExactlyOnce<TMessage>(this JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder builder, string lockKey, System.TimeSpan? lockDuration = null, System.Func<TMessage, string> deduplicationKeySelector = null) -> JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder
-JustSaying.IMessagingConfig.MessageTypeRegistry.get -> JustSaying.Messaging.MessageSerialization.IMessageTypeRegistry
-JustSaying.IMessagingConfig.MessageTypeRegistry.set -> void
-JustSaying.Messaging.MessageSerialization.IMessageTypeRegistry
-JustSaying.Messaging.MessageSerialization.IMessageTypeRegistry.GetLogicalName(System.Type messageType) -> string
-JustSaying.Messaging.MessageSerialization.IMessageTypeRegistry.Register(System.Type messageType, string logicalName) -> void
-JustSaying.Messaging.MessageSerialization.IMessageTypeRegistry.TryResolveType(string logicalName, out System.Type messageType) -> bool
-JustSaying.MessagingConfig.MessageTypeRegistry.get -> JustSaying.Messaging.MessageSerialization.IMessageTypeRegistry
-JustSaying.MessagingConfig.MessageTypeRegistry.set -> void
 JustSaying.IMessagingConfig.MessageMetadataProvider.get -> JustSaying.Messaging.IMessageMetadataProvider
 JustSaying.IMessagingConfig.MessageMetadataProvider.set -> void
 JustSaying.Messaging.IMessageMetadataProvider
@@ -277,3 +271,18 @@ JustSaying.Messaging.IMessageMetadataProvider.GetTimestamp(object message) -> Sy
 JustSaying.Messaging.IMessageMetadataProvider.TryGetDeduplicationKey(object message, out string deduplicationKey) -> bool
 JustSaying.MessagingConfig.MessageMetadataProvider.get -> JustSaying.Messaging.IMessageMetadataProvider
 JustSaying.MessagingConfig.MessageMetadataProvider.set -> void
+JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
+JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.WithReadConfiguration(System.Action<JustSaying.AwsTools.QueueCreation.SqsReadConfiguration> configure) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
+JustSaying.Fluent.SubscriptionsBuilder.ForQueue(string queueName, System.Action<JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder> configure) -> JustSaying.Fluent.SubscriptionsBuilder
+JustSaying.Messaging.IMessageTypeDiscriminator
+JustSaying.Messaging.IMessageTypeDiscriminator.TryGetMessageTypeName(JustSaying.Messaging.MessageDiscriminationContext context, out string typeName) -> bool
+JustSaying.Messaging.MessageDiscriminationContext
+JustSaying.Messaging.MessageDiscriminationContext.Body.get -> string
+JustSaying.Messaging.MessageDiscriminationContext.MessageAttributes.get -> JustSaying.Messaging.MessageHandling.MessageAttributes
+JustSaying.Messaging.MessageDiscriminationContext.MessageDiscriminationContext(string body, string subject, JustSaying.Messaging.MessageHandling.MessageAttributes messageAttributes) -> void
+JustSaying.Messaging.MessageDiscriminationContext.Subject.get -> string
+JustSaying.Messaging.SubjectMessageTypeDiscriminator
+JustSaying.Messaging.SubjectMessageTypeDiscriminator.SubjectMessageTypeDiscriminator() -> void
+JustSaying.Messaging.SubjectMessageTypeDiscriminator.TryGetMessageTypeName(JustSaying.Messaging.MessageDiscriminationContext context, out string typeName) -> bool
+JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.Handling<TMessage>(string typeName = null, System.Action<JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder> middlewareConfiguration = null) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
+JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.WithDiscriminator(JustSaying.Messaging.IMessageTypeDiscriminator discriminator) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder

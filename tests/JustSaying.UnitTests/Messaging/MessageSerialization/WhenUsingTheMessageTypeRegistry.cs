@@ -38,13 +38,4 @@ public class WhenUsingTheMessageTypeRegistry
         registry.TryResolveType("unknown", out var resolved).ShouldBeFalse();
         resolved.ShouldBeNull();
     }
-
-    [Test]
-    public void TheConfigExposesADefaultRegistryBackedByItsSubjectProvider()
-    {
-        var config = new MessagingConfig();
-
-        config.MessageTypeRegistry.ShouldNotBeNull();
-        config.MessageTypeRegistry.GetLogicalName(typeof(OrderPlaced)).ShouldBe(nameof(OrderPlaced));
-    }
 }
