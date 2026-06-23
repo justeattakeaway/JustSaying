@@ -13,7 +13,7 @@ namespace JustSaying.CloudEvents;
 /// serialized by an inner <see cref="IMessageBodySerializer{TMessage}"/>.
 /// </summary>
 /// <typeparam name="TMessage">The type of message to be serialized or deserialized.</typeparam>
-public sealed class CloudEventMessageBodySerializer<TMessage> : IMessageBodySerializer<TMessage> where TMessage : class
+public sealed class CloudEventMessageBodySerializer<TMessage> : IMessageBodySerializer<TMessage>, ISelfDescribingMessageBodySerializer where TMessage : class
 {
     private const string SpecVersion = "1.0";
 
