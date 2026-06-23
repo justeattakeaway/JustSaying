@@ -49,6 +49,6 @@ public class SnsWriteConfiguration
     /// <remarks>
     /// This is an extension point enabling custom error handling, including the ability to handle raised exceptions.
     /// </remarks>
-    /// <returns>A function that takes an Exception and a Message as parameters and returns a boolean indicating whether the exception has been handled.</returns>
-    public Func<Exception, Message, bool> HandleException { get; set; }
+    /// <returns>A function that takes an Exception and a message as parameters and returns a boolean indicating whether the exception has been handled.</returns>
+    public Func<Exception, object, bool> HandleException { get; set; }
 }

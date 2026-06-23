@@ -2,8 +2,8 @@ using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware;
-using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent;
@@ -14,21 +14,20 @@ namespace JustSaying.Fluent;
 /// <typeparam name="T">
 /// The type of the message.
 /// </typeparam>
-public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
-    where T : Message
+public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T> where T : class
 {
     private readonly TopicAddress _topicAddress;
-    private Func<Exception, Message, bool> _exceptionHandler;
-    private Func<Exception, IReadOnlyCollection<Message>, bool> _exceptionBatchHandler;
+    private Func<Exception, T, bool> _exceptionHandler;
+    private Func<Exception, IReadOnlyCollection<T>, bool> _exceptionBatchHandler;
     private PublishCompressionOptions _compressionOptions;
     private string _subject;
     private bool _subjectSet;
 
     /// <summary>
-    /// Function that will produce a topic address dynamically from a Message and the original topic
+    /// Function that will produce a topic address dynamically from a message and the original topic
     /// address at publish time.
     /// </summary>
-    public Func<string, Message, string> TopicAddressCustomizer { get; set; }
+    public Func<string, T, string> TopicAddressCustomizer { get; set; }
 
     private Action<PublishMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
@@ -51,7 +50,7 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="exceptionHandler"/> is <see langword="null"/>.
     /// </exception>
-    public TopicAddressPublicationBuilder<T> WithExceptionHandler(Func<Exception, Message, bool> exceptionHandler)
+    public TopicAddressPublicationBuilder<T> WithExceptionHandler(Func<Exception, T, bool> exceptionHandler)
     {
         _exceptionHandler = exceptionHandler ?? throw new ArgumentNullException(nameof(exceptionHandler));
         return this;
@@ -67,7 +66,7 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="exceptionBatchHandler"/> is <see langword="null"/>.
     /// </exception>
-    public TopicAddressPublicationBuilder<T> WithExceptionHandler(Func<Exception, IReadOnlyCollection<Message>, bool> exceptionBatchHandler)
+    public TopicAddressPublicationBuilder<T> WithExceptionHandler(Func<Exception, IReadOnlyCollection<T>, bool> exceptionBatchHandler)
     {
         _exceptionBatchHandler = exceptionBatchHandler ?? throw new ArgumentNullException(nameof(exceptionBatchHandler));
         return this;
@@ -104,7 +103,7 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
     /// <returns>
     /// The current <see cref="TopicAddressPublicationBuilder{T}"/>.
     /// </returns>
-    public TopicAddressPublicationBuilder<T> WithTopicAddress(Func<string, Message, string> topicAddressCustomizer)
+    public TopicAddressPublicationBuilder<T> WithTopicAddress(Func<string, T, string> topicAddressCustomizer)
     {
         TopicAddressCustomizer = topicAddressCustomizer;
         return this;
@@ -134,23 +133,27 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
         var compressionRegistry = bus.CompressionRegistry;
         var compressionOptions = _compressionOptions ?? bus.Config.DefaultCompressionOptions;
         var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
-        var subjectProvider = bus.Config.MessageSubjectProvider;
-        var subject = _subjectSet ? _subject : subjectProvider.GetSubjectForType(typeof(T));
+        var subject = _subjectSet ? _subject : bus.Config.MessageTypeRegistry.GetLogicalName(typeof(T));
 
         CompressionEncodingValidator.ValidateEncoding(bus.CompressionRegistry, compressionOptions);
+
+        Func<Exception, object, bool> exceptionHandler =
+            _exceptionHandler is null ? null : (ex, message) => _exceptionHandler(ex, (T)message);
+        Func<Exception, IReadOnlyCollection<object>, bool> exceptionBatchHandler =
+            _exceptionBatchHandler is null ? null : (ex, messages) => _exceptionBatchHandler(ex, messages.Cast<T>().ToList());
 
         StaticAddressPublicationConfiguration BuildConfiguration(string topicArn)
             => StaticAddressPublicationConfiguration.Build<T>(
                 topicArn,
                 proxy.GetAwsClientFactory(),
-                new OutboundMessageConverter(PublishDestinationType.Topic, serializer, compressionRegistry, compressionOptions, subject, true),
+                new OutboundMessageConverter(PublishDestinationType.Topic, serializer.Erase(), compressionRegistry, compressionOptions, subject, true),
                 loggerFactory,
                 bus,
-                _exceptionHandler,
-                _exceptionBatchHandler);
+                exceptionHandler,
+                exceptionBatchHandler);
 
         ITopicAddressPublisher publisherConfig = TopicAddressCustomizer != null
-            ? DynamicAddressPublicationConfiguration.Build<T>(_topicAddress.TopicArn, TopicAddressCustomizer, BuildConfiguration, loggerFactory)
+            ? DynamicAddressPublicationConfiguration.Build<T>(_topicAddress.TopicArn, (topicArn, message) => TopicAddressCustomizer(topicArn, (T)message), BuildConfiguration, loggerFactory)
             : BuildConfiguration(_topicAddress.TopicArn);
 
         bus.AddMessagePublisher<T>(publisherConfig.Publisher);
