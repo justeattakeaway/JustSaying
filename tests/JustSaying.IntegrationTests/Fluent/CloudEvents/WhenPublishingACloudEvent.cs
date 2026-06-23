@@ -102,14 +102,12 @@ public class WhenPublishingACloudEvent : IntegrationTestBase
 
             received.Messages.ShouldHaveSingleItem();
 
-            // JustSaying wraps every published body in its own {"Message", "Subject"} envelope, so the
-            // structured-mode CloudEvent is carried inside the "Message" member; unwrap it first.
-            using var envelope = JsonDocument.Parse(received.Messages[0].Body);
-            var cloudEventJson = envelope.RootElement.GetProperty("Message").GetString();
-
-            using var document = JsonDocument.Parse(cloudEventJson);
+            // The CloudEvents serializer is self-describing, so JustSaying publishes it without its
+            // {"Message", "Subject"} queue envelope: the body on the wire IS the structured CloudEvent.
+            using var document = JsonDocument.Parse(received.Messages[0].Body);
             var root = document.RootElement;
 
+            root.TryGetProperty("Message", out _).ShouldBeFalse("the CloudEvent should not be double-wrapped");
             root.GetProperty("specversion").GetString().ShouldBe("1.0");
             root.GetProperty("type").GetString().ShouldBe(OrderPlacedType);
             root.GetProperty("source").GetString().ShouldBe("https://orders.example.com/");

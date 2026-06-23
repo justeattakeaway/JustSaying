@@ -233,6 +233,7 @@ JustSaying.Messaging.MessageSerialization.IMessageBodySerializationFactory.GetSe
 JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<TMessage>
 JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<TMessage>.Deserialize(string message) -> TMessage
 JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<TMessage>.Serialize(TMessage message) -> string
+JustSaying.Messaging.MessageSerialization.ISelfDescribingMessageBodySerializer
 JustSaying.Messaging.MessageSerialization.InboundMessage.Deconstruct(out object message, out JustSaying.Messaging.MessageHandling.MessageAttributes attributes) -> void
 JustSaying.Messaging.MessageSerialization.InboundMessage.InboundMessage(object message, JustSaying.Messaging.MessageHandling.MessageAttributes messageAttributes) -> void
 JustSaying.Messaging.MessageSerialization.InboundMessage.Message.get -> object
