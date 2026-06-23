@@ -33,6 +33,8 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
 
     private Action<PublishMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
+    private bool _isRawMessage;
+
     /// <summary>
     /// Configures the SQS write configuration.
     /// </summary>
@@ -89,6 +91,19 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
     }
 
     /// <summary>
+    /// Publishes the message body to the queue verbatim, without JustSaying's
+    /// <c>{ "Message", "Subject" }</c> queue envelope.
+    /// </summary>
+    /// <returns>
+    /// The current <see cref="QueuePublicationBuilder{T}"/>.
+    /// </returns>
+    public QueuePublicationBuilder<T> WithRawMessages()
+    {
+        _isRawMessage = true;
+        return this;
+    }
+
+    /// <summary>
     /// Configures the publish middleware pipeline for this publication.
     /// </summary>
     /// <param name="middlewareConfiguration">A delegate to configure the publish middleware pipeline.</param>
@@ -132,7 +147,7 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
         var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
         // A self-describing serializer (for example CloudEvents) already carries the message's type
         // metadata, so the {Message, Subject} queue envelope would just double-wrap it.
-        var isRawMessage = writeConfiguration.IsRawMessage || serializer is ISelfDescribingMessageBodySerializer;
+        var isRawMessage = _isRawMessage || writeConfiguration.IsRawMessage || serializer is ISelfDescribingMessageBodySerializer;
 
         var eventPublisher = new SqsMessagePublisher(
             sqsClient,
