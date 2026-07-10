@@ -19,7 +19,7 @@ public class SimpleMessage : Message
 {
     public string Content { get; set; }
 
-    public static IMessageBodySerializer Serializer { get; } = new SystemTextJsonMessageBodySerializer<SimpleMessage>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions);
+    public static IMessageBodySerializer<SimpleMessage> Serializer { get; } = new SystemTextJsonMessageBodySerializer<SimpleMessage>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions);
 }
 
 public class AnotherSimpleMessage : Message

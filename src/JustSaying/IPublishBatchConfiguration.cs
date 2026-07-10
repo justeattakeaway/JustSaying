@@ -21,5 +21,5 @@ public interface IPublishBatchConfiguration
     /// <summary>
     /// Gets or sets a delegate to log when a message batch is published.
     /// </summary>
-    Action<MessageBatchResponse, IReadOnlyCollection<Message>> MessageBatchResponseLogger { get; set; }
+    Action<MessageBatchResponse, IReadOnlyCollection<object>> MessageBatchResponseLogger { get; set; }
 }
