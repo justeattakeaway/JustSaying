@@ -17,3 +17,17 @@ JustSaying.CloudEvents.CloudEventTypeDiscriminator.CloudEventTypeDiscriminator()
 JustSaying.CloudEvents.CloudEventTypeDiscriminator.TryGetMessageTypeName(JustSaying.Messaging.MessageDiscriminationContext context, out string typeName) -> bool
 Microsoft.Extensions.DependencyInjection.CloudEventsServiceCollectionExtensions
 static Microsoft.Extensions.DependencyInjection.CloudEventsServiceCollectionExtensions.AddJustSayingCloudEvents(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, System.Action<JustSaying.CloudEvents.CloudEventOptions> configure, System.Text.Json.JsonSerializerOptions dataSerializerOptions = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection
+JustSaying.CloudEvents.CloudEventMessageBodySerializer<TMessage>.Deserialize(string message, out JustSaying.Messaging.MessageHandling.MessageContextFactory contextFactory) -> TMessage
+JustSaying.CloudEvents.CloudEventMessageContext
+JustSaying.CloudEvents.CloudEventMessageContext.CloudEventMessageContext(Amazon.SQS.Model.Message message, System.Uri queueUri, JustSaying.Messaging.MessageHandling.MessageAttributes messageAttributes, string specVersion, string id, System.Uri source, string type, System.DateTimeOffset? time = null, string dataContentType = null, System.Uri dataSchema = null, string subject = null, System.Collections.Generic.IReadOnlyDictionary<string, string> extensions = null) -> void
+JustSaying.CloudEvents.CloudEventMessageContext.DataContentType.get -> string
+JustSaying.CloudEvents.CloudEventMessageContext.DataSchema.get -> System.Uri
+JustSaying.CloudEvents.CloudEventMessageContext.Extensions.get -> System.Collections.Generic.IReadOnlyDictionary<string, string>
+JustSaying.CloudEvents.CloudEventMessageContext.Id.get -> string
+JustSaying.CloudEvents.CloudEventMessageContext.Source.get -> System.Uri
+JustSaying.CloudEvents.CloudEventMessageContext.SpecVersion.get -> string
+JustSaying.CloudEvents.CloudEventMessageContext.Subject.get -> string
+JustSaying.CloudEvents.CloudEventMessageContext.Time.get -> System.DateTimeOffset?
+JustSaying.CloudEvents.CloudEventMessageContext.Type.get -> string
+JustSaying.CloudEvents.MessageContextReaderExtensions
+static JustSaying.CloudEvents.MessageContextReaderExtensions.GetCloudEventContext(this JustSaying.Messaging.MessageHandling.IMessageContextReader reader) -> JustSaying.CloudEvents.CloudEventMessageContext

@@ -13,6 +13,7 @@ namespace JustSaying.Messaging.Middleware;
 /// <param name="queueName">The queue from which this message was received.</param>
 /// <param name="visibilityUpdater">The <see cref="IMessageVisibilityUpdater"/> to use to update message visibilities on failure.</param>
 /// <param name="messageDeleter">The <see cref="IMessageDeleter"/> to use to remove a message from the queue on success.</param>
+/// <param name="messageContext">An optional <see cref="MessageHandling.MessageContext"/> (or derived type) for this message; when omitted, the default context is created.</param>
 public sealed class HandleMessageContext(
     string queueName,
     Amazon.SQS.Model.Message rawMessage,
@@ -21,7 +22,8 @@ public sealed class HandleMessageContext(
     IMessageVisibilityUpdater visibilityUpdater,
     IMessageDeleter messageDeleter,
     Uri queueUri,
-    MessageAttributes messageAttributes)
+    MessageAttributes messageAttributes,
+    MessageHandling.MessageContext messageContext = null)
 {
 
     /// <summary>
@@ -53,6 +55,14 @@ public sealed class HandleMessageContext(
     /// The raw SQS message that was downloaded from the queue.
     /// </summary>
     public Amazon.SQS.Model.Message RawMessage { get; } = rawMessage;
+
+    /// <summary>
+    /// The <see cref="MessageHandling.MessageContext"/> for this message, made available to handlers
+    /// via <see cref="IMessageContextReader"/>. A serializer whose wire format is an envelope (such
+    /// as a CloudEvents envelope) may substitute a derived context carrying the envelope's metadata;
+    /// otherwise this is the default context.
+    /// </summary>
+    public MessageHandling.MessageContext MessageContext { get; } = messageContext ?? new MessageHandling.MessageContext(rawMessage, queueUri, messageAttributes);
 
     /// <summary>
     /// An <see cref="IMessageVisibilityUpdater"/> that can be used to update the visibility timeout for this message.

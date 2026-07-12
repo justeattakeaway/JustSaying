@@ -15,7 +15,7 @@ public sealed class MessageContextAccessorMiddleware(IMessageContextAccessor mes
 
     protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
     {
-        _messageContextAccessor.MessageContext = new MessageHandling.MessageContext(context.RawMessage, context.QueueUri, context.MessageAttributes);
+        _messageContextAccessor.MessageContext = context.MessageContext;
 
         try
         {

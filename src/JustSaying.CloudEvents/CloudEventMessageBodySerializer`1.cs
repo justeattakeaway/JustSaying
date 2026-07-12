@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using JustSaying.Messaging;
+using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 
 namespace JustSaying.CloudEvents;
@@ -13,9 +14,14 @@ namespace JustSaying.CloudEvents;
 /// serialized by an inner <see cref="IMessageBodySerializer{TMessage}"/>.
 /// </summary>
 /// <typeparam name="TMessage">The type of message to be serialized or deserialized.</typeparam>
-public sealed class CloudEventMessageBodySerializer<TMessage> : IMessageBodySerializer<TMessage>, ISelfDescribingMessageBodySerializer where TMessage : class
+public sealed class CloudEventMessageBodySerializer<TMessage> : IMessageBodySerializer<TMessage>, IContextProvidingMessageBodySerializer<TMessage>, ISelfDescribingMessageBodySerializer where TMessage : class
 {
     private const string SpecVersion = "1.0";
+
+    private static readonly string[] ReservedAttributes =
+    [
+        "specversion", "id", "source", "type", "time", "datacontenttype", "dataschema", "subject", "data", "data_base64"
+    ];
 
     private readonly IMessageBodySerializer<TMessage> _dataSerializer;
     private readonly IMessageMetadataProvider _metadataProvider;
@@ -88,6 +94,91 @@ public sealed class CloudEventMessageBodySerializer<TMessage> : IMessageBodySeri
     public TMessage Deserialize(string message)
     {
         using var document = JsonDocument.Parse(message);
+        return DeserializeData(document);
+    }
+
+    /// <summary>
+    /// Deserializes the <c>data</c> payload of a structured-mode CloudEvents JSON envelope into a
+    /// message of type <typeparamref name="TMessage"/>, also capturing a factory for a
+    /// <see cref="CloudEventMessageContext"/> carrying the envelope's context attributes.
+    /// </summary>
+    /// <param name="message">The CloudEvents JSON.</param>
+    /// <param name="contextFactory">
+    /// When this method returns, a factory that creates the <see cref="CloudEventMessageContext"/>
+    /// for this message.
+    /// </param>
+    /// <returns>The deserialized message.</returns>
+    public TMessage Deserialize(string message, out MessageContextFactory contextFactory)
+    {
+        using var document = JsonDocument.Parse(message);
+        var data = DeserializeData(document);
+
+        var root = document.RootElement;
+        string specVersion = GetStringAttribute(root, "specversion") ?? SpecVersion;
+        string id = GetStringAttribute(root, "id");
+        string source = GetStringAttribute(root, "source");
+        string type = GetStringAttribute(root, "type");
+        string dataContentType = GetStringAttribute(root, "datacontenttype");
+        string dataSchema = GetStringAttribute(root, "dataschema");
+        string subject = GetStringAttribute(root, "subject");
+
+        if (id is null || source is null || type is null)
+        {
+            // Not a well-formed CloudEvent (id, source and type are required attributes);
+            // fall back to the default message context.
+            contextFactory = null;
+            return data;
+        }
+
+        DateTimeOffset? time = null;
+        if (root.TryGetProperty("time", out var timeElement) &&
+            timeElement.ValueKind == JsonValueKind.String &&
+            timeElement.TryGetDateTimeOffset(out var parsedTime))
+        {
+            time = parsedTime;
+        }
+
+        Dictionary<string, string> extensions = null;
+        foreach (var property in root.EnumerateObject())
+        {
+            if (Array.IndexOf(ReservedAttributes, property.Name) >= 0)
+            {
+                continue;
+            }
+
+            // CloudEvents extension attributes are simple (non-composite) values; ignore anything else.
+            string value = property.Value.ValueKind switch
+            {
+                JsonValueKind.String => property.Value.GetString(),
+                JsonValueKind.Number or JsonValueKind.True or JsonValueKind.False => property.Value.GetRawText(),
+                _ => null,
+            };
+
+            if (value is not null)
+            {
+                (extensions ??= new Dictionary<string, string>()).Add(property.Name, value);
+            }
+        }
+
+        contextFactory = (rawMessage, queueUri, messageAttributes) => new CloudEventMessageContext(
+            rawMessage,
+            queueUri,
+            messageAttributes,
+            specVersion,
+            id,
+            new Uri(source, UriKind.RelativeOrAbsolute),
+            type,
+            time,
+            dataContentType,
+            dataSchema is null ? null : new Uri(dataSchema, UriKind.RelativeOrAbsolute),
+            subject,
+            extensions);
+
+        return data;
+    }
+
+    private TMessage DeserializeData(JsonDocument document)
+    {
         if (!document.RootElement.TryGetProperty("data", out var data))
         {
             throw new InvalidOperationException("The CloudEvents payload does not contain a 'data' member.");
@@ -95,4 +186,9 @@ public sealed class CloudEventMessageBodySerializer<TMessage> : IMessageBodySeri
 
         return _dataSerializer.Deserialize(data.GetRawText());
     }
+
+    private static string GetStringAttribute(JsonElement root, string name)
+        => root.TryGetProperty(name, out var element) && element.ValueKind == JsonValueKind.String
+            ? element.GetString()
+            : null;
 }

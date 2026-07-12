@@ -34,7 +34,7 @@ internal sealed class MessageDispatcher : IMessageDispatcher
             return;
         }
 
-        (bool success, object typedMessage, MessageAttributes attributes) =
+        (bool success, InboundMessage inboundMessage) =
             await DeserializeMessage(messageContext, cancellationToken).ConfigureAwait(false);
 
         if (!success)
@@ -43,6 +43,8 @@ internal sealed class MessageDispatcher : IMessageDispatcher
             return;
         }
 
+        var typedMessage = inboundMessage.Message;
+        var attributes = inboundMessage.MessageAttributes;
         var messageType = typedMessage.GetType();
         var middleware = _middlewareMap.Get(messageContext.QueueName, messageType);
 
@@ -62,7 +64,8 @@ internal sealed class MessageDispatcher : IMessageDispatcher
             messageContext,
             messageContext,
             messageContext.QueueUri,
-            attributes);
+            attributes,
+            inboundMessage.MessageContextFactory?.Invoke(messageContext.Message, messageContext.QueueUri, attributes));
 
         using var activity = StartConsumerActivity(messageContext, typedMessage, messageType, attributes);
 
@@ -124,16 +127,16 @@ internal sealed class MessageDispatcher : IMessageDispatcher
         return activity;
     }
 
-    private async Task<(bool success, object typedMessage, MessageAttributes attributes)>
+    private async Task<(bool success, InboundMessage inboundMessage)>
         DeserializeMessage(IQueueMessageContext messageContext, CancellationToken cancellationToken)
     {
         try
         {
             _logger.LogDebug("Attempting to deserialize message.");
 
-            var (message, attributes) = await messageContext.MessageConverter.ConvertToInboundMessageAsync(messageContext.Message, cancellationToken);
+            var inboundMessage = await messageContext.MessageConverter.ConvertToInboundMessageAsync(messageContext.Message, cancellationToken);
 
-            return (true, message, attributes);
+            return (true, inboundMessage);
         }
         catch (MessageFormatNotSupportedException ex)
         {
@@ -145,12 +148,12 @@ internal sealed class MessageDispatcher : IMessageDispatcher
             await messageContext.DeleteMessage(cancellationToken).ConfigureAwait(false);
             _messagingMonitor.HandleError(ex, messageContext.Message);
 
-            return (false, null, null);
+            return (false, null);
         }
         catch (OperationCanceledException)
         {
             // Ignore cancellation
-            return (false, null, null);
+            return (false, null);
         }
         catch (Exception ex)
         {
@@ -162,7 +165,7 @@ internal sealed class MessageDispatcher : IMessageDispatcher
 
             _messagingMonitor.HandleError(ex, messageContext.Message);
 
-            return (false, null, null);
+            return (false, null);
         }
     }
 }
