@@ -50,8 +50,19 @@ internal sealed class InboundMessageConverter : IInboundMessageConverter
         }
         body = ApplyBodyDecompression(body, attributes);
         var serializer = _serializerResolver.Resolve(body, subject, attributes);
-        var result = serializer.Deserialize(body);
-        return new ValueTask<InboundMessage>(new InboundMessage(result, attributes));
+
+        object result;
+        MessageContextFactory contextFactory = null;
+        if (serializer is IContextProvidingMessageBodySerializer contextProviding)
+        {
+            result = contextProviding.Deserialize(body, out contextFactory);
+        }
+        else
+        {
+            result = serializer.Deserialize(body);
+        }
+
+        return new ValueTask<InboundMessage>(new InboundMessage(result, attributes, contextFactory));
     }
 
     private string ApplyBodyDecompression(string body, MessageAttributes attributes)

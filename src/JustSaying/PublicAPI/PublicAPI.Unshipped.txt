@@ -236,7 +236,6 @@ JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<TMessage>.Deser
 JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<TMessage>.Serialize(TMessage message) -> string
 JustSaying.Messaging.MessageSerialization.ISelfDescribingMessageBodySerializer
 JustSaying.Messaging.MessageSerialization.InboundMessage.Deconstruct(out object message, out JustSaying.Messaging.MessageHandling.MessageAttributes attributes) -> void
-JustSaying.Messaging.MessageSerialization.InboundMessage.InboundMessage(object message, JustSaying.Messaging.MessageHandling.MessageAttributes messageAttributes) -> void
 JustSaying.Messaging.MessageSerialization.InboundMessage.Message.get -> object
 JustSaying.Messaging.MessageSerialization.NewtonsoftMessageBodySerializer<T>.Deserialize(string message) -> T
 JustSaying.Messaging.MessageSerialization.NewtonsoftMessageBodySerializer<T>.Serialize(T message) -> string
@@ -244,7 +243,6 @@ JustSaying.Messaging.MessageSerialization.NewtonsoftSerializationFactory.GetSeri
 JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer<T>.Deserialize(string messageBody) -> T
 JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer<T>.Serialize(T message) -> string
 JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializationFactory.GetSerializer<T>() -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<T>
-JustSaying.Messaging.Middleware.HandleMessageContext.HandleMessageContext(string queueName, Amazon.SQS.Model.Message rawMessage, object message, System.Type messageType, JustSaying.Messaging.Channels.Context.IMessageVisibilityUpdater visibilityUpdater, JustSaying.Messaging.Channels.Context.IMessageDeleter messageDeleter, System.Uri queueUri, JustSaying.Messaging.MessageHandling.MessageAttributes messageAttributes) -> void
 JustSaying.Messaging.Middleware.HandleMessageContext.Message.get -> object
 JustSaying.Messaging.Middleware.PublishContext.Message.get -> object
 JustSaying.Messaging.Middleware.PublishContext.Messages.get -> System.Collections.Generic.IReadOnlyCollection<object>
@@ -286,3 +284,10 @@ JustSaying.Messaging.SubjectMessageTypeDiscriminator.SubjectMessageTypeDiscrimin
 JustSaying.Messaging.SubjectMessageTypeDiscriminator.TryGetMessageTypeName(JustSaying.Messaging.MessageDiscriminationContext context, out string typeName) -> bool
 JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.Handling<TMessage>(string typeName = null, System.Action<JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder> middlewareConfiguration = null) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
 JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.WithDiscriminator(JustSaying.Messaging.IMessageTypeDiscriminator discriminator) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
+JustSaying.Messaging.MessageHandling.MessageContextFactory
+JustSaying.Messaging.MessageSerialization.IContextProvidingMessageBodySerializer<TMessage>
+JustSaying.Messaging.MessageSerialization.IContextProvidingMessageBodySerializer<TMessage>.Deserialize(string message, out JustSaying.Messaging.MessageHandling.MessageContextFactory contextFactory) -> TMessage
+JustSaying.Messaging.MessageSerialization.InboundMessage.InboundMessage(object message, JustSaying.Messaging.MessageHandling.MessageAttributes messageAttributes, JustSaying.Messaging.MessageHandling.MessageContextFactory messageContextFactory = null) -> void
+JustSaying.Messaging.MessageSerialization.InboundMessage.MessageContextFactory.get -> JustSaying.Messaging.MessageHandling.MessageContextFactory
+JustSaying.Messaging.Middleware.HandleMessageContext.HandleMessageContext(string queueName, Amazon.SQS.Model.Message rawMessage, object message, System.Type messageType, JustSaying.Messaging.Channels.Context.IMessageVisibilityUpdater visibilityUpdater, JustSaying.Messaging.Channels.Context.IMessageDeleter messageDeleter, System.Uri queueUri, JustSaying.Messaging.MessageHandling.MessageAttributes messageAttributes, JustSaying.Messaging.MessageHandling.MessageContext messageContext = null) -> void
+JustSaying.Messaging.Middleware.HandleMessageContext.MessageContext.get -> JustSaying.Messaging.MessageHandling.MessageContext

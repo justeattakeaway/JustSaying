@@ -7,10 +7,21 @@ namespace JustSaying.Messaging.MessageSerialization;
 /// inner serializer performs the actual (generic, trim/AOT-friendly) serialization.
 /// </summary>
 /// <typeparam name="TMessage">The concrete message type the inner serializer handles.</typeparam>
-internal sealed class ErasedMessageBodySerializer<TMessage>(IMessageBodySerializer<TMessage> inner) : IMessageBodySerializer
+internal sealed class ErasedMessageBodySerializer<TMessage>(IMessageBodySerializer<TMessage> inner) : IMessageBodySerializer, IContextProvidingMessageBodySerializer
     where TMessage : class
 {
     public string Serialize(object message) => inner.Serialize((TMessage)message);
 
     public object Deserialize(string message) => inner.Deserialize(message);
+
+    public object Deserialize(string message, out MessageHandling.MessageContextFactory contextFactory)
+    {
+        if (inner is IContextProvidingMessageBodySerializer<TMessage> contextProviding)
+        {
+            return contextProviding.Deserialize(message, out contextFactory);
+        }
+
+        contextFactory = null;
+        return inner.Deserialize(message);
+    }
 }
