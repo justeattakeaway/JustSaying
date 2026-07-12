@@ -25,7 +25,8 @@ internal sealed class StaticPublicationConfiguration(
         SnsWriteConfiguration writeConfiguration,
         IAmazonSimpleNotificationService snsClient,
         ILoggerFactory loggerFactory,
-        JustSayingBus bus) where T : class
+        JustSayingBus bus,
+        Func<IMessageBodySerializationFactory, IMessageBodySerializer<T>> serializerFactory = null) where T : class
     {
         var readConfiguration = new SqsReadConfiguration(SubscriptionType.ToTopic)
         {
@@ -36,12 +37,14 @@ internal sealed class StaticPublicationConfiguration(
 
         // Already resolved against the bus default (which self-describing publications don't take).
         var compressionOptions = writeConfiguration.CompressionOptions;
-        var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
+        var serializer = (serializerFactory is null
+            ? bus.MessageBodySerializerFactory.GetSerializer<T>()
+            : serializerFactory(bus.MessageBodySerializerFactory)).Erase();
         var subject = writeConfiguration.SubjectSet ? writeConfiguration.Subject : bus.MessageTypeRegistry.GetLogicalName(typeof(T));
 
         var eventPublisher = new SnsMessagePublisher(
             snsClient,
-            new OutboundMessageConverter(PublishDestinationType.Topic, serializer.Erase(), new MessageCompressionRegistry([new GzipMessageBodyCompression()]), compressionOptions, subject, writeConfiguration.IsRawMessage),
+            new OutboundMessageConverter(PublishDestinationType.Topic, serializer, new MessageCompressionRegistry([new GzipMessageBodyCompression()]), compressionOptions, subject, writeConfiguration.IsRawMessage),
             loggerFactory,
             null,
             null,

@@ -211,6 +211,17 @@ If a non-`Message` type is used without a `deduplicationKeySelector`, `UseExactl
 
 `UseExactlyOnce<TMessage>` on a subscription whose message type isn't a `TMessage` now throws when the bus is built, rather than failing for every message.
 
+## One publication per message type
+
+Registering two publications for the same message type (for example `WithTopic<Order>()` twice, or a
+`WithTopic<Order>()` alongside a `WithQueue<Order>()`) previously last-write-wins: the earlier
+registration was silently discarded. v9 throws at startup instead:
+
+> A publisher for message type 'Order' is already registered. Each message type can only have one publication.
+
+If you hit this, remove the redundant registration — only one of them was ever taking effect.
+
+
 ## A subscription's middleware configuration must add the handler
 
 `WithMiddlewareConfiguration` replaces the default pipeline, so it has to add the handler itself with `UseDefaults<T>(handlerType)` or `UseHandler`. In v8 a configuration that didn't (for example one that only called `UseExactlyOnce`) built a pipeline that never ran the handler, and nothing was logged. v9 throws when the bus is built, naming the message type:

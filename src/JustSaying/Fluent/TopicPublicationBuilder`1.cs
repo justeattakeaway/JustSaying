@@ -39,6 +39,21 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
     private Action<PublishMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
     /// <summary>
+    /// An optional custom serializer built from the bus's serialization factory, used instead of the
+    /// factory's per-type default. Internal extensibility seam for serializer packages (such as
+    /// JustSaying.CloudEvents, which exposes it via <c>WithCloudEvent&lt;T&gt;</c>).
+    /// </summary>
+    internal Func<JustSaying.Messaging.MessageSerialization.IMessageBodySerializationFactory, JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<T>> SerializerOverride { get; set; }
+
+    /// <summary>
+    /// An optional resolver for the topic name, applied when no explicit name is set — instead of the
+    /// naming convention keyed on <typeparamref name="T"/>. Internal extensibility seam used by wrapper
+    /// publications (such as CloudEvents envelopes) so the topic is named after the payload type rather
+    /// than the wrapper type.
+    /// </summary>
+    internal Func<JustSaying.Naming.ITopicNamingConvention, string> TopicNameResolver { get; set; }
+
+    /// <summary>
     /// Function that will produce a topic name dynamically from a message at publish time.
     /// If the topic doesn't exist, it will be created at that point.
     /// </summary>
@@ -200,7 +215,14 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
                 writeConfiguration,
                 client,
                 loggerFactory,
-                bus);
+                bus,
+                SerializerOverride);
+
+        var topicName = TopicName;
+        if (string.IsNullOrEmpty(topicName) && TopicNameResolver is not null)
+        {
+            topicName = TopicNameResolver(bus.Config.TopicNamingConvention);
+        }
 
         // A dynamic topic only builds its publisher on first publish, so create a serializer now so that
         // one that can't handle T fails at bus build, as it does for a static topic.
@@ -208,7 +230,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
 
         ITopicPublisher config = TopicNameCustomizer != null
             ? DynamicPublicationConfiguration.Build<T>(message => TopicNameCustomizer((T)message), BuildConfiguration, loggerFactory)
-            : BuildConfiguration(TopicName);
+            : BuildConfiguration(topicName);
 
         bus.AddStartupTask(config.StartupTask);
         bus.AddMessagePublisher<T>(config.Publisher);
