@@ -45,6 +45,34 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
     }
 
     /// <summary>
+    /// Registers a message type that can arrive on this queue, with a custom serializer built from the
+    /// bus's serialization factory rather than resolved from it directly. This is the seam a wrapping
+    /// message type (such as a CloudEvents envelope) uses to deserialize into a richer shape than the
+    /// factory's per-type default.
+    /// </summary>
+    /// <typeparam name="TMessage">The message type the handler receives.</typeparam>
+    /// <param name="typeName">The value the discriminator emits on the wire for this type, or <see langword="null"/> to derive it via <paramref name="typeNameResolver"/>.</param>
+    /// <param name="serializerFactory">Builds the serializer for <typeparamref name="TMessage"/> from the bus's serialization factory.</param>
+    /// <param name="typeNameResolver">Derives the wire type name from the bus's serialization factory when <paramref name="typeName"/> is <see langword="null"/> (for example, a CloudEvents <c>type</c> from configuration).</param>
+    /// <param name="middlewareConfiguration">An optional middleware configuration for this type's handler.</param>
+    /// <returns>The current <see cref="MultiTypeQueueSubscriptionBuilder"/>.</returns>
+    /// <remarks>
+    /// Internal extensibility seam used by serializer packages (such as JustSaying.CloudEvents, which
+    /// exposes it via <c>HandlingCloudEvent&lt;T&gt;</c>); not part of the public surface.
+    /// </remarks>
+    internal MultiTypeQueueSubscriptionBuilder Handling<TMessage>(
+        string typeName,
+        Func<IMessageBodySerializationFactory, IMessageBodySerializer<TMessage>> serializerFactory,
+        Func<IMessageBodySerializationFactory, string> typeNameResolver = null,
+        Action<HandlerMiddlewareBuilder> middlewareConfiguration = null)
+        where TMessage : class
+    {
+        if (serializerFactory is null) throw new ArgumentNullException(nameof(serializerFactory));
+        _registrations.Add(new MessageTypeRegistration<TMessage>(typeName, middlewareConfiguration, serializerFactory, typeNameResolver));
+        return this;
+    }
+
+    /// <summary>
     /// Adds a discriminator to the chain used to resolve an inbound message's type. Discriminators are
     /// tried in the order added; the first to yield a registered type name wins. When none are added,
     /// the SNS <c>Subject</c> is used.
@@ -54,6 +82,30 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
     public MultiTypeQueueSubscriptionBuilder WithDiscriminator(IMessageTypeDiscriminator discriminator)
     {
         _discriminators.Add(discriminator ?? throw new ArgumentNullException(nameof(discriminator)));
+        return this;
+    }
+
+    /// <summary>
+    /// Adds a discriminator of type <typeparamref name="TDiscriminator"/> to the chain unless one is
+    /// already present, so a registration helper can guarantee the discriminator it needs is configured
+    /// without duplicating it. Internal extensibility seam used by serializer packages (such as
+    /// JustSaying.CloudEvents, whose <c>HandlingCloudEvent&lt;T&gt;</c> ensures a
+    /// <c>CloudEventTypeDiscriminator</c>).
+    /// </summary>
+    internal MultiTypeQueueSubscriptionBuilder EnsureDiscriminator<TDiscriminator>(Func<TDiscriminator> factory)
+        where TDiscriminator : IMessageTypeDiscriminator
+    {
+        if (factory is null) throw new ArgumentNullException(nameof(factory));
+
+        foreach (var existing in _discriminators)
+        {
+            if (existing is TDiscriminator)
+            {
+                return this;
+            }
+        }
+
+        _discriminators.Add(factory());
         return this;
     }
 
@@ -109,7 +161,7 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
         var serializersByName = new Dictionary<string, IMessageBodySerializer>(StringComparer.Ordinal);
         foreach (var registration in _registrations)
         {
-            var typeName = registration.TypeName ?? bus.MessageTypeRegistry.GetLogicalName(registration.MessageType);
+            var typeName = registration.ResolveTypeName(bus);
             serializersByName[typeName] = registration.CreateErasedSerializer(bus);
             registration.RegisterHandler(bus, handlerResolver, serviceResolver, subscriptionConfig.QueueName);
         }
@@ -135,22 +187,33 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
     {
         Type MessageType { get; }
 
-        string TypeName { get; }
+        string ResolveTypeName(JustSayingBus bus);
 
         IMessageBodySerializer CreateErasedSerializer(JustSayingBus bus);
 
         void RegisterHandler(JustSayingBus bus, IHandlerResolver handlerResolver, IServiceResolver serviceResolver, string queueName);
     }
 
-    private sealed class MessageTypeRegistration<TMessage>(string typeName, Action<HandlerMiddlewareBuilder> middlewareConfiguration)
+    private sealed class MessageTypeRegistration<TMessage>(
+        string typeName,
+        Action<HandlerMiddlewareBuilder> middlewareConfiguration,
+        Func<IMessageBodySerializationFactory, IMessageBodySerializer<TMessage>> serializerFactory = null,
+        Func<IMessageBodySerializationFactory, string> typeNameResolver = null)
         : IMessageTypeRegistration where TMessage : class
     {
         public Type MessageType => typeof(TMessage);
 
-        public string TypeName => typeName;
+        // Precedence: an explicit type name wins; otherwise a resolver (e.g. the configured CloudEvents
+        // `type`); otherwise the type's logical name (the SNS Subject).
+        public string ResolveTypeName(JustSayingBus bus)
+            => typeName
+               ?? typeNameResolver?.Invoke(bus.MessageBodySerializerFactory)
+               ?? bus.MessageTypeRegistry.GetLogicalName(typeof(TMessage));
 
         public IMessageBodySerializer CreateErasedSerializer(JustSayingBus bus)
-            => bus.MessageBodySerializerFactory.GetSerializer<TMessage>().Erase();
+            => (serializerFactory is null
+                ? bus.MessageBodySerializerFactory.GetSerializer<TMessage>()
+                : serializerFactory(bus.MessageBodySerializerFactory)).Erase();
 
         public void RegisterHandler(JustSayingBus bus, IHandlerResolver handlerResolver, IServiceResolver serviceResolver, string queueName)
         {

@@ -160,6 +160,8 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
                 "You have not set a re-attempt value for publish failures. If the publish location is 'down' you may lose messages.");
         }
 
+        ThrowIfConflictingPublisher<T>(messagePublisher);
+
         _publishersByType[typeof(T)] = messagePublisher;
         if (messagePublisher is IMessageBatchPublisher batchPublisher)
         {
@@ -174,10 +176,25 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
             _log.LogWarning("You have not set a re-attempt value for batch publish failures. If the publish location is not available you may lose messages.");
         }
 
+        ThrowIfConflictingPublisher<T>(messageBatchPublisher);
+
         _batchPublishersByType[typeof(T)] = messageBatchPublisher;
         if (messageBatchPublisher is IMessagePublisher messagePublisher)
         {
             _publishersByType[typeof(T)] = messagePublisher;
+        }
+    }
+
+    // A single publication registers the same publisher instance as both a message and a batch
+    // publisher, so re-adding the same instance is fine; a *different* instance means two publications
+    // were registered for the same message type, which would silently last-write-wins otherwise.
+    private void ThrowIfConflictingPublisher<T>(object publisher) where T : class
+    {
+        if ((_publishersByType.TryGetValue(typeof(T), out var existing) && !ReferenceEquals(existing, publisher))
+            || (_batchPublishersByType.TryGetValue(typeof(T), out var existingBatch) && !ReferenceEquals(existingBatch, publisher)))
+        {
+            throw new InvalidOperationException(
+                $"A publisher for message type '{typeof(T)}' is already registered. Each message type can only have one publication.");
         }
     }
 

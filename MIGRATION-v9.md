@@ -55,6 +55,16 @@ pipeline.UseExactlyOnce<OrderPlaced>("orders-handler",
 
 If a non-`Message` type is used without a `deduplicationKeySelector`, `UseExactlyOnce` throws at registration (startup) rather than degrading silently at runtime.
 
+## One publication per message type
+
+Registering two publications for the same message type (for example `WithTopic<Order>()` twice, or a
+`WithTopic<Order>()` alongside a `WithQueue<Order>()`) previously last-write-wins: the earlier
+registration was silently discarded. v9 throws at startup instead:
+
+> A publisher for message type 'Order' is already registered. Each message type can only have one publication.
+
+If you hit this, remove the redundant registration — only one of them was ever taking effect.
+
 ## New extensibility seams
 
 Available on `IMessagingConfig`:

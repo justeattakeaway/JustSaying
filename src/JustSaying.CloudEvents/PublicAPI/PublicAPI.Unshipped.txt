@@ -12,8 +12,28 @@ JustSaying.CloudEvents.CloudEventOptions.WithCloudEventType<TMessage>(string typ
 JustSaying.CloudEvents.CloudEventSerializationFactory
 JustSaying.CloudEvents.CloudEventSerializationFactory.CloudEventSerializationFactory(JustSaying.Messaging.MessageSerialization.IMessageBodySerializationFactory dataSerializerFactory, JustSaying.Messaging.IMessageMetadataProvider metadataProvider, JustSaying.CloudEvents.CloudEventOptions options) -> void
 JustSaying.CloudEvents.CloudEventSerializationFactory.GetSerializer<TMessage>() -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<TMessage>
+JustSaying.CloudEvents.CloudEventSerializationFactory.GetEnvelopeSerializer<T>(string type = null, System.Uri source = null) -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<JustSaying.CloudEvents.CloudEvent<T>>
+JustSaying.CloudEvents.CloudEventSerializationFactory.GetSerializer<T>(string type, System.Uri source = null) -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<T>
+JustSaying.CloudEvents.CloudEventSerializationFactory.GetCloudEventType<T>() -> string
+JustSaying.CloudEvents.CloudEvent<T>
+JustSaying.CloudEvents.CloudEvent<T>.CloudEvent(T data, string id = null, System.Uri source = null, string type = null, System.DateTimeOffset? time = null, string subject = null, System.Collections.Generic.IReadOnlyDictionary<string, string> extensions = null) -> void
+JustSaying.CloudEvents.CloudEvent<T>.Data.get -> T
+JustSaying.CloudEvents.CloudEvent<T>.Id.get -> string
+JustSaying.CloudEvents.CloudEvent<T>.Source.get -> System.Uri
+JustSaying.CloudEvents.CloudEvent<T>.Type.get -> string
+JustSaying.CloudEvents.CloudEvent<T>.Time.get -> System.DateTimeOffset?
+JustSaying.CloudEvents.CloudEvent<T>.Subject.get -> string
+JustSaying.CloudEvents.CloudEvent<T>.Extensions.get -> System.Collections.Generic.IReadOnlyDictionary<string, string>
+JustSaying.CloudEvents.CloudEventEnvelopeBodySerializer<T>
+JustSaying.CloudEvents.CloudEventEnvelopeBodySerializer<T>.CloudEventEnvelopeBodySerializer(JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<T> dataSerializer, JustSaying.Messaging.IMessageMetadataProvider metadataProvider, System.Uri source = null, string type = null, string dataContentType = "application/json") -> void
+JustSaying.CloudEvents.CloudEventEnvelopeBodySerializer<T>.Deserialize(string message) -> JustSaying.CloudEvents.CloudEvent<T>
+JustSaying.CloudEvents.CloudEventEnvelopeBodySerializer<T>.Serialize(JustSaying.CloudEvents.CloudEvent<T> message) -> string
+JustSaying.Fluent.MultiTypeQueueSubscriptionCloudEventExtensions
+static JustSaying.Fluent.MultiTypeQueueSubscriptionCloudEventExtensions.HandlingCloudEvent<T>(this JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder builder, string typeName = null, System.Action<JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder> middlewareConfiguration = null) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
+JustSaying.Fluent.PublicationsBuilderCloudEventExtensions
+static JustSaying.Fluent.PublicationsBuilderCloudEventExtensions.WithCloudEvent<T>(this JustSaying.Fluent.PublicationsBuilder publications, string type, System.Uri source = null, string topicName = null) -> JustSaying.Fluent.PublicationsBuilder
 JustSaying.CloudEvents.CloudEventTypeDiscriminator
 JustSaying.CloudEvents.CloudEventTypeDiscriminator.CloudEventTypeDiscriminator() -> void
 JustSaying.CloudEvents.CloudEventTypeDiscriminator.TryGetMessageTypeName(JustSaying.Messaging.MessageDiscriminationContext context, out string typeName) -> bool
 Microsoft.Extensions.DependencyInjection.CloudEventsServiceCollectionExtensions
-static Microsoft.Extensions.DependencyInjection.CloudEventsServiceCollectionExtensions.AddJustSayingCloudEvents(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, System.Action<JustSaying.CloudEvents.CloudEventOptions> configure, System.Text.Json.JsonSerializerOptions dataSerializerOptions = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection
+static Microsoft.Extensions.DependencyInjection.CloudEventsServiceCollectionExtensions.AddJustSayingCloudEvents(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, System.Action<JustSaying.CloudEvents.CloudEventOptions> configure = null, System.Text.Json.JsonSerializerOptions dataSerializerOptions = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection
