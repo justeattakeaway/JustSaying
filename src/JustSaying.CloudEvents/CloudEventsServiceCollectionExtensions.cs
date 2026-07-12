@@ -17,7 +17,12 @@ public static class CloudEventsServiceCollectionExtensions
     /// System.Text.Json factory for the <c>data</c> payload) so it is used by <c>AddJustSaying</c>.
     /// </summary>
     /// <param name="services">The service collection to add CloudEvents support to.</param>
-    /// <param name="configure">A delegate used to configure the <see cref="CloudEventOptions"/>.</param>
+    /// <param name="configure">
+    /// An optional delegate used to configure the <see cref="CloudEventOptions"/>. A consume-only
+    /// application can omit it entirely and state each message's <c>type</c> at the subscription via
+    /// <c>HandlingCloudEvent&lt;T&gt;("...")</c>, since <c>source</c> and the type map are only needed
+    /// when publishing.
+    /// </param>
     /// <param name="dataSerializerOptions">
     /// Optional <see cref="JsonSerializerOptions"/> for the <c>data</c> payload. Supply one with a
     /// source-generated <c>TypeInfoResolver</c> to remain Native AOT-compatible; when
@@ -26,14 +31,13 @@ public static class CloudEventsServiceCollectionExtensions
     /// <returns>The same <see cref="IServiceCollection"/>, for chaining.</returns>
     public static IServiceCollection AddJustSayingCloudEvents(
         this IServiceCollection services,
-        Action<CloudEventOptions> configure,
+        Action<CloudEventOptions> configure = null,
         JsonSerializerOptions dataSerializerOptions = null)
     {
         if (services is null) throw new ArgumentNullException(nameof(services));
-        if (configure is null) throw new ArgumentNullException(nameof(configure));
 
         var options = new CloudEventOptions();
-        configure(options);
+        configure?.Invoke(options);
 
         services.TryAddSingleton<IMessageBodySerializationFactory>(serviceProvider =>
         {
