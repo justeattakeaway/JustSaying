@@ -10,7 +10,7 @@ namespace JustSaying.Fluent;
 /// <typeparam name="T">
 /// The type of the messages to publish.
 /// </typeparam>
-internal interface IPublicationBuilder<out T>
+public interface IPublicationBuilder<out T>
     where T : Message
 {
     /// <summary>

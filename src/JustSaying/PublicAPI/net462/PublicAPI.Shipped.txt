@@ -1,0 +1,5 @@
+JustSaying.AwsTools.MessageHandling.PublishBatchException.PublishBatchException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+JustSaying.AwsTools.MessageHandling.PublishException.PublishException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+JustSaying.AwsTools.QueueCreation.ConfigurationErrorsException.ConfigurationErrorsException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+JustSaying.HandlerNotRegisteredWithContainerException.HandlerNotRegisteredWithContainerException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+JustSaying.Messaging.MessageSerialization.MessageFormatNotSupportedException.MessageFormatNotSupportedException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
