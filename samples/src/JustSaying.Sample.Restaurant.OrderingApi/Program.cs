@@ -1,8 +1,13 @@
+using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using JustSaying.Messaging;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Sample.Restaurant.Models;
 using JustSaying.Sample.Restaurant.OrderingApi;
 using JustSaying.Sample.Restaurant.OrderingApi.Handlers;
 using JustSaying.Sample.Restaurant.OrderingApi.Models;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Scalar.AspNetCore;
 
 Console.Title = "OrderingApi";
@@ -12,48 +17,26 @@ builder.AddServiceDefaults();
 
 var configuration = builder.Configuration;
 
-builder.Services.AddJustSaying(config =>
+// Register an AOT-safe IMessageBodySerializationFactory before AddJustSaying so its
+// TryAddSingleton for the default Newtonsoft factory becomes a no-op. The source-gen
+// resolver wires up serialization for our message types without using reflection.
+var serializerOptions = new JsonSerializerOptions
 {
-    config.Client(x =>
-    {
-        if (configuration.HasAWSServiceUrl())
-        {
-            // The AWS client SDK allows specifying a custom HTTP endpoint.
-            // For testing purposes it is useful to specify a value that
-            // points to a docker image such as `localstack/localstack`
-            x.WithServiceUri(configuration.GetAWSServiceUri())
-                .WithAnonymousCredentials();
-        }
-        else
-        {
-            // The real AWS environment will require some means of authentication
-            //x.WithBasicCredentials("###", "###");
-            //x.WithSessionCredentials("###", "###", "###");
-        }
-    });
-    config.Messaging(x =>
-    {
-        // Configures which AWS Region to operate in
-        x.WithRegion(configuration.GetAWSRegion());
-    });
-    config.Subscriptions(x =>
-    {
-        // Creates the following if they do not already exist
-        //  - a SQS queue of name `orderreadyevent`
-        //  - a SQS queue of name `orderreadyevent_error`
-        //  - a SNS topic of name `orderreadyevent`
-        //  - a SNS topic subscription on topic 'orderreadyevent' and queue 'orderreadyevent'
-        x.ForTopic<OrderReadyEvent>();
-        x.ForTopic<OrderDeliveredEvent>();
-    });
-    config.Publications(x =>
-    {
-        // Creates the following if they do not already exist
-        //  - a SNS topic of name `orderplacedevent`
-        x.WithTopic<OrderPlacedEvent>();
-        x.WithTopic<OrderOnItsWayEvent>();
-    });
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    TypeInfoResolver = ApplicationJsonContext.Default,
+};
+builder.Services.TryAddSingleton<IMessageBodySerializationFactory>(_ => new SystemTextJsonSerializationFactory(serializerOptions));
+
+// ASP.NET's minimal-API JSON pipeline owns its own JsonSerializerOptions, separate
+// from JustSaying's. Plug ApplicationJsonContext into it too so request body binding
+// and response serialization are AOT-safe — without this, the default reflection-
+// based JsonTypeInfoResolver gets stripped at publish time and any POST throws.
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.TypeInfoResolverChain.Insert(0, ApplicationJsonContext.Default);
 });
+
+ConfigureJustSaying(builder.Services, configuration);
 
 // Added a message handler for message type for 'OrderReadyEvent' on topic 'orderreadyevent' and queue 'orderreadyevent'
 builder.Services.AddJustSayingHandler<OrderReadyEvent, OrderReadyEventHandler>();
@@ -112,3 +95,53 @@ app.MapPost("api/multi-orders",
     });
 
 await app.RunAsync();
+
+[UnconditionalSuppressMessage("Trimming", "IL2026",
+    Justification = "We have replaced the default IMessageBodySerializationFactory with an AOT-safe SystemTextJson source-gen one above.")]
+[UnconditionalSuppressMessage("AOT", "IL3050",
+    Justification = "We have replaced the default IMessageBodySerializationFactory with an AOT-safe SystemTextJson source-gen one above.")]
+static void ConfigureJustSaying(IServiceCollection services, IConfiguration configuration)
+{
+    services.AddJustSaying(config =>
+    {
+        config.Client(x =>
+        {
+            if (configuration.HasAWSServiceUrl())
+            {
+                // The AWS client SDK allows specifying a custom HTTP endpoint.
+                // For testing purposes it is useful to specify a value that
+                // points to a docker image such as `localstack/localstack`
+                x.WithServiceUri(configuration.GetAWSServiceUri())
+                    .WithAnonymousCredentials();
+            }
+            else
+            {
+                // The real AWS environment will require some means of authentication
+                //x.WithBasicCredentials("###", "###");
+                //x.WithSessionCredentials("###", "###", "###");
+            }
+        });
+        config.Messaging(x =>
+        {
+            // Configures which AWS Region to operate in
+            x.WithRegion(configuration.GetAWSRegion());
+        });
+        config.Subscriptions(x =>
+        {
+            // Creates the following if they do not already exist
+            //  - a SQS queue of name `orderreadyevent`
+            //  - a SQS queue of name `orderreadyevent_error`
+            //  - a SNS topic of name `orderreadyevent`
+            //  - a SNS topic subscription on topic 'orderreadyevent' and queue 'orderreadyevent'
+            x.ForTopic<OrderReadyEvent>();
+            x.ForTopic<OrderDeliveredEvent>();
+        });
+        config.Publications(x =>
+        {
+            // Creates the following if they do not already exist
+            //  - a SNS topic of name `orderplacedevent`
+            x.WithTopic<OrderPlacedEvent>();
+            x.WithTopic<OrderOnItsWayEvent>();
+        });
+    });
+}

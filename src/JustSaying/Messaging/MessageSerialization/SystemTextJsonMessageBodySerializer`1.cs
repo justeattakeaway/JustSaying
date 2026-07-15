@@ -1,5 +1,9 @@
 using System.Text.Json;
 using JustSaying.Models;
+#if NET8_0_OR_GREATER
+using System.Runtime.CompilerServices;
+using JustSaying.Extensions;
+#endif
 
 namespace JustSaying.Messaging.MessageSerialization;
 
@@ -14,6 +18,16 @@ public sealed class SystemTextJsonMessageBodySerializer<T> : IMessageBodySeriali
     /// <summary>
     /// Initializes a new instance of the <see cref="SystemTextJsonMessageBodySerializer{T}"/> class with default JSON serializer options.
     /// </summary>
+    /// <remarks>
+    /// The default options have no <see cref="System.Text.Json.Serialization.Metadata.JsonTypeInfoResolver"/>, so under Native AOT
+    /// the resulting serializer will throw <see cref="NotSupportedException"/> on first use. Use the
+    /// <see cref="SystemTextJsonMessageBodySerializer{T}(JsonSerializerOptions)"/> overload with a source-generated context to
+    /// remain AOT-compatible.
+    /// </remarks>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("The default JsonSerializerOptions have no TypeInfoResolver, so serialization falls back to reflection over message types that may be removed when trimming.")]
+    [RequiresDynamicCode("The default JsonSerializerOptions have no TypeInfoResolver, so serialization falls back to reflection-based metadata that requires dynamic code.")]
+#endif
     public SystemTextJsonMessageBodySerializer() : this(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions)
     { }
 
@@ -33,7 +47,21 @@ public sealed class SystemTextJsonMessageBodySerializer<T> : IMessageBodySeriali
     /// <returns>A JSON string representation of the message.</returns>
     public string Serialize(Message message)
     {
+#if NET8_0_OR_GREATER
+        if (RuntimeFeature.IsDynamicCodeSupported)
+        {
+#pragma warning disable IL3050
+#pragma warning disable IL2026
+            return JsonSerializer.Serialize(message, message.GetType(), _options);
+#pragma warning restore IL2026
+#pragma warning restore IL3050
+        }
+
+        var jsonTypeInfo = _options.GetTypeInfo<T>();
+        return JsonSerializer.Serialize((T)message, jsonTypeInfo);
+#else
         return JsonSerializer.Serialize(message, message.GetType(), _options);
+#endif
     }
 
     /// <summary>
@@ -43,6 +71,20 @@ public sealed class SystemTextJsonMessageBodySerializer<T> : IMessageBodySeriali
     /// <returns>A deserialized message of type <typeparamref name="T"/>.</returns>
     public Message Deserialize(string messageBody)
     {
+#if NET8_0_OR_GREATER
+        if (RuntimeFeature.IsDynamicCodeSupported)
+        {
+#pragma warning disable IL3050
+#pragma warning disable IL2026
+            return JsonSerializer.Deserialize<T>(messageBody, _options);
+#pragma warning restore IL2026
+#pragma warning restore IL3050
+        }
+
+        var jsonTypeInfo = _options.GetTypeInfo<T>();
+        return JsonSerializer.Deserialize(messageBody, jsonTypeInfo);
+#else
         return JsonSerializer.Deserialize<T>(messageBody, _options);
+#endif
     }
 }

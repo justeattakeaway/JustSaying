@@ -6,6 +6,14 @@
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <UserSecretsId>JustSaying.Sample.Restaurant.OrderingApi</UserSecretsId>
     <NoWarn>$(NoWarn);CA2007</NoWarn>
+    <!-- Newtonsoft.Json (a transitive dependency) still produces some assembly-level
+         trim/AOT warnings even on 13.0.4 because the package only ships a net6.0 target
+         and not all internal reflection paths are annotated. Demote them from errors to
+         warnings so they remain visible in publish output — if a new dependency starts
+         emitting IL2104/IL3053 we'll see it in the log instead of having it silently
+         suppressed by NoWarn. Newtonsoft itself is replaced at runtime by an AOT-safe
+         System.Text.Json source-gen factory in Program.cs. -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);IL2104;IL3053</WarningsNotAsErrors>
     <SignAssembly>false</SignAssembly>
   </PropertyGroup>
 
@@ -23,7 +31,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Update="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Update="appsettings.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <PublishAot>true</PublishAot>
+  </PropertyGroup>
 
 </Project>

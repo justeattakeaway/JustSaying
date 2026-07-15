@@ -15,6 +15,9 @@ namespace Microsoft.Extensions.DependencyInjection;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class IServiceCollectionExtensions
 {
+    private const string AttributeRequiresUnreferencedCodeMessage = "The AWSSDK.Extensions.NETCore.Setup package has not been updated to support Native AOT compilations";
+    private const string AttributeRequiresDynamicCodeMessage = "The AWSSDK.Extensions.NETCore.Setup package has not been updated to support Native AOT compilations";
+
     /// <summary>
     /// Adds JustSaying services to the service collection using AWS configuration.
     /// </summary>
@@ -27,6 +30,10 @@ public static class IServiceCollectionExtensions
     /// <exception cref="ArgumentNullException">
     /// <paramref name="services"/>, <paramref name="configuration"/> or <paramref name="builderConfig"/> is <see langword="null"/>.
     /// </exception>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode(AttributeRequiresUnreferencedCodeMessage)]
+    [RequiresDynamicCode(AttributeRequiresDynamicCodeMessage)]
+#endif
     public static void AddJustSayingWithAwsConfig(this IServiceCollection services, IConfiguration configuration, Action<MessagingBusBuilder> builderConfig)
     {
         if (services is null)
@@ -59,6 +66,10 @@ public static class IServiceCollectionExtensions
     /// <exception cref="ArgumentNullException">
     /// <paramref name="services"/>, <paramref name="configuration"/> or <paramref name="builderConfig"/> is <see langword="null"/>.
     /// </exception>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode(AttributeRequiresUnreferencedCodeMessage)]
+    [RequiresDynamicCode(AttributeRequiresDynamicCodeMessage)]
+#endif
     public static void AddJustSayingWithAwsConfig(this IServiceCollection services, IConfiguration configuration, Action<MessagingBusBuilder, IServiceProvider> builderConfig)
     {
         if (services is null)
