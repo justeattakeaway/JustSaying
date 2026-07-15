@@ -1,0 +1,16 @@
+JustSaying.Extensions.HeaderPropagation.HeaderPropagationOptions
+JustSaying.Extensions.HeaderPropagation.HeaderPropagationOptions.HeaderPropagationOptions(System.Collections.Generic.IEnumerable<string!>! headers) -> void
+JustSaying.Extensions.HeaderPropagation.HeaderPropagationOptions.Headers.get -> System.Collections.Generic.IReadOnlyCollection<string!>!
+JustSaying.Extensions.HeaderPropagation.HeaderPropagationPublisher
+JustSaying.Extensions.HeaderPropagation.HeaderPropagationPublisher.HeaderPropagationPublisher(JustSaying.Messaging.IMessagePublisher! inner, Microsoft.AspNetCore.Http.IHttpContextAccessor! httpContextAccessor, JustSaying.Extensions.HeaderPropagation.HeaderPropagationOptions! options) -> void
+JustSaying.Extensions.HeaderPropagation.HeaderPropagationPublisher.Interrogate() -> JustSaying.Messaging.Interrogation.InterrogationResult!
+JustSaying.Extensions.HeaderPropagation.HeaderPropagationPublisher.PublishAsync(JustSaying.Models.Message! message, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+JustSaying.Extensions.HeaderPropagation.HeaderPropagationPublisher.PublishAsync(JustSaying.Models.Message! message, JustSaying.Messaging.PublishMetadata! metadata, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+JustSaying.Extensions.HeaderPropagation.HeaderPropagationPublisher.PublishAsync(System.Collections.Generic.IEnumerable<JustSaying.Models.Message!>! messages, JustSaying.Messaging.PublishBatchMetadata? metadata, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+JustSaying.Extensions.HeaderPropagation.HeaderPropagationPublisher.StartAsync(System.Threading.CancellationToken stoppingToken) -> System.Threading.Tasks.Task!
+JustSaying.Extensions.HeaderPropagation.HeaderValueFilterMiddleware
+JustSaying.Extensions.HeaderPropagation.HeaderValueFilterMiddleware.HeaderValueFilterMiddleware(string! headerName, string? expectedValue = null) -> void
+JustSaying.Messaging.Middleware.HandlerMiddlewareBuilderExtensions
+static JustSaying.Messaging.Middleware.HandlerMiddlewareBuilderExtensions.UseHeaderFilter(this JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder! builder, string! headerName, string? expectedValue = null) -> JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder!
+static Microsoft.Extensions.DependencyInjection.JustSayingHeaderPropagationServiceCollectionExtensions.AddJustSayingHeaderPropagation(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, params string![]! headers) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+Microsoft.Extensions.DependencyInjection.JustSayingHeaderPropagationServiceCollectionExtensions
