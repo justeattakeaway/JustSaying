@@ -258,7 +258,7 @@ jobs:
         git clone https://github.com/sourcegraph/scip-dotnet.git scip-dotnet
         git -C scip-dotnet checkout "${SCIP_DOTNET_COMMIT}"
         dotnet pack scip-dotnet/ScipDotnet/ScipDotnet.csproj --configuration Release --output scip-dotnet/artifacts
-        dotnet tool install --global scip-dotnet --add-source scip-dotnet/artifacts
+        dotnet tool install --global scip-dotnet --version 0.2.15 --add-source scip-dotnet/artifacts
 
     - name: Generate SCIP index
       run: scip-dotnet index JustSaying.slnx
