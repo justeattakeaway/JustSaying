@@ -74,7 +74,8 @@ public sealed class CloudEventSerializationFactory : IMessageBodySerializationFa
         var resolvedSource = source ?? _options.Source
             ?? throw new InvalidOperationException(
                 $"A CloudEvents 'source' is required to publish '{typeof(T).FullName}' as a bare message. " +
-                $"Pass source: to WithCloudEvent<{typeof(T).Name}>(...), set {nameof(CloudEventOptions)}.{nameof(CloudEventOptions.Source)}, " +
+                $"Pass source: to the WithCloudEventTopic<{typeof(T).Name}>/WithCloudEventQueue<{typeof(T).Name}> registration, " +
+                $"set {nameof(CloudEventOptions)}.{nameof(CloudEventOptions.Source)}, " +
                 $"or publish a CloudEvent<{typeof(T).Name}> with its Source set.");
 
         var dataSerializer = _dataSerializerFactory.GetSerializer<T>();

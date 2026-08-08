@@ -14,8 +14,9 @@ public static class CloudEventsServiceCollectionExtensions
     /// <summary>
     /// Adds CloudEvents support to JustSaying, registering the <see cref="CloudEventSerializationFactory"/>
     /// (wrapping a System.Text.Json factory for the <c>data</c> payload) used by the CloudEvents
-    /// publication and subscription registrations (<c>WithCloudEvent&lt;T&gt;</c>,
-    /// <c>HandlingCloudEvent&lt;T&gt;</c>, <c>HandlingCloudEventData&lt;T&gt;</c>). Registrations that do
+    /// publication and subscription registrations (<c>WithCloudEventTopic&lt;T&gt;</c>,
+    /// <c>WithCloudEventQueue&lt;T&gt;</c>, <c>HandlingCloudEvent&lt;T&gt;</c>,
+    /// <c>HandlingCloudEventData&lt;T&gt;</c>). Registrations that do
     /// not opt into CloudEvents are unaffected — the app-wide serialization factory is left alone, so
     /// legacy, plain-JSON and CloudEvents registrations can coexist in one application.
     /// </summary>

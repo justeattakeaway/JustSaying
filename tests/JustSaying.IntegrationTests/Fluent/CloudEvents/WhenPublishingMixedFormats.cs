@@ -61,7 +61,7 @@ public class WhenPublishingMixedFormats : IntegrationTestBase
                 {
                     p.WithTopic<OrderPlaced>();                        // legacy — derives from Message
                     p.WithTopic<PaymentTaken>();                       // plain JSON POCO
-                    p.WithCloudEvent<ParcelShipped>(ParcelShippedType, // CloudEvents
+                    p.WithCloudEventTopic<ParcelShipped>(ParcelShippedType, // CloudEvents
                         source: ParcelSource,
                         topicName: parcelTopic);
                 })
@@ -73,7 +73,7 @@ public class WhenPublishingMixedFormats : IntegrationTestBase
             .AddSingleton(orderHandler)
             .AddSingleton(paymentHandler);
 
-        // No useAsDefault: only the WithCloudEvent publication speaks CloudEvents.
+        // No useAsDefault: only the WithCloudEventTopic publication speaks CloudEvents.
         services.AddJustSayingCloudEvents();
 
         await WhenAsync(
