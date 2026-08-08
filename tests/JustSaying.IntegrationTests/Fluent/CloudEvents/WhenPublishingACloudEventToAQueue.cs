@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Amazon.SimpleNotificationService.Model;
 using Amazon.SQS.Model;
 using JustSaying.CloudEvents;
 using JustSaying.Fluent;
@@ -9,13 +8,13 @@ using Microsoft.Extensions.DependencyInjection;
 namespace JustSaying.IntegrationTests.Fluent.CloudEvents;
 
 /// <summary>
-/// The publish-side counterpart of <see cref="WhenHandlingACloudEventEnvelope"/>: a single
-/// <c>WithCloudEventTopic&lt;T&gt;</c> publication (type, source and topic co-located, no global type map)
-/// accepts both shapes — the bare model, whose envelope metadata is defaulted, and a
-/// <see cref="CloudEvent{T}"/>, whose <c>source</c>, <c>subject</c> and extension attributes are set
-/// per message.
+/// The point-to-point counterpart of <see cref="WhenPublishingACloudEventEnvelope"/>: a single
+/// <c>WithCloudEventQueue&lt;T&gt;</c> publication accepts both shapes — the bare model and a
+/// <see cref="CloudEvent{T}"/> — and, because the CloudEvents serializer is self-describing, the
+/// structured envelope is the body on the wire, never wrapped in JustSaying's
+/// <c>{ "Subject", "Message" }</c> queue envelope.
 /// </summary>
-public class WhenPublishingACloudEventEnvelope : IntegrationTestBase
+public class WhenPublishingACloudEventToAQueue : IntegrationTestBase
 {
     private const string OrderPlacedType = "com.example.orders.order.placed";
     private static readonly Uri RegistrationSource = new("https://orders.example.com");
@@ -31,7 +30,7 @@ public class WhenPublishingACloudEventEnvelope : IntegrationTestBase
         // Arrange
         var services = GivenJustSaying()
             .ConfigureJustSaying(builder => builder
-                .Publications(p => p.WithCloudEventTopic<OrderPlaced>(OrderPlacedType, source: RegistrationSource, topicName: UniqueName)));
+                .Publications(p => p.WithCloudEventQueue<OrderPlaced>(OrderPlacedType, source: RegistrationSource, queueName: UniqueName)));
 
         services.AddJustSayingCloudEvents();
 
@@ -40,9 +39,7 @@ public class WhenPublishingACloudEventEnvelope : IntegrationTestBase
 
         await RunActionWithTimeout(async cancellationToken =>
         {
-            await publisher.StartAsync(cancellationToken); // creates the topic
-
-            var (sqs, queueUrl) = await SubscribeCaptureQueueAsync(cancellationToken);
+            await publisher.StartAsync(cancellationToken); // creates the queue
 
             // Act - the same registration accepts the bare model and the envelope.
             await publisher.PublishAsync(new OrderPlaced { OrderId = "bare-1" }, cancellationToken);
@@ -52,11 +49,14 @@ public class WhenPublishingACloudEventEnvelope : IntegrationTestBase
                 subject: "orders/2",
                 extensions: new Dictionary<string, string> { ["tenantid"] = "acme" }), cancellationToken);
 
-            // Assert
+            // Assert - read the raw messages straight off the queue.
+            var sqs = CreateClientFactory().GetSqsClient(Region);
+            var queueUrl = (await sqs.GetQueueUrlAsync(UniqueName, cancellationToken)).QueueUrl;
             var bodies = await ReceiveManyAsync(sqs, queueUrl, 2, cancellationToken);
             bodies.Count.ShouldBe(2);
 
             var bare = ParseByOrderId(bodies, "bare-1");
+            bare.TryGetProperty("Message", out _).ShouldBeFalse("the CloudEvent should not be double-wrapped");
             bare.GetProperty("specversion").GetString().ShouldBe("1.0");
             bare.GetProperty("type").GetString().ShouldBe(OrderPlacedType);
             bare.GetProperty("source").GetString().ShouldBe(RegistrationSource.ToString());
@@ -64,6 +64,7 @@ public class WhenPublishingACloudEventEnvelope : IntegrationTestBase
             bare.TryGetProperty("subject", out _).ShouldBeFalse();
 
             var wrapped = ParseByOrderId(bodies, "wrapped-2");
+            wrapped.TryGetProperty("Message", out _).ShouldBeFalse("the CloudEvent should not be double-wrapped");
             wrapped.GetProperty("type").GetString().ShouldBe(OrderPlacedType);
             wrapped.GetProperty("source").GetString().ShouldBe("https://orders.example.com/eu");
             wrapped.GetProperty("subject").GetString().ShouldBe("orders/2");
@@ -77,7 +78,7 @@ public class WhenPublishingACloudEventEnvelope : IntegrationTestBase
         // Arrange - no source on the publication and none on CloudEventOptions.
         var services = GivenJustSaying()
             .ConfigureJustSaying(builder => builder
-                .Publications(p => p.WithCloudEventTopic<OrderPlaced>(OrderPlacedType, topicName: UniqueName)));
+                .Publications(p => p.WithCloudEventQueue<OrderPlaced>(OrderPlacedType, queueName: UniqueName)));
 
         services.AddJustSayingCloudEvents();
 
@@ -86,54 +87,6 @@ public class WhenPublishingACloudEventEnvelope : IntegrationTestBase
         // Act and Assert - fails at bus build, not on first publish.
         var exception = Should.Throw<InvalidOperationException>(() => serviceProvider.GetRequiredService<IMessagePublisher>());
         exception.Message.ShouldContain("source");
-    }
-
-    [Test]
-    public void Then_Building_The_Bus_Throws_When_The_Same_Type_Has_Two_Publications()
-    {
-        // Arrange - a plain topic publication and a CloudEvents publication for the same type.
-        var services = GivenJustSaying()
-            .ConfigureJustSaying(builder => builder
-                .Publications(p =>
-                {
-                    p.WithTopic<OrderPlaced>(t => t.WithTopicName(UniqueName));
-                    p.WithCloudEventTopic<OrderPlaced>(OrderPlacedType, source: RegistrationSource, topicName: UniqueName);
-                }));
-
-        services.AddJustSayingCloudEvents();
-
-        var serviceProvider = services.BuildServiceProvider();
-
-        // Act and Assert - the silent last-write-wins is now a startup error.
-        var exception = Should.Throw<InvalidOperationException>(() => serviceProvider.GetRequiredService<IMessagePublisher>());
-        exception.Message.ShouldContain("already registered");
-    }
-
-    private async Task<(Amazon.SQS.IAmazonSQS Sqs, string QueueUrl)> SubscribeCaptureQueueAsync(CancellationToken cancellationToken)
-    {
-        // Wire a queue to the topic with raw delivery so the bare envelope can be read off the wire.
-        var sns = CreateClientFactory().GetSnsClient(Region);
-        var sqs = CreateClientFactory().GetSqsClient(Region);
-
-        var topicArn = (await sns.CreateTopicAsync(new CreateTopicRequest { Name = UniqueName }, cancellationToken)).TopicArn;
-        var queueUrl = (await sqs.CreateQueueAsync(new CreateQueueRequest { QueueName = UniqueName + "-capture" }, cancellationToken)).QueueUrl;
-        var queueArn = (await sqs.GetQueueAttributesAsync(
-            new GetQueueAttributesRequest { QueueUrl = queueUrl, AttributeNames = ["QueueArn"] }, cancellationToken)).Attributes["QueueArn"];
-        var subscriptionArn = (await sns.SubscribeAsync(new SubscribeRequest
-        {
-            TopicArn = topicArn,
-            Protocol = "sqs",
-            Endpoint = queueArn,
-            ReturnSubscriptionArn = true,
-        }, cancellationToken)).SubscriptionArn;
-        await sns.SetSubscriptionAttributesAsync(new SetSubscriptionAttributesRequest
-        {
-            SubscriptionArn = subscriptionArn,
-            AttributeName = "RawMessageDelivery",
-            AttributeValue = "true",
-        }, cancellationToken);
-
-        return (sqs, queueUrl);
     }
 
     private static async Task<List<string>> ReceiveManyAsync(Amazon.SQS.IAmazonSQS sqs, string queueUrl, int count, CancellationToken cancellationToken)
@@ -158,7 +111,8 @@ public class WhenPublishingACloudEventEnvelope : IntegrationTestBase
         foreach (var body in bodies)
         {
             using var document = JsonDocument.Parse(body);
-            if (document.RootElement.GetProperty("data").GetProperty("OrderId").GetString() == orderId)
+            if (document.RootElement.TryGetProperty("data", out var data)
+                && data.GetProperty("OrderId").GetString() == orderId)
             {
                 return document.RootElement.Clone();
             }

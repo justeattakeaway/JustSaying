@@ -42,7 +42,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
     /// the bus's serialization factory. Built from the bus's <see cref="IServiceResolver"/> so a
     /// serializer package can resolve its own serialization services from the container without
     /// replacing the app-wide factory. Internal extensibility seam for serializer packages (such as
-    /// JustSaying.CloudEvents, which exposes it via <c>WithCloudEvent&lt;T&gt;</c>).
+    /// JustSaying.CloudEvents, which exposes it via <c>WithCloudEventTopic&lt;T&gt;</c>).
     /// </summary>
     internal Func<IServiceResolver, JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<T>> SerializerOverride { get; set; }
 

@@ -33,7 +33,8 @@ JustSaying.Fluent.MultiTypeQueueSubscriptionCloudEventExtensions
 static JustSaying.Fluent.MultiTypeQueueSubscriptionCloudEventExtensions.HandlingCloudEvent<T>(this JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder builder, string typeName = null, System.Action<JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder> middlewareConfiguration = null) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
 static JustSaying.Fluent.MultiTypeQueueSubscriptionCloudEventExtensions.HandlingCloudEventData<T>(this JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder builder, string typeName = null, System.Action<JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder> middlewareConfiguration = null) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
 JustSaying.Fluent.PublicationsBuilderCloudEventExtensions
-static JustSaying.Fluent.PublicationsBuilderCloudEventExtensions.WithCloudEvent<T>(this JustSaying.Fluent.PublicationsBuilder publications, string type, System.Uri source = null, string topicName = null) -> JustSaying.Fluent.PublicationsBuilder
+static JustSaying.Fluent.PublicationsBuilderCloudEventExtensions.WithCloudEventTopic<T>(this JustSaying.Fluent.PublicationsBuilder publications, string type, System.Uri source = null, string topicName = null) -> JustSaying.Fluent.PublicationsBuilder
+static JustSaying.Fluent.PublicationsBuilderCloudEventExtensions.WithCloudEventQueue<T>(this JustSaying.Fluent.PublicationsBuilder publications, string type, System.Uri source = null, string queueName = null) -> JustSaying.Fluent.PublicationsBuilder
 JustSaying.CloudEvents.CloudEventTypeDiscriminator
 JustSaying.CloudEvents.CloudEventTypeDiscriminator.CloudEventTypeDiscriminator() -> void
 JustSaying.CloudEvents.CloudEventTypeDiscriminator.TryGetMessageTypeName(JustSaying.Messaging.MessageDiscriminationContext context, out string typeName) -> bool
