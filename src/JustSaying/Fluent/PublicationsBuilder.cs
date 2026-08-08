@@ -72,6 +72,27 @@ public sealed class PublicationsBuilder
     }
 
     /// <summary>
+    /// Configures a publisher for a pre-existing queue. The queue is never created by JustSaying, so
+    /// only publish-time configuration is available — none of the infrastructure options apply.
+    /// </summary>
+    /// <param name="address">The address of the queue to publish to (see <see cref="QueueAddress.FromUri(Uri, string)"/>, <see cref="QueueAddress.FromUrl(string, string)"/> and <see cref="QueueAddress.FromArn(string)"/>).</param>
+    /// <param name="configure">An optional delegate to configure the queue publication.</param>
+    /// <typeparam name="T">The type of the message to publish.</typeparam>
+    /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="address"/> is <see langword="null"/>.</exception>
+    public PublicationsBuilder WithQueue<T>(QueueAddress address, Action<QueueAddressPublicationBuilder<T>> configure = null) where T : class
+    {
+        if (address == null) throw new ArgumentNullException(nameof(address));
+
+        var builder = new QueueAddressPublicationBuilder<T>(address);
+        configure?.Invoke(builder);
+
+        Publications.Add(builder);
+
+        return this;
+    }
+
+    /// <summary>
     /// Configures a publisher for a pre-existing queue.
     /// </summary>
     /// <param name="queueArn">The ARN of the queue to publish to.</param>
@@ -93,12 +114,7 @@ public sealed class PublicationsBuilder
     {
         if (queueArn == null) throw new ArgumentNullException(nameof(queueArn));
 
-        var builder = new QueueAddressPublicationBuilder<T>(QueueAddress.FromArn(queueArn));
-        configure?.Invoke(builder);
-
-        Publications.Add(builder);
-
-        return this;
+        return WithQueue(QueueAddress.FromArn(queueArn), configure);
     }
 
     /// <summary>
@@ -123,12 +139,7 @@ public sealed class PublicationsBuilder
     {
         if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
 
-        var builder = new QueueAddressPublicationBuilder<T>(QueueAddress.FromUrl(queueUrl));
-        configure?.Invoke(builder);
-
-        Publications.Add(builder);
-
-        return this;
+        return WithQueue(QueueAddress.FromUrl(queueUrl), configure);
     }
 
     /// <summary>
@@ -153,12 +164,7 @@ public sealed class PublicationsBuilder
     {
         if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
 
-        var builder = new QueueAddressPublicationBuilder<T>(QueueAddress.FromUri(queueUrl));
-        configure?.Invoke(builder);
-
-        Publications.Add(builder);
-
-        return this;
+        return WithQueue(QueueAddress.FromUri(queueUrl), configure);
     }
 
     /// <summary>
@@ -202,6 +208,28 @@ public sealed class PublicationsBuilder
     }
 
     /// <summary>
+    /// Configures a publisher for a pre-existing topic. The topic is never created by JustSaying, so
+    /// only publish-time configuration is available — none of the infrastructure options apply.
+    /// </summary>
+    /// <param name="address">The address of the topic to publish to (see <see cref="TopicAddress.FromArn(string)"/>).</param>
+    /// <param name="configure">An optional delegate to configure the topic publication.</param>
+    /// <typeparam name="T">The type of the message to publish.</typeparam>
+    /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="address"/> is <see langword="null"/>.</exception>
+    public PublicationsBuilder WithTopic<T>(TopicAddress address, Action<TopicAddressPublicationBuilder<T>> configure = null) where T : class
+    {
+        if (address == null) throw new ArgumentNullException(nameof(address));
+
+        var builder = new TopicAddressPublicationBuilder<T>(address);
+
+        configure?.Invoke(builder);
+
+        Publications.Add(builder);
+
+        return this;
+    }
+
+    /// <summary>
     /// Configures a publisher for a pre-existing topic.
     /// </summary>
     /// <param name="topicArn">The ARN of the topic to publish to.</param>
@@ -213,13 +241,7 @@ public sealed class PublicationsBuilder
     {
         if (topicArn == null) throw new ArgumentNullException(nameof(topicArn));
 
-        var builder = new TopicAddressPublicationBuilder<T>(TopicAddress.FromArn(topicArn));
-
-        configure?.Invoke(builder);
-
-        Publications.Add(builder);
-
-        return this;
+        return WithTopic(TopicAddress.FromArn(topicArn), configure);
     }
 
     /// <summary>
