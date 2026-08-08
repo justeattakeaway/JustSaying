@@ -1,5 +1,4 @@
 using JustSaying.CloudEvents;
-using JustSaying.Messaging.MessageSerialization;
 
 namespace JustSaying.Fluent;
 
@@ -11,7 +10,8 @@ public static class PublicationsBuilderCloudEventExtensions
     /// <summary>
     /// Registers a topic publication that writes messages of type <typeparamref name="T"/> as
     /// structured-mode CloudEvents — the publish-side counterpart of <c>HandlingCloudEvent&lt;T&gt;</c>.
-    /// The CloudEvents <c>type</c> is stated here, co-located with the publication.
+    /// The CloudEvents <c>type</c> is stated here, co-located with the publication. Only this
+    /// publication speaks CloudEvents; other publications keep the app-wide default serializer.
     /// <para>
     /// Both shapes can then be published: the bare <typeparamref name="T"/> (the envelope's
     /// <c>id</c>/<c>time</c>/<c>source</c> are defaulted), or a <see cref="CloudEvent{T}"/> to set the
@@ -50,11 +50,12 @@ public static class PublicationsBuilderCloudEventExtensions
                 builder.WithTopicName(topicName);
             }
 
-            builder.SerializerOverride = factory => Require(factory).GetSerializer<T>(type, source);
+            builder.SerializerOverride = resolver => resolver.ResolveCloudEventSerializationFactory().GetSerializer<T>(type, source);
         });
 
         // The envelope publication: publishing a CloudEvent<T> controls the metadata per message.
-        // Same topic — named after the payload type T, not the CloudEvent<T> wrapper.
+        // Same topic — named after the payload type T, not the CloudEvent<T> wrapper — and the SNS
+        // Subject reflects the payload type too.
         publications.WithTopic<CloudEvent<T>>(builder =>
         {
             if (topicName is not null)
@@ -66,14 +67,10 @@ public static class PublicationsBuilderCloudEventExtensions
                 builder.TopicNameResolver = convention => convention.TopicName<T>();
             }
 
-            builder.SerializerOverride = factory => Require(factory).GetEnvelopeSerializer<T>(type, source);
+            builder.SubjectResolver = registry => registry.GetLogicalName(typeof(T));
+            builder.SerializerOverride = resolver => resolver.ResolveCloudEventSerializationFactory().GetEnvelopeSerializer<T>(type, source);
         });
 
         return publications;
     }
-
-    private static CloudEventSerializationFactory Require(IMessageBodySerializationFactory factory)
-        => factory as CloudEventSerializationFactory
-           ?? throw new InvalidOperationException(
-               $"Publishing CloudEvents requires the CloudEvents serialization factory; call AddJustSayingCloudEvents(...). Found '{factory?.GetType().Name ?? "null"}'.");
 }

@@ -44,6 +44,11 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
     /// </summary>
     private Action<HandlerMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
+    /// <summary>
+    /// Gets or sets a serializer that overrides the per-type default from the bus's serialization factory.
+    /// </summary>
+    private IMessageBodySerializer<T> MessageBodySerializer { get; set; }
+
 
     /// <summary>
     /// Configures that the <see cref="IQueueNamingConvention"/> will create the queue name that should be used.
@@ -156,6 +161,21 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
         return this;
     }
 
+    /// <summary>
+    /// Configures a serializer for this subscription's message bodies, used instead of the per-type
+    /// default from the bus's serialization factory — so a single subscription can consume an envelope
+    /// format (for example CloudEvents) without changing the app-wide serializer.
+    /// </summary>
+    /// <param name="messageBodySerializer">The serializer to deserialize this queue's message bodies with.</param>
+    /// <returns>
+    /// The current <see cref="QueueSubscriptionBuilder{T}"/>.
+    /// </returns>
+    public QueueSubscriptionBuilder<T> WithMessageBodySerializer(IMessageBodySerializer<T> messageBodySerializer)
+    {
+        MessageBodySerializer = messageBodySerializer;
+        return this;
+    }
+
     /// <inheritdoc />
     void ISubscriptionBuilder<T>.Configure(
         JustSayingBus bus,
@@ -186,7 +206,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
         var queue = creator.EnsureQueueExists(region, subscriptionConfig);
         bus.AddStartupTask(queue.StartupTask);
 
-        var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
+        var serializer = MessageBodySerializer ?? bus.MessageBodySerializerFactory.GetSerializer<T>();
         var compressionRegistry = bus.CompressionRegistry;
         bus.AddQueue(subscriptionConfig.SubscriptionGroupName, new SqsSource { MessageConverter = new InboundMessageConverter(serializer.Erase(), compressionRegistry, subscriptionConfig.RawMessageDelivery), SqsQueue = queue.Queue });
 

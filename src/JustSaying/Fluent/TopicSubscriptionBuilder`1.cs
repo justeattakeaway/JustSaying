@@ -44,6 +44,11 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
     private Action<HandlerMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
     /// <summary>
+    /// Gets or sets a serializer that overrides the per-type default from the bus's serialization factory.
+    /// </summary>
+    private IMessageBodySerializer<T> MessageBodySerializer { get; set; }
+
+    /// <summary>
     /// Configures that the <see cref="ITopicNamingConvention"/> will create the topic name that should be used.
     /// </summary>
     /// <returns>
@@ -134,6 +139,21 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
     }
 
     /// <summary>
+    /// Configures a serializer for this subscription's message bodies, used instead of the per-type
+    /// default from the bus's serialization factory — so a single subscription can consume an envelope
+    /// format (for example CloudEvents) without changing the app-wide serializer.
+    /// </summary>
+    /// <param name="messageBodySerializer">The serializer to deserialize this subscription's message bodies with.</param>
+    /// <returns>
+    /// The current <see cref="TopicSubscriptionBuilder{T}"/>.
+    /// </returns>
+    public TopicSubscriptionBuilder<T> WithMessageBodySerializer(IMessageBodySerializer<T> messageBodySerializer)
+    {
+        MessageBodySerializer = messageBodySerializer;
+        return this;
+    }
+
+    /// <summary>
     /// Creates a tag with no value that will be assigned to the SQS queue.
     /// </summary>
     /// <param name="key">The key for the tag.</param>
@@ -205,7 +225,7 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
 
         bus.AddStartupTask(queueWithStartup.StartupTask);
         var compressionRegistry = bus.CompressionRegistry;
-        var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
+        var serializer = MessageBodySerializer ?? bus.MessageBodySerializerFactory.GetSerializer<T>();
 
         var sqsSource = new SqsSource
         {
