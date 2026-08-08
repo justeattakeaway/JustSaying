@@ -11,7 +11,7 @@ namespace JustSaying.Fluent;
 
 /// <summary>
 /// A builder for a topic publication's publish-time behaviour. The destination — which topic, and
-/// (when JustSaying owns it) how to create it — is a <see cref="Topic"/> value supplied at
+/// (when JustSaying owns it) how to create it — is a <see cref="TopicDestination"/> value supplied at
 /// registration; this builder is the same whether the topic is created by JustSaying or already
 /// exists, and exposes no infrastructure configuration. This class cannot be inherited.
 /// </summary>
@@ -20,7 +20,7 @@ namespace JustSaying.Fluent;
 /// </typeparam>
 public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T : class
 {
-    private readonly Topic _destination;
+    private readonly TopicDestination _destination;
 
     private string TopicName { get; set; }
 
@@ -82,7 +82,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
     /// Initializes a new instance of the <see cref="TopicPublicationBuilder{T}"/> class.
     /// </summary>
     internal TopicPublicationBuilder()
-        : this(Topic.ByConvention())
+        : this(TopicDestination.ByConvention())
     { }
 
     /// <summary>
@@ -90,14 +90,14 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
     /// specified destination.
     /// </summary>
     /// <param name="destination">The topic the publication targets.</param>
-    internal TopicPublicationBuilder(Topic destination)
+    internal TopicPublicationBuilder(TopicDestination destination)
     {
         _destination = destination ?? throw new ArgumentNullException(nameof(destination));
     }
 
     /// <summary>
     /// Configures the name of the topic. Equivalent to registering the publication against
-    /// <see cref="Topic.Named(string)"/>.
+    /// <see cref="TopicDestination.Named(string)"/>.
     /// </summary>
     /// <param name="name">The name of the topic to publish to.</param>
     /// <returns>
@@ -133,7 +133,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
 
     /// <summary>
     /// Configures the address of the topic by calling this function at publish time to determine the topic ARN.
-    /// Only applicable for a topic addressed by ARN (<see cref="Topic.FromArn(string)"/>).
+    /// Only applicable for a topic addressed by ARN (<see cref="TopicDestination.FromArn(string)"/>).
     /// </summary>
     /// <param name="topicAddressCustomizer">Function that will be called at publish time to determine the ARN of the target topic for this <see cref="T"/>.
     /// <para>
@@ -257,13 +257,13 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
         if (TopicAddressCustomizer is not null)
         {
             throw new InvalidOperationException(
-                $"{nameof(WithTopicAddress)} only applies to a topic addressed by ARN; use {nameof(Topic)}.{nameof(Topic.FromArn)}(...) or {nameof(WithTopicName)}.");
+                $"{nameof(WithTopicAddress)} only applies to a topic addressed by ARN; use {nameof(TopicDestination)}.{nameof(TopicDestination.FromArn)}(...) or {nameof(WithTopicName)}.");
         }
 
         if (TopicName is not null && _destination.Name is not null)
         {
             throw new InvalidOperationException(
-                $"The topic is named both by the {nameof(Topic)} destination ('{_destination.Name}') and {nameof(WithTopicName)} ('{TopicName}'); name it once.");
+                $"The topic is named both by the {nameof(TopicDestination)} destination ('{_destination.Name}') and {nameof(WithTopicName)} ('{TopicName}'); name it once.");
         }
 
         var region = bus.Config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(bus.Config.Region)} property.");

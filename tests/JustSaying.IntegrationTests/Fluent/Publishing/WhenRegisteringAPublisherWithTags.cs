@@ -5,7 +5,7 @@ using JustSaying.Messaging;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
-using Topic = JustSaying.Fluent.Topic;
+using JustSaying.Fluent;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
@@ -26,7 +26,7 @@ public class WhenRegisteringAPublisherWithTags : IntegrationTestBase
             .ConfigureJustSaying((builder) =>
                 builder.Publications((options) =>
                 {
-                    options.WithTopic<MessageForTags>(Topic.ByConvention((topic) =>
+                    options.WithTopic<MessageForTags>(TopicDestination.ByConvention((topic) =>
                     {
                         foreach ((string key, string value) in tags)
                         {

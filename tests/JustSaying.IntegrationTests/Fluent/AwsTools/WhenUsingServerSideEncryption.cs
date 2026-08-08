@@ -18,10 +18,10 @@ public class WhenUsingServerSideEncryption : IntegrationTestBase
         var services = GivenJustSaying()
             .ConfigureJustSaying(
                 (builder) => builder.Publications((options) => options.WithQueue<SimpleMessage>(
-                    Queue.Named(UniqueName, (queue) => queue.WithEncryption(masterKeyId)))))
+                    QueueDestination.Named(UniqueName, (queue) => queue.WithEncryption(masterKeyId)))))
             .ConfigureJustSaying(
                 (builder) => builder.Subscriptions((options) => options.ForQueue<SimpleMessage>(
-                    Queue.Named(UniqueName, (queue) => queue.WithEncryption(masterKeyId)))))
+                    QueueDestination.Named(UniqueName, (queue) => queue.WithEncryption(masterKeyId)))))
             .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 
         string content = Guid.NewGuid().ToString();

@@ -20,6 +20,6 @@ public class WhenUsingTopicSubscriberBuilder
     public void ShouldThrowArgumentExceptionWhenQueueInfrastructureTagIsInvalid(string tagKey)
     {
         // Act + Assert
-        Should.Throw<ArgumentException>(() => Queue.ByConvention(q => q.WithTag(tagKey)));
+        Should.Throw<ArgumentException>(() => QueueDestination.ByConvention(q => q.WithTag(tagKey)));
     }
 }

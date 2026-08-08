@@ -27,7 +27,7 @@ public class WhenRegisteringASubscriberWithTags : IntegrationTestBase
         await AssertQueueTagsExist(tags,
             builder =>
                 builder.ForTopic<SimpleMessage>((queueBuilder) =>
-                    queueBuilder.WithQueue(Queue.Named(QueueName, q =>
+                    queueBuilder.WithQueue(QueueDestination.Named(QueueName, q =>
                     {
                         foreach ((string key, string value) in tags)
                         {
@@ -49,7 +49,7 @@ public class WhenRegisteringASubscriberWithTags : IntegrationTestBase
 
         await AssertQueueTagsExist(tags,
             builder =>
-                builder.ForQueue<SimpleMessage>(Queue.Named(QueueName, q =>
+                builder.ForQueue<SimpleMessage>(QueueDestination.Named(QueueName, q =>
                 {
                     foreach ((string key, string value) in tags)
                     {

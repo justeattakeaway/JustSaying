@@ -11,7 +11,7 @@ namespace JustSaying.Fluent;
 
 /// <summary>
 /// A builder for a queue publication's publish-time behaviour. The destination — which queue, and
-/// (when JustSaying owns it) how to create it — is a <see cref="Queue"/> value supplied at
+/// (when JustSaying owns it) how to create it — is a <see cref="QueueDestination"/> value supplied at
 /// registration; this builder is the same whether the queue is created by JustSaying or already
 /// exists, and exposes no infrastructure configuration. This class cannot be inherited.
 /// </summary>
@@ -20,7 +20,7 @@ namespace JustSaying.Fluent;
 /// </typeparam>
 public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T : class
 {
-    private readonly Queue _destination;
+    private readonly QueueDestination _destination;
 
     private string QueueName { get; set; }
 
@@ -64,7 +64,7 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
     /// Initializes a new instance of the <see cref="QueuePublicationBuilder{T}"/> class.
     /// </summary>
     internal QueuePublicationBuilder()
-        : this(Queue.ByConvention())
+        : this(QueueDestination.ByConvention())
     { }
 
     /// <summary>
@@ -72,14 +72,14 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
     /// specified destination.
     /// </summary>
     /// <param name="destination">The queue the publication targets.</param>
-    internal QueuePublicationBuilder(Queue destination)
+    internal QueuePublicationBuilder(QueueDestination destination)
     {
         _destination = destination ?? throw new ArgumentNullException(nameof(destination));
     }
 
     /// <summary>
     /// Configures the SQS queue name, rather than using the naming convention. Equivalent to
-    /// registering the publication against <see cref="Queue.Named(string)"/>.
+    /// registering the publication against <see cref="QueueDestination.Named(string)"/>.
     /// </summary>
     /// <param name="name">The name of the queue to publish to.</param>
     /// <returns>
@@ -227,7 +227,7 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
         if (QueueName is not null && _destination.Name is not null)
         {
             throw new InvalidOperationException(
-                $"The queue is named both by the {nameof(Queue)} destination ('{_destination.Name}') and {nameof(WithQueueName)} ('{QueueName}'); name it once.");
+                $"The queue is named both by the {nameof(QueueDestination)} destination ('{_destination.Name}') and {nameof(WithQueueName)} ('{QueueName}'); name it once.");
         }
 
         var config = bus.Config;

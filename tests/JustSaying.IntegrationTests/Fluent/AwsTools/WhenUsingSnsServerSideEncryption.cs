@@ -24,7 +24,7 @@ public class WhenUsingSnsServerSideEncryption : IntegrationTestBase
             .ConfigureJustSaying(
                 (builder) => builder.Publications((options) => options.WithQueue<SimpleMessage>(
                         (queue) => queue.WithQueueName(UniqueName))
-                    .WithTopic<SimpleMessage>(Topic.ByConvention(topic => topic.WithEncryption(new ServerSideEncryption { KmsMasterKeyId = masterSnsKeyId })))))
+                    .WithTopic<SimpleMessage>(TopicDestination.ByConvention(topic => topic.WithEncryption(new ServerSideEncryption { KmsMasterKeyId = masterSnsKeyId })))))
             .ConfigureJustSaying(
                 (builder) => builder.Subscriptions((options) => options.ForTopic<SimpleMessage>(topic => topic.WithQueueName(UniqueName))))
             .AddSingleton(handler);

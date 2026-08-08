@@ -72,7 +72,7 @@ public sealed class PublicationsBuilder
     }
 
     /// <summary>
-    /// Configures a publisher for a queue described by a <see cref="Queue"/> destination: named by
+    /// Configures a publisher for a queue described by a <see cref="QueueDestination"/> destination: named by
     /// convention or explicitly (created on startup, with any configured infrastructure), or a
     /// pre-existing queue by URL or ARN (never created).
     /// </summary>
@@ -81,7 +81,7 @@ public sealed class PublicationsBuilder
     /// <typeparam name="T">The type of the message to publish.</typeparam>
     /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="destination"/> is <see langword="null"/>.</exception>
-    public PublicationsBuilder WithQueue<T>(Queue destination, Action<QueuePublicationBuilder<T>> configure = null) where T : class
+    public PublicationsBuilder WithQueue<T>(QueueDestination destination, Action<QueuePublicationBuilder<T>> configure = null) where T : class
     {
         if (destination == null) throw new ArgumentNullException(nameof(destination));
 
@@ -115,7 +115,7 @@ public sealed class PublicationsBuilder
     {
         if (queueArn == null) throw new ArgumentNullException(nameof(queueArn));
 
-        return WithQueue(Queue.FromArn(queueArn), configure);
+        return WithQueue(QueueDestination.FromArn(queueArn), configure);
     }
 
     /// <summary>
@@ -140,7 +140,7 @@ public sealed class PublicationsBuilder
     {
         if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
 
-        return WithQueue(Queue.FromUrl(queueUrl), configure);
+        return WithQueue(QueueDestination.FromUrl(queueUrl), configure);
     }
 
     /// <summary>
@@ -165,7 +165,7 @@ public sealed class PublicationsBuilder
     {
         if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
 
-        return WithQueue(Queue.FromUri(queueUrl), configure);
+        return WithQueue(QueueDestination.FromUri(queueUrl), configure);
     }
 
     /// <summary>
@@ -209,7 +209,7 @@ public sealed class PublicationsBuilder
     }
 
     /// <summary>
-    /// Configures a publisher for a topic described by a <see cref="Topic"/> destination: named by
+    /// Configures a publisher for a topic described by a <see cref="TopicDestination"/> destination: named by
     /// convention or explicitly (created on startup, with any configured infrastructure), or a
     /// pre-existing topic by ARN (never created).
     /// </summary>
@@ -218,7 +218,7 @@ public sealed class PublicationsBuilder
     /// <typeparam name="T">The type of the message to publish.</typeparam>
     /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="destination"/> is <see langword="null"/>.</exception>
-    public PublicationsBuilder WithTopic<T>(Topic destination, Action<TopicPublicationBuilder<T>> configure = null) where T : class
+    public PublicationsBuilder WithTopic<T>(TopicDestination destination, Action<TopicPublicationBuilder<T>> configure = null) where T : class
     {
         if (destination == null) throw new ArgumentNullException(nameof(destination));
 
@@ -243,7 +243,7 @@ public sealed class PublicationsBuilder
     {
         if (topicArn == null) throw new ArgumentNullException(nameof(topicArn));
 
-        return WithTopic(Topic.FromArn(topicArn), configure);
+        return WithTopic(TopicDestination.FromArn(topicArn), configure);
     }
 
     /// <summary>
