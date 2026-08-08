@@ -125,32 +125,32 @@ registration was silently discarded. v9 throws at startup instead:
 
 If you hit this, remove the redundant registration — only one of them was ever taking effect.
 
-## Destinations are values: `Topic` and `Queue`
+## Destinations are values: `TopicDestination` and `QueueDestination`
 
-The fluent registration API is rebuilt around two destination values. A `Topic` or `Queue` says
+The fluent registration API is rebuilt around two destination values. A `TopicDestination` or `QueueDestination` says
 *which* resource a registration targets and — when JustSaying owns it — *how to create it*; the
 registration builders configure publish/read-time behaviour only, and are the same type whether
 the resource is created by JustSaying or already exists:
 
 ```csharp
 p.WithTopic<OrderPlaced>();                                   // by convention, created
-p.WithTopic<OrderPlaced>(Topic.Named("orders"));              // by name, created
-p.WithTopic<OrderPlaced>(Topic.Named("orders", t => t
+p.WithTopic<OrderPlaced>(TopicDestination.Named("orders"));              // by name, created
+p.WithTopic<OrderPlaced>(TopicDestination.Named("orders", t => t
     .WithTag("team", "payments")
     .WithEncryption(masterKeyId)));                           // creation config lives on the value
-p.WithTopic<OrderPlaced>(Topic.FromArn(topicArn));            // pre-existing, never created —
+p.WithTopic<OrderPlaced>(TopicDestination.FromArn(topicArn));            // pre-existing, never created —
                                                               // no creation config to mis-set
 
-s.ForQueue<Refund>(Queue.Named("refunds", q => q
+s.ForQueue<Refund>(QueueDestination.Named("refunds", q => q
     .WithMessageRetention(TimeSpan.FromDays(4))
     .WithNoErrorQueue()));
-s.ForQueue<Refund>(Queue.FromUri(queueUri));
-s.ForQueue(Queue.FromUri(queueUri), q => q                    // multi-type over an existing queue
+s.ForQueue<Refund>(QueueDestination.FromUri(queueUri));
+s.ForQueue(QueueDestination.FromUri(queueUri), q => q                    // multi-type over an existing queue
     .Handling<OrderPlaced>()
     .HandlingCloudEvent<ParcelShipped>("com.example.parcel-shipped"));
 
 s.ForTopic<OrderPlaced>(cfg => cfg
-    .WithQueue(Queue.Named("orders-sub", q => q.WithTag("team", "payments")))
+    .WithQueue(QueueDestination.Named("orders-sub", q => q.WithTag("team", "payments")))
     .WithFilterPolicy(filterPolicyJson)
     .WithSubscriptionGroup("orders"));
 ```
@@ -162,7 +162,7 @@ This restructures the v8 fluent surface:
   `SqsReadConfigurationBuilder` wrappers, and the `TopicAddressPublicationBuilder`/
   `QueueAddressPublicationBuilder`/`QueueAddressSubscriptionBuilder` classes.
 - **Where each knob went:** queue/topic creation settings (retention, visibility timeout,
-  delivery delay, error-queue settings, encryption, tags) → `Topic.Named`/`Queue.Named`/
+  delivery delay, error-queue settings, encryption, tags) → `TopicDestination.Named`/`QueueDestination.Named`/
   `*.ByConvention` configuration; publish-time settings → the builder (`WithSubject`,
   `WithCompression`, `WithRawMessages`, `WithExceptionHandler`); subscription settings on
   `ForTopic` → the builder (`WithRawMessageDelivery`, `WithFilterPolicy`,
@@ -178,9 +178,9 @@ This restructures the v8 fluent surface:
 The CloudEvents registrations take the same values, so they never need per-address variants:
 
 ```csharp
-p.WithCloudEventTopic<ParcelShipped>(Topic.FromArn(topicArn),
+p.WithCloudEventTopic<ParcelShipped>(TopicDestination.FromArn(topicArn),
     "com.example.parcel-shipped", source);
-p.WithCloudEventQueue<OrderCancelled>(Queue.FromUrl(queueUrl),
+p.WithCloudEventQueue<OrderCancelled>(QueueDestination.FromUrl(queueUrl),
     "com.example.order-cancelled", source);
 ```
 

@@ -109,7 +109,7 @@ public sealed class SubscriptionsBuilder
         if (string.IsNullOrEmpty(queueName)) throw new ArgumentException("Parameter cannot be null or empty.", nameof(queueName));
         if (configure == null) throw new ArgumentNullException(nameof(configure));
 
-        var builder = new MultiTypeQueueSubscriptionBuilder(Queue.Named(queueName));
+        var builder = new MultiTypeQueueSubscriptionBuilder(QueueDestination.Named(queueName));
 
         configure(builder);
 
@@ -119,7 +119,7 @@ public sealed class SubscriptionsBuilder
     }
 
     /// <summary>
-    /// Configures a queue subscription for a queue described by a <see cref="Queue"/> destination:
+    /// Configures a queue subscription for a queue described by a <see cref="QueueDestination"/> destination:
     /// named by convention or explicitly (created on startup, with any configured infrastructure), or
     /// a pre-existing queue by URL or ARN (never created).
     /// </summary>
@@ -127,11 +127,11 @@ public sealed class SubscriptionsBuilder
     /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
     /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="destination"/> is <see langword="null"/>.</exception>
-    public SubscriptionsBuilder ForQueue<T>(Queue destination) where T : class
+    public SubscriptionsBuilder ForQueue<T>(QueueDestination destination) where T : class
         => ForQueue<T>(destination, null);
 
     /// <summary>
-    /// Configures a queue subscription for a queue described by a <see cref="Queue"/> destination:
+    /// Configures a queue subscription for a queue described by a <see cref="QueueDestination"/> destination:
     /// named by convention or explicitly (created on startup, with any configured infrastructure), or
     /// a pre-existing queue by URL or ARN (never created).
     /// </summary>
@@ -140,7 +140,7 @@ public sealed class SubscriptionsBuilder
     /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
     /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="destination"/> is <see langword="null"/>.</exception>
-    public SubscriptionsBuilder ForQueue<T>(Queue destination, Action<QueueSubscriptionBuilder<T>> configure) where T : class
+    public SubscriptionsBuilder ForQueue<T>(QueueDestination destination, Action<QueueSubscriptionBuilder<T>> configure) where T : class
     {
         if (destination == null) throw new ArgumentNullException(nameof(destination));
 
@@ -154,7 +154,7 @@ public sealed class SubscriptionsBuilder
     }
 
     /// <summary>
-    /// Configures a subscription to a single queue — described by a <see cref="Queue"/> destination —
+    /// Configures a subscription to a single queue — described by a <see cref="QueueDestination"/> destination —
     /// that carries more than one message type. The type of each inbound message is resolved from a
     /// discriminator on the wire (by default the SNS <c>Subject</c>), so each message is dispatched to
     /// the handler registered for its own type.
@@ -163,7 +163,7 @@ public sealed class SubscriptionsBuilder
     /// <param name="configure">A delegate used to register the message types the queue carries.</param>
     /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="destination"/> or <paramref name="configure"/> is <see langword="null"/>.</exception>
-    public SubscriptionsBuilder ForQueue(Queue destination, Action<MultiTypeQueueSubscriptionBuilder> configure)
+    public SubscriptionsBuilder ForQueue(QueueDestination destination, Action<MultiTypeQueueSubscriptionBuilder> configure)
     {
         if (destination == null) throw new ArgumentNullException(nameof(destination));
         if (configure == null) throw new ArgumentNullException(nameof(configure));
@@ -188,7 +188,7 @@ public sealed class SubscriptionsBuilder
     {
         if (queueArn == null) throw new ArgumentNullException(nameof(queueArn));
 
-        return ForQueue(Queue.FromArn(queueArn), configure);
+        return ForQueue(QueueDestination.FromArn(queueArn), configure);
     }
 
     /// <summary>
@@ -203,7 +203,7 @@ public sealed class SubscriptionsBuilder
     {
         if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
 
-        return ForQueue(Queue.FromUrl(queueUrl, regionName), configure);
+        return ForQueue(QueueDestination.FromUrl(queueUrl, regionName), configure);
     }
 
     /// <summary>
@@ -218,7 +218,7 @@ public sealed class SubscriptionsBuilder
     {
         if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
 
-        return ForQueue(Queue.FromUri(queueUrl, regionName), configure);
+        return ForQueue(QueueDestination.FromUri(queueUrl, regionName), configure);
     }
 
     /// <summary>
@@ -234,18 +234,18 @@ public sealed class SubscriptionsBuilder
     }
 
     /// <summary>
-    /// Configures a topic subscription for a topic described by a <see cref="Topic"/> destination
+    /// Configures a topic subscription for a topic described by a <see cref="TopicDestination"/> destination
     /// (named by convention or explicitly).
     /// </summary>
     /// <param name="topic">The topic to subscribe to.</param>
     /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
     /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="topic"/> is <see langword="null"/>.</exception>
-    public SubscriptionsBuilder ForTopic<T>(Topic topic) where T : class
+    public SubscriptionsBuilder ForTopic<T>(TopicDestination topic) where T : class
         => ForTopic<T>(topic, null);
 
     /// <summary>
-    /// Configures a topic subscription for a topic described by a <see cref="Topic"/> destination
+    /// Configures a topic subscription for a topic described by a <see cref="TopicDestination"/> destination
     /// (named by convention or explicitly).
     /// </summary>
     /// <param name="topic">The topic to subscribe to.</param>
@@ -253,7 +253,7 @@ public sealed class SubscriptionsBuilder
     /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
     /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="topic"/> is <see langword="null"/>.</exception>
-    public SubscriptionsBuilder ForTopic<T>(Topic topic, Action<TopicSubscriptionBuilder<T>> configure) where T : class
+    public SubscriptionsBuilder ForTopic<T>(TopicDestination topic, Action<TopicSubscriptionBuilder<T>> configure) where T : class
     {
         if (topic == null) throw new ArgumentNullException(nameof(topic));
 

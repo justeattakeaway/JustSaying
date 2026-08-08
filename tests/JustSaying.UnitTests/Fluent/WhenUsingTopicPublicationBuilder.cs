@@ -27,6 +27,6 @@ public class WhenUsingTopicPublicationBuilder
     public void ShouldThrowArgumentExceptionWhenTopicInfrastructureTagIsInvalid(string tagKey)
     {
         // Act + Assert
-        Should.Throw<ArgumentException>(() => Topic.ByConvention(t => t.WithTag(tagKey)));
+        Should.Throw<ArgumentException>(() => TopicDestination.ByConvention(t => t.WithTag(tagKey)));
     }
 }
