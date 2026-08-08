@@ -11,35 +11,32 @@ using Microsoft.Extensions.Logging;
 namespace JustSaying.Fluent;
 
 /// <summary>
-/// A class representing a builder for a topic subscription. This class cannot be inherited.
+/// A builder for a topic subscription: a queue owned by JustSaying, subscribed to an SNS topic. The
+/// topic is a <see cref="Topic"/> value supplied at registration (named by convention or
+/// explicitly); the queue is a <see cref="Queue"/> value configured via <see cref="WithQueue(Queue)"/>.
+/// This builder configures the subscription and read-time behaviour only. This class cannot be
+/// inherited.
 /// </summary>
 /// <typeparam name="T">
 /// The type of the message.
 /// </typeparam>
 public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T> where T : class
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TopicSubscriptionBuilder{T}"/> class.
-    /// </summary>
-    internal TopicSubscriptionBuilder()
-    { }
+    private readonly Topic _topic;
 
-    /// <summary>
-    /// Gets or sets the topic name.
-    /// </summary>
-    private string TopicName { get; set; } = string.Empty;
+    private Queue _queue = Queue.ByConvention();
+
+    private string TopicName { get; set; }
 
     private string QueueName { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Gets or sets a delegate to a method to use to configure SNS reads.
-    /// </summary>
-    private Action<SqsReadConfiguration> ConfigureReads { get; set; }
+    private string SubscriptionGroupName { get; set; }
 
-    /// <summary>
-    /// Gets the tags to add to the queue.
-    /// </summary>
-    private Dictionary<string, string> Tags { get; } = new(StringComparer.Ordinal);
+    private bool RawMessageDelivery { get; set; }
+
+    private string FilterPolicy { get; set; }
+
+    private string TopicSourceAccount { get; set; }
 
     private Action<HandlerMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
@@ -47,6 +44,23 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
     /// Gets or sets a serializer that overrides the per-type default from the bus's serialization factory.
     /// </summary>
     private IMessageBodySerializer<T> MessageBodySerializer { get; set; }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TopicSubscriptionBuilder{T}"/> class.
+    /// </summary>
+    internal TopicSubscriptionBuilder()
+        : this(Topic.ByConvention())
+    { }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TopicSubscriptionBuilder{T}"/> class for the
+    /// specified topic.
+    /// </summary>
+    /// <param name="topic">The topic to subscribe to.</param>
+    internal TopicSubscriptionBuilder(Topic topic)
+    {
+        _topic = topic ?? throw new ArgumentNullException(nameof(topic));
+    }
 
     /// <summary>
     /// Configures that the <see cref="ITopicNamingConvention"/> will create the topic name that should be used.
@@ -74,6 +88,22 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
     }
 
     /// <summary>
+    /// Configures the queue that will be subscribed to, including (when named) how it is created.
+    /// </summary>
+    /// <param name="queue">The queue to subscribe to the topic.</param>
+    /// <returns>
+    /// The current <see cref="TopicSubscriptionBuilder{T}"/>.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="queue"/> is <see langword="null"/>.
+    /// </exception>
+    public TopicSubscriptionBuilder<T> WithQueue(Queue queue)
+    {
+        _queue = queue ?? throw new ArgumentNullException(nameof(queue));
+        return this;
+    }
+
+    /// <summary>
     /// Configures the name of the topic that this queue will be subscribed to.
     /// </summary>
     /// <param name="name">The name of the topic subscribe to.</param>
@@ -90,44 +120,50 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
     }
 
     /// <summary>
-    /// Configures the SNS read configuration.
+    /// Configures the subscription group this subscription's reads are coordinated under. Defaults to
+    /// the queue name.
     /// </summary>
-    /// <param name="configure">A delegate to a method to use to configure SNS reads.</param>
-    /// <returns>
-    /// The current <see cref="TopicSubscriptionBuilder{T}"/>.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">
-    /// <paramref name="configure"/> is <see langword="null"/>.
-    /// </exception>
-    public TopicSubscriptionBuilder<T> WithReadConfiguration(
-        Action<SqsReadConfigurationBuilder> configure)
+    /// <param name="subscriptionGroupName">The name of the subscription group.</param>
+    /// <returns>The current <see cref="TopicSubscriptionBuilder{T}"/>.</returns>
+    /// <exception cref="ArgumentException"><paramref name="subscriptionGroupName"/> is <see langword="null"/> or empty.</exception>
+    public TopicSubscriptionBuilder<T> WithSubscriptionGroup(string subscriptionGroupName)
     {
-        if (configure == null)
-        {
-            throw new ArgumentNullException(nameof(configure));
-        }
+        if (string.IsNullOrEmpty(subscriptionGroupName)) throw new ArgumentException("Parameter cannot be null or empty.", nameof(subscriptionGroupName));
 
-        var builder = new SqsReadConfigurationBuilder();
-
-        configure(builder);
-
-        ConfigureReads = builder.Configure;
+        SubscriptionGroupName = subscriptionGroupName;
         return this;
     }
 
     /// <summary>
-    /// Configures the SNS read configuration.
+    /// Configures the SNS subscription for raw message delivery: the message body is delivered to the
+    /// queue verbatim, without the SNS notification wrapper.
     /// </summary>
-    /// <param name="configure">A delegate to a method to use to configure SNS reads.</param>
-    /// <returns>
-    /// The current <see cref="TopicSubscriptionBuilder{T}"/>.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">
-    /// <paramref name="configure"/> is <see langword="null"/>.
-    /// </exception>
-    public TopicSubscriptionBuilder<T> WithReadConfiguration(Action<SqsReadConfiguration> configure)
+    /// <returns>The current <see cref="TopicSubscriptionBuilder{T}"/>.</returns>
+    public TopicSubscriptionBuilder<T> WithRawMessageDelivery()
     {
-        ConfigureReads = configure ?? throw new ArgumentNullException(nameof(configure));
+        RawMessageDelivery = true;
+        return this;
+    }
+
+    /// <summary>
+    /// Configures an SNS subscription filter policy, so only matching messages are delivered to the queue.
+    /// </summary>
+    /// <param name="filterPolicy">The SNS filter policy, as JSON.</param>
+    /// <returns>The current <see cref="TopicSubscriptionBuilder{T}"/>.</returns>
+    public TopicSubscriptionBuilder<T> WithFilterPolicy(string filterPolicy)
+    {
+        FilterPolicy = filterPolicy;
+        return this;
+    }
+
+    /// <summary>
+    /// Configures the AWS account that owns the topic, for a cross-account subscription.
+    /// </summary>
+    /// <param name="accountId">The AWS account id that owns the topic.</param>
+    /// <returns>The current <see cref="TopicSubscriptionBuilder{T}"/>.</returns>
+    public TopicSubscriptionBuilder<T> WithTopicSourceAccount(string accountId)
+    {
+        TopicSourceAccount = accountId;
         return this;
     }
 
@@ -153,43 +189,6 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
         return this;
     }
 
-    /// <summary>
-    /// Creates a tag with no value that will be assigned to the SQS queue.
-    /// </summary>
-    /// <param name="key">The key for the tag.</param>
-    /// <returns>
-    /// The current <see cref="TopicSubscriptionBuilder{T}"/>.
-    /// </returns>
-    /// <remarks>Tag keys are case-sensitive. A new tag with a key identical to that of an existing one will overwrite it.</remarks>
-    /// <exception cref="ArgumentException">
-    /// <paramref name="key"/> is <see langword="null"/> or whitespace.
-    /// </exception>
-    public TopicSubscriptionBuilder<T> WithTag(string key) => WithTag(key, null);
-
-    /// <summary>
-    /// Creates a tag with a value that will be assigned to the SQS queue.
-    /// </summary>
-    /// <param name="key">The key for the tag.</param>
-    /// <param name="value">The value associated with this tag.</param>
-    /// <returns>
-    /// The current <see cref="TopicSubscriptionBuilder{T}"/>.
-    /// </returns>
-    /// <remarks>Tag keys are case-sensitive. A new tag with a key identical to that of an existing one will overwrite it.</remarks>
-    /// <exception cref="ArgumentException">
-    /// <paramref name="key"/> is <see langword="null"/> or whitespace.
-    /// </exception>
-    public TopicSubscriptionBuilder<T> WithTag(string key, string value)
-    {
-        if (string.IsNullOrWhiteSpace(key))
-        {
-            throw new ArgumentException("A queue tag key cannot be null or only whitespace", nameof(key));
-        }
-
-        Tags.Add(key, value ?? string.Empty);
-
-        return this;
-    }
-
     /// <inheritdoc />
     void ISubscriptionBuilder<T>.Configure(
         JustSayingBus bus,
@@ -201,21 +200,54 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
     {
         var logger = loggerFactory.CreateLogger<TopicSubscriptionBuilder<T>>();
 
+        if (_topic.IsAddress)
+        {
+            throw new InvalidOperationException(
+                $"A topic subscription creates the topic if needed, so it cannot target a topic by ARN; use {nameof(Topic)}.{nameof(Topic.Named)} or the naming convention.");
+        }
+
+        if (_topic.Infrastructure is not null)
+        {
+            throw new InvalidOperationException(
+                "A topic subscription does not create the topic's infrastructure configuration; configure it on the publication side.");
+        }
+
+        if (_queue.IsAddress)
+        {
+            throw new InvalidOperationException(
+                $"A topic subscription creates and subscribes its own queue, so it cannot target a queue by URL or ARN; use {nameof(Queue)}.{nameof(Queue.Named)} or the naming convention.");
+        }
+
+        if (TopicName is not null && _topic.Name is not null)
+        {
+            throw new InvalidOperationException(
+                $"The topic is named both by the {nameof(Topic)} destination ('{_topic.Name}') and {nameof(WithTopicName)} ('{TopicName}'); name it once.");
+        }
+
+        if (QueueName is { Length: > 0 } && _queue.Name is not null)
+        {
+            throw new InvalidOperationException(
+                $"The queue is named both by the {nameof(Queue)} destination ('{_queue.Name}') and {nameof(WithQueueName)} ('{QueueName}'); name it once.");
+        }
+
         var subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic)
         {
-            QueueName = QueueName,
-            TopicName = TopicName,
-            Tags = Tags
+            QueueName = QueueName is { Length: > 0 } ? QueueName : _queue.Name ?? string.Empty,
+            TopicName = TopicName ?? _topic.Name ?? string.Empty,
+            Tags = _queue.Infrastructure?.Tags ?? new Dictionary<string, string>(StringComparer.Ordinal),
+            RawMessageDelivery = RawMessageDelivery,
+            FilterPolicy = FilterPolicy,
+            TopicSourceAccount = TopicSourceAccount,
         };
+
+        _queue.Infrastructure?.Apply(subscriptionConfig);
 
         var config = bus.Config;
         var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
 
-        ConfigureReads?.Invoke(subscriptionConfig);
-
         subscriptionConfig.ApplyTopicNamingConvention<T>(config.TopicNamingConvention);
         subscriptionConfig.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
-        subscriptionConfig.SubscriptionGroupName ??= subscriptionConfig.QueueName;
+        subscriptionConfig.SubscriptionGroupName = SubscriptionGroupName ?? subscriptionConfig.QueueName;
         subscriptionConfig.PublishEndpoint = subscriptionConfig.TopicName;
         subscriptionConfig.Validate();
 

@@ -125,38 +125,62 @@ registration was silently discarded. v9 throws at startup instead:
 
 If you hit this, remove the redundant registration — only one of them was ever taking effect.
 
-## Unified destination addressing
+## Destinations are values: `Topic` and `Queue`
 
-`TopicAddress` and `QueueAddress` are now public, and the main registration methods accept them
-directly — so how a destination is addressed is a value, not a separate method family. Pass an
-address for pre-existing infrastructure (never created by JustSaying), a name to create it
-explicitly, or nothing to fall back to the naming conventions:
+The fluent registration API is rebuilt around two destination values. A `Topic` or `Queue` says
+*which* resource a registration targets and — when JustSaying owns it — *how to create it*; the
+registration builders configure publish/read-time behaviour only, and are the same type whether
+the resource is created by JustSaying or already exists:
 
 ```csharp
 p.WithTopic<OrderPlaced>();                                   // by convention, created
-p.WithTopic<OrderPlaced>(c => c.WithTopicName("orders"));     // by name, created
-p.WithTopic<OrderPlaced>(TopicAddress.FromArn(topicArn));     // pre-existing, never created
+p.WithTopic<OrderPlaced>(Topic.Named("orders"));              // by name, created
+p.WithTopic<OrderPlaced>(Topic.Named("orders", t => t
+    .WithTag("team", "payments")
+    .WithEncryption(masterKeyId)));                           // creation config lives on the value
+p.WithTopic<OrderPlaced>(Topic.FromArn(topicArn));            // pre-existing, never created —
+                                                              // no creation config to mis-set
 
-p.WithQueue<Refund>(QueueAddress.FromUri(queueUri));
-
-s.ForQueue<Refund>(QueueAddress.FromUri(queueUri));
-s.ForQueue(QueueAddress.FromUri(queueUri), q => q             // multi-type over an existing queue
+s.ForQueue<Refund>(Queue.Named("refunds", q => q
+    .WithMessageRetention(TimeSpan.FromDays(4))
+    .WithNoErrorQueue()));
+s.ForQueue<Refund>(Queue.FromUri(queueUri));
+s.ForQueue(Queue.FromUri(queueUri), q => q                    // multi-type over an existing queue
     .Handling<OrderPlaced>()
     .HandlingCloudEvent<ParcelShipped>("com.example.parcel-shipped"));
+
+s.ForTopic<OrderPlaced>(cfg => cfg
+    .WithQueue(Queue.Named("orders-sub", q => q.WithTag("team", "payments")))
+    .WithFilterPolicy(filterPolicyJson)
+    .WithSubscriptionGroup("orders"));
 ```
 
-The address overloads keep the slim configuration surface: their builder types expose only
-publish/read-time settings, so infrastructure options (tags, encryption, retention, …) are not
-reachable — the compiler enforces what the split `WithTopicArn`/`ForQueueUrl` families used to.
-Those methods still exist and now delegate to the unified overloads; use whichever style you
-prefer.
+This restructures the v8 fluent surface:
+
+- **Removed:** `WithWriteConfiguration(...)`, `WithReadConfiguration(...)`, `WithTag(...)` on the
+  registration builders, the `SnsWriteConfigurationBuilder`/`SqsWriteConfigurationBuilder`/
+  `SqsReadConfigurationBuilder` wrappers, and the `TopicAddressPublicationBuilder`/
+  `QueueAddressPublicationBuilder`/`QueueAddressSubscriptionBuilder` classes.
+- **Where each knob went:** queue/topic creation settings (retention, visibility timeout,
+  delivery delay, error-queue settings, encryption, tags) → `Topic.Named`/`Queue.Named`/
+  `*.ByConvention` configuration; publish-time settings → the builder (`WithSubject`,
+  `WithCompression`, `WithRawMessages`, `WithExceptionHandler`); subscription settings on
+  `ForTopic` → the builder (`WithRawMessageDelivery`, `WithFilterPolicy`,
+  `WithTopicSourceAccount`); read-time settings → the builder (`WithSubscriptionGroup`,
+  `WithRawMessageDelivery`).
+- **Kept:** `WithTopicArn<T>`, `WithQueueArn/Url/Uri<T>`, `ForQueueArn/Url/Uri<T>` remain, now
+  delegating to the unified methods; their configure lambdas are retyped to the merged builders,
+  which carry every member the old address builders had — most v8 call sites recompile unchanged.
+- **Now works everywhere:** publish exception handlers apply to created topics too (previously
+  the fluent create path silently dropped them), and compression consistently falls back to the
+  bus-wide default options in every mode.
 
 The CloudEvents registrations take the same values, so they never need per-address variants:
 
 ```csharp
-p.WithCloudEventTopic<ParcelShipped>(TopicAddress.FromArn(topicArn),
+p.WithCloudEventTopic<ParcelShipped>(Topic.FromArn(topicArn),
     "com.example.parcel-shipped", source);
-p.WithCloudEventQueue<OrderCancelled>(QueueAddress.FromUrl(queueUrl),
+p.WithCloudEventQueue<OrderCancelled>(Queue.FromUrl(queueUrl),
     "com.example.order-cancelled", source);
 ```
 

@@ -19,7 +19,7 @@ public class WhenAMessageIsPublishedToATopicWithRemovedSubject : IntegrationTest
                 (builder) =>
                 {
                     builder.Client((options) => options.WithClientFactory(() => awsClientFactory));
-                    builder.WithLoopbackTopicAndPublicationOptions<SimpleMessage>(UniqueName, configure => configure.WithWriteConfiguration(wc => wc.Subject = null));
+                    builder.WithLoopbackTopicAndPublicationOptions<SimpleMessage>(UniqueName, configure => configure.WithSubject(null));
                 })
             .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 

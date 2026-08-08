@@ -18,20 +18,15 @@ namespace JustSaying.Fluent;
 /// </summary>
 public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<object>
 {
-    private readonly string _queueName;
-    private readonly QueueAddress _queueAddress;
+    private readonly Queue _destination;
     private readonly List<IMessageTypeRegistration> _registrations = [];
     private readonly List<IMessageTypeDiscriminator> _discriminators = [];
-    private Action<SqsReadConfiguration> _configureReads;
+    private string _subscriptionGroupName;
+    private bool _rawMessageDelivery;
 
-    internal MultiTypeQueueSubscriptionBuilder(string queueName)
+    internal MultiTypeQueueSubscriptionBuilder(Queue destination)
     {
-        _queueName = queueName ?? throw new ArgumentNullException(nameof(queueName));
-    }
-
-    internal MultiTypeQueueSubscriptionBuilder(QueueAddress queueAddress)
-    {
-        _queueAddress = queueAddress ?? throw new ArgumentNullException(nameof(queueAddress));
+        _destination = destination ?? throw new ArgumentNullException(nameof(destination));
     }
 
     /// <summary>
@@ -125,13 +120,28 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
     }
 
     /// <summary>
-    /// Configures the SQS read configuration for the queue.
+    /// Configures the subscription group this subscription's reads are coordinated under. Defaults to
+    /// the queue name.
     /// </summary>
-    /// <param name="configure">A delegate to configure SQS reads.</param>
+    /// <param name="subscriptionGroupName">The name of the subscription group.</param>
     /// <returns>The current <see cref="MultiTypeQueueSubscriptionBuilder"/>.</returns>
-    public MultiTypeQueueSubscriptionBuilder WithReadConfiguration(Action<SqsReadConfiguration> configure)
+    /// <exception cref="ArgumentException"><paramref name="subscriptionGroupName"/> is <see langword="null"/> or empty.</exception>
+    public MultiTypeQueueSubscriptionBuilder WithSubscriptionGroup(string subscriptionGroupName)
     {
-        _configureReads = configure ?? throw new ArgumentNullException(nameof(configure));
+        if (string.IsNullOrEmpty(subscriptionGroupName)) throw new ArgumentException("Parameter cannot be null or empty.", nameof(subscriptionGroupName));
+
+        _subscriptionGroupName = subscriptionGroupName;
+        return this;
+    }
+
+    /// <summary>
+    /// Declares that this queue's message bodies arrive verbatim, without JustSaying's
+    /// <c>{ "Subject", "Message" }</c> envelope or the SNS notification wrapper.
+    /// </summary>
+    /// <returns>The current <see cref="MultiTypeQueueSubscriptionBuilder"/>.</returns>
+    public MultiTypeQueueSubscriptionBuilder WithRawMessageDelivery()
+    {
+        _rawMessageDelivery = true;
         return this;
     }
 
@@ -155,13 +165,6 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
 
         var logger = loggerFactory.CreateLogger<MultiTypeQueueSubscriptionBuilder>();
 
-        var subscriptionConfig = new SqsReadConfiguration(SubscriptionType.PointToPoint)
-        {
-            QueueName = _queueName,
-        };
-
-        _configureReads?.Invoke(subscriptionConfig);
-
         // The discriminator value is what routes an inbound message to a serializer, so a blank or
         // duplicated one is a misconfiguration that would otherwise silently deserialize messages as the
         // wrong type. Resolve the names up front, before any queue is created or looked up.
@@ -174,7 +177,7 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
             if (string.IsNullOrWhiteSpace(typeName))
             {
                 throw new InvalidOperationException(
-                    $"The message type '{registration.MessageType.FullName}' registered on the multi-type queue subscription for '{_queueName ?? _queueAddress?.QueueUrl?.ToString()}' " +
+                    $"The message type '{registration.MessageType.FullName}' registered on the multi-type queue subscription for '{_destination.Name ?? _destination.Address?.QueueUrl?.ToString()}' " +
                     $"resolved to a null or empty type name. Pass an explicit name to {nameof(Handling)}<T>(typeName).");
             }
 
@@ -182,7 +185,7 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
             {
                 throw new InvalidOperationException(
                     $"The message types '{existingType.FullName}' and '{registration.MessageType.FullName}' registered on the multi-type queue subscription for " +
-                    $"'{_queueName ?? _queueAddress?.QueueUrl?.ToString()}' both resolve to the type name '{typeName}'. Each type on a queue must have a distinct name; " +
+                    $"'{_destination.Name ?? _destination.Address?.QueueUrl?.ToString()}' both resolve to the type name '{typeName}'. Each type on a queue must have a distinct name; " +
                     $"pass an explicit name to {nameof(Handling)}<T>(typeName).");
             }
 
@@ -191,11 +194,31 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
         }
 
         ISqsQueue sqsQueue;
-        if (_queueAddress is null)
+        string queueName;
+        if (_destination.IsAddress)
+        {
+            // A pre-existing queue: never created, so only the read-time settings apply.
+            var sqsClient = awsClientFactoryProxy
+                .GetAwsClientFactory()
+                .GetSqsClient(Amazon.RegionEndpoint.GetBySystemName(_destination.Address.RegionName));
+
+            var queue = new QueueAddressQueue(_destination.Address, sqsClient);
+            sqsQueue = queue;
+            queueName = queue.QueueName;
+        }
+        else
         {
             // The queue name is explicit for a multi-type subscription, so no naming convention is applied.
-            subscriptionConfig.QueueName = _queueName;
-            subscriptionConfig.SubscriptionGroupName ??= subscriptionConfig.QueueName;
+            var subscriptionConfig = new SqsReadConfiguration(SubscriptionType.PointToPoint)
+            {
+                QueueName = _destination.Name,
+                Tags = _destination.Infrastructure?.Tags ?? new Dictionary<string, string>(StringComparer.Ordinal),
+                RawMessageDelivery = _rawMessageDelivery,
+            };
+
+            _destination.Infrastructure?.Apply(subscriptionConfig);
+
+            subscriptionConfig.SubscriptionGroupName = _subscriptionGroupName ?? subscriptionConfig.QueueName;
             subscriptionConfig.Validate();
 
             var config = bus.Config;
@@ -204,18 +227,7 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
             var queue = creator.EnsureQueueExists(region, subscriptionConfig);
             bus.AddStartupTask(queue.StartupTask);
             sqsQueue = queue.Queue;
-        }
-        else
-        {
-            // A pre-existing queue: never created, so only the read-time settings apply.
-            var sqsClient = awsClientFactoryProxy
-                .GetAwsClientFactory()
-                .GetSqsClient(Amazon.RegionEndpoint.GetBySystemName(_queueAddress.RegionName));
-
-            var queue = new QueueAddressQueue(_queueAddress, sqsClient);
-            subscriptionConfig.QueueName = queue.QueueName;
-            subscriptionConfig.SubscriptionGroupName ??= queue.QueueName;
-            sqsQueue = queue;
+            queueName = subscriptionConfig.QueueName;
         }
 
         var serializersByName = new Dictionary<string, IMessageBodySerializer>(StringComparer.Ordinal);
@@ -230,15 +242,15 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
             : [new SubjectMessageTypeDiscriminator()];
         var serializerResolver = new DiscriminatingInboundMessageSerializerResolver(discriminators, serializersByName);
 
-        bus.AddQueue(subscriptionConfig.SubscriptionGroupName, new SqsSource
+        bus.AddQueue(_subscriptionGroupName ?? queueName, new SqsSource
         {
-            MessageConverter = new InboundMessageConverter(serializerResolver, bus.CompressionRegistry, subscriptionConfig.RawMessageDelivery),
+            MessageConverter = new InboundMessageConverter(serializerResolver, bus.CompressionRegistry, _rawMessageDelivery),
             SqsQueue = sqsQueue,
         });
 
         logger.LogInformation(
             "Created multi-type SQS subscriber on queue '{QueueName}' handling {MessageTypeCount} message types.",
-            subscriptionConfig.QueueName,
+            queueName,
             _registrations.Count);
     }
 
