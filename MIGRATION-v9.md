@@ -75,8 +75,14 @@ services.AddJustSayingCloudEvents();
 // publications — only the CloudEvents registration writes CloudEvents
 p.WithTopic<OrderPlaced>();                                       // legacy (Message-derived)
 p.WithTopic<PaymentTaken>();                                      // plain JSON POCO
-p.WithCloudEvent<ParcelShipped>("com.example.parcel-shipped",
+p.WithCloudEventTopic<ParcelShipped>("com.example.parcel-shipped",
     source: new Uri("https://orders.example.com"));               // CloudEvents
+
+// point-to-point queue publications have a matching registration; the CloudEvents
+// serializer is self-describing, so the envelope goes to the queue verbatim
+// (no { "Subject", "Message" } wrapper)
+p.WithCloudEventQueue<OrderCancelled>("com.example.order-cancelled",
+    source: new Uri("https://orders.example.com"));
 
 // subscriptions — one queue can mix native and CloudEvents messages
 s.ForQueue("orders", q => q
