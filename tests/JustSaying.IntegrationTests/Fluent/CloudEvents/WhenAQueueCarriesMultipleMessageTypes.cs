@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Amazon.SQS.Model;
 using JustSaying.CloudEvents;
 using JustSaying.Fluent;
@@ -23,6 +24,15 @@ public class WhenAQueueCarriesMultipleMessageTypes : IntegrationTestBase
     public sealed class OrderCancelled
     {
         public string Reason { get; set; }
+    }
+
+    /// <summary>A native payload whose own domain data includes a <c>type</c> member.</summary>
+    public sealed class OrderAmended
+    {
+        public string OrderId { get; set; }
+
+        [JsonPropertyName("type")]
+        public string Type { get; set; }
     }
 
     [Test]
@@ -255,6 +265,74 @@ public class WhenAQueueCarriesMultipleMessageTypes : IntegrationTestBase
         exception.Message.ShouldContain(nameof(OrderPlaced));
 
         await Task.CompletedTask;
+    }
+
+    [Test]
+    public async Task Then_A_Native_Payload_With_Its_Own_Type_Member_Is_Not_Mistaken_For_A_CloudEvent()
+    {
+        // Arrange - the same mixed queue, but the CloudEvents registration is added first (so its
+        // discriminator is tried first) and the native payload carries a `type` member of its own whose
+        // value collides with the registered CloudEvents type. Routing must not depend on that.
+        const string cancelledType = "com.example.orders.order.cancelled";
+
+        var amendedHandled = new TaskCompletionSource<OrderAmended>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var cancelledHandled = new TaskCompletionSource<CloudEvent<OrderCancelled>>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var amendedHandler = Substitute.For<IHandlerAsync<OrderAmended>>();
+        amendedHandler.Handle(Arg.Any<OrderAmended>())
+            .Returns(true)
+            .AndDoes(call => amendedHandled.TrySetResult(call.Arg<OrderAmended>()));
+
+        var cancelledHandler = Substitute.For<IHandlerAsync<CloudEvent<OrderCancelled>>>();
+        cancelledHandler.Handle(Arg.Any<CloudEvent<OrderCancelled>>())
+            .Returns(true)
+            .AndDoes(call => cancelledHandled.TrySetResult(call.Arg<CloudEvent<OrderCancelled>>()));
+
+        var services = GivenJustSaying()
+            .ConfigureJustSaying(builder => builder
+                .Publications(p => p.WithQueue<OrderAmended>(o => o.WithQueueName(UniqueName)))
+                .Subscriptions(s => s.ForQueue(UniqueName, q => q
+                    .HandlingCloudEvent<OrderCancelled>(cancelledType)
+                    .Handling<OrderAmended>())))
+            .AddSingleton(amendedHandler)
+            .AddSingleton(cancelledHandler);
+
+        services.AddJustSayingCloudEvents();
+
+        await WhenAsync(
+            services,
+            async (publisher, listener, cancellationToken) =>
+            {
+                await listener.StartAsync(cancellationToken);
+                await publisher.StartAsync(cancellationToken);
+
+                // Act
+                await publisher.PublishAsync(
+                    new OrderAmended { OrderId = "order-1", Type = cancelledType }, cancellationToken);
+
+                var sqs = CreateClientFactory().GetSqsClient(Region);
+                var queueUrl = (await sqs.GetQueueUrlAsync(UniqueName, cancellationToken)).QueueUrl;
+                var envelope = $$"""
+                    {
+                      "specversion": "1.0",
+                      "id": "{{Guid.NewGuid()}}",
+                      "source": "https://orders.example.com",
+                      "type": "{{cancelledType}}",
+                      "time": "{{DateTimeOffset.UtcNow:O}}",
+                      "datacontenttype": "application/json",
+                      "data": { "Reason": "out-of-stock" }
+                    }
+                    """;
+                await sqs.SendMessageAsync(new SendMessageRequest { QueueUrl = queueUrl, MessageBody = envelope }, cancellationToken);
+
+                // Assert - the native payload went to its own handler (routed by Subject), and the real
+                // CloudEvent still went to the CloudEvents handler.
+                var amended = await amendedHandled.Task.WaitAsync(cancellationToken);
+                amended.OrderId.ShouldBe("order-1");
+                amended.Type.ShouldBe(cancelledType);
+
+                (await cancelledHandled.Task.WaitAsync(cancellationToken)).Data.Reason.ShouldBe("out-of-stock");
+            });
     }
 
     [Test]

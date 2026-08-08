@@ -179,12 +179,15 @@ public static class PublicationsBuilderCloudEventExtensions
         if (destination is null) throw new ArgumentNullException(nameof(destination));
         if (string.IsNullOrEmpty(type)) throw new ArgumentException("Parameter cannot be null or empty.", nameof(type));
 
-        // Both shapes publish to the same destination, so no name resolution is involved at all.
         publications.WithTopic<T>(destination, builder =>
             builder.SerializerOverride = resolver => resolver.ResolveCloudEventSerializationFactory().GetSerializer<T>(type, source));
 
         publications.WithTopic<CloudEvent<T>>(destination, builder =>
         {
+            // A destination named by convention is resolved per registration, so the envelope would
+            // otherwise be named after CloudEvent<T> and both shapes would no longer share a topic.
+            // An explicit name or an ARN ignores this resolver.
+            builder.TopicNameResolver = convention => convention.TopicName<T>();
             builder.SubjectResolver = registry => registry.GetLogicalName(typeof(T));
             builder.SerializerOverride = resolver => resolver.ResolveCloudEventSerializationFactory().GetEnvelopeSerializer<T>(type, source);
         });
@@ -230,6 +233,10 @@ public static class PublicationsBuilderCloudEventExtensions
 
         publications.WithQueue<CloudEvent<T>>(destination, builder =>
         {
+            // A destination named by convention is resolved per registration, so the envelope would
+            // otherwise be named after CloudEvent<T> and both shapes would no longer share a queue.
+            // An explicit name, a URL or an ARN ignores this resolver.
+            builder.QueueNameResolver = convention => convention.QueueName<T>();
             builder.SubjectResolver = registry => registry.GetLogicalName(typeof(T));
             builder.SerializerOverride = resolver => resolver.ResolveCloudEventSerializationFactory().GetEnvelopeSerializer<T>(type, source);
         });
