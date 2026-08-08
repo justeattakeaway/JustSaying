@@ -1,7 +1,4 @@
 JustSaying.Fluent.PublicationsBuilder.WithPublishMiddleware<TMiddleware>() -> JustSaying.Fluent.PublicationsBuilder
-JustSaying.Fluent.PublicationsBuilder.WithQueueArn<T>(string queueArn, System.Action<JustSaying.Fluent.QueueAddressPublicationBuilder<T>> configure) -> JustSaying.Fluent.PublicationsBuilder
-JustSaying.Fluent.PublicationsBuilder.WithQueueUri<T>(System.Uri queueUrl, System.Action<JustSaying.Fluent.QueueAddressPublicationBuilder<T>> configure) -> JustSaying.Fluent.PublicationsBuilder
-JustSaying.Fluent.PublicationsBuilder.WithQueueUrl<T>(string queueUrl, System.Action<JustSaying.Fluent.QueueAddressPublicationBuilder<T>> configure) -> JustSaying.Fluent.PublicationsBuilder
 JustSaying.Messaging.Middleware.PublishContext
 JustSaying.Messaging.Middleware.PublishContext.Metadata.get -> JustSaying.Messaging.PublishMetadata
 JustSaying.Messaging.Middleware.PublishMiddlewareBuilder
@@ -13,9 +10,6 @@ JustSaying.Messaging.Middleware.PublishMiddlewareBuilder.Use(System.Func<JustSay
 JustSaying.Messaging.Middleware.PublishMiddlewareBuilder.Use<TMiddleware>() -> JustSaying.Messaging.Middleware.PublishMiddlewareBuilder
 JustSaying.Fluent.QueuePublicationBuilder<T>.WithMiddlewareConfiguration(System.Action<JustSaying.Messaging.Middleware.PublishMiddlewareBuilder> middlewareConfiguration) -> JustSaying.Fluent.QueuePublicationBuilder<T>
 JustSaying.Fluent.TopicPublicationBuilder<T>.WithMiddlewareConfiguration(System.Action<JustSaying.Messaging.Middleware.PublishMiddlewareBuilder> middlewareConfiguration) -> JustSaying.Fluent.TopicPublicationBuilder<T>
-JustSaying.Fluent.TopicAddressPublicationBuilder<T>.WithMiddlewareConfiguration(System.Action<JustSaying.Messaging.Middleware.PublishMiddlewareBuilder> middlewareConfiguration) -> JustSaying.Fluent.TopicAddressPublicationBuilder<T>
-JustSaying.Fluent.QueueAddressPublicationBuilder<T>.WithMiddlewareConfiguration(System.Action<JustSaying.Messaging.Middleware.PublishMiddlewareBuilder> middlewareConfiguration) -> JustSaying.Fluent.QueueAddressPublicationBuilder<T>
-JustSaying.Messaging.Middleware.Logging.LoggingMiddleware.LoggingMiddleware(Microsoft.Extensions.Logging.ILoggerFactory loggerFactory, JustSaying.Messaging.IMessageMetadataProvider metadataProvider) -> void
 *REMOVED*JustSaying.Fluent.QueueAddressPublicationBuilder<T>.Configure(JustSaying.JustSayingBus bus, JustSaying.AwsTools.IAwsClientFactoryProxy proxy, Microsoft.Extensions.Logging.ILoggerFactory loggerFactory) -> void
 *REMOVED*JustSaying.Fluent.TopicAddressPublicationBuilder<T>.Configure(JustSaying.JustSayingBus bus, JustSaying.AwsTools.IAwsClientFactoryProxy proxy, Microsoft.Extensions.Logging.ILoggerFactory loggerFactory) -> void
 const JustSaying.Messaging.Compression.ContentEncodings.GzipBase64 = "gzip,base64" -> string
@@ -37,17 +31,8 @@ JustSaying.AwsTools.QueueCreation.SqsReadConfiguration.RawMessageDelivery.get ->
 JustSaying.AwsTools.QueueCreation.SqsReadConfiguration.RawMessageDelivery.set -> void
 JustSaying.AwsTools.QueueCreation.SqsWriteConfiguration.CompressionOptions.get -> JustSaying.AwsTools.MessageHandling.PublishCompressionOptions
 JustSaying.AwsTools.QueueCreation.SqsWriteConfiguration.CompressionOptions.set -> void
-JustSaying.Fluent.QueueAddressConfiguration.RawMessageDelivery.get -> bool
-JustSaying.Fluent.QueueAddressConfiguration.RawMessageDelivery.set -> void
-JustSaying.Fluent.QueueAddressPublicationBuilder<T>.WithQueueExistenceCheck() -> JustSaying.Fluent.QueueAddressPublicationBuilder<T>
-JustSaying.Fluent.QueueAddressPublicationBuilder<T>.WithCompression(JustSaying.AwsTools.MessageHandling.PublishCompressionOptions compressionOptions) -> JustSaying.Fluent.QueueAddressPublicationBuilder<T>
-JustSaying.Fluent.QueueAddressPublicationBuilder<T>.WithRawMessages() -> JustSaying.Fluent.QueueAddressPublicationBuilder<T>
-JustSaying.Fluent.QueueAddressPublicationBuilder<T>.WithSubject(string subject) -> JustSaying.Fluent.QueueAddressPublicationBuilder<T>
-JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>.WithQueueExistenceCheck() -> JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>
 JustSaying.Fluent.QueuePublicationBuilder<T>.WithQueueName(string name) -> JustSaying.Fluent.QueuePublicationBuilder<T>
 JustSaying.Fluent.QueuePublicationBuilder<T>.WithRawMessages() -> JustSaying.Fluent.QueuePublicationBuilder<T>
-JustSaying.Fluent.TopicAddressPublicationBuilder<T>.WithCompression(JustSaying.AwsTools.MessageHandling.PublishCompressionOptions compressionOptions) -> JustSaying.Fluent.TopicAddressPublicationBuilder<T>
-JustSaying.Fluent.TopicAddressPublicationBuilder<T>.WithSubject(string subject) -> JustSaying.Fluent.TopicAddressPublicationBuilder<T>
 JustSaying.IMessagingConfig.DefaultCompressionOptions.get -> JustSaying.AwsTools.MessageHandling.PublishCompressionOptions
 JustSaying.IMessagingConfig.DefaultCompressionOptions.set -> void
 JustSaying.Messaging.Channels.Context.IQueueMessageContext.MessageConverter.get -> JustSaying.Messaging.IInboundMessageConverter
@@ -214,14 +199,8 @@ static JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerial
 JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.HandleException.get -> System.Func<System.Exception, object, bool>
 JustSaying.Fluent.MessagingConfigurationBuilder.WithMessageResponseLogger(System.Action<JustSaying.AwsTools.MessageHandling.MessageBatchResponse, System.Collections.Generic.IReadOnlyCollection<object>> logger) -> JustSaying.Fluent.MessagingConfigurationBuilder
 JustSaying.Fluent.MessagingConfigurationBuilder.WithMessageResponseLogger(System.Action<JustSaying.AwsTools.MessageHandling.MessageResponse, object> logger) -> JustSaying.Fluent.MessagingConfigurationBuilder
-JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>.WithMessageBodySerializer(JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<T> messageBodySerializer) -> JustSaying.Fluent.ISubscriptionBuilder<T>
 JustSaying.Fluent.QueueSubscriptionBuilder<T>.WithMessageBodySerializer(JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<T> messageBodySerializer) -> JustSaying.Fluent.QueueSubscriptionBuilder<T>
 JustSaying.Fluent.TopicSubscriptionBuilder<T>.WithMessageBodySerializer(JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<T> messageBodySerializer) -> JustSaying.Fluent.TopicSubscriptionBuilder<T>
-JustSaying.Fluent.SnsWriteConfigurationBuilder.WithErrorHandler(System.Func<System.Exception, object, bool> handler) -> JustSaying.Fluent.SnsWriteConfigurationBuilder
-JustSaying.Fluent.TopicAddressPublicationBuilder<T>.TopicAddressCustomizer.get -> System.Func<string, T, string>
-JustSaying.Fluent.TopicAddressPublicationBuilder<T>.WithExceptionHandler(System.Func<System.Exception, System.Collections.Generic.IReadOnlyCollection<T>, bool> exceptionBatchHandler) -> JustSaying.Fluent.TopicAddressPublicationBuilder<T>
-JustSaying.Fluent.TopicAddressPublicationBuilder<T>.WithExceptionHandler(System.Func<System.Exception, T, bool> exceptionHandler) -> JustSaying.Fluent.TopicAddressPublicationBuilder<T>
-JustSaying.Fluent.TopicAddressPublicationBuilder<T>.WithTopicAddress(System.Func<string, T, string> topicAddressCustomizer) -> JustSaying.Fluent.TopicAddressPublicationBuilder<T>
 JustSaying.Fluent.TopicPublicationBuilder<T>.TopicNameCustomizer.get -> System.Func<T, string>
 JustSaying.Fluent.TopicPublicationBuilder<T>.WithTopicName(System.Func<T, string> topicNameCustomizer) -> JustSaying.Fluent.TopicPublicationBuilder<T>
 JustSaying.IPublishBatchConfiguration.MessageBatchResponseLogger.get -> System.Action<JustSaying.AwsTools.MessageHandling.MessageBatchResponse, System.Collections.Generic.IReadOnlyCollection<object>>
@@ -275,7 +254,6 @@ JustSaying.Messaging.IMessageMetadataProvider.TryGetDeduplicationKey(object mess
 JustSaying.MessagingConfig.MessageMetadataProvider.get -> JustSaying.Messaging.IMessageMetadataProvider
 JustSaying.MessagingConfig.MessageMetadataProvider.set -> void
 JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
-JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.WithReadConfiguration(System.Action<JustSaying.AwsTools.QueueCreation.SqsReadConfiguration> configure) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
 JustSaying.Fluent.SubscriptionsBuilder.ForQueue(string queueName, System.Action<JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder> configure) -> JustSaying.Fluent.SubscriptionsBuilder
 JustSaying.Messaging.IMessageTypeDiscriminator
 JustSaying.Messaging.IMessageTypeDiscriminator.TryGetMessageTypeName(JustSaying.Messaging.MessageDiscriminationContext context, out string typeName) -> bool
@@ -289,20 +267,109 @@ JustSaying.Messaging.SubjectMessageTypeDiscriminator.SubjectMessageTypeDiscrimin
 JustSaying.Messaging.SubjectMessageTypeDiscriminator.TryGetMessageTypeName(JustSaying.Messaging.MessageDiscriminationContext context, out string typeName) -> bool
 JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.Handling<TMessage>(string typeName = null, System.Action<JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder> middlewareConfiguration = null) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
 JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.WithDiscriminator(JustSaying.Messaging.IMessageTypeDiscriminator discriminator) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
-JustSaying.Fluent.TopicAddress
-JustSaying.Fluent.TopicAddress.TopicArn.get -> string
-static JustSaying.Fluent.TopicAddress.FromArn(string topicArn) -> JustSaying.Fluent.TopicAddress
-JustSaying.Fluent.QueueAddress
-JustSaying.Fluent.QueueAddress.QueueUrl.get -> System.Uri
-JustSaying.Fluent.QueueAddress.RegionName.get -> string
-static JustSaying.Fluent.QueueAddress.FromUri(System.Uri queueUrl, string regionName = null) -> JustSaying.Fluent.QueueAddress
-static JustSaying.Fluent.QueueAddress.FromUrl(string queueUrl, string regionName = null) -> JustSaying.Fluent.QueueAddress
-static JustSaying.Fluent.QueueAddress.FromArn(string queueArn) -> JustSaying.Fluent.QueueAddress
-JustSaying.Fluent.PublicationsBuilder.WithTopic<T>(JustSaying.Fluent.TopicAddress address, System.Action<JustSaying.Fluent.TopicAddressPublicationBuilder<T>> configure = null) -> JustSaying.Fluent.PublicationsBuilder
-JustSaying.Fluent.PublicationsBuilder.WithQueue<T>(JustSaying.Fluent.QueueAddress address, System.Action<JustSaying.Fluent.QueueAddressPublicationBuilder<T>> configure = null) -> JustSaying.Fluent.PublicationsBuilder
-JustSaying.Fluent.SubscriptionsBuilder.ForQueue<T>(JustSaying.Fluent.QueueAddress address) -> JustSaying.Fluent.SubscriptionsBuilder
-JustSaying.Fluent.SubscriptionsBuilder.ForQueue<T>(JustSaying.Fluent.QueueAddress address, System.Action<JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>> configure) -> JustSaying.Fluent.SubscriptionsBuilder
-JustSaying.Fluent.SubscriptionsBuilder.ForQueue(JustSaying.Fluent.QueueAddress address, System.Action<JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder> configure) -> JustSaying.Fluent.SubscriptionsBuilder
+*REMOVED*JustSaying.Fluent.PublicationsBuilder.WithTopicArn<T>(string topicArn, System.Action<JustSaying.Fluent.TopicAddressPublicationBuilder<T>> configure = null) -> JustSaying.Fluent.PublicationsBuilder
+*REMOVED*JustSaying.Fluent.QueueAddressConfiguration
+*REMOVED*JustSaying.Fluent.QueueAddressConfiguration.QueueAddressConfiguration() -> void
+*REMOVED*JustSaying.Fluent.QueueAddressConfiguration.SubscriptionGroupName.get -> string
+*REMOVED*JustSaying.Fluent.QueueAddressConfiguration.SubscriptionGroupName.set -> void
+*REMOVED*JustSaying.Fluent.QueueAddressConfiguration.Validate() -> void
+*REMOVED*JustSaying.Fluent.QueueAddressPublicationBuilder<T>
+*REMOVED*JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>
+*REMOVED*JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>.WithMiddlewareConfiguration(System.Action<JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder> middlewareConfiguration) -> JustSaying.Fluent.ISubscriptionBuilder<T>
+*REMOVED*JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>.WithReadConfiguration(System.Action<JustSaying.Fluent.QueueAddressConfiguration> configure) -> JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>
+*REMOVED*JustSaying.Fluent.QueuePublicationBuilder<T>.WithWriteConfiguration(System.Action<JustSaying.AwsTools.QueueCreation.SqsWriteConfiguration> configure) -> JustSaying.Fluent.QueuePublicationBuilder<T>
+*REMOVED*JustSaying.Fluent.QueuePublicationBuilder<T>.WithWriteConfiguration(System.Action<JustSaying.Fluent.SqsWriteConfigurationBuilder> configure) -> JustSaying.Fluent.QueuePublicationBuilder<T>
+*REMOVED*JustSaying.Fluent.QueueSubscriptionBuilder<T>.WithReadConfiguration(System.Action<JustSaying.AwsTools.QueueCreation.SqsReadConfiguration> configure) -> JustSaying.Fluent.QueueSubscriptionBuilder<T>
+*REMOVED*JustSaying.Fluent.QueueSubscriptionBuilder<T>.WithReadConfiguration(System.Action<JustSaying.Fluent.SqsReadConfigurationBuilder> configure) -> JustSaying.Fluent.QueueSubscriptionBuilder<T>
+*REMOVED*JustSaying.Fluent.QueueSubscriptionBuilder<T>.WithTag(string key) -> JustSaying.Fluent.QueueSubscriptionBuilder<T>
+*REMOVED*JustSaying.Fluent.QueueSubscriptionBuilder<T>.WithTag(string key, string value) -> JustSaying.Fluent.QueueSubscriptionBuilder<T>
+*REMOVED*JustSaying.Fluent.SnsWriteConfigurationBuilder
+*REMOVED*JustSaying.Fluent.SnsWriteConfigurationBuilder.SnsWriteConfigurationBuilder() -> void
+*REMOVED*JustSaying.Fluent.SqsReadConfigurationBuilder
+*REMOVED*JustSaying.Fluent.SqsReadConfigurationBuilder.SqsReadConfigurationBuilder() -> void
+*REMOVED*JustSaying.Fluent.SqsReadConfigurationBuilder.WithSubscriptionGroup(string subscriptionGroupName) -> JustSaying.Fluent.SqsReadConfigurationBuilder
+*REMOVED*JustSaying.Fluent.SqsReadConfigurationBuilder.WithTopicSourceAccount(string id) -> JustSaying.Fluent.SqsReadConfigurationBuilder
+*REMOVED*JustSaying.Fluent.SqsWriteConfigurationBuilder
+*REMOVED*JustSaying.Fluent.SqsWriteConfigurationBuilder.SqsWriteConfigurationBuilder() -> void
+*REMOVED*JustSaying.Fluent.SqsWriteConfigurationBuilder.WithQueueName(string name) -> JustSaying.Fluent.SqsWriteConfigurationBuilder
+*REMOVED*JustSaying.Fluent.SubscriptionsBuilder.ForQueueArn<T>(string queueArn, System.Action<JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>> configure = null) -> JustSaying.Fluent.SubscriptionsBuilder
+*REMOVED*JustSaying.Fluent.SubscriptionsBuilder.ForQueueUri<T>(System.Uri queueUrl, string regionName = null, System.Action<JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>> configure = null) -> JustSaying.Fluent.SubscriptionsBuilder
+*REMOVED*JustSaying.Fluent.SubscriptionsBuilder.ForQueueUrl<T>(string queueUrl, string regionName = null, System.Action<JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>> configure = null) -> JustSaying.Fluent.SubscriptionsBuilder
+*REMOVED*JustSaying.Fluent.TopicAddressPublicationBuilder<T>
+*REMOVED*JustSaying.Fluent.TopicAddressPublicationBuilder<T>.TopicAddressCustomizer.set -> void
+*REMOVED*JustSaying.Fluent.TopicPublicationBuilder<T>.WithTag(string key) -> JustSaying.Fluent.TopicPublicationBuilder<T>
+*REMOVED*JustSaying.Fluent.TopicPublicationBuilder<T>.WithTag(string key, string value) -> JustSaying.Fluent.TopicPublicationBuilder<T>
+*REMOVED*JustSaying.Fluent.TopicPublicationBuilder<T>.WithWriteConfiguration(System.Action<JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration> configure) -> JustSaying.Fluent.TopicPublicationBuilder<T>
+*REMOVED*JustSaying.Fluent.TopicPublicationBuilder<T>.WithWriteConfiguration(System.Action<JustSaying.Fluent.SnsWriteConfigurationBuilder> configure) -> JustSaying.Fluent.TopicPublicationBuilder<T>
+*REMOVED*JustSaying.Fluent.TopicSubscriptionBuilder<T>.WithReadConfiguration(System.Action<JustSaying.AwsTools.QueueCreation.SqsReadConfiguration> configure) -> JustSaying.Fluent.TopicSubscriptionBuilder<T>
+*REMOVED*JustSaying.Fluent.TopicSubscriptionBuilder<T>.WithReadConfiguration(System.Action<JustSaying.Fluent.SqsReadConfigurationBuilder> configure) -> JustSaying.Fluent.TopicSubscriptionBuilder<T>
+*REMOVED*JustSaying.Fluent.TopicSubscriptionBuilder<T>.WithTag(string key) -> JustSaying.Fluent.TopicSubscriptionBuilder<T>
+*REMOVED*JustSaying.Fluent.TopicSubscriptionBuilder<T>.WithTag(string key, string value) -> JustSaying.Fluent.TopicSubscriptionBuilder<T>
+JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.WithRawMessageDelivery() -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
+JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.WithSubscriptionGroup(string subscriptionGroupName) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
+JustSaying.Fluent.PublicationsBuilder.WithQueue<T>(JustSaying.Fluent.QueueDestination destination, System.Action<JustSaying.Fluent.QueuePublicationBuilder<T>> configure = null) -> JustSaying.Fluent.PublicationsBuilder
+JustSaying.Fluent.PublicationsBuilder.WithQueueArn<T>(string queueArn, System.Action<JustSaying.Fluent.QueuePublicationBuilder<T>> configure) -> JustSaying.Fluent.PublicationsBuilder
+JustSaying.Fluent.PublicationsBuilder.WithQueueUri<T>(System.Uri queueUrl, System.Action<JustSaying.Fluent.QueuePublicationBuilder<T>> configure) -> JustSaying.Fluent.PublicationsBuilder
+JustSaying.Fluent.PublicationsBuilder.WithQueueUrl<T>(string queueUrl, System.Action<JustSaying.Fluent.QueuePublicationBuilder<T>> configure) -> JustSaying.Fluent.PublicationsBuilder
+JustSaying.Fluent.PublicationsBuilder.WithTopic<T>(JustSaying.Fluent.TopicDestination destination, System.Action<JustSaying.Fluent.TopicPublicationBuilder<T>> configure = null) -> JustSaying.Fluent.PublicationsBuilder
+JustSaying.Fluent.PublicationsBuilder.WithTopicArn<T>(string topicArn, System.Action<JustSaying.Fluent.TopicPublicationBuilder<T>> configure = null) -> JustSaying.Fluent.PublicationsBuilder
+JustSaying.Fluent.QueueDestination
+JustSaying.Fluent.QueueInfrastructure
+JustSaying.Fluent.QueueInfrastructure.WithDeliveryDelay(System.TimeSpan delay) -> JustSaying.Fluent.QueueInfrastructure
+JustSaying.Fluent.QueueInfrastructure.WithEncryption(JustSaying.AwsTools.QueueCreation.ServerSideEncryption encryption) -> JustSaying.Fluent.QueueInfrastructure
+JustSaying.Fluent.QueueInfrastructure.WithErrorQueueRetention(System.TimeSpan retention) -> JustSaying.Fluent.QueueInfrastructure
+JustSaying.Fluent.QueueInfrastructure.WithMessageRetention(System.TimeSpan retention) -> JustSaying.Fluent.QueueInfrastructure
+JustSaying.Fluent.QueueInfrastructure.WithNoErrorQueue() -> JustSaying.Fluent.QueueInfrastructure
+JustSaying.Fluent.QueueInfrastructure.WithRetriesBeforeErrorQueue(int retryCount) -> JustSaying.Fluent.QueueInfrastructure
+JustSaying.Fluent.QueueInfrastructure.WithTag(string key) -> JustSaying.Fluent.QueueInfrastructure
+JustSaying.Fluent.QueueInfrastructure.WithTag(string key, string value) -> JustSaying.Fluent.QueueInfrastructure
+JustSaying.Fluent.QueueInfrastructure.WithVisibilityTimeout(System.TimeSpan timeout) -> JustSaying.Fluent.QueueInfrastructure
+JustSaying.Fluent.QueuePublicationBuilder<T>.WithCompression(JustSaying.AwsTools.MessageHandling.PublishCompressionOptions compressionOptions) -> JustSaying.Fluent.QueuePublicationBuilder<T>
+JustSaying.Fluent.QueuePublicationBuilder<T>.WithQueueExistenceCheck() -> JustSaying.Fluent.QueuePublicationBuilder<T>
+JustSaying.Fluent.QueuePublicationBuilder<T>.WithSubject(string subject) -> JustSaying.Fluent.QueuePublicationBuilder<T>
+JustSaying.Fluent.QueueSubscriptionBuilder<T>.WithQueueExistenceCheck() -> JustSaying.Fluent.QueueSubscriptionBuilder<T>
+JustSaying.Fluent.QueueSubscriptionBuilder<T>.WithRawMessageDelivery() -> JustSaying.Fluent.QueueSubscriptionBuilder<T>
+JustSaying.Fluent.QueueSubscriptionBuilder<T>.WithSubscriptionGroup(string subscriptionGroupName) -> JustSaying.Fluent.QueueSubscriptionBuilder<T>
+JustSaying.Fluent.SubscriptionsBuilder.ForQueue(JustSaying.Fluent.QueueDestination destination, System.Action<JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder> configure) -> JustSaying.Fluent.SubscriptionsBuilder
+JustSaying.Fluent.SubscriptionsBuilder.ForQueue<T>(JustSaying.Fluent.QueueDestination destination) -> JustSaying.Fluent.SubscriptionsBuilder
+JustSaying.Fluent.SubscriptionsBuilder.ForQueue<T>(JustSaying.Fluent.QueueDestination destination, System.Action<JustSaying.Fluent.QueueSubscriptionBuilder<T>> configure) -> JustSaying.Fluent.SubscriptionsBuilder
+JustSaying.Fluent.SubscriptionsBuilder.ForQueueArn<T>(string queueArn, System.Action<JustSaying.Fluent.QueueSubscriptionBuilder<T>> configure = null) -> JustSaying.Fluent.SubscriptionsBuilder
+JustSaying.Fluent.SubscriptionsBuilder.ForQueueUri<T>(System.Uri queueUrl, string regionName = null, System.Action<JustSaying.Fluent.QueueSubscriptionBuilder<T>> configure = null) -> JustSaying.Fluent.SubscriptionsBuilder
+JustSaying.Fluent.SubscriptionsBuilder.ForQueueUrl<T>(string queueUrl, string regionName = null, System.Action<JustSaying.Fluent.QueueSubscriptionBuilder<T>> configure = null) -> JustSaying.Fluent.SubscriptionsBuilder
+JustSaying.Fluent.SubscriptionsBuilder.ForTopic<T>(JustSaying.Fluent.TopicDestination topic) -> JustSaying.Fluent.SubscriptionsBuilder
+JustSaying.Fluent.SubscriptionsBuilder.ForTopic<T>(JustSaying.Fluent.TopicDestination topic, System.Action<JustSaying.Fluent.TopicSubscriptionBuilder<T>> configure) -> JustSaying.Fluent.SubscriptionsBuilder
+JustSaying.Fluent.TopicDestination
+JustSaying.Fluent.TopicInfrastructure
+JustSaying.Fluent.TopicInfrastructure.WithEncryption(JustSaying.AwsTools.QueueCreation.ServerSideEncryption encryption) -> JustSaying.Fluent.TopicInfrastructure
+JustSaying.Fluent.TopicInfrastructure.WithTag(string key) -> JustSaying.Fluent.TopicInfrastructure
+JustSaying.Fluent.TopicInfrastructure.WithTag(string key, string value) -> JustSaying.Fluent.TopicInfrastructure
+JustSaying.Fluent.TopicPublicationBuilder<T>.TopicAddressCustomizer.get -> System.Func<string, T, string>
+JustSaying.Fluent.TopicPublicationBuilder<T>.TopicAddressCustomizer.set -> void
+JustSaying.Fluent.TopicPublicationBuilder<T>.WithCompression(JustSaying.AwsTools.MessageHandling.PublishCompressionOptions compressionOptions) -> JustSaying.Fluent.TopicPublicationBuilder<T>
+JustSaying.Fluent.TopicPublicationBuilder<T>.WithExceptionHandler(System.Func<System.Exception, System.Collections.Generic.IReadOnlyCollection<T>, bool> exceptionBatchHandler) -> JustSaying.Fluent.TopicPublicationBuilder<T>
+JustSaying.Fluent.TopicPublicationBuilder<T>.WithExceptionHandler(System.Func<System.Exception, T, bool> exceptionHandler) -> JustSaying.Fluent.TopicPublicationBuilder<T>
+JustSaying.Fluent.TopicPublicationBuilder<T>.WithSubject(string subject) -> JustSaying.Fluent.TopicPublicationBuilder<T>
+JustSaying.Fluent.TopicPublicationBuilder<T>.WithTopicAddress(System.Func<string, T, string> topicAddressCustomizer) -> JustSaying.Fluent.TopicPublicationBuilder<T>
+JustSaying.Fluent.TopicSubscriptionBuilder<T>.WithFilterPolicy(string filterPolicy) -> JustSaying.Fluent.TopicSubscriptionBuilder<T>
+JustSaying.Fluent.TopicSubscriptionBuilder<T>.WithQueue(JustSaying.Fluent.QueueDestination queue) -> JustSaying.Fluent.TopicSubscriptionBuilder<T>
+JustSaying.Fluent.TopicSubscriptionBuilder<T>.WithRawMessageDelivery() -> JustSaying.Fluent.TopicSubscriptionBuilder<T>
+JustSaying.Fluent.TopicSubscriptionBuilder<T>.WithSubscriptionGroup(string subscriptionGroupName) -> JustSaying.Fluent.TopicSubscriptionBuilder<T>
+JustSaying.Fluent.TopicSubscriptionBuilder<T>.WithTopicSourceAccount(string accountId) -> JustSaying.Fluent.TopicSubscriptionBuilder<T>
+static JustSaying.Fluent.QueueDestination.ByConvention() -> JustSaying.Fluent.QueueDestination
+static JustSaying.Fluent.QueueDestination.ByConvention(System.Action<JustSaying.Fluent.QueueInfrastructure> configure) -> JustSaying.Fluent.QueueDestination
+static JustSaying.Fluent.QueueDestination.FromArn(string queueArn) -> JustSaying.Fluent.QueueDestination
+static JustSaying.Fluent.QueueDestination.FromUri(System.Uri queueUrl, string regionName = null) -> JustSaying.Fluent.QueueDestination
+static JustSaying.Fluent.QueueDestination.FromUrl(string queueUrl, string regionName = null) -> JustSaying.Fluent.QueueDestination
+static JustSaying.Fluent.QueueDestination.Named(string name) -> JustSaying.Fluent.QueueDestination
+static JustSaying.Fluent.QueueDestination.Named(string name, System.Action<JustSaying.Fluent.QueueInfrastructure> configure) -> JustSaying.Fluent.QueueDestination
+static JustSaying.Fluent.TopicDestination.ByConvention() -> JustSaying.Fluent.TopicDestination
+static JustSaying.Fluent.TopicDestination.ByConvention(System.Action<JustSaying.Fluent.TopicInfrastructure> configure) -> JustSaying.Fluent.TopicDestination
+static JustSaying.Fluent.TopicDestination.FromArn(string topicArn) -> JustSaying.Fluent.TopicDestination
+static JustSaying.Fluent.TopicDestination.Named(string name) -> JustSaying.Fluent.TopicDestination
+static JustSaying.Fluent.TopicDestination.Named(string name, System.Action<JustSaying.Fluent.TopicInfrastructure> configure) -> JustSaying.Fluent.TopicDestination
+JustSaying.Fluent.QueueInfrastructure.WithEncryption(string kmsMasterKeyId) -> JustSaying.Fluent.QueueInfrastructure
+JustSaying.Fluent.TopicInfrastructure.WithEncryption(string kmsMasterKeyId) -> JustSaying.Fluent.TopicInfrastructure
+JustSaying.Messaging.Middleware.Logging.LoggingMiddleware.LoggingMiddleware(Microsoft.Extensions.Logging.ILoggerFactory loggerFactory, JustSaying.Messaging.IMessageMetadataProvider metadataProvider) -> void
 *REMOVED*JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.HandleException.get -> System.Func<System.Exception, JustSaying.Models.Message, bool>
 *REMOVED*JustSaying.Fluent.MessagingConfigurationBuilder.WithMessageResponseLogger(System.Action<JustSaying.AwsTools.MessageHandling.MessageBatchResponse, System.Collections.Generic.IReadOnlyCollection<JustSaying.Models.Message>> logger) -> JustSaying.Fluent.MessagingConfigurationBuilder
 *REMOVED*JustSaying.Fluent.MessagingConfigurationBuilder.WithMessageResponseLogger(System.Action<JustSaying.AwsTools.MessageHandling.MessageResponse, JustSaying.Models.Message> logger) -> JustSaying.Fluent.MessagingConfigurationBuilder

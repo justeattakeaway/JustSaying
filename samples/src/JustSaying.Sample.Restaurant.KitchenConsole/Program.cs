@@ -3,6 +3,7 @@ using JustSaying.Sample.Restaurant.KitchenConsole.Handlers;
 using JustSaying.Sample.Restaurant.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using JustSaying.Fluent;
 
 const string appName = "KitchenConsole";
 
@@ -54,14 +55,13 @@ builder.Services.AddJustSaying(config =>
         //      - "Subscriber" with the value "KitchenConsole"
         //  - a SNS topic subscription on topic 'orderonitswayevent' and queue 'orderonitswayevent'
         x.ForTopic<OrderPlacedEvent>(cfg =>
-            cfg.WithTag("IsOrderEvent")
-                .WithTag("Subscriber", appName)
-                .WithReadConfiguration(rc =>
-                    rc.WithSubscriptionGroup("GroupA")));
+            cfg.WithQueue(Queue.ByConvention(q => q
+                    .WithTag("IsOrderEvent")
+                    .WithTag("Subscriber", appName)))
+                .WithSubscriptionGroup("GroupA"));
 
         x.ForTopic<OrderOnItsWayEvent>(cfg =>
-            cfg.WithReadConfiguration(rc =>
-                rc.WithSubscriptionGroup("GroupB")));
+            cfg.WithSubscriptionGroup("GroupB"));
     });
 
     config.Publications(x =>
@@ -70,11 +70,9 @@ builder.Services.AddJustSaying(config =>
         //  - an SNS topic of name `orderreadyevent` with two tags:
         //      - "IsOrderEvent" with no value
         //      - "Publisher" with the value "KitchenConsole"
-        x.WithTopic<OrderReadyEvent>(cfg =>
-        {
-            cfg.WithTag("IsOrderEvent")
-                .WithTag("Publisher", appName);
-        });
+        x.WithTopic<OrderReadyEvent>(Topic.ByConvention(topic =>
+            topic.WithTag("IsOrderEvent")
+                .WithTag("Publisher", appName)));
         x.WithTopic<OrderDeliveredEvent>();
     });
 });

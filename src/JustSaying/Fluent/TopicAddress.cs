@@ -5,7 +5,7 @@ namespace JustSaying.Fluent;
 /// <summary>
 /// A type that encapsulates an address of an SNS topic.
 /// </summary>
-public sealed class TopicAddress
+internal sealed class TopicAddress
 {
     private TopicAddress()
     { }

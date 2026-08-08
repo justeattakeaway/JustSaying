@@ -1,3 +1,4 @@
+using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
@@ -11,37 +12,26 @@ using Microsoft.Extensions.Logging;
 namespace JustSaying.Fluent;
 
 /// <summary>
-/// A class representing a builder for a queue subscription. This class cannot be inherited.
+/// A builder for a queue subscription's read-time behaviour. The destination — which queue, and
+/// (when JustSaying owns it) how to create it — is a <see cref="Queue"/> value supplied at
+/// registration; this builder is the same whether the queue is created by JustSaying or already
+/// exists, and exposes no infrastructure configuration. This class cannot be inherited.
 /// </summary>
 /// <typeparam name="T">
 /// The type of the message.
 /// </typeparam>
 public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where T : class
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="QueueSubscriptionBuilder{T}"/> class.
-    /// </summary>
-    internal QueueSubscriptionBuilder()
-    { }
+    private readonly Queue _destination;
 
-    /// <summary>
-    /// Gets or sets the queue name.
-    /// </summary>
-    private string QueueName { get; set; } = string.Empty;
+    private string QueueName { get; set; }
 
-    /// <summary>
-    /// Gets or sets a delegate to a method to use to configure SQS reads.
-    /// </summary>
-    private Action<SqsReadConfiguration> ConfigureReads { get; set; }
+    private string SubscriptionGroupName { get; set; }
 
-    /// <summary>
-    /// Gets the tags to add to the queue.
-    /// </summary>
-    private Dictionary<string, string> Tags { get; } = new(StringComparer.Ordinal);
+    private bool RawMessageDelivery { get; set; }
 
-    /// <summary>
-    /// Gets or sets the <see cref="MiddlewareConfiguration"/>.
-    /// </summary>
+    private bool ShouldCheckQueueExistence { get; set; }
+
     private Action<HandlerMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
     /// <summary>
@@ -49,6 +39,22 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
     /// </summary>
     private IMessageBodySerializer<T> MessageBodySerializer { get; set; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="QueueSubscriptionBuilder{T}"/> class.
+    /// </summary>
+    internal QueueSubscriptionBuilder()
+        : this(Queue.ByConvention())
+    { }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="QueueSubscriptionBuilder{T}"/> class for the
+    /// specified destination.
+    /// </summary>
+    /// <param name="destination">The queue the subscription reads from.</param>
+    internal QueueSubscriptionBuilder(Queue destination)
+    {
+        _destination = destination ?? throw new ArgumentNullException(nameof(destination));
+    }
 
     /// <summary>
     /// Configures that the <see cref="IQueueNamingConvention"/> will create the queue name that should be used.
@@ -60,7 +66,8 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
         => WithQueueName(string.Empty);
 
     /// <summary>
-    /// Configures the name of the queue.
+    /// Configures the name of the queue. Equivalent to registering the subscription against
+    /// <see cref="Queue.Named(string)"/>.
     /// </summary>
     /// <param name="name">The name of the queue to subscribe to.</param>
     /// <returns>
@@ -76,81 +83,41 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
     }
 
     /// <summary>
-    /// Configures the SQS read configuration.
+    /// Configures the subscription group this subscription's reads are coordinated under. Defaults to
+    /// the queue name.
     /// </summary>
-    /// <param name="configure">A delegate to a method to use to configure SQS reads.</param>
-    /// <returns>
-    /// The current <see cref="QueueSubscriptionBuilder{T}"/>.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">
-    /// <paramref name="configure"/> is <see langword="null"/>.
-    /// </exception>
-    public QueueSubscriptionBuilder<T> WithReadConfiguration(
-        Action<SqsReadConfigurationBuilder> configure)
+    /// <param name="subscriptionGroupName">The name of the subscription group.</param>
+    /// <returns>The current <see cref="QueueSubscriptionBuilder{T}"/>.</returns>
+    /// <exception cref="ArgumentException"><paramref name="subscriptionGroupName"/> is <see langword="null"/> or empty.</exception>
+    public QueueSubscriptionBuilder<T> WithSubscriptionGroup(string subscriptionGroupName)
     {
-        if (configure == null)
-        {
-            throw new ArgumentNullException(nameof(configure));
-        }
+        if (string.IsNullOrEmpty(subscriptionGroupName)) throw new ArgumentException("Parameter cannot be null or empty.", nameof(subscriptionGroupName));
 
-        var builder = new SqsReadConfigurationBuilder();
-
-        configure(builder);
-
-        ConfigureReads = builder.Configure;
+        SubscriptionGroupName = subscriptionGroupName;
         return this;
     }
 
     /// <summary>
-    /// Configures the SQS read configuration.
+    /// Declares that this queue's message bodies arrive verbatim, without JustSaying's
+    /// <c>{ "Subject", "Message" }</c> envelope or the SNS notification wrapper.
     /// </summary>
-    /// <param name="configure">A delegate to a method to use to configure SQS reads.</param>
-    /// <returns>
-    /// The current <see cref="QueueSubscriptionBuilder{T}"/>.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">
-    /// <paramref name="configure"/> is <see langword="null"/>.
-    /// </exception>
-    public QueueSubscriptionBuilder<T> WithReadConfiguration(Action<SqsReadConfiguration> configure)
+    /// <returns>The current <see cref="QueueSubscriptionBuilder{T}"/>.</returns>
+    public QueueSubscriptionBuilder<T> WithRawMessageDelivery()
     {
-        ConfigureReads = configure ?? throw new ArgumentNullException(nameof(configure));
+        RawMessageDelivery = true;
         return this;
     }
 
     /// <summary>
-    /// Creates a tag with no value that will be assigned to the SQS queue.
+    /// Checks that the configured SQS queue exists before the bus starts receiving messages. Only
+    /// applicable for a pre-existing queue (a queue JustSaying owns is created on startup).
     /// </summary>
-    /// <param name="key">The key for the tag.</param>
     /// <returns>
     /// The current <see cref="QueueSubscriptionBuilder{T}"/>.
     /// </returns>
-    /// <remarks>Tag keys are case-sensitive. A new tag with a key identical to that of an existing one will overwrite it.</remarks>
-    /// <exception cref="ArgumentException">
-    /// <paramref name="key"/> is <see langword="null"/> or whitespace.
-    /// </exception>
-    public QueueSubscriptionBuilder<T> WithTag(string key) => WithTag(key, null);
-
-    /// <summary>
-    /// Creates a tag with a value that will be assigned to the SQS queue.
-    /// </summary>
-    /// <param name="key">The key for the tag.</param>
-    /// <param name="value">The value associated with this tag.</param>
-    /// <returns>
-    /// The current <see cref="QueueSubscriptionBuilder{T}"/>.
-    /// </returns>
-    /// <remarks>Tag keys are case-sensitive. A new tag with a key identical to that of an existing one will overwrite it.</remarks>
-    /// <exception cref="ArgumentException">
-    /// <paramref name="key"/> is <see langword="null"/> or whitespace.
-    /// </exception>
-    public QueueSubscriptionBuilder<T> WithTag(string key, string value)
+    public QueueSubscriptionBuilder<T> WithQueueExistenceCheck()
     {
-        if (string.IsNullOrWhiteSpace(key))
-        {
-            throw new ArgumentException("A queue tag key cannot be null or only whitespace", nameof(key));
-        }
-
-        Tags.Add(key, value ?? string.Empty);
-
+        ShouldCheckQueueExistence = true;
         return this;
     }
 
@@ -187,35 +154,91 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
     {
         var logger = loggerFactory.CreateLogger<QueueSubscriptionBuilder<T>>();
 
-        var subscriptionConfig = new SqsReadConfiguration(SubscriptionType.PointToPoint)
-        {
-            QueueName = QueueName,
-            Tags = Tags
-        };
-
-        ConfigureReads?.Invoke(subscriptionConfig);
-
-        var config = bus.Config;
-        var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
-
-        subscriptionConfig.ApplyTopicNamingConvention<T>(config.TopicNamingConvention);
-        subscriptionConfig.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
-        subscriptionConfig.SubscriptionGroupName ??= subscriptionConfig.QueueName;
-        subscriptionConfig.Validate();
-
-        var queue = creator.EnsureQueueExists(region, subscriptionConfig);
-        bus.AddStartupTask(queue.StartupTask);
-
         var serializer = MessageBodySerializer ?? bus.MessageBodySerializerFactory.GetSerializer<T>();
         var compressionRegistry = bus.CompressionRegistry;
-        bus.AddQueue(subscriptionConfig.SubscriptionGroupName, new SqsSource { MessageConverter = new InboundMessageConverter(serializer.Erase(), compressionRegistry, subscriptionConfig.RawMessageDelivery), SqsQueue = queue.Queue });
+
+        AwsTools.MessageHandling.ISqsQueue sqsQueue;
+        string queueName;
+
+        if (_destination.IsAddress)
+        {
+            if (QueueName is not null)
+            {
+                throw new InvalidOperationException(
+                    $"A queue addressed by URL or ARN cannot also be named; remove the {nameof(WithQueueName)} call.");
+            }
+
+            var sqsClient = awsClientFactoryProxy
+                .GetAwsClientFactory()
+                .GetSqsClient(RegionEndpoint.GetBySystemName(_destination.Address.RegionName));
+
+            var queue = new QueueAddressQueue(_destination.Address, sqsClient);
+
+            if (ShouldCheckQueueExistence)
+            {
+                bus.AddStartupTask(async cancellationToken =>
+                {
+                    if (!await queue.ExistsAsync(cancellationToken).ConfigureAwait(false))
+                    {
+                        throw new InvalidOperationException(
+                            $"SQS queue '{queue.QueueName}' with URL '{queue.Uri}' does not exist.");
+                    }
+                });
+            }
+
+            sqsQueue = queue;
+            queueName = queue.QueueName;
+        }
+        else
+        {
+            if (ShouldCheckQueueExistence)
+            {
+                throw new InvalidOperationException(
+                    $"{nameof(WithQueueExistenceCheck)} only applies to a pre-existing queue; a queue JustSaying owns is created on startup.");
+            }
+
+            if (QueueName is { Length: > 0 } && _destination.Name is not null)
+            {
+                throw new InvalidOperationException(
+                    $"The queue is named both by the {nameof(Queue)} destination ('{_destination.Name}') and {nameof(WithQueueName)} ('{QueueName}'); name it once.");
+            }
+
+            var subscriptionConfig = new SqsReadConfiguration(SubscriptionType.PointToPoint)
+            {
+                QueueName = QueueName is { Length: > 0 } ? QueueName : _destination.Name ?? string.Empty,
+                Tags = _destination.Infrastructure?.Tags ?? new Dictionary<string, string>(StringComparer.Ordinal),
+                RawMessageDelivery = RawMessageDelivery,
+            };
+
+            _destination.Infrastructure?.Apply(subscriptionConfig);
+
+            var config = bus.Config;
+            var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
+
+            subscriptionConfig.ApplyTopicNamingConvention<T>(config.TopicNamingConvention);
+            subscriptionConfig.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
+            subscriptionConfig.SubscriptionGroupName = SubscriptionGroupName ?? subscriptionConfig.QueueName;
+            subscriptionConfig.Validate();
+
+            var queue = creator.EnsureQueueExists(region, subscriptionConfig);
+            bus.AddStartupTask(queue.StartupTask);
+
+            sqsQueue = queue.Queue;
+            queueName = subscriptionConfig.QueueName;
+        }
+
+        bus.AddQueue(SubscriptionGroupName ?? queueName, new SqsSource
+        {
+            MessageConverter = new InboundMessageConverter(serializer.Erase(), compressionRegistry, RawMessageDelivery),
+            SqsQueue = sqsQueue,
+        });
 
         logger.LogInformation(
             "Created SQS subscriber for message type '{MessageType}' on queue '{QueueName}'.",
             typeof(T),
-            subscriptionConfig.QueueName);
+            queueName);
 
-        var resolutionContext = new HandlerResolutionContext(subscriptionConfig.QueueName);
+        var resolutionContext = new HandlerResolutionContext(queueName);
         var proposedHandler = handlerResolver.ResolveHandler<T>(resolutionContext) ?? throw new HandlerNotRegisteredWithContainerException(
                 $"There is no handler for '{typeof(T)}' messages.");
         var middlewareBuilder = new HandlerMiddlewareBuilder(handlerResolver, serviceResolver);
@@ -223,12 +246,11 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
             .Configure(MiddlewareConfiguration ?? (b => b.UseDefaults<T>(proposedHandler.GetType())))
             .Build();
 
-        bus.AddMessageMiddleware<T>(subscriptionConfig.QueueName, handlerMiddleware);
+        bus.AddMessageMiddleware<T>(queueName, handlerMiddleware);
 
         logger.LogInformation(
-            "Added a message handler for message type for '{MessageType}' on topic '{TopicName}' and queue '{QueueName}'.",
+            "Added a message handler for message type for '{MessageType}' on queue '{QueueName}'.",
             typeof(T),
-            subscriptionConfig.TopicName,
-            subscriptionConfig.QueueName);
+            queueName);
     }
 }
