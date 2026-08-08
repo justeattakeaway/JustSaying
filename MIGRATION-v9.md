@@ -55,6 +55,55 @@ pipeline.UseExactlyOnce<OrderPlaced>("orders-handler",
 
 If a non-`Message` type is used without a `deduplicationKeySelector`, `UseExactlyOnce` throws at registration (startup) rather than degrading silently at runtime.
 
+## One publication per message type
+
+Registering two publications for the same message type (for example `WithTopic<Order>()` twice, or a
+`WithTopic<Order>()` alongside a `WithQueue<Order>()`) previously last-write-wins: the earlier
+registration was silently discarded. v9 throws at startup instead:
+
+> A publisher for message type 'Order' is already registered. Each message type can only have one publication.
+
+If you hit this, remove the redundant registration — only one of them was ever taking effect.
+
+## CloudEvents (new package: `JustSaying.CloudEvents`)
+
+v9 can publish and consume [CloudEvents 1.0](https://github.com/cloudevents/spec) structured-mode envelopes via the new `JustSaying.CloudEvents` package. The envelope is chosen **per registration**, not per application: `services.AddJustSayingCloudEvents(...)` registers the CloudEvents serializer as its own service and leaves the app-wide default serializer untouched, so legacy, plain-JSON and CloudEvents registrations coexist in one app.
+
+```csharp
+services.AddJustSayingCloudEvents();
+
+// publications — only the CloudEvents registration writes CloudEvents
+p.WithTopic<OrderPlaced>();                                       // legacy (Message-derived)
+p.WithTopic<PaymentTaken>();                                      // plain JSON POCO
+p.WithCloudEventTopic<ParcelShipped>("com.example.parcel-shipped",
+    source: new Uri("https://orders.example.com"));               // CloudEvents
+
+// point-to-point queue publications have a matching registration; the CloudEvents
+// serializer is self-describing, so the envelope goes to the queue verbatim
+// (no { "Subject", "Message" } wrapper)
+p.WithCloudEventQueue<OrderCancelled>("com.example.order-cancelled",
+    source: new Uri("https://orders.example.com"));
+
+// subscriptions — one queue can mix native and CloudEvents messages
+s.ForQueue("orders", q => q
+    .Handling<LegacyOrderPlaced>()                                // native, routed by Subject
+    .HandlingCloudEvent<ParcelShipped>("com.example.parcel-shipped")   // handler receives CloudEvent<T>
+    .HandlingCloudEventData<OrderCancelled>("com.example.order-cancelled")); // handler receives bare T
+```
+
+For an all-CloudEvents application, opt the CloudEvents serializer in as the app-wide default — then plain `WithTopic<T>`/`ForQueue<T>` registrations speak CloudEvents too, and every published type must have a `type` mapped in `CloudEventOptions` (an unmapped type fails at startup):
+
+```csharp
+services.AddJustSayingCloudEvents(options =>
+{
+    options.Source = new Uri("https://orders.example.com");
+    options.MapType<OrderPlaced>("com.example.order-placed");
+},
+useAsDefault: true);
+```
+
+Single-type subscriptions can also override their serializer per registration via `WithMessageBodySerializer(IMessageBodySerializer<T>)`, now available on the `ForTopic<T>`/`ForQueue<T>` builders as well as `ForQueueUrl<T>`/`ForQueueArn<T>`.
+
 ## New extensibility seams
 
 Available on `IMessagingConfig`:

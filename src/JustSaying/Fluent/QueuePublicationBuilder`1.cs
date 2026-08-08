@@ -36,6 +36,30 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
     private bool _isRawMessage;
 
     /// <summary>
+    /// An optional custom serializer for this publication, used instead of the per-type default from
+    /// the bus's serialization factory. Built from the bus's <see cref="IServiceResolver"/> so a
+    /// serializer package can resolve its own serialization services from the container without
+    /// replacing the app-wide factory. Internal extensibility seam for serializer packages (such as
+    /// JustSaying.CloudEvents, which exposes it via <c>WithCloudEventQueue&lt;T&gt;</c>).
+    /// </summary>
+    internal Func<IServiceResolver, IMessageBodySerializer<T>> SerializerOverride { get; set; }
+
+    /// <summary>
+    /// An optional resolver for the queue name, applied when no explicit name is set — instead of the
+    /// naming convention keyed on <typeparamref name="T"/>. Internal extensibility seam used by wrapper
+    /// publications (such as CloudEvents envelopes) so the queue is named after the payload type rather
+    /// than the wrapper type.
+    /// </summary>
+    internal Func<JustSaying.Naming.IQueueNamingConvention, string> QueueNameResolver { get; set; }
+
+    /// <summary>
+    /// An optional resolver for the <c>Subject</c> written into the queue envelope, used instead of the
+    /// logical name of <typeparamref name="T"/>. Internal extensibility seam used by wrapper
+    /// publications so the subject reflects the payload type rather than the wrapper type.
+    /// </summary>
+    internal Func<IMessageTypeRegistry, string> SubjectResolver { get; set; }
+
+    /// <summary>
     /// Configures the SQS write configuration.
     /// </summary>
     /// <param name="configure">A delegate to a method to use to configure SQS writes.</param>
@@ -135,6 +159,10 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
             QueueName = QueueName
         };
         ConfigureWrites?.Invoke(writeConfiguration);
+        if (string.IsNullOrEmpty(writeConfiguration.QueueName) && QueueNameResolver is not null)
+        {
+            writeConfiguration.QueueName = QueueNameResolver(config.QueueNamingConvention);
+        }
         writeConfiguration.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
 
         var regionEndpoint = RegionEndpoint.GetBySystemName(region);
@@ -142,9 +170,11 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
 
         var compressionRegistry = bus.CompressionRegistry;
         var compressionOptions = writeConfiguration.CompressionOptions;
-        var subject = bus.MessageTypeRegistry.GetLogicalName(typeof(T));
+        var subject = SubjectResolver?.Invoke(bus.MessageTypeRegistry) ?? bus.MessageTypeRegistry.GetLogicalName(typeof(T));
 
-        var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
+        var serializer = SerializerOverride is null
+            ? bus.MessageBodySerializerFactory.GetSerializer<T>()
+            : SerializerOverride(serviceResolver);
         // A self-describing serializer (for example CloudEvents) already carries the message's type
         // metadata, so the {Message, Subject} queue envelope would just double-wrap it.
         var isRawMessage = _isRawMessage || writeConfiguration.IsRawMessage || serializer is ISelfDescribingMessageBodySerializer;

@@ -38,6 +38,31 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
     private Action<PublishMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
     /// <summary>
+    /// An optional custom serializer for this publication, used instead of the per-type default from
+    /// the bus's serialization factory. Built from the bus's <see cref="IServiceResolver"/> so a
+    /// serializer package can resolve its own serialization services from the container without
+    /// replacing the app-wide factory. Internal extensibility seam for serializer packages (such as
+    /// JustSaying.CloudEvents, which exposes it via <c>WithCloudEventTopic&lt;T&gt;</c>).
+    /// </summary>
+    internal Func<IServiceResolver, JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<T>> SerializerOverride { get; set; }
+
+    /// <summary>
+    /// An optional resolver for the SNS <c>Subject</c> stamped on published messages, applied when the
+    /// write configuration does not set one explicitly — instead of the logical name of
+    /// <typeparamref name="T"/>. Internal extensibility seam used by wrapper publications (such as
+    /// CloudEvents envelopes) so the subject reflects the payload type rather than the wrapper type.
+    /// </summary>
+    internal Func<JustSaying.Messaging.MessageSerialization.IMessageTypeRegistry, string> SubjectResolver { get; set; }
+
+    /// <summary>
+    /// An optional resolver for the topic name, applied when no explicit name is set — instead of the
+    /// naming convention keyed on <typeparamref name="T"/>. Internal extensibility seam used by wrapper
+    /// publications (such as CloudEvents envelopes) so the topic is named after the payload type rather
+    /// than the wrapper type.
+    /// </summary>
+    internal Func<JustSaying.Naming.ITopicNamingConvention, string> TopicNameResolver { get; set; }
+
+    /// <summary>
     /// Function that will produce a topic name dynamically from a message at publish time.
     /// If the topic doesn't exist, it will be created at that point.
     /// </summary>
@@ -196,11 +221,20 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
                 writeConfiguration,
                 client,
                 loggerFactory,
-                bus);
+                bus,
+                serviceResolver,
+                SerializerOverride,
+                SubjectResolver);
+
+        var topicName = TopicName;
+        if (string.IsNullOrEmpty(topicName) && TopicNameResolver is not null)
+        {
+            topicName = TopicNameResolver(bus.Config.TopicNamingConvention);
+        }
 
         ITopicPublisher config = TopicNameCustomizer != null
             ? DynamicPublicationConfiguration.Build<T>(message => TopicNameCustomizer((T)message), BuildConfiguration, loggerFactory)
-            : BuildConfiguration(TopicName);
+            : BuildConfiguration(topicName);
 
         bus.AddStartupTask(config.StartupTask);
         bus.AddMessagePublisher<T>(config.Publisher);
