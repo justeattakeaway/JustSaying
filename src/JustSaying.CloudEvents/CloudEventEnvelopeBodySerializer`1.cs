@@ -58,7 +58,7 @@ public sealed class CloudEventEnvelopeBodySerializer<T> : IMessageBodySerializer
         var source = message.Source ?? _source
             ?? throw new InvalidOperationException("A CloudEvents 'source' is required to publish; set CloudEvent<T>.Source or CloudEventOptions.Source.");
         var type = message.Type ?? _type
-            ?? throw new InvalidOperationException($"A CloudEvents 'type' is required to publish; set CloudEvent<T>.Type or configure WithCloudEventType<{typeof(T).Name}>(...).");
+            ?? throw new InvalidOperationException($"A CloudEvents 'type' is required to publish; set CloudEvent<T>.Type or configure MapType<{typeof(T).Name}>(...).");
 
         var dataJson = _dataSerializer.Serialize(message.Data);
 

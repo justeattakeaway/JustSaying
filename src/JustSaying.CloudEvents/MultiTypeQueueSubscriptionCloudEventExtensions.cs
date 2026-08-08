@@ -22,7 +22,7 @@ public static class MultiTypeQueueSubscriptionCloudEventExtensions
     /// <param name="typeName">
     /// The CloudEvents <c>type</c> the discriminator matches for this message. When <see langword="null"/>
     /// (the default), it is derived from the type configured via
-    /// <see cref="CloudEventOptions.WithCloudEventType{TMessage}"/> — so the <c>type</c> is named once.
+    /// <see cref="CloudEventOptions.MapType{TMessage}"/> — so the <c>type</c> is named once.
     /// Pass an explicit value only to match a <c>type</c> produced by another system.
     /// </param>
     /// <param name="middlewareConfiguration">An optional middleware configuration for this type's handler.</param>
@@ -60,7 +60,7 @@ public static class MultiTypeQueueSubscriptionCloudEventExtensions
     /// <param name="typeName">
     /// The CloudEvents <c>type</c> the discriminator matches for this message. When <see langword="null"/>
     /// (the default), it is derived from the type configured via
-    /// <see cref="CloudEventOptions.WithCloudEventType{TMessage}"/>.
+    /// <see cref="CloudEventOptions.MapType{TMessage}"/>.
     /// </param>
     /// <param name="middlewareConfiguration">An optional middleware configuration for this type's handler.</param>
     /// <returns>The current <see cref="MultiTypeQueueSubscriptionBuilder"/>.</returns>

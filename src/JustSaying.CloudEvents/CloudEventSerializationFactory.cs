@@ -41,7 +41,7 @@ public sealed class CloudEventSerializationFactory : IMessageBodySerializationFa
         {
             throw new InvalidOperationException(
                 $"No CloudEvents 'type' is configured for message type '{typeof(TMessage).FullName}'. " +
-                $"Configure one via {nameof(CloudEventOptions)}.{nameof(CloudEventOptions.WithCloudEventType)}<{typeof(TMessage).Name}>(\"...\").");
+                $"Configure one via {nameof(CloudEventOptions)}.{nameof(CloudEventOptions.MapType)}<{typeof(TMessage).Name}>(\"...\").");
         }
 
         // This is the app-default path (CloudEvents registered with useAsDefault: true), which serves
@@ -91,7 +91,7 @@ public sealed class CloudEventSerializationFactory : IMessageBodySerializationFa
     /// <typeparam name="T">The type of the <c>data</c> payload.</typeparam>
     /// <param name="type">
     /// The CloudEvents <c>type</c> to write when publishing, or <see langword="null"/> to fall back to
-    /// the type configured via <see cref="CloudEventOptions.WithCloudEventType{TMessage}"/> (which may
+    /// the type configured via <see cref="CloudEventOptions.MapType{TMessage}"/> (which may
     /// itself be absent — the value is only needed to publish, not to consume).
     /// </param>
     public IMessageBodySerializer<T> GetDataSerializer<T>(string type = null) where T : class
@@ -109,7 +109,7 @@ public sealed class CloudEventSerializationFactory : IMessageBodySerializationFa
     /// <typeparam name="T">The type of the <c>data</c> payload.</typeparam>
     /// <param name="type">
     /// The CloudEvents <c>type</c> to write when publishing. When <see langword="null"/>, falls back to
-    /// the type configured via <see cref="CloudEventOptions.WithCloudEventType{TMessage}"/> (which may
+    /// the type configured via <see cref="CloudEventOptions.MapType{TMessage}"/> (which may
     /// itself be absent — the value is only needed to publish, not to consume).
     /// </param>
     /// <param name="source">
@@ -126,7 +126,7 @@ public sealed class CloudEventSerializationFactory : IMessageBodySerializationFa
 
     /// <summary>
     /// Gets the configured CloudEvents <c>type</c> for <typeparamref name="T"/> (set via
-    /// <see cref="CloudEventOptions.WithCloudEventType{TMessage}"/>), throwing if none is configured.
+    /// <see cref="CloudEventOptions.MapType{TMessage}"/>), throwing if none is configured.
     /// Used as the fallback routing key for a subscription that did not state the <c>type</c> itself.
     /// </summary>
     /// <typeparam name="T">The message type.</typeparam>
@@ -135,7 +135,7 @@ public sealed class CloudEventSerializationFactory : IMessageBodySerializationFa
            ?? throw new InvalidOperationException(
                $"No CloudEvents 'type' is configured for message type '{typeof(T).FullName}'. " +
                $"Pass it to HandlingCloudEvent<{typeof(T).Name}>(\"...\"), or configure one via " +
-               $"{nameof(CloudEventOptions)}.{nameof(CloudEventOptions.WithCloudEventType)}<{typeof(T).Name}>(\"...\").");
+               $"{nameof(CloudEventOptions)}.{nameof(CloudEventOptions.MapType)}<{typeof(T).Name}>(\"...\").");
 
     private string TryGetCloudEventType<T>() where T : class
         => _options.TryGetCloudEventType(typeof(T), out var type) ? type : null;

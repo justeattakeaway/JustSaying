@@ -26,7 +26,7 @@ public sealed class CloudEventOptions
     /// <typeparam name="TMessage">The message type.</typeparam>
     /// <param name="type">The CloudEvents <c>type</c> to use for <typeparamref name="TMessage"/>.</param>
     /// <returns>The same <see cref="CloudEventOptions"/> instance, for chaining.</returns>
-    public CloudEventOptions WithCloudEventType<TMessage>(string type) where TMessage : class
+    public CloudEventOptions MapType<TMessage>(string type) where TMessage : class
     {
         if (string.IsNullOrEmpty(type)) throw new ArgumentException("Parameter cannot be null or empty.", nameof(type));
 

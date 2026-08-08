@@ -78,7 +78,7 @@ public class WhenSerializingCloudEvents
     public async Task Factory_Produces_A_Serializer_For_A_Mapped_Type()
     {
         var options = new CloudEventOptions { Source = new Uri("https://example.com/") }
-            .WithCloudEventType<OrderPlaced>("com.justeattakeaway.orders.orderplaced");
+            .MapType<OrderPlaced>("com.justeattakeaway.orders.orderplaced");
 
         var factory = new CloudEventSerializationFactory(
             new SystemTextJsonSerializationFactory(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions),
