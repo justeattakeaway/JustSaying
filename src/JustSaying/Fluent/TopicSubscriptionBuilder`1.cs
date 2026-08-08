@@ -12,8 +12,8 @@ namespace JustSaying.Fluent;
 
 /// <summary>
 /// A builder for a topic subscription: a queue owned by JustSaying, subscribed to an SNS topic. The
-/// topic is a <see cref="Topic"/> value supplied at registration (named by convention or
-/// explicitly); the queue is a <see cref="Queue"/> value configured via <see cref="WithQueue(Queue)"/>.
+/// topic is a <see cref="TopicDestination"/> value supplied at registration (named by convention or
+/// explicitly); the queue is a <see cref="QueueDestination"/> value configured via <see cref="WithQueue(QueueDestination)"/>.
 /// This builder configures the subscription and read-time behaviour only. This class cannot be
 /// inherited.
 /// </summary>
@@ -22,9 +22,9 @@ namespace JustSaying.Fluent;
 /// </typeparam>
 public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T> where T : class
 {
-    private readonly Topic _topic;
+    private readonly TopicDestination _topic;
 
-    private Queue _queue = Queue.ByConvention();
+    private QueueDestination _queue = QueueDestination.ByConvention();
 
     private string TopicName { get; set; }
 
@@ -49,7 +49,7 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
     /// Initializes a new instance of the <see cref="TopicSubscriptionBuilder{T}"/> class.
     /// </summary>
     internal TopicSubscriptionBuilder()
-        : this(Topic.ByConvention())
+        : this(TopicDestination.ByConvention())
     { }
 
     /// <summary>
@@ -57,7 +57,7 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
     /// specified topic.
     /// </summary>
     /// <param name="topic">The topic to subscribe to.</param>
-    internal TopicSubscriptionBuilder(Topic topic)
+    internal TopicSubscriptionBuilder(TopicDestination topic)
     {
         _topic = topic ?? throw new ArgumentNullException(nameof(topic));
     }
@@ -97,7 +97,7 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
     /// <exception cref="ArgumentNullException">
     /// <paramref name="queue"/> is <see langword="null"/>.
     /// </exception>
-    public TopicSubscriptionBuilder<T> WithQueue(Queue queue)
+    public TopicSubscriptionBuilder<T> WithQueue(QueueDestination queue)
     {
         _queue = queue ?? throw new ArgumentNullException(nameof(queue));
         return this;
@@ -203,7 +203,7 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
         if (_topic.IsAddress)
         {
             throw new InvalidOperationException(
-                $"A topic subscription creates the topic if needed, so it cannot target a topic by ARN; use {nameof(Topic)}.{nameof(Topic.Named)} or the naming convention.");
+                $"A topic subscription creates the topic if needed, so it cannot target a topic by ARN; use {nameof(TopicDestination)}.{nameof(TopicDestination.Named)} or the naming convention.");
         }
 
         if (_topic.Infrastructure is not null)
@@ -215,19 +215,19 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
         if (_queue.IsAddress)
         {
             throw new InvalidOperationException(
-                $"A topic subscription creates and subscribes its own queue, so it cannot target a queue by URL or ARN; use {nameof(Queue)}.{nameof(Queue.Named)} or the naming convention.");
+                $"A topic subscription creates and subscribes its own queue, so it cannot target a queue by URL or ARN; use {nameof(QueueDestination)}.{nameof(QueueDestination.Named)} or the naming convention.");
         }
 
         if (TopicName is not null && _topic.Name is not null)
         {
             throw new InvalidOperationException(
-                $"The topic is named both by the {nameof(Topic)} destination ('{_topic.Name}') and {nameof(WithTopicName)} ('{TopicName}'); name it once.");
+                $"The topic is named both by the {nameof(TopicDestination)} destination ('{_topic.Name}') and {nameof(WithTopicName)} ('{TopicName}'); name it once.");
         }
 
         if (QueueName is { Length: > 0 } && _queue.Name is not null)
         {
             throw new InvalidOperationException(
-                $"The queue is named both by the {nameof(Queue)} destination ('{_queue.Name}') and {nameof(WithQueueName)} ('{QueueName}'); name it once.");
+                $"The queue is named both by the {nameof(QueueDestination)} destination ('{_queue.Name}') and {nameof(WithQueueName)} ('{QueueName}'); name it once.");
         }
 
         var subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic)

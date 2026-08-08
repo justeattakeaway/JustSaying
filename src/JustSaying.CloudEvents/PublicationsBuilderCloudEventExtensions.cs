@@ -149,7 +149,7 @@ public static class PublicationsBuilderCloudEventExtensions
 
     /// <summary>
     /// Registers a publication that writes messages of type <typeparamref name="T"/> as
-    /// structured-mode CloudEvents to a topic described by a <see cref="Topic"/> destination — named,
+    /// structured-mode CloudEvents to a topic described by a <see cref="TopicDestination"/> destination — named,
     /// by convention, or a pre-existing topic by ARN. Both publish shapes are accepted, as with
     /// <see cref="WithCloudEventTopic{T}(PublicationsBuilder, string, Uri, string)"/>. The
     /// CloudEvents <c>source</c> falls back to <c>CloudEventOptions.Source</c> (one of the two must
@@ -162,15 +162,15 @@ public static class PublicationsBuilderCloudEventExtensions
     /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
     public static PublicationsBuilder WithCloudEventTopic<T>(
         this PublicationsBuilder publications,
-        Topic destination,
+        TopicDestination destination,
         string type)
         where T : class
         => publications.WithCloudEventTopic<T>(destination, type, null);
 
-    /// <inheritdoc cref="WithCloudEventTopic{T}(PublicationsBuilder, Topic, string)"/>
+    /// <inheritdoc cref="WithCloudEventTopic{T}(PublicationsBuilder, TopicDestination, string)"/>
     public static PublicationsBuilder WithCloudEventTopic<T>(
         this PublicationsBuilder publications,
-        Topic destination,
+        TopicDestination destination,
         string type,
         Uri source)
         where T : class
@@ -194,7 +194,7 @@ public static class PublicationsBuilderCloudEventExtensions
 
     /// <summary>
     /// Registers a publication that writes messages of type <typeparamref name="T"/> as
-    /// structured-mode CloudEvents to a queue described by a <see cref="Queue"/> destination — named,
+    /// structured-mode CloudEvents to a queue described by a <see cref="QueueDestination"/> destination — named,
     /// by convention, or a pre-existing queue by URL or ARN. Both publish shapes are accepted, as with
     /// <see cref="WithCloudEventQueue{T}(PublicationsBuilder, string, Uri, string)"/>, and the
     /// envelope is the queue body verbatim (the CloudEvents serializer is self-describing). The
@@ -208,15 +208,15 @@ public static class PublicationsBuilderCloudEventExtensions
     /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
     public static PublicationsBuilder WithCloudEventQueue<T>(
         this PublicationsBuilder publications,
-        Queue destination,
+        QueueDestination destination,
         string type)
         where T : class
         => publications.WithCloudEventQueue<T>(destination, type, null);
 
-    /// <inheritdoc cref="WithCloudEventQueue{T}(PublicationsBuilder, Queue, string)"/>
+    /// <inheritdoc cref="WithCloudEventQueue{T}(PublicationsBuilder, QueueDestination, string)"/>
     public static PublicationsBuilder WithCloudEventQueue<T>(
         this PublicationsBuilder publications,
-        Queue destination,
+        QueueDestination destination,
         string type,
         Uri source)
         where T : class

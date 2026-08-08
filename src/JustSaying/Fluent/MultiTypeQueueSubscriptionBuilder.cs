@@ -18,13 +18,13 @@ namespace JustSaying.Fluent;
 /// </summary>
 public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<object>
 {
-    private readonly Queue _destination;
+    private readonly QueueDestination _destination;
     private readonly List<IMessageTypeRegistration> _registrations = [];
     private readonly List<IMessageTypeDiscriminator> _discriminators = [];
     private string _subscriptionGroupName;
     private bool _rawMessageDelivery;
 
-    internal MultiTypeQueueSubscriptionBuilder(Queue destination)
+    internal MultiTypeQueueSubscriptionBuilder(QueueDestination destination)
     {
         _destination = destination ?? throw new ArgumentNullException(nameof(destination));
     }
