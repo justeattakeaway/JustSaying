@@ -44,8 +44,15 @@ public sealed class CloudEventSerializationFactory : IMessageBodySerializationFa
                 $"Configure one via {nameof(CloudEventOptions)}.{nameof(CloudEventOptions.WithCloudEventType)}<{typeof(TMessage).Name}>(\"...\").");
         }
 
+        // This is the app-default path (CloudEvents registered with useAsDefault: true), which serves
+        // publications as well as subscriptions — so require the outbound `source` up front to keep the
+        // failure at startup rather than on first publish.
+        var source = _options.Source
+            ?? throw new InvalidOperationException(
+                $"A CloudEvents 'source' is required; set {nameof(CloudEventOptions)}.{nameof(CloudEventOptions.Source)}.");
+
         var dataSerializer = _dataSerializerFactory.GetSerializer<TMessage>();
-        return new CloudEventMessageBodySerializer<TMessage>(dataSerializer, _metadataProvider, _options.Source, type, _options.DataContentType);
+        return new CloudEventMessageBodySerializer<TMessage>(dataSerializer, _metadataProvider, source, type, _options.DataContentType);
     }
 
     /// <summary>
@@ -72,6 +79,26 @@ public sealed class CloudEventSerializationFactory : IMessageBodySerializationFa
 
         var dataSerializer = _dataSerializerFactory.GetSerializer<T>();
         return new CloudEventMessageBodySerializer<T>(dataSerializer, _metadataProvider, resolvedSource, type, _options.DataContentType);
+    }
+
+    /// <summary>
+    /// Gets a serializer that deserializes a structured-mode CloudEvents envelope into its bare
+    /// <c>data</c> payload (the envelope is stripped), without requiring any outbound configuration —
+    /// used by a subscription that consumes a CloudEvent as plain <typeparamref name="T"/> and states
+    /// the <c>type</c> at the subscription. Serializing with it requires a <c>source</c> and
+    /// <c>type</c> (from <paramref name="type"/> / the options), like any CloudEvents publication.
+    /// </summary>
+    /// <typeparam name="T">The type of the <c>data</c> payload.</typeparam>
+    /// <param name="type">
+    /// The CloudEvents <c>type</c> to write when publishing, or <see langword="null"/> to fall back to
+    /// the type configured via <see cref="CloudEventOptions.WithCloudEventType{TMessage}"/> (which may
+    /// itself be absent — the value is only needed to publish, not to consume).
+    /// </param>
+    public IMessageBodySerializer<T> GetDataSerializer<T>(string type = null) where T : class
+    {
+        type ??= TryGetCloudEventType<T>();
+        var dataSerializer = _dataSerializerFactory.GetSerializer<T>();
+        return new CloudEventMessageBodySerializer<T>(dataSerializer, _metadataProvider, _options.Source, type, _options.DataContentType);
     }
 
     /// <summary>

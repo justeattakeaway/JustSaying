@@ -38,11 +38,21 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
     private Action<PublishMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
     /// <summary>
-    /// An optional custom serializer built from the bus's serialization factory, used instead of the
-    /// factory's per-type default. Internal extensibility seam for serializer packages (such as
+    /// An optional custom serializer for this publication, used instead of the per-type default from
+    /// the bus's serialization factory. Built from the bus's <see cref="IServiceResolver"/> so a
+    /// serializer package can resolve its own serialization services from the container without
+    /// replacing the app-wide factory. Internal extensibility seam for serializer packages (such as
     /// JustSaying.CloudEvents, which exposes it via <c>WithCloudEvent&lt;T&gt;</c>).
     /// </summary>
-    internal Func<JustSaying.Messaging.MessageSerialization.IMessageBodySerializationFactory, JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<T>> SerializerOverride { get; set; }
+    internal Func<IServiceResolver, JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<T>> SerializerOverride { get; set; }
+
+    /// <summary>
+    /// An optional resolver for the SNS <c>Subject</c> stamped on published messages, applied when the
+    /// write configuration does not set one explicitly — instead of the logical name of
+    /// <typeparamref name="T"/>. Internal extensibility seam used by wrapper publications (such as
+    /// CloudEvents envelopes) so the subject reflects the payload type rather than the wrapper type.
+    /// </summary>
+    internal Func<JustSaying.Messaging.MessageSerialization.IMessageTypeRegistry, string> SubjectResolver { get; set; }
 
     /// <summary>
     /// An optional resolver for the topic name, applied when no explicit name is set — instead of the
@@ -212,7 +222,9 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
                 client,
                 loggerFactory,
                 bus,
-                SerializerOverride);
+                serviceResolver,
+                SerializerOverride,
+                SubjectResolver);
 
         var topicName = TopicName;
         if (string.IsNullOrEmpty(topicName) && TopicNameResolver is not null)
