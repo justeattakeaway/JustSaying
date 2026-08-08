@@ -1,6 +1,7 @@
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
+using JustSaying.Fluent;
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools;
 
@@ -17,12 +18,10 @@ public class WhenUsingServerSideEncryption : IntegrationTestBase
         var services = GivenJustSaying()
             .ConfigureJustSaying(
                 (builder) => builder.Publications((options) => options.WithQueue<SimpleMessage>(
-                    (queue) => queue.WithWriteConfiguration(
-                        (config) => config.WithQueueName(UniqueName).WithEncryption(masterKeyId)))))
+                    Queue.Named(UniqueName, (queue) => queue.WithEncryption(masterKeyId)))))
             .ConfigureJustSaying(
                 (builder) => builder.Subscriptions((options) => options.ForQueue<SimpleMessage>(
-                    (queue) => queue.WithQueueName(UniqueName).WithReadConfiguration(
-                        (config) => config.WithEncryption(masterKeyId)))))
+                    Queue.Named(UniqueName, (queue) => queue.WithEncryption(masterKeyId)))))
             .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 
         string content = Guid.NewGuid().ToString();
