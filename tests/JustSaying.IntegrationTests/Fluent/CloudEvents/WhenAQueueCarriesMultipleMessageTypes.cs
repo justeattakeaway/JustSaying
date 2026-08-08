@@ -115,8 +115,8 @@ public class WhenAQueueCarriesMultipleMessageTypes : IntegrationTestBase
         services.AddJustSayingCloudEvents(options =>
         {
             options.Source = new Uri("https://orders.example.com");
-            options.WithCloudEventType<OrderPlaced>(placedType);
-            options.WithCloudEventType<OrderCancelled>(cancelledType);
+            options.MapType<OrderPlaced>(placedType);
+            options.MapType<OrderCancelled>(cancelledType);
         },
         useAsDefault: true);
 
