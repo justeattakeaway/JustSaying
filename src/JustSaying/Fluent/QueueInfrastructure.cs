@@ -3,10 +3,10 @@ using JustSaying.AwsTools.QueueCreation;
 namespace JustSaying.Fluent;
 
 /// <summary>
-/// Configures the SQS queue JustSaying creates for a registration against a <see cref="Queue"/>
-/// that JustSaying owns (<see cref="Queue.Named(string, Action{QueueInfrastructure})"/> or
-/// <see cref="Queue.ByConvention(Action{QueueInfrastructure})"/>). A pre-existing queue
-/// (<see cref="Queue.FromUri(Uri, string)"/> and friends) is never created, so it offers no such
+/// Configures the SQS queue JustSaying creates for a registration against a <see cref="QueueDestination"/>
+/// that JustSaying owns (<see cref="QueueDestination.Named(string, Action{QueueInfrastructure})"/> or
+/// <see cref="QueueDestination.ByConvention(Action{QueueInfrastructure})"/>). A pre-existing queue
+/// (<see cref="QueueDestination.FromUri(Uri, string)"/> and friends) is never created, so it offers no such
 /// configuration. This class cannot be inherited.
 /// </summary>
 public sealed class QueueInfrastructure

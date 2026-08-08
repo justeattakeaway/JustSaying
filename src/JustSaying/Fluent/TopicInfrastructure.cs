@@ -4,9 +4,9 @@ namespace JustSaying.Fluent;
 
 /// <summary>
 /// Configures the SNS topic JustSaying creates for a publication registered against a
-/// <see cref="Topic"/> that JustSaying owns (<see cref="Topic.Named(string, Action{TopicInfrastructure})"/>
-/// or <see cref="Topic.ByConvention(Action{TopicInfrastructure})"/>). A pre-existing topic
-/// (<see cref="Topic.FromArn(string)"/>) is never created, so it offers no such configuration.
+/// <see cref="TopicDestination"/> that JustSaying owns (<see cref="TopicDestination.Named(string, Action{TopicInfrastructure})"/>
+/// or <see cref="TopicDestination.ByConvention(Action{TopicInfrastructure})"/>). A pre-existing topic
+/// (<see cref="TopicDestination.FromArn(string)"/>) is never created, so it offers no such configuration.
 /// This class cannot be inherited.
 /// </summary>
 public sealed class TopicInfrastructure

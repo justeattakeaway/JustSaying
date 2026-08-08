@@ -5,14 +5,13 @@ using JustSaying.CloudEvents;
 using JustSaying.Fluent;
 using JustSaying.Messaging;
 using Microsoft.Extensions.DependencyInjection;
-using Topic = JustSaying.Fluent.Topic;
 
 namespace JustSaying.IntegrationTests.Fluent.CloudEvents;
 
 /// <summary>
 /// Proves the CloudEvents publications compose with pre-existing infrastructure: the same
 /// <c>WithCloudEventTopic&lt;T&gt;</c> / <c>WithCloudEventQueue&lt;T&gt;</c> registrations accept a
-/// <see cref="Topic"/> / <see cref="Queue"/> destination, publish both shapes to the addressed
+/// <see cref="TopicDestination"/> / <see cref="QueueDestination"/>, publish both shapes to the addressed
 /// resource, and never create anything.
 /// </summary>
 public class WhenPublishingCloudEventsToExistingInfrastructure : IntegrationTestBase
@@ -53,7 +52,7 @@ public class WhenPublishingCloudEventsToExistingInfrastructure : IntegrationTest
         var services = GivenJustSaying()
             .ConfigureJustSaying(builder => builder
                 .Publications(p => p.WithCloudEventTopic<OrderPlaced>(
-                    Topic.FromArn(topicArn), OrderPlacedType, RegistrationSource)));
+                    TopicDestination.FromArn(topicArn), OrderPlacedType, RegistrationSource)));
 
         services.AddJustSayingCloudEvents();
 
@@ -95,7 +94,7 @@ public class WhenPublishingCloudEventsToExistingInfrastructure : IntegrationTest
         var services = GivenJustSaying()
             .ConfigureJustSaying(builder => builder
                 .Publications(p => p.WithCloudEventQueue<OrderPlaced>(
-                    Queue.FromUrl(queueUrl), OrderPlacedType, RegistrationSource)));
+                    QueueDestination.FromUrl(queueUrl), OrderPlacedType, RegistrationSource)));
 
         services.AddJustSayingCloudEvents();
 

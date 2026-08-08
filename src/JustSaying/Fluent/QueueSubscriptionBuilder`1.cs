@@ -13,7 +13,7 @@ namespace JustSaying.Fluent;
 
 /// <summary>
 /// A builder for a queue subscription's read-time behaviour. The destination — which queue, and
-/// (when JustSaying owns it) how to create it — is a <see cref="Queue"/> value supplied at
+/// (when JustSaying owns it) how to create it — is a <see cref="QueueDestination"/> value supplied at
 /// registration; this builder is the same whether the queue is created by JustSaying or already
 /// exists, and exposes no infrastructure configuration. This class cannot be inherited.
 /// </summary>
@@ -22,7 +22,7 @@ namespace JustSaying.Fluent;
 /// </typeparam>
 public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where T : class
 {
-    private readonly Queue _destination;
+    private readonly QueueDestination _destination;
 
     private string QueueName { get; set; }
 
@@ -43,7 +43,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
     /// Initializes a new instance of the <see cref="QueueSubscriptionBuilder{T}"/> class.
     /// </summary>
     internal QueueSubscriptionBuilder()
-        : this(Queue.ByConvention())
+        : this(QueueDestination.ByConvention())
     { }
 
     /// <summary>
@@ -51,7 +51,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
     /// specified destination.
     /// </summary>
     /// <param name="destination">The queue the subscription reads from.</param>
-    internal QueueSubscriptionBuilder(Queue destination)
+    internal QueueSubscriptionBuilder(QueueDestination destination)
     {
         _destination = destination ?? throw new ArgumentNullException(nameof(destination));
     }
@@ -67,7 +67,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
 
     /// <summary>
     /// Configures the name of the queue. Equivalent to registering the subscription against
-    /// <see cref="Queue.Named(string)"/>.
+    /// <see cref="QueueDestination.Named(string)"/>.
     /// </summary>
     /// <param name="name">The name of the queue to subscribe to.</param>
     /// <returns>
@@ -200,7 +200,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
             if (QueueName is { Length: > 0 } && _destination.Name is not null)
             {
                 throw new InvalidOperationException(
-                    $"The queue is named both by the {nameof(Queue)} destination ('{_destination.Name}') and {nameof(WithQueueName)} ('{QueueName}'); name it once.");
+                    $"The queue is named both by the {nameof(QueueDestination)} destination ('{_destination.Name}') and {nameof(WithQueueName)} ('{QueueName}'); name it once.");
             }
 
             var subscriptionConfig = new SqsReadConfiguration(SubscriptionType.PointToPoint)

@@ -25,7 +25,7 @@ public class WhenTheErrorQueueDisabled : IntegrationTestBase
             .ConfigureJustSaying(
                 (builder) => builder.Publications(
                     (options) => options.WithQueue<SimpleMessage>(
-                        Queue.Named(UniqueName, (queue) => queue.WithNoErrorQueue()))))
+                        QueueDestination.Named(UniqueName, (queue) => queue.WithNoErrorQueue()))))
             .AddSingleton(handler)
             .BuildServiceProvider();
 

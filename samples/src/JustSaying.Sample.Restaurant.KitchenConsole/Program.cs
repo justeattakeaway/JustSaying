@@ -55,7 +55,7 @@ builder.Services.AddJustSaying(config =>
         //      - "Subscriber" with the value "KitchenConsole"
         //  - a SNS topic subscription on topic 'orderonitswayevent' and queue 'orderonitswayevent'
         x.ForTopic<OrderPlacedEvent>(cfg =>
-            cfg.WithQueue(Queue.ByConvention(q => q
+            cfg.WithQueue(QueueDestination.ByConvention(q => q
                     .WithTag("IsOrderEvent")
                     .WithTag("Subscriber", appName)))
                 .WithSubscriptionGroup("GroupA"));
@@ -70,7 +70,7 @@ builder.Services.AddJustSaying(config =>
         //  - an SNS topic of name `orderreadyevent` with two tags:
         //      - "IsOrderEvent" with no value
         //      - "Publisher" with the value "KitchenConsole"
-        x.WithTopic<OrderReadyEvent>(Topic.ByConvention(topic =>
+        x.WithTopic<OrderReadyEvent>(TopicDestination.ByConvention(topic =>
             topic.WithTag("IsOrderEvent")
                 .WithTag("Publisher", appName)));
         x.WithTopic<OrderDeliveredEvent>();
