@@ -30,7 +30,7 @@ public class WhenPublishingACloudEvent : IntegrationTestBase
         services.AddJustSayingCloudEvents(options =>
         {
             options.Source = new Uri("https://orders.example.com");
-            options.WithCloudEventType<OrderPlaced>(OrderPlacedType);
+            options.MapType<OrderPlaced>(OrderPlacedType);
         },
         useAsDefault: true);
 

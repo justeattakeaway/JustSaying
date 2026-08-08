@@ -7,7 +7,7 @@ JustSaying.CloudEvents.CloudEventOptions.DataContentType.get -> string
 JustSaying.CloudEvents.CloudEventOptions.DataContentType.set -> void
 JustSaying.CloudEvents.CloudEventOptions.Source.get -> System.Uri
 JustSaying.CloudEvents.CloudEventOptions.Source.set -> void
-JustSaying.CloudEvents.CloudEventOptions.WithCloudEventType<TMessage>(string type) -> JustSaying.CloudEvents.CloudEventOptions
+JustSaying.CloudEvents.CloudEventOptions.MapType<TMessage>(string type) -> JustSaying.CloudEvents.CloudEventOptions
 JustSaying.CloudEvents.CloudEventSerializationFactory
 JustSaying.CloudEvents.CloudEventSerializationFactory.GetSerializer<TMessage>() -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<TMessage>
 JustSaying.CloudEvents.CloudEventSerializationFactory.GetEnvelopeSerializer<T>(string type = null, System.Uri source = null) -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<JustSaying.CloudEvents.CloudEvent<T>>
