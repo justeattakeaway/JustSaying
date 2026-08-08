@@ -149,41 +149,41 @@ public static class PublicationsBuilderCloudEventExtensions
 
     /// <summary>
     /// Registers a publication that writes messages of type <typeparamref name="T"/> as
-    /// structured-mode CloudEvents to a pre-existing topic, addressed by its ARN. The topic is never
-    /// created by JustSaying. Both publish shapes are accepted, as with
+    /// structured-mode CloudEvents to a topic described by a <see cref="Topic"/> destination — named,
+    /// by convention, or a pre-existing topic by ARN. Both publish shapes are accepted, as with
     /// <see cref="WithCloudEventTopic{T}(PublicationsBuilder, string, Uri, string)"/>. The
     /// CloudEvents <c>source</c> falls back to <c>CloudEventOptions.Source</c> (one of the two must
     /// be set to publish the bare <typeparamref name="T"/>, verified when the bus is built).
     /// </summary>
     /// <typeparam name="T">The type of the <c>data</c> payload.</typeparam>
     /// <param name="publications">The publications builder.</param>
-    /// <param name="address">The address of the topic to publish to (see <c>TopicAddress.FromArn</c>).</param>
+    /// <param name="destination">The topic to publish to.</param>
     /// <param name="type">The CloudEvents <c>type</c> written for this message.</param>
     /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
     public static PublicationsBuilder WithCloudEventTopic<T>(
         this PublicationsBuilder publications,
-        TopicAddress address,
+        Topic destination,
         string type)
         where T : class
-        => publications.WithCloudEventTopic<T>(address, type, null);
+        => publications.WithCloudEventTopic<T>(destination, type, null);
 
-    /// <inheritdoc cref="WithCloudEventTopic{T}(PublicationsBuilder, TopicAddress, string)"/>
+    /// <inheritdoc cref="WithCloudEventTopic{T}(PublicationsBuilder, Topic, string)"/>
     public static PublicationsBuilder WithCloudEventTopic<T>(
         this PublicationsBuilder publications,
-        TopicAddress address,
+        Topic destination,
         string type,
         Uri source)
         where T : class
     {
         if (publications is null) throw new ArgumentNullException(nameof(publications));
-        if (address is null) throw new ArgumentNullException(nameof(address));
+        if (destination is null) throw new ArgumentNullException(nameof(destination));
         if (string.IsNullOrEmpty(type)) throw new ArgumentException("Parameter cannot be null or empty.", nameof(type));
 
-        // Both shapes publish to the same address, so no name resolution is involved at all.
-        publications.WithTopic<T>(address, builder =>
+        // Both shapes publish to the same destination, so no name resolution is involved at all.
+        publications.WithTopic<T>(destination, builder =>
             builder.SerializerOverride = resolver => resolver.ResolveCloudEventSerializationFactory().GetSerializer<T>(type, source));
 
-        publications.WithTopic<CloudEvent<T>>(address, builder =>
+        publications.WithTopic<CloudEvent<T>>(destination, builder =>
         {
             builder.SubjectResolver = registry => registry.GetLogicalName(typeof(T));
             builder.SerializerOverride = resolver => resolver.ResolveCloudEventSerializationFactory().GetEnvelopeSerializer<T>(type, source);
@@ -194,8 +194,8 @@ public static class PublicationsBuilderCloudEventExtensions
 
     /// <summary>
     /// Registers a publication that writes messages of type <typeparamref name="T"/> as
-    /// structured-mode CloudEvents to a pre-existing queue, addressed by its URL or ARN. The queue is
-    /// never created by JustSaying. Both publish shapes are accepted, as with
+    /// structured-mode CloudEvents to a queue described by a <see cref="Queue"/> destination — named,
+    /// by convention, or a pre-existing queue by URL or ARN. Both publish shapes are accepted, as with
     /// <see cref="WithCloudEventQueue{T}(PublicationsBuilder, string, Uri, string)"/>, and the
     /// envelope is the queue body verbatim (the CloudEvents serializer is self-describing). The
     /// CloudEvents <c>source</c> falls back to <c>CloudEventOptions.Source</c> (one of the two must
@@ -203,32 +203,32 @@ public static class PublicationsBuilderCloudEventExtensions
     /// </summary>
     /// <typeparam name="T">The type of the <c>data</c> payload.</typeparam>
     /// <param name="publications">The publications builder.</param>
-    /// <param name="address">The address of the queue to publish to (see <c>QueueAddress.FromUri</c>, <c>QueueAddress.FromUrl</c> and <c>QueueAddress.FromArn</c>).</param>
+    /// <param name="destination">The queue to publish to.</param>
     /// <param name="type">The CloudEvents <c>type</c> written for this message.</param>
     /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
     public static PublicationsBuilder WithCloudEventQueue<T>(
         this PublicationsBuilder publications,
-        QueueAddress address,
+        Queue destination,
         string type)
         where T : class
-        => publications.WithCloudEventQueue<T>(address, type, null);
+        => publications.WithCloudEventQueue<T>(destination, type, null);
 
-    /// <inheritdoc cref="WithCloudEventQueue{T}(PublicationsBuilder, QueueAddress, string)"/>
+    /// <inheritdoc cref="WithCloudEventQueue{T}(PublicationsBuilder, Queue, string)"/>
     public static PublicationsBuilder WithCloudEventQueue<T>(
         this PublicationsBuilder publications,
-        QueueAddress address,
+        Queue destination,
         string type,
         Uri source)
         where T : class
     {
         if (publications is null) throw new ArgumentNullException(nameof(publications));
-        if (address is null) throw new ArgumentNullException(nameof(address));
+        if (destination is null) throw new ArgumentNullException(nameof(destination));
         if (string.IsNullOrEmpty(type)) throw new ArgumentException("Parameter cannot be null or empty.", nameof(type));
 
-        publications.WithQueue<T>(address, builder =>
+        publications.WithQueue<T>(destination, builder =>
             builder.SerializerOverride = resolver => resolver.ResolveCloudEventSerializationFactory().GetSerializer<T>(type, source));
 
-        publications.WithQueue<CloudEvent<T>>(address, builder =>
+        publications.WithQueue<CloudEvent<T>>(destination, builder =>
         {
             builder.SubjectResolver = registry => registry.GetLogicalName(typeof(T));
             builder.SerializerOverride = resolver => resolver.ResolveCloudEventSerializationFactory().GetEnvelopeSerializer<T>(type, source);

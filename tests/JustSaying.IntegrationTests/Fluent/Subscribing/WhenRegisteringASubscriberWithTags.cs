@@ -27,14 +27,13 @@ public class WhenRegisteringASubscriberWithTags : IntegrationTestBase
         await AssertQueueTagsExist(tags,
             builder =>
                 builder.ForTopic<SimpleMessage>((queueBuilder) =>
-                {
-                    foreach ((string key, string value) in tags)
+                    queueBuilder.WithQueue(Queue.Named(QueueName, q =>
                     {
-                        queueBuilder.WithTag(key, value);
-                    }
-
-                    queueBuilder.WithReadConfiguration(ReadConfig);
-                }));
+                        foreach ((string key, string value) in tags)
+                        {
+                            q.WithTag(key, value);
+                        }
+                    }))));
     }
 
     [NotSimulatorSkip]
@@ -50,15 +49,13 @@ public class WhenRegisteringASubscriberWithTags : IntegrationTestBase
 
         await AssertQueueTagsExist(tags,
             builder =>
-                builder.ForQueue<SimpleMessage>((queueBuilder) =>
+                builder.ForQueue<SimpleMessage>(Queue.Named(QueueName, q =>
                 {
                     foreach ((string key, string value) in tags)
                     {
-                        queueBuilder.WithTag(key, value);
+                        q.WithTag(key, value);
                     }
-
-                    queueBuilder.WithReadConfiguration(ReadConfig);
-                }));
+                })));
     }
 
     private async Task AssertQueueTagsExist(Dictionary<string, string> expectedQueueTags, Action<SubscriptionsBuilder> subscriptionBuilder)
@@ -94,7 +91,6 @@ public class WhenRegisteringASubscriberWithTags : IntegrationTestBase
         }
     }
 
-    private static void ReadConfig(SqsReadConfiguration readConfig) => readConfig.QueueName = QueueName;
 
     private static string CleanTagValue(string tagValue) => string.IsNullOrEmpty(tagValue) ? null : tagValue;
 }

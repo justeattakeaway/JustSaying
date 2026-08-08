@@ -283,8 +283,8 @@ public class WhenAQueueCarriesMultipleMessageTypes : IntegrationTestBase
         var services = GivenJustSaying()
             .ConfigureJustSaying(builder => builder
                 // The native publication targets the existing queue by address too.
-                .Publications(p => p.WithQueue<OrderPlaced>(QueueAddress.FromUrl(queueUrl)))
-                .Subscriptions(s => s.ForQueue(QueueAddress.FromUrl(queueUrl), q => q
+                .Publications(p => p.WithQueue<OrderPlaced>(Queue.FromUrl(queueUrl)))
+                .Subscriptions(s => s.ForQueue(Queue.FromUrl(queueUrl), q => q
                     .Handling<OrderPlaced>()
                     .HandlingCloudEvent<OrderCancelled>(cancelledType))))
             .AddSingleton(placedHandler)

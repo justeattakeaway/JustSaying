@@ -26,6 +26,8 @@ internal sealed class StaticPublicationConfiguration(
         IAmazonSimpleNotificationService snsClient,
         ILoggerFactory loggerFactory,
         JustSayingBus bus,
+        Func<Exception, object, bool> exceptionHandler = null,
+        Func<Exception, IReadOnlyCollection<object>, bool> exceptionBatchHandler = null,
         IServiceResolver serviceResolver = null,
         Func<IServiceResolver, IMessageBodySerializer<T>> serializerFactory = null,
         Func<IMessageTypeRegistry, string> subjectResolver = null) where T : class
@@ -47,10 +49,10 @@ internal sealed class StaticPublicationConfiguration(
 
         var eventPublisher = new SnsMessagePublisher(
             snsClient,
-            new OutboundMessageConverter(PublishDestinationType.Topic, serializer, new MessageCompressionRegistry([new GzipMessageBodyCompression()]), compressionOptions, subject, writeConfiguration.IsRawMessage),
+            new OutboundMessageConverter(PublishDestinationType.Topic, serializer, bus.CompressionRegistry, compressionOptions, subject, writeConfiguration.IsRawMessage),
             loggerFactory,
-            null,
-            null,
+            exceptionHandler ?? writeConfiguration.HandleException,
+            exceptionBatchHandler,
             bus.Config.MessageMetadataProvider)
         {
             MessageResponseLogger = bus.Config.MessageResponseLogger,
