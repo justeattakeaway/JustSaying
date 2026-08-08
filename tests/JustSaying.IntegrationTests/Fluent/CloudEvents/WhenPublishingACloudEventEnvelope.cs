@@ -4,9 +4,7 @@ using Amazon.SQS.Model;
 using JustSaying.CloudEvents;
 using JustSaying.Fluent;
 using JustSaying.Messaging;
-using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace JustSaying.IntegrationTests.Fluent.CloudEvents;
 
@@ -35,7 +33,6 @@ public class WhenPublishingACloudEventEnvelope : IntegrationTestBase
             .ConfigureJustSaying(builder => builder
                 .Publications(p => p.WithCloudEvent<OrderPlaced>(OrderPlacedType, source: RegistrationSource, topicName: UniqueName)));
 
-        services.RemoveAll<IMessageBodySerializationFactory>();
         services.AddJustSayingCloudEvents();
 
         var serviceProvider = services.BuildServiceProvider();
@@ -82,7 +79,6 @@ public class WhenPublishingACloudEventEnvelope : IntegrationTestBase
             .ConfigureJustSaying(builder => builder
                 .Publications(p => p.WithCloudEvent<OrderPlaced>(OrderPlacedType, topicName: UniqueName)));
 
-        services.RemoveAll<IMessageBodySerializationFactory>();
         services.AddJustSayingCloudEvents();
 
         var serviceProvider = services.BuildServiceProvider();
@@ -104,12 +100,7 @@ public class WhenPublishingACloudEventEnvelope : IntegrationTestBase
                     p.WithCloudEvent<OrderPlaced>(OrderPlacedType, source: RegistrationSource, topicName: UniqueName);
                 }));
 
-        services.RemoveAll<IMessageBodySerializationFactory>();
-        services.AddJustSayingCloudEvents(options =>
-        {
-            options.Source = RegistrationSource;
-            options.WithCloudEventType<OrderPlaced>(OrderPlacedType);
-        });
+        services.AddJustSayingCloudEvents();
 
         var serviceProvider = services.BuildServiceProvider();
 

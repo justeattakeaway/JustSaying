@@ -13,6 +13,7 @@ JustSaying.CloudEvents.CloudEventSerializationFactory.GetSerializer<TMessage>() 
 JustSaying.CloudEvents.CloudEventSerializationFactory.GetEnvelopeSerializer<T>(string type = null, System.Uri source = null) -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<JustSaying.CloudEvents.CloudEvent<T>>
 JustSaying.CloudEvents.CloudEventSerializationFactory.GetSerializer<T>(string type, System.Uri source = null) -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<T>
 JustSaying.CloudEvents.CloudEventSerializationFactory.GetCloudEventType<T>() -> string
+JustSaying.CloudEvents.CloudEventSerializationFactory.GetDataSerializer<T>(string type = null) -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<T>
 JustSaying.CloudEvents.CloudEvent<T>
 JustSaying.CloudEvents.CloudEvent<T>.CloudEvent(T data, string id = null, System.Uri source = null, string type = null, System.DateTimeOffset? time = null, string subject = null, System.Collections.Generic.IReadOnlyDictionary<string, string> extensions = null) -> void
 JustSaying.CloudEvents.CloudEvent<T>.Data.get -> T
@@ -28,6 +29,7 @@ JustSaying.CloudEvents.CloudEventEnvelopeBodySerializer<T>.Deserialize(string me
 JustSaying.CloudEvents.CloudEventEnvelopeBodySerializer<T>.Serialize(JustSaying.CloudEvents.CloudEvent<T> message) -> string
 JustSaying.Fluent.MultiTypeQueueSubscriptionCloudEventExtensions
 static JustSaying.Fluent.MultiTypeQueueSubscriptionCloudEventExtensions.HandlingCloudEvent<T>(this JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder builder, string typeName = null, System.Action<JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder> middlewareConfiguration = null) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
+static JustSaying.Fluent.MultiTypeQueueSubscriptionCloudEventExtensions.HandlingCloudEventData<T>(this JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder builder, string typeName = null, System.Action<JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder> middlewareConfiguration = null) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
 JustSaying.Fluent.PublicationsBuilderCloudEventExtensions
 static JustSaying.Fluent.PublicationsBuilderCloudEventExtensions.WithCloudEvent<T>(this JustSaying.Fluent.PublicationsBuilder publications, string type, System.Uri source = null, string topicName = null) -> JustSaying.Fluent.PublicationsBuilder
 JustSaying.CloudEvents.CloudEventTypeDiscriminator
@@ -35,4 +37,4 @@ JustSaying.CloudEvents.CloudEventTypeDiscriminator.CloudEventTypeDiscriminator()
 JustSaying.CloudEvents.CloudEventTypeDiscriminator.TryGetMessageTypeName(JustSaying.Messaging.MessageDiscriminationContext context, out string typeName) -> bool
 override JustSaying.CloudEvents.CloudEventTypeDiscriminator.ToString() -> string
 Microsoft.Extensions.DependencyInjection.CloudEventsServiceCollectionExtensions
-static Microsoft.Extensions.DependencyInjection.CloudEventsServiceCollectionExtensions.AddJustSayingCloudEvents(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, System.Action<JustSaying.CloudEvents.CloudEventOptions> configure = null, System.Text.Json.JsonSerializerOptions dataSerializerOptions = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection
+static Microsoft.Extensions.DependencyInjection.CloudEventsServiceCollectionExtensions.AddJustSayingCloudEvents(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, System.Action<JustSaying.CloudEvents.CloudEventOptions> configure = null, System.Text.Json.JsonSerializerOptions dataSerializerOptions = null, bool useAsDefault = false) -> Microsoft.Extensions.DependencyInjection.IServiceCollection

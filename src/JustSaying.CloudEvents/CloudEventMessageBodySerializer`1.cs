@@ -25,26 +25,29 @@ public sealed class CloudEventMessageBodySerializer<TMessage> : IMessageBodySeri
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CloudEventMessageBodySerializer{TMessage}"/> class.
+    /// <paramref name="source"/> and <paramref name="type"/> are written only when serializing
+    /// (publishing); they may be <see langword="null"/> for a consume-only serializer, which unwraps
+    /// the inbound envelope's <c>data</c> without needing either.
     /// </summary>
     /// <param name="dataSerializer">The serializer used for the <c>data</c> payload.</param>
     /// <param name="metadataProvider">Provides the CloudEvents <c>id</c> and <c>time</c> from the message.</param>
-    /// <param name="source">The CloudEvents <c>source</c>.</param>
-    /// <param name="type">The CloudEvents <c>type</c> for this message type.</param>
+    /// <param name="source">The CloudEvents <c>source</c>, required to serialize.</param>
+    /// <param name="type">The CloudEvents <c>type</c> for this message type, required to serialize.</param>
     /// <param name="dataContentType">
     /// The CloudEvents <c>datacontenttype</c>, which must be a JSON media type. Defaults to <c>application/json</c>.
     /// </param>
     internal CloudEventMessageBodySerializer(
         IMessageBodySerializer<TMessage> dataSerializer,
         IMessageMetadataProvider metadataProvider,
-        Uri source,
-        string type,
+        Uri source = null,
+        string type = null,
         string dataContentType = "application/json")
     {
         _dataSerializer = dataSerializer ?? throw new ArgumentNullException(nameof(dataSerializer));
         _metadataProvider = metadataProvider ?? throw new ArgumentNullException(nameof(metadataProvider));
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        if (string.IsNullOrEmpty(source.OriginalString)) throw new ArgumentException("Parameter cannot be an empty URI.", nameof(source));
-        if (string.IsNullOrEmpty(type)) throw new ArgumentException("Parameter cannot be null or empty.", nameof(type));
+        _source = source;
+        if (source is not null && string.IsNullOrEmpty(source.OriginalString)) throw new ArgumentException("Parameter cannot be an empty URI.", nameof(source));
+        if (type is not null && type.Length == 0) throw new ArgumentException("Parameter cannot be empty.", nameof(type));
         _type = type;
         _dataContentType = dataContentType ?? "application/json";
         if (!JsonMediaType.IsJson(_dataContentType))
@@ -60,6 +63,11 @@ public sealed class CloudEventMessageBodySerializer<TMessage> : IMessageBodySeri
     /// <returns>The CloudEvents JSON.</returns>
     public string Serialize(TMessage message)
     {
+        var source = _source
+            ?? throw new InvalidOperationException($"A CloudEvents 'source' is required to publish '{typeof(TMessage).FullName}'; set CloudEventOptions.Source or pass one at the publication registration.");
+        var type = _type
+            ?? throw new InvalidOperationException($"A CloudEvents 'type' is required to publish '{typeof(TMessage).FullName}'; configure WithCloudEventType<{typeof(TMessage).Name}>(...) or pass one at the publication registration.");
+
         var dataJson = _dataSerializer.Serialize(message);
 
         using var stream = new MemoryStream();
@@ -72,8 +80,8 @@ public sealed class CloudEventMessageBodySerializer<TMessage> : IMessageBodySeri
             writer.WriteString("id", string.IsNullOrEmpty(id) ? Guid.NewGuid().ToString() : id);
             // As configured: Uri.ToString() would normalize it (lowercasing the host, adding a trailing
             // slash) and unescape it, which can leave an invalid URI-reference.
-            writer.WriteString("source", _source.OriginalString);
-            writer.WriteString("type", _type);
+            writer.WriteString("source", source.OriginalString);
+            writer.WriteString("type", type);
             writer.WriteString("time", _metadataProvider.GetTimestamp(message) ?? DateTimeOffset.UtcNow);
             writer.WriteString("datacontenttype", _dataContentType);
 

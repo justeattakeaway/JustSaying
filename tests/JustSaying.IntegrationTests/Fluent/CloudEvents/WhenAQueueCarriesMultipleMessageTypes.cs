@@ -1,4 +1,6 @@
+using Amazon.SQS.Model;
 using JustSaying.CloudEvents;
+using JustSaying.Fluent;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.DependencyInjection;
@@ -110,14 +112,15 @@ public class WhenAQueueCarriesMultipleMessageTypes : IntegrationTestBase
             .AddSingleton(placedHandler)
             .AddSingleton(cancelledHandler);
 
-        // Serialize everything as CloudEvents, mapping each type to its CloudEvents `type`.
-        services.RemoveAll<IMessageBodySerializationFactory>();
+        // Serialize everything as CloudEvents (an all-CloudEvents app), mapping each type to its
+        // CloudEvents `type`.
         services.AddJustSayingCloudEvents(options =>
         {
             options.Source = new Uri("https://orders.example.com");
             options.WithCloudEventType<OrderPlaced>(placedType);
             options.WithCloudEventType<OrderCancelled>(cancelledType);
-        });
+        },
+        useAsDefault: true);
 
         await WhenAsync(
             services,
@@ -134,6 +137,104 @@ public class WhenAQueueCarriesMultipleMessageTypes : IntegrationTestBase
                 (await placedHandled.Task.WaitAsync(cancellationToken)).OrderId.ShouldBe("order-1");
                 (await cancelledHandled.Task.WaitAsync(cancellationToken)).Reason.ShouldBe("out-of-stock");
             });
+    }
+
+    [Test]
+    public async Task Then_Native_And_CloudEvents_Types_Can_Share_The_Queue()
+    {
+        // Arrange - one queue carrying a native JustSaying message (routed by Subject, deserialized by
+        // the app-wide default serializer) and a CloudEvent (routed by its `type`, deserialized by the
+        // CloudEvents serializer). Each registration brings its own serializer, so neither format's
+        // configuration disturbs the other.
+        const string cancelledType = "com.example.orders.order.cancelled";
+
+        var placedHandled = new TaskCompletionSource<OrderPlaced>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var cancelledHandled = new TaskCompletionSource<CloudEvent<OrderCancelled>>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var placedHandler = Substitute.For<IHandlerAsync<OrderPlaced>>();
+        placedHandler.Handle(Arg.Any<OrderPlaced>())
+            .Returns(true)
+            .AndDoes(call => placedHandled.TrySetResult(call.Arg<OrderPlaced>()));
+
+        var cancelledHandler = Substitute.For<IHandlerAsync<CloudEvent<OrderCancelled>>>();
+        cancelledHandler.Handle(Arg.Any<CloudEvent<OrderCancelled>>())
+            .Returns(true)
+            .AndDoes(call => cancelledHandled.TrySetResult(call.Arg<CloudEvent<OrderCancelled>>()));
+
+        var services = GivenJustSaying()
+            .ConfigureJustSaying(builder => builder
+                // The native publication uses the app-wide default (System.Text.Json) serializer.
+                .Publications(p => p.WithQueue<OrderPlaced>(o => o.WithQueueName(UniqueName)))
+                .Subscriptions(s => s.ForQueue(UniqueName, q => q
+                    .Handling<OrderPlaced>()
+                    .HandlingCloudEvent<OrderCancelled>(cancelledType))))
+            .AddSingleton(placedHandler)
+            .AddSingleton(cancelledHandler);
+
+        // CloudEvents support for the HandlingCloudEvent registration only - the default serializer
+        // (and with it the native publication and subscription) is untouched.
+        services.AddJustSayingCloudEvents();
+
+        await WhenAsync(
+            services,
+            async (publisher, listener, cancellationToken) =>
+            {
+                await listener.StartAsync(cancellationToken);
+                await publisher.StartAsync(cancellationToken);
+
+                // Act - publish the native message through the bus, and drop a structured CloudEvent
+                // (as another CloudEvents system would produce it) straight onto the same queue.
+                await publisher.PublishAsync(new OrderPlaced { OrderId = "order-1" }, cancellationToken);
+
+                var sqs = CreateClientFactory().GetSqsClient(Region);
+                var queueUrl = (await sqs.GetQueueUrlAsync(UniqueName, cancellationToken)).QueueUrl;
+                var envelope = $$"""
+                    {
+                      "specversion": "1.0",
+                      "id": "{{Guid.NewGuid()}}",
+                      "source": "https://orders.example.com",
+                      "type": "{{cancelledType}}",
+                      "time": "{{DateTimeOffset.UtcNow:O}}",
+                      "datacontenttype": "application/json",
+                      "data": { "Reason": "out-of-stock" }
+                    }
+                    """;
+                await sqs.SendMessageAsync(new SendMessageRequest { QueueUrl = queueUrl, MessageBody = envelope }, cancellationToken);
+
+                // Assert - each message reached the handler for its own type, in its own shape.
+                (await placedHandled.Task.WaitAsync(cancellationToken)).OrderId.ShouldBe("order-1");
+
+                var cancelled = await cancelledHandled.Task.WaitAsync(cancellationToken);
+                cancelled.Data.Reason.ShouldBe("out-of-stock");
+                cancelled.Type.ShouldBe(cancelledType);
+                cancelled.Source.ShouldBe(new Uri("https://orders.example.com"));
+            });
+
+    [Test]
+    public async Task Then_Two_Types_Resolving_To_The_Same_Name_Fail_Fast()
+    {
+        // Arrange - the type name is what routes an inbound message to a serializer, so a duplicate
+        // would silently overwrite one registration and deserialize messages as the wrong type.
+        var services = GivenJustSaying()
+            .ConfigureJustSaying(builder => builder
+                .Subscriptions(s => s.ForQueue(UniqueName, q => q
+                    .Handling<OrderPlaced>("orders")
+                    .Handling<OrderCancelled>("orders"))))
+            .AddSingleton(Substitute.For<IHandlerAsync<OrderPlaced>>())
+            .AddSingleton(Substitute.For<IHandlerAsync<OrderCancelled>>());
+
+        var serviceProvider = services.BuildServiceProvider();
+
+        // Act
+        var exception = Should.Throw<InvalidOperationException>(
+            () => serviceProvider.GetRequiredService<IMessagingBus>());
+
+        // Assert
+        exception.Message.ShouldContain(nameof(OrderPlaced));
+        exception.Message.ShouldContain(nameof(OrderCancelled));
+        exception.Message.ShouldContain("orders");
+
+        await Task.CompletedTask;
     }
 
     [Test]
@@ -192,33 +293,6 @@ public class WhenAQueueCarriesMultipleMessageTypes : IntegrationTestBase
 
                 deadLettered.ShouldHaveSingleItem().Body.ShouldContain("out-of-stock");
             });
-    }
-
-    [Test]
-    public async Task Then_Two_Types_Resolving_To_The_Same_Name_Fail_Fast()
-    {
-        // Arrange - the type name is what routes an inbound message to a serializer, so a duplicate
-        // would silently overwrite one registration and deserialize messages as the wrong type.
-        var services = GivenJustSaying()
-            .ConfigureJustSaying(builder => builder
-                .Subscriptions(s => s.ForQueue(UniqueName, q => q
-                    .Handling<OrderPlaced>("orders")
-                    .Handling<OrderCancelled>("orders"))))
-            .AddSingleton(Substitute.For<IHandlerAsync<OrderPlaced>>())
-            .AddSingleton(Substitute.For<IHandlerAsync<OrderCancelled>>());
-
-        var serviceProvider = services.BuildServiceProvider();
-
-        // Act
-        var exception = Should.Throw<InvalidOperationException>(
-            () => serviceProvider.GetRequiredService<IMessagingBus>());
-
-        // Assert
-        exception.Message.ShouldContain(nameof(OrderPlaced));
-        exception.Message.ShouldContain(nameof(OrderCancelled));
-        exception.Message.ShouldContain("orders");
-
-        await Task.CompletedTask;
     }
 
     [Test]

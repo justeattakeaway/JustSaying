@@ -4,9 +4,7 @@ using Amazon.SQS.Model;
 using JustSaying.CloudEvents;
 using JustSaying.Fluent;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using NSubstitute;
 
 namespace JustSaying.IntegrationTests.Fluent.CloudEvents;
@@ -45,7 +43,6 @@ public class WhenHandlingACloudEventEnvelope : IntegrationTestBase
                     .HandlingCloudEvent<OrderPlaced>(OrderPlacedType))))
             .AddSingleton(handler);
 
-        services.RemoveAll<IMessageBodySerializationFactory>();
         services.AddJustSayingCloudEvents();
 
         var id = Guid.NewGuid().ToString();

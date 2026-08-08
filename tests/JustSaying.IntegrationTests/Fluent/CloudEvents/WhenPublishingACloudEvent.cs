@@ -4,9 +4,7 @@ using JustSaying.AwsTools;
 using JustSaying.CloudEvents;
 using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using NSubstitute;
 
 namespace JustSaying.IntegrationTests.Fluent.CloudEvents;
@@ -27,15 +25,14 @@ public class WhenPublishingACloudEvent : IntegrationTestBase
 
     private IServiceCollection GivenCloudEvents(IServiceCollection services)
     {
-        // GivenJustSaying() has already registered the default System.Text.Json serialization
-        // factory; replace it with the CloudEvents factory (which AddJustSayingCloudEvents only
-        // registers via TryAdd).
-        services.RemoveAll<IMessageBodySerializationFactory>();
+        // An all-CloudEvents application: opt CloudEvents in as the app-wide default, so the plain
+        // WithQueue<T>/ForQueue<T> registrations below speak CloudEvents too.
         services.AddJustSayingCloudEvents(options =>
         {
             options.Source = new Uri("https://orders.example.com");
             options.WithCloudEventType<OrderPlaced>(OrderPlacedType);
-        });
+        },
+        useAsDefault: true);
 
         return services;
     }
