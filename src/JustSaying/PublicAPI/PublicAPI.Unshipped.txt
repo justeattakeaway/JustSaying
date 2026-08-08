@@ -215,6 +215,8 @@ JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.HandleException.get -> S
 JustSaying.Fluent.MessagingConfigurationBuilder.WithMessageResponseLogger(System.Action<JustSaying.AwsTools.MessageHandling.MessageBatchResponse, System.Collections.Generic.IReadOnlyCollection<object>> logger) -> JustSaying.Fluent.MessagingConfigurationBuilder
 JustSaying.Fluent.MessagingConfigurationBuilder.WithMessageResponseLogger(System.Action<JustSaying.AwsTools.MessageHandling.MessageResponse, object> logger) -> JustSaying.Fluent.MessagingConfigurationBuilder
 JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>.WithMessageBodySerializer(JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<T> messageBodySerializer) -> JustSaying.Fluent.ISubscriptionBuilder<T>
+JustSaying.Fluent.QueueSubscriptionBuilder<T>.WithMessageBodySerializer(JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<T> messageBodySerializer) -> JustSaying.Fluent.QueueSubscriptionBuilder<T>
+JustSaying.Fluent.TopicSubscriptionBuilder<T>.WithMessageBodySerializer(JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<T> messageBodySerializer) -> JustSaying.Fluent.TopicSubscriptionBuilder<T>
 JustSaying.Fluent.SnsWriteConfigurationBuilder.WithErrorHandler(System.Func<System.Exception, object, bool> handler) -> JustSaying.Fluent.SnsWriteConfigurationBuilder
 JustSaying.Fluent.TopicAddressPublicationBuilder<T>.TopicAddressCustomizer.get -> System.Func<string, T, string>
 JustSaying.Fluent.TopicAddressPublicationBuilder<T>.WithExceptionHandler(System.Func<System.Exception, System.Collections.Generic.IReadOnlyCollection<T>, bool> exceptionBatchHandler) -> JustSaying.Fluent.TopicAddressPublicationBuilder<T>
