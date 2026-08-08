@@ -125,6 +125,41 @@ registration was silently discarded. v9 throws at startup instead:
 
 If you hit this, remove the redundant registration — only one of them was ever taking effect.
 
+## Unified destination addressing
+
+`TopicAddress` and `QueueAddress` are now public, and the main registration methods accept them
+directly — so how a destination is addressed is a value, not a separate method family. Pass an
+address for pre-existing infrastructure (never created by JustSaying), a name to create it
+explicitly, or nothing to fall back to the naming conventions:
+
+```csharp
+p.WithTopic<OrderPlaced>();                                   // by convention, created
+p.WithTopic<OrderPlaced>(c => c.WithTopicName("orders"));     // by name, created
+p.WithTopic<OrderPlaced>(TopicAddress.FromArn(topicArn));     // pre-existing, never created
+
+p.WithQueue<Refund>(QueueAddress.FromUri(queueUri));
+
+s.ForQueue<Refund>(QueueAddress.FromUri(queueUri));
+s.ForQueue(QueueAddress.FromUri(queueUri), q => q             // multi-type over an existing queue
+    .Handling<OrderPlaced>()
+    .HandlingCloudEvent<ParcelShipped>("com.example.parcel-shipped"));
+```
+
+The address overloads keep the slim configuration surface: their builder types expose only
+publish/read-time settings, so infrastructure options (tags, encryption, retention, …) are not
+reachable — the compiler enforces what the split `WithTopicArn`/`ForQueueUrl` families used to.
+Those methods still exist and now delegate to the unified overloads; use whichever style you
+prefer.
+
+The CloudEvents registrations take the same values, so they never need per-address variants:
+
+```csharp
+p.WithCloudEventTopic<ParcelShipped>(TopicAddress.FromArn(topicArn),
+    "com.example.parcel-shipped", source);
+p.WithCloudEventQueue<OrderCancelled>(QueueAddress.FromUrl(queueUrl),
+    "com.example.order-cancelled", source);
+```
+
 ## CloudEvents (new package: `JustSaying.CloudEvents`)
 
 v9 can publish and consume [CloudEvents 1.0](https://github.com/cloudevents/spec) structured-mode envelopes via the new `JustSaying.CloudEvents` package. The envelope is chosen **per registration**, not per application: `services.AddJustSayingCloudEvents(...)` registers the CloudEvents serializer as its own service and leaves the app-wide default serializer untouched, so legacy, plain-JSON and CloudEvents registrations coexist in one app.

@@ -7,7 +7,7 @@ namespace JustSaying.Fluent;
 /// <summary>
 /// A type that encapsulates an address of an SQS queue.
 /// </summary>
-internal sealed class QueueAddress
+public sealed class QueueAddress
 {
     private QueueAddress()
     { }
