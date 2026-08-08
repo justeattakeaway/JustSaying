@@ -35,7 +35,7 @@ public static class CloudEventsServiceCollectionExtensions
     /// When <see langword="true"/>, additionally makes CloudEvents the app-wide default serialization
     /// format, so every plain registration (<c>WithTopic&lt;T&gt;</c>, <c>ForQueue&lt;T&gt;</c>, …)
     /// speaks CloudEvents too — for an all-CloudEvents application. Every published type must then have
-    /// a <c>type</c> mapped via <see cref="CloudEventOptions.WithCloudEventType{TMessage}"/> (an
+    /// a <c>type</c> mapped via <see cref="CloudEventOptions.MapType{TMessage}"/> (an
     /// unmapped type fails at startup rather than silently publishing plain JSON). The default is
     /// <see langword="false"/>: non-CloudEvents registrations keep the app-wide default (System.Text.Json
     /// unless configured otherwise).

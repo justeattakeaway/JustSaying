@@ -91,7 +91,7 @@ For an all-CloudEvents application, opt the CloudEvents serializer in as the app
 services.AddJustSayingCloudEvents(options =>
 {
     options.Source = new Uri("https://orders.example.com");
-    options.WithCloudEventType<OrderPlaced>("com.example.order-placed");
+    options.MapType<OrderPlaced>("com.example.order-placed");
 },
 useAsDefault: true);
 ```

@@ -22,7 +22,7 @@ public class WhenAddingCloudEventsToTheServiceCollection
         services.AddJustSayingCloudEvents(options =>
         {
             options.Source = new Uri("https://orders.example.com/");
-            options.WithCloudEventType<OrderPlaced>("com.justeattakeaway.orders.orderplaced");
+            options.MapType<OrderPlaced>("com.justeattakeaway.orders.orderplaced");
         });
 
         await using var provider = services.BuildServiceProvider();
