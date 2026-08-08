@@ -119,6 +119,66 @@ public sealed class SubscriptionsBuilder
     }
 
     /// <summary>
+    /// Configures a queue subscription for a pre-existing queue. The queue is never created by
+    /// JustSaying, so only read-time configuration is available — none of the infrastructure options
+    /// apply.
+    /// </summary>
+    /// <param name="address">The address of the queue to subscribe to (see <see cref="QueueAddress.FromUri(Uri, string)"/>, <see cref="QueueAddress.FromUrl(string, string)"/> and <see cref="QueueAddress.FromArn(string)"/>).</param>
+    /// <param name="configure">An optional delegate to configure the queue subscription.</param>
+    /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
+    /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="address"/> is <see langword="null"/>.</exception>
+    public SubscriptionsBuilder ForQueue<T>(QueueAddress address) where T : class
+        => ForQueue<T>(address, null);
+
+    /// <summary>
+    /// Configures a queue subscription for a pre-existing queue. The queue is never created by
+    /// JustSaying, so only read-time configuration is available — none of the infrastructure options
+    /// apply.
+    /// </summary>
+    /// <param name="address">The address of the queue to subscribe to (see <see cref="QueueAddress.FromUri(Uri, string)"/>, <see cref="QueueAddress.FromUrl(string, string)"/> and <see cref="QueueAddress.FromArn(string)"/>).</param>
+    /// <param name="configure">An optional delegate to configure the queue subscription.</param>
+    /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
+    /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="address"/> is <see langword="null"/>.</exception>
+    public SubscriptionsBuilder ForQueue<T>(QueueAddress address, Action<QueueAddressSubscriptionBuilder<T>> configure) where T : class
+    {
+        if (address == null) throw new ArgumentNullException(nameof(address));
+
+        var builder = new QueueAddressSubscriptionBuilder<T>(address);
+
+        configure?.Invoke(builder);
+
+        Subscriptions.Add(builder);
+
+        return this;
+    }
+
+    /// <summary>
+    /// Configures a subscription to a pre-existing queue that carries more than one message type. The
+    /// queue is never created by JustSaying, and the type of each inbound message is resolved from a
+    /// discriminator on the wire (by default the SNS <c>Subject</c>), so each message is dispatched to
+    /// the handler registered for its own type.
+    /// </summary>
+    /// <param name="address">The address of the queue to subscribe to (see <see cref="QueueAddress.FromUri(Uri, string)"/>, <see cref="QueueAddress.FromUrl(string, string)"/> and <see cref="QueueAddress.FromArn(string)"/>).</param>
+    /// <param name="configure">A delegate used to register the message types the queue carries.</param>
+    /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="address"/> or <paramref name="configure"/> is <see langword="null"/>.</exception>
+    public SubscriptionsBuilder ForQueue(QueueAddress address, Action<MultiTypeQueueSubscriptionBuilder> configure)
+    {
+        if (address == null) throw new ArgumentNullException(nameof(address));
+        if (configure == null) throw new ArgumentNullException(nameof(configure));
+
+        var builder = new MultiTypeQueueSubscriptionBuilder(address);
+
+        configure(builder);
+
+        Subscriptions.Add(builder);
+
+        return this;
+    }
+
+    /// <summary>
     /// Configures a queue subscription for a pre-existing queue.
     /// </summary>
     /// <param name="queueArn">The ARN of the queue to subscribe to.</param>
@@ -129,14 +189,7 @@ public sealed class SubscriptionsBuilder
     {
         if (queueArn == null) throw new ArgumentNullException(nameof(queueArn));
 
-        var queueAddress = QueueAddress.FromArn(queueArn);
-        var builder = new QueueAddressSubscriptionBuilder<T>(queueAddress);
-
-        configure?.Invoke(builder);
-
-        Subscriptions.Add(builder);
-
-        return this;
+        return ForQueue(QueueAddress.FromArn(queueArn), configure);
     }
 
     /// <summary>
@@ -151,14 +204,7 @@ public sealed class SubscriptionsBuilder
     {
         if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
 
-        var queueAddress = QueueAddress.FromUrl(queueUrl, regionName);
-        var builder = new QueueAddressSubscriptionBuilder<T>(queueAddress);
-
-        configure?.Invoke(builder);
-
-        Subscriptions.Add(builder);
-
-        return this;
+        return ForQueue(QueueAddress.FromUrl(queueUrl, regionName), configure);
     }
 
     /// <summary>
@@ -173,14 +219,7 @@ public sealed class SubscriptionsBuilder
     {
         if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
 
-        var queueAddress = QueueAddress.FromUri(queueUrl, regionName);
-        var builder = new QueueAddressSubscriptionBuilder<T>(queueAddress);
-
-        configure?.Invoke(builder);
-
-        Subscriptions.Add(builder);
-
-        return this;
+        return ForQueue(QueueAddress.FromUri(queueUrl, regionName), configure);
     }
 
     /// <summary>

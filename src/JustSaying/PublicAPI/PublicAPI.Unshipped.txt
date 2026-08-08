@@ -289,6 +289,20 @@ JustSaying.Messaging.SubjectMessageTypeDiscriminator.SubjectMessageTypeDiscrimin
 JustSaying.Messaging.SubjectMessageTypeDiscriminator.TryGetMessageTypeName(JustSaying.Messaging.MessageDiscriminationContext context, out string typeName) -> bool
 JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.Handling<TMessage>(string typeName = null, System.Action<JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder> middlewareConfiguration = null) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
 JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.WithDiscriminator(JustSaying.Messaging.IMessageTypeDiscriminator discriminator) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
+JustSaying.Fluent.TopicAddress
+JustSaying.Fluent.TopicAddress.TopicArn.get -> string
+static JustSaying.Fluent.TopicAddress.FromArn(string topicArn) -> JustSaying.Fluent.TopicAddress
+JustSaying.Fluent.QueueAddress
+JustSaying.Fluent.QueueAddress.QueueUrl.get -> System.Uri
+JustSaying.Fluent.QueueAddress.RegionName.get -> string
+static JustSaying.Fluent.QueueAddress.FromUri(System.Uri queueUrl, string regionName = null) -> JustSaying.Fluent.QueueAddress
+static JustSaying.Fluent.QueueAddress.FromUrl(string queueUrl, string regionName = null) -> JustSaying.Fluent.QueueAddress
+static JustSaying.Fluent.QueueAddress.FromArn(string queueArn) -> JustSaying.Fluent.QueueAddress
+JustSaying.Fluent.PublicationsBuilder.WithTopic<T>(JustSaying.Fluent.TopicAddress address, System.Action<JustSaying.Fluent.TopicAddressPublicationBuilder<T>> configure = null) -> JustSaying.Fluent.PublicationsBuilder
+JustSaying.Fluent.PublicationsBuilder.WithQueue<T>(JustSaying.Fluent.QueueAddress address, System.Action<JustSaying.Fluent.QueueAddressPublicationBuilder<T>> configure = null) -> JustSaying.Fluent.PublicationsBuilder
+JustSaying.Fluent.SubscriptionsBuilder.ForQueue<T>(JustSaying.Fluent.QueueAddress address) -> JustSaying.Fluent.SubscriptionsBuilder
+JustSaying.Fluent.SubscriptionsBuilder.ForQueue<T>(JustSaying.Fluent.QueueAddress address, System.Action<JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>> configure) -> JustSaying.Fluent.SubscriptionsBuilder
+JustSaying.Fluent.SubscriptionsBuilder.ForQueue(JustSaying.Fluent.QueueAddress address, System.Action<JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder> configure) -> JustSaying.Fluent.SubscriptionsBuilder
 *REMOVED*JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.HandleException.get -> System.Func<System.Exception, JustSaying.Models.Message, bool>
 *REMOVED*JustSaying.Fluent.MessagingConfigurationBuilder.WithMessageResponseLogger(System.Action<JustSaying.AwsTools.MessageHandling.MessageBatchResponse, System.Collections.Generic.IReadOnlyCollection<JustSaying.Models.Message>> logger) -> JustSaying.Fluent.MessagingConfigurationBuilder
 *REMOVED*JustSaying.Fluent.MessagingConfigurationBuilder.WithMessageResponseLogger(System.Action<JustSaying.AwsTools.MessageHandling.MessageResponse, JustSaying.Models.Message> logger) -> JustSaying.Fluent.MessagingConfigurationBuilder

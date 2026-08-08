@@ -256,4 +256,71 @@ public class WhenAQueueCarriesMultipleMessageTypes : IntegrationTestBase
 
         await Task.CompletedTask;
     }
+
+    [Test]
+    public async Task Then_A_PreExisting_Queue_Can_Carry_Multiple_Types()
+    {
+        // Arrange - the queue exists before JustSaying is configured; JustSaying never creates it.
+        // The same multi-type registration surface (including CloudEvents) works over its address.
+        const string cancelledType = "com.example.orders.order.cancelled";
+
+        var sqs = CreateClientFactory().GetSqsClient(Region);
+        var queueUrl = (await sqs.CreateQueueAsync(UniqueName)).QueueUrl;
+
+        var placedHandled = new TaskCompletionSource<OrderPlaced>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var cancelledHandled = new TaskCompletionSource<CloudEvent<OrderCancelled>>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var placedHandler = Substitute.For<IHandlerAsync<OrderPlaced>>();
+        placedHandler.Handle(Arg.Any<OrderPlaced>())
+            .Returns(true)
+            .AndDoes(call => placedHandled.TrySetResult(call.Arg<OrderPlaced>()));
+
+        var cancelledHandler = Substitute.For<IHandlerAsync<CloudEvent<OrderCancelled>>>();
+        cancelledHandler.Handle(Arg.Any<CloudEvent<OrderCancelled>>())
+            .Returns(true)
+            .AndDoes(call => cancelledHandled.TrySetResult(call.Arg<CloudEvent<OrderCancelled>>()));
+
+        var services = GivenJustSaying()
+            .ConfigureJustSaying(builder => builder
+                // The native publication targets the existing queue by address too.
+                .Publications(p => p.WithQueue<OrderPlaced>(QueueAddress.FromUrl(queueUrl)))
+                .Subscriptions(s => s.ForQueue(QueueAddress.FromUrl(queueUrl), q => q
+                    .Handling<OrderPlaced>()
+                    .HandlingCloudEvent<OrderCancelled>(cancelledType))))
+            .AddSingleton(placedHandler)
+            .AddSingleton(cancelledHandler);
+
+        services.AddJustSayingCloudEvents();
+
+        await WhenAsync(
+            services,
+            async (publisher, listener, cancellationToken) =>
+            {
+                await listener.StartAsync(cancellationToken);
+                await publisher.StartAsync(cancellationToken);
+
+                // Act - the native message through the bus, and a raw CloudEvent straight onto the queue.
+                await publisher.PublishAsync(new OrderPlaced { OrderId = "order-1" }, cancellationToken);
+
+                var envelope = $$"""
+                    {
+                      "specversion": "1.0",
+                      "id": "{{Guid.NewGuid()}}",
+                      "source": "https://orders.example.com",
+                      "type": "{{cancelledType}}",
+                      "time": "{{DateTimeOffset.UtcNow:O}}",
+                      "datacontenttype": "application/json",
+                      "data": { "Reason": "out-of-stock" }
+                    }
+                    """;
+                await sqs.SendMessageAsync(new SendMessageRequest { QueueUrl = queueUrl, MessageBody = envelope }, cancellationToken);
+
+                // Assert
+                (await placedHandled.Task.WaitAsync(cancellationToken)).OrderId.ShouldBe("order-1");
+
+                var cancelled = await cancelledHandled.Task.WaitAsync(cancellationToken);
+                cancelled.Data.Reason.ShouldBe("out-of-stock");
+                cancelled.Type.ShouldBe(cancelledType);
+            });
+    }
 }

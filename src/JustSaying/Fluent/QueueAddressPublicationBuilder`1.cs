@@ -28,6 +28,22 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T> w
     private Action<PublishMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
     /// <summary>
+    /// An optional custom serializer for this publication, used instead of the per-type default from
+    /// the bus's serialization factory. Built from the bus's <see cref="IServiceResolver"/> so a
+    /// serializer package can resolve its own serialization services from the container without
+    /// replacing the app-wide factory. Internal extensibility seam for serializer packages (such as
+    /// JustSaying.CloudEvents).
+    /// </summary>
+    internal Func<IServiceResolver, IMessageBodySerializer<T>> SerializerOverride { get; set; }
+
+    /// <summary>
+    /// An optional resolver for the <c>Subject</c> written into the queue envelope, used instead of the
+    /// logical name of <typeparamref name="T"/>. Internal extensibility seam used by wrapper
+    /// publications so the subject reflects the payload type rather than the wrapper type.
+    /// </summary>
+    internal Func<IMessageTypeRegistry, string> SubjectResolver { get; set; }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="QueueAddressPublicationBuilder{T}"/> class.
     /// </summary>
     /// <param name="queueAddress">The address of the queue to publish to.</param>
@@ -103,7 +119,9 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T> w
 
         var config = bus.Config;
         var compressionOptions = _compressionOptions ?? bus.Config.DefaultCompressionOptions;
-        var subject = _subjectSet ? _subject : bus.MessageTypeRegistry.GetLogicalName(typeof(T));
+        var subject = _subjectSet
+            ? _subject
+            : SubjectResolver?.Invoke(bus.MessageTypeRegistry) ?? bus.MessageTypeRegistry.GetLogicalName(typeof(T));
         var sqsClient = proxy.GetAwsClientFactory().GetSqsClient(RegionEndpoint.GetBySystemName(_queueAddress.RegionName));
 
         if (_shouldCheckQueueExistence)
@@ -119,7 +137,9 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T> w
             });
         }
 
-        var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
+        var serializer = SerializerOverride is null
+            ? bus.MessageBodySerializerFactory.GetSerializer<T>()
+            : SerializerOverride(serviceResolver);
         // A self-describing serializer (for example CloudEvents) already carries the message's type
         // metadata, so the {Message, Subject} queue envelope would just double-wrap it.
         var isSelfDescribing = serializer is ISelfDescribingMessageBodySerializer;
@@ -136,7 +156,7 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T> w
         var eventPublisher = new SqsMessagePublisher(
             _queueAddress.QueueUrl,
             sqsClient,
-            new OutboundMessageConverter(PublishDestinationType.Queue, serializer.Erase(), new MessageCompressionRegistry([new GzipMessageBodyCompression()]), compressionOptions, subject, isRawMessage),
+            new OutboundMessageConverter(PublishDestinationType.Queue, serializer.Erase(), bus.CompressionRegistry, compressionOptions, subject, isRawMessage),
             loggerFactory,
             bus.Config.MessageMetadataProvider)
         {
