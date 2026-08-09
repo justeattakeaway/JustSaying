@@ -69,6 +69,45 @@ public class WhenPublishingCloudEventsByConvention : IntegrationTestBase
     }
 
     [Test]
+    [Arguments("")]
+    [Arguments("   ")]
+    public async Task Then_A_Blank_Queue_Name_Falls_Back_To_The_Convention(string blankQueueName)
+    {
+        // Arrange — a blank name is "not provided", not an explicit empty name. Treating it as provided
+        // would skip the resolver on the envelope registration and name that queue after CloudEvent<T>.
+        var services = GivenJustSaying()
+            .ConfigureJustSaying(builder => builder
+                .Publications(p => p.WithCloudEventQueue<ConventionOrderPlaced>(
+                    OrderPlacedType, RegistrationSource, queueName: blankQueueName)));
+
+        services.AddJustSayingCloudEvents();
+
+        var serviceProvider = services.BuildServiceProvider();
+        var publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
+
+        await RunActionWithTimeout(async cancellationToken =>
+        {
+            await publisher.StartAsync(cancellationToken);
+
+            // Act
+            await publisher.PublishAsync(new ConventionOrderPlaced { OrderId = "bare-1" }, cancellationToken);
+            await publisher.PublishAsync(new CloudEvent<ConventionOrderPlaced>(
+                new ConventionOrderPlaced { OrderId = "wrapped-2" }), cancellationToken);
+
+            // Assert
+            var sqs = CreateClientFactory().GetSqsClient(Region);
+            var queueUrl = (await sqs.GetQueueUrlAsync(ConventionName, cancellationToken)).QueueUrl;
+            var bodies = await ReceiveManyAsync(sqs, queueUrl, 2, cancellationToken);
+
+            bodies.Count.ShouldBe(2);
+            OrderIds(bodies).ShouldBe(["bare-1", "wrapped-2"], ignoreOrder: true);
+
+            await Should.ThrowAsync<QueueDoesNotExistException>(
+                () => sqs.GetQueueUrlAsync(WrapperConventionName, cancellationToken));
+        });
+    }
+
+    [Test]
     public async Task Then_Both_Shapes_Publish_To_The_Topic_Named_After_The_Payload_Type()
     {
         // Arrange
