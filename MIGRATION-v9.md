@@ -56,16 +56,43 @@ Rename batch calls accordingly. Single-message `PublishAsync` is unchanged.
 
 ### The default serializer is now System.Text.Json
 
-The default message body serializer changes from **Newtonsoft.Json** to **System.Text.Json** (the source-generator-friendly path that enables Native AOT). This affects the default wire format — review for behavioural differences (for example, STScJ is stricter about types and handles some constructs differently).
+The default message body serializer changes from **Newtonsoft.Json** to **System.Text.Json** (the source-generator-friendly path that enables Native AOT). This affects the default wire format — review for behavioural differences (for example, STJ is stricter about types and handles some constructs differently).
 
-To keep using Newtonsoft.Json, opt back in explicitly:
+To keep using Newtonsoft.Json, register the factory yourself. `AddJustSaying` registers the System.Text.Json factory with `TryAddSingleton`, so **register yours before the `AddJustSaying` call** and it wins:
 
 ```csharp
-services.AddJustSaying(...)
-        // register the Newtonsoft factory before/after AddJustSaying as appropriate
+using JustSaying.Messaging.MessageSerialization;
+
+// Must come before AddJustSaying — the default is registered with TryAddSingleton.
+services.AddSingleton<IMessageBodySerializationFactory>(
+    new NewtonsoftSerializationFactory());
+
+services.AddJustSaying(builder => builder.Messaging(c => c.WithRegion("eu-west-1")));
 ```
 
-…or via the fluent `WithMessageBodySerializer` / serialization-factory hook. Newtonsoft.Json remains fully supported as an opt-in; it is not Native-AOT-compatible.
+Pass `JsonSerializerSettings` to the constructor if you were customising them:
+
+```csharp
+services.AddSingleton<IMessageBodySerializationFactory>(
+    new NewtonsoftSerializationFactory(new JsonSerializerSettings
+    {
+        NullValueHandling = NullValueHandling.Ignore,
+    }));
+```
+
+StructureMap resolves the *last* registration rather than the first, so there register it **after** `AddJustSaying`:
+
+```csharp
+var container = new Container(registry =>
+{
+    registry.AddJustSaying("eu-west-1");
+    registry.For<IMessageBodySerializationFactory>()
+            .Use(new NewtonsoftSerializationFactory())
+            .Singleton();
+});
+```
+
+Newtonsoft.Json remains fully supported as an opt-in. It is not Native-AOT-compatible, so `NewtonsoftSerializationFactory` is annotated with `[RequiresUnreferencedCode]` / `[RequiresDynamicCode]` and will produce trim/AOT warnings in a project that opts into those analysers.
 
 ### Serialization interface is generic
 
