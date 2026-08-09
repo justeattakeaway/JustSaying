@@ -16,12 +16,14 @@ internal sealed class SnsMessagePublisher(
     IOutboundMessageConverter messageConverter,
     ILoggerFactory loggerFactory,
     Func<Exception, object, bool> handleException,
-    Func<Exception, IReadOnlyCollection<object>, bool> handleBatchException) : IMessagePublisher, IMessageBatchPublisher, IInterrogable
+    Func<Exception, IReadOnlyCollection<object>, bool> handleBatchException,
+    IMessageMetadataProvider metadataProvider = null) : IMessagePublisher, IMessageBatchPublisher, IInterrogable
 {
     private readonly IOutboundMessageConverter _messageConverter = messageConverter;
     private readonly Func<Exception, object, bool> _handleException = handleException;
     private readonly Func<Exception, IReadOnlyCollection<object>, bool> _handleBatchException = handleBatchException;
     private readonly IAmazonSimpleNotificationService _client = client;
+    private readonly IMessageMetadataProvider _metadataProvider = metadataProvider ?? DefaultMessageMetadataProvider.Instance;
     private readonly ILogger _logger = loggerFactory.CreateLogger("JustSaying.Publish");
     public Action<MessageResponse, object> MessageResponseLogger { get; set; }
     public Action<MessageBatchResponse, IReadOnlyCollection<object>> MessageBatchResponseLogger { get; set; }
@@ -33,8 +35,9 @@ internal sealed class SnsMessagePublisher(
         IOutboundMessageConverter messageConverter,
         ILoggerFactory loggerFactory,
         Func<Exception, object, bool> handleException,
-        Func<Exception, IReadOnlyCollection<object>, bool> handleBatchException)
-        : this(client, messageConverter, loggerFactory, handleException, handleBatchException)
+        Func<Exception, IReadOnlyCollection<object>, bool> handleBatchException,
+        IMessageMetadataProvider metadataProvider = null)
+        : this(client, messageConverter, loggerFactory, handleException, handleBatchException, metadataProvider)
     {
         Arn = topicArn;
     }
@@ -73,7 +76,7 @@ internal sealed class SnsMessagePublisher(
         {
             _logger.LogInformation(
                 "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
-                MessageIdentity.GetId(message),
+                MessageIdentity.GetId(message, _metadataProvider),
                 message.GetType().FullName,
                 "Topic",
                 request.TopicArn);
@@ -265,7 +268,7 @@ internal sealed class SnsMessagePublisher(
 
             PublishBatchRequestEntry request = new()
             {
-                Id = MessageIdentity.GetBatchEntryId(message),
+                Id = MessageIdentity.GetBatchEntryId(message, _metadataProvider),
                 Subject = subject,
                 Message = messageToSend,
             };

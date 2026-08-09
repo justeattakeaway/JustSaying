@@ -18,17 +18,31 @@ internal sealed class MessageTypeRegistry(IMessageSubjectProvider subjectProvide
     private readonly IMessageSubjectProvider _subjectProvider = subjectProvider ?? throw new ArgumentNullException(nameof(subjectProvider));
     private readonly ConcurrentDictionary<Type, string> _namesByType = new();
     private readonly ConcurrentDictionary<string, Type> _typesByName = new(StringComparer.Ordinal);
+    private readonly object _writeLock = new();
 
     public string GetLogicalName(Type messageType)
     {
         if (messageType is null) throw new ArgumentNullException(nameof(messageType));
 
-        return _namesByType.GetOrAdd(messageType, type =>
+        if (_namesByType.TryGetValue(messageType, out string existing))
         {
-            string name = _subjectProvider.GetSubjectForType(type);
-            _typesByName[name] = type;
+            return existing;
+        }
+
+        // Both directions are written under a lock so the forward and reverse maps stay consistent
+        // with each other, including when a name is later overridden by Register.
+        lock (_writeLock)
+        {
+            if (_namesByType.TryGetValue(messageType, out existing))
+            {
+                return existing;
+            }
+
+            string name = _subjectProvider.GetSubjectForType(messageType);
+            _namesByType[messageType] = name;
+            _typesByName[name] = messageType;
             return name;
-        });
+        }
     }
 
     public void Register(Type messageType, string logicalName)
@@ -36,8 +50,21 @@ internal sealed class MessageTypeRegistry(IMessageSubjectProvider subjectProvide
         if (messageType is null) throw new ArgumentNullException(nameof(messageType));
         if (string.IsNullOrEmpty(logicalName)) throw new ArgumentException("Parameter cannot be null or empty.", nameof(logicalName));
 
-        _namesByType[messageType] = logicalName;
-        _typesByName[logicalName] = messageType;
+        lock (_writeLock)
+        {
+            // An override replaces the type's previous name, so drop the stale reverse entry rather than
+            // leaving both the old and the new name resolving to this type.
+            if (_namesByType.TryGetValue(messageType, out string previousName) &&
+                !string.Equals(previousName, logicalName, StringComparison.Ordinal) &&
+                _typesByName.TryGetValue(previousName, out Type previouslyMapped) &&
+                previouslyMapped == messageType)
+            {
+                _typesByName.TryRemove(previousName, out _);
+            }
+
+            _namesByType[messageType] = logicalName;
+            _typesByName[logicalName] = messageType;
+        }
     }
 
     public bool TryResolveType(string logicalName, out Type messageType)
