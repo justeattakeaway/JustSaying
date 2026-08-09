@@ -103,18 +103,15 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
         var config = bus.Config;
         var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
 
-        var queue = creator.EnsureQueueExists(region, subscriptionConfig);
-        bus.AddStartupTask(queue.StartupTask);
-
-        var serializersByName = new Dictionary<string, IMessageBodySerializer>(StringComparer.Ordinal);
+        // The discriminator value is what routes an inbound message to a serializer, so a blank or
+        // duplicated one is a misconfiguration that would otherwise silently deserialize messages as the
+        // wrong type. Resolve the names up front, before any queue is created.
+        var namesByRegistration = new Dictionary<IMessageTypeRegistration, string>();
         var typesByName = new Dictionary<string, Type>(StringComparer.Ordinal);
         foreach (var registration in _registrations)
         {
             var typeName = registration.TypeName ?? bus.MessageTypeRegistry.GetLogicalName(registration.MessageType);
 
-            // The discriminator value is what routes an inbound message to a serializer, so a blank or
-            // duplicated one is a misconfiguration that would otherwise silently deserialize messages as
-            // the wrong type.
             if (string.IsNullOrWhiteSpace(typeName))
             {
                 throw new InvalidOperationException(
@@ -131,7 +128,16 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
             }
 
             typesByName[typeName] = registration.MessageType;
-            serializersByName[typeName] = registration.CreateErasedSerializer(bus);
+            namesByRegistration[registration] = typeName;
+        }
+
+        var queue = creator.EnsureQueueExists(region, subscriptionConfig);
+        bus.AddStartupTask(queue.StartupTask);
+
+        var serializersByName = new Dictionary<string, IMessageBodySerializer>(StringComparer.Ordinal);
+        foreach (var registration in _registrations)
+        {
+            serializersByName[namesByRegistration[registration]] = registration.CreateErasedSerializer(bus);
             registration.RegisterHandler(bus, handlerResolver, serviceResolver, subscriptionConfig.QueueName);
         }
 
