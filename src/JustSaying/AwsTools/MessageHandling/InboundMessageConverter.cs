@@ -21,8 +21,8 @@ internal sealed class InboundMessageConverter : IInboundMessageConverter
 
     public InboundMessageConverter(IInboundMessageSerializerResolver serializerResolver, MessageCompressionRegistry compressionRegistry, bool isRawMessage)
     {
-        _serializerResolver = serializerResolver;
-        _compressionRegistry = compressionRegistry;
+        _serializerResolver = serializerResolver ?? throw new ArgumentNullException(nameof(serializerResolver));
+        _compressionRegistry = compressionRegistry ?? throw new ArgumentNullException(nameof(compressionRegistry));
         _isRawMessage = isRawMessage;
     }
 
@@ -32,26 +32,50 @@ internal sealed class InboundMessageConverter : IInboundMessageConverter
         var attributes = GetMessageAttributes(message, body);
 
         string subject = null;
-        if (body is not null && !_isRawMessage)
+        if (body is not null && !_isRawMessage && TryParseEnvelope(body, out var jsonObject))
         {
-            var jsonNode = JsonNode.Parse(body);
-            if (jsonNode is JsonObject jsonObject)
+            if (jsonObject.TryGetPropertyValue("Message", out var messageNode))
             {
-                if (jsonObject.TryGetPropertyValue("Message", out var messageNode))
-                {
-                    body = messageNode?.GetValue<string>();
-                }
+                body = messageNode?.GetValue<string>();
+            }
 
-                if (jsonObject.TryGetPropertyValue("Subject", out var subjectNode))
-                {
-                    subject = subjectNode?.GetValue<string>();
-                }
+            if (jsonObject.TryGetPropertyValue("Subject", out var subjectNode))
+            {
+                subject = subjectNode?.GetValue<string>();
             }
         }
         body = ApplyBodyDecompression(body, attributes);
         var serializer = _serializerResolver.Resolve(body, subject, attributes);
         var result = serializer.Deserialize(body);
         return new ValueTask<InboundMessage>(new InboundMessage(result, attributes));
+    }
+
+    /// <summary>
+    /// Attempts to read the <c>{Message, Subject}</c> queue envelope from a body. A body that is not a
+    /// JSON object simply has no envelope to strip and is passed through untouched — that covers a
+    /// publication whose serializer is self-describing (CloudEvents), which is sent without the envelope,
+    /// and a compressed body, which arrives as a bare Base64 string rather than JSON.
+    /// </summary>
+    private static bool TryParseEnvelope(string body, out JsonObject envelope)
+    {
+        envelope = null;
+
+        var trimmed = body.AsSpan().TrimStart();
+        if (trimmed.IsEmpty || trimmed[0] != '{')
+        {
+            return false;
+        }
+
+        try
+        {
+            envelope = JsonNode.Parse(body) as JsonObject;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+
+        return envelope is not null;
     }
 
     private string ApplyBodyDecompression(string body, MessageAttributes attributes)

@@ -35,4 +35,28 @@ public class WhenDiscriminatingCloudEventTypes
         await Assert.That(discriminator.TryGetMessageTypeName(new MessageDiscriminationContext("{\"foo\":1}", null, new()), out _)).IsFalse();
         await Assert.That(discriminator.TryGetMessageTypeName(new MessageDiscriminationContext("not json", null, new()), out _)).IsFalse();
     }
+
+    [Test]
+    public async Task ReturnsFalseForANonCloudEventThatHappensToHaveAType()
+    {
+        var discriminator = new CloudEventTypeDiscriminator();
+
+        // A bare "type" property is far too weak a signal to claim a payload as a CloudEvent.
+        var body = """{"type":"pepperoni","size":"large"}""";
+
+        await Assert.That(discriminator.TryGetMessageTypeName(new MessageDiscriminationContext(body, null, new()), out var typeName)).IsFalse();
+        await Assert.That(typeName).IsNull();
+    }
+
+    [Test]
+    public async Task ReturnsFalseWhenSpecVersionIsMissingOrEmpty()
+    {
+        var discriminator = new CloudEventTypeDiscriminator();
+
+        var noSpecVersion = """{"id":"1","source":"https://example.com/","type":"com.example.thing"}""";
+        var emptySpecVersion = """{"specversion":"","id":"1","source":"https://example.com/","type":"com.example.thing"}""";
+
+        await Assert.That(discriminator.TryGetMessageTypeName(new MessageDiscriminationContext(noSpecVersion, null, new()), out _)).IsFalse();
+        await Assert.That(discriminator.TryGetMessageTypeName(new MessageDiscriminationContext(emptySpecVersion, null, new()), out _)).IsFalse();
+    }
 }
