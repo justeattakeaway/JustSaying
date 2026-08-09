@@ -13,9 +13,11 @@ namespace JustSaying.AwsTools.MessageHandling;
 internal sealed class SqsMessagePublisher(
     IAmazonSQS client,
     OutboundMessageConverter messageConverter,
-    ILoggerFactory loggerFactory) : IMessagePublisher, IMessageBatchPublisher
+    ILoggerFactory loggerFactory,
+    IMessageMetadataProvider metadataProvider = null) : IMessagePublisher, IMessageBatchPublisher
 {
     private readonly ILogger _logger = loggerFactory.CreateLogger("JustSaying.Publish");
+    private readonly IMessageMetadataProvider _metadataProvider = metadataProvider ?? DefaultMessageMetadataProvider.Instance;
     public Action<MessageResponse, object> MessageResponseLogger { get; set; }
     public Action<MessageBatchResponse, IReadOnlyCollection<object>> MessageBatchResponseLogger { get; set; }
 
@@ -25,7 +27,8 @@ internal sealed class SqsMessagePublisher(
         Uri queueUrl,
         IAmazonSQS client,
         OutboundMessageConverter messageConverter,
-        ILoggerFactory loggerFactory) : this(client, messageConverter, loggerFactory)
+        ILoggerFactory loggerFactory,
+        IMessageMetadataProvider metadataProvider = null) : this(client, messageConverter, loggerFactory, metadataProvider)
     {
         QueueUrl = queueUrl;
     }
@@ -66,7 +69,7 @@ internal sealed class SqsMessagePublisher(
         {
             _logger.LogInformation(
                 "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
-                MessageIdentity.GetId(message),
+                MessageIdentity.GetId(message, _metadataProvider),
                 message.GetType().FullName,
                 "Queue",
                 request.QueueUrl);
@@ -259,7 +262,7 @@ internal sealed class SqsMessagePublisher(
 
             var entry = new SendMessageBatchRequestEntry
             {
-                Id = MessageIdentity.GetBatchEntryId(message),
+                Id = MessageIdentity.GetBatchEntryId(message, _metadataProvider),
                 MessageBody = messageBody
             };
 

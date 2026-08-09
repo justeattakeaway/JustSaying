@@ -17,6 +17,15 @@ public class WhenPublishingAMessageNotDerivingFromMessage : IntegrationTestBase
         public string OrderId { get; set; }
     }
 
+    private sealed class OrderPlacedPocoHandler(TaskCompletionSource<OrderPlacedPoco> completionSource) : IHandlerAsync<OrderPlacedPoco>
+    {
+        public Task<bool> Handle(OrderPlacedPoco message)
+        {
+            completionSource.TrySetResult(message);
+            return Task.FromResult(true);
+        }
+    }
+
     [Test]
     public async Task Then_The_Message_Is_Handled()
     {
@@ -47,6 +56,35 @@ public class WhenPublishingAMessageNotDerivingFromMessage : IntegrationTestBase
                 // Assert
                 var handled = await completionSource.Task.WaitAsync(cancellationToken);
                 handled.OrderId.ShouldBe("abc-123");
+            });
+    }
+
+    [Test]
+    public async Task Then_The_Message_Is_Handled_When_Registered_Via_AddJustSayingHandler()
+    {
+        // Arrange
+        var completionSource = new TaskCompletionSource<OrderPlacedPoco>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var services = GivenJustSaying()
+            .ConfigureJustSaying(builder => builder
+                .Publications(p => p.WithQueue<OrderPlacedPoco>(o => o.WithQueueName(UniqueName)))
+                .Subscriptions(s => s.ForQueue<OrderPlacedPoco>(sub => sub.WithQueueName(UniqueName))))
+            .AddSingleton(completionSource)
+            .AddJustSayingHandler<OrderPlacedPoco, OrderPlacedPocoHandler>();
+
+        await WhenAsync(
+            services,
+            async (publisher, listener, cancellationToken) =>
+            {
+                await listener.StartAsync(cancellationToken);
+                await publisher.StartAsync(cancellationToken);
+
+                // Act
+                await publisher.PublishAsync(new OrderPlacedPoco { OrderId = "def-456" }, cancellationToken);
+
+                // Assert
+                var handled = await completionSource.Task.WaitAsync(cancellationToken);
+                handled.OrderId.ShouldBe("def-456");
             });
     }
 }

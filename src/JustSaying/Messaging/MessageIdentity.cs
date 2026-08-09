@@ -11,6 +11,11 @@ namespace JustSaying.Messaging;
 /// uses this helper to obtain identity where one is needed, degrading gracefully when the payload
 /// does not derive from <see cref="Message"/>.
 /// </para>
+/// <para>
+/// Identity is read through the configured <see cref="IMessageMetadataProvider"/>
+/// (<see cref="IMessagingConfig.MessageMetadataProvider"/>), so a custom provider takes effect
+/// everywhere a message identity is surfaced.
+/// </para>
 /// </summary>
 internal static class MessageIdentity
 {
@@ -18,19 +23,21 @@ internal static class MessageIdentity
     /// Gets a stable identifier for a message for telemetry and logging purposes, or
     /// <see langword="null"/> if the payload does not expose one.
     /// </summary>
-    public static string GetId(object message)
-        => DefaultMessageMetadataProvider.Instance.GetId(message);
+    public static string GetId(object message, IMessageMetadataProvider metadataProvider)
+        => (metadataProvider ?? DefaultMessageMetadataProvider.Instance).GetId(message);
 
     /// <summary>
     /// Gets an identifier for a message suitable for use as a batch request entry identifier, which
     /// only needs to be unique <em>within a single batch request</em>. Falls back to a fresh
-    /// <see cref="Guid"/> for payloads that do not derive from <see cref="Message"/>.
+    /// <see cref="Guid"/> for payloads that do not expose a stable key.
     /// <para>
     /// This is deliberately <em>not</em> suitable for deduplication: the fallback is not stable
     /// across publishes. Features that need a stable key (such as exactly-once handling) must obtain
     /// it explicitly rather than calling this method.
     /// </para>
     /// </summary>
-    public static string GetBatchEntryId(object message)
-        => message is Message typed ? typed.UniqueKey() : Guid.NewGuid().ToString();
+    public static string GetBatchEntryId(object message, IMessageMetadataProvider metadataProvider)
+        => (metadataProvider ?? DefaultMessageMetadataProvider.Instance).TryGetDeduplicationKey(message, out string key)
+            ? key
+            : Guid.NewGuid().ToString();
 }
