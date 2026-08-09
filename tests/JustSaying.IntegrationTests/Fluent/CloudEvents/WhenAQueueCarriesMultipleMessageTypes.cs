@@ -135,4 +135,53 @@ public class WhenAQueueCarriesMultipleMessageTypes : IntegrationTestBase
                 (await cancelledHandled.Task.WaitAsync(cancellationToken)).Reason.ShouldBe("out-of-stock");
             });
     }
+
+    [Test]
+    public async Task Then_Two_Types_Resolving_To_The_Same_Name_Fail_Fast()
+    {
+        // Arrange - the type name is what routes an inbound message to a serializer, so a duplicate
+        // would silently overwrite one registration and deserialize messages as the wrong type.
+        var services = GivenJustSaying()
+            .ConfigureJustSaying(builder => builder
+                .Subscriptions(s => s.ForQueue(UniqueName, q => q
+                    .Handling<OrderPlaced>("orders")
+                    .Handling<OrderCancelled>("orders"))))
+            .AddSingleton(Substitute.For<IHandlerAsync<OrderPlaced>>())
+            .AddSingleton(Substitute.For<IHandlerAsync<OrderCancelled>>());
+
+        var serviceProvider = services.BuildServiceProvider();
+
+        // Act
+        var exception = Should.Throw<InvalidOperationException>(
+            () => serviceProvider.GetRequiredService<IMessagingBus>());
+
+        // Assert
+        exception.Message.ShouldContain(nameof(OrderPlaced));
+        exception.Message.ShouldContain(nameof(OrderCancelled));
+        exception.Message.ShouldContain("orders");
+
+        await Task.CompletedTask;
+    }
+
+    [Test]
+    public async Task Then_A_Blank_Type_Name_Fails_Fast()
+    {
+        // Arrange
+        var services = GivenJustSaying()
+            .ConfigureJustSaying(builder => builder
+                .Subscriptions(s => s.ForQueue(UniqueName, q => q
+                    .Handling<OrderPlaced>("   "))))
+            .AddSingleton(Substitute.For<IHandlerAsync<OrderPlaced>>());
+
+        var serviceProvider = services.BuildServiceProvider();
+
+        // Act
+        var exception = Should.Throw<InvalidOperationException>(
+            () => serviceProvider.GetRequiredService<IMessagingBus>());
+
+        // Assert
+        exception.Message.ShouldContain(nameof(OrderPlaced));
+
+        await Task.CompletedTask;
+    }
 }
