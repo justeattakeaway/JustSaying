@@ -17,7 +17,7 @@ internal interface IInboundMessageSerializerResolver
 /// </summary>
 internal sealed class SingleInboundMessageSerializerResolver(IMessageBodySerializer serializer) : IInboundMessageSerializerResolver
 {
-    private readonly IMessageBodySerializer _serializer = serializer;
+    private readonly IMessageBodySerializer _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
 
     public IMessageBodySerializer Resolve(string body, string subject, MessageAttributes attributes) => _serializer;
 }

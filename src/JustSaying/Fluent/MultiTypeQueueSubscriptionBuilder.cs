@@ -107,9 +107,30 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
         bus.AddStartupTask(queue.StartupTask);
 
         var serializersByName = new Dictionary<string, IMessageBodySerializer>(StringComparer.Ordinal);
+        var typesByName = new Dictionary<string, Type>(StringComparer.Ordinal);
         foreach (var registration in _registrations)
         {
             var typeName = registration.TypeName ?? bus.MessageTypeRegistry.GetLogicalName(registration.MessageType);
+
+            // The discriminator value is what routes an inbound message to a serializer, so a blank or
+            // duplicated one is a misconfiguration that would otherwise silently deserialize messages as
+            // the wrong type.
+            if (string.IsNullOrWhiteSpace(typeName))
+            {
+                throw new InvalidOperationException(
+                    $"The message type '{registration.MessageType.FullName}' registered on the multi-type queue subscription for '{subscriptionConfig.QueueName}' " +
+                    $"resolved to a null or empty type name. Pass an explicit name to {nameof(Handling)}<T>(typeName).");
+            }
+
+            if (typesByName.TryGetValue(typeName, out var existingType))
+            {
+                throw new InvalidOperationException(
+                    $"The message types '{existingType.FullName}' and '{registration.MessageType.FullName}' registered on the multi-type queue subscription for " +
+                    $"'{subscriptionConfig.QueueName}' both resolve to the type name '{typeName}'. Each type on a queue must have a distinct name; " +
+                    $"pass an explicit name to {nameof(Handling)}<T>(typeName).");
+            }
+
+            typesByName[typeName] = registration.MessageType;
             serializersByName[typeName] = registration.CreateErasedSerializer(bus);
             registration.RegisterHandler(bus, handlerResolver, serviceResolver, subscriptionConfig.QueueName);
         }
