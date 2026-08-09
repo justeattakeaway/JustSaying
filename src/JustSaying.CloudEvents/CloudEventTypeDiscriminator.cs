@@ -26,7 +26,14 @@ public sealed class CloudEventTypeDiscriminator : IMessageTypeDiscriminator
         {
             using var document = JsonDocument.Parse(context.Body);
 
+            // `type` alone is far too weak a signal — plenty of unrelated payloads have one. Require
+            // `specversion` too, which is mandatory in a structured-mode CloudEvent and unlikely to
+            // appear by accident, so a non-CloudEvent falls through to the next discriminator instead of
+            // being mis-routed.
             if (document.RootElement.ValueKind == JsonValueKind.Object
+                && document.RootElement.TryGetProperty("specversion", out var specVersionElement)
+                && specVersionElement.ValueKind == JsonValueKind.String
+                && !string.IsNullOrEmpty(specVersionElement.GetString())
                 && document.RootElement.TryGetProperty("type", out var typeElement)
                 && typeElement.ValueKind == JsonValueKind.String)
             {

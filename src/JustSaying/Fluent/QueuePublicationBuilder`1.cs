@@ -147,7 +147,16 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
         var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
         // A self-describing serializer (for example CloudEvents) already carries the message's type
         // metadata, so the {Message, Subject} queue envelope would just double-wrap it.
-        var isRawMessage = _isRawMessage || writeConfiguration.IsRawMessage || serializer is ISelfDescribingMessageBodySerializer;
+        var isSelfDescribing = serializer is ISelfDescribingMessageBodySerializer;
+        var isRawMessage = _isRawMessage || writeConfiguration.IsRawMessage || isSelfDescribing;
+
+        if (isSelfDescribing && !_isRawMessage && !writeConfiguration.IsRawMessage)
+        {
+            logger.LogInformation(
+                "Publishing '{MessageType}' to queue '{QueueName}' without the queue envelope because its serializer is self-describing.",
+                typeof(T),
+                writeConfiguration.QueueName);
+        }
 
         var eventPublisher = new SqsMessagePublisher(
             sqsClient,
