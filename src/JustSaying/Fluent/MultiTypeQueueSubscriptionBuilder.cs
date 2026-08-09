@@ -234,7 +234,7 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
         foreach (var registration in _registrations)
         {
             serializersByName[namesByRegistration[registration]] = registration.CreateErasedSerializer(bus, serviceResolver);
-            registration.RegisterHandler(bus, handlerResolver, serviceResolver, subscriptionConfig.QueueName);
+            registration.RegisterHandler(bus, handlerResolver, serviceResolver, queueName);
         }
 
         var discriminators = _discriminators.Count > 0
