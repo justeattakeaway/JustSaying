@@ -268,11 +268,18 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
             loggerFactory);
 #pragma warning restore 618
 
+        var tags = _destination.Infrastructure?.Tags;
+
         async Task StartupTask(CancellationToken cancellationToken)
         {
             if (!await sqsQueue.ExistsAsync(cancellationToken).ConfigureAwait(false))
             {
                 await sqsQueue.CreateAsync(writeConfiguration, cancellationToken: cancellationToken).ConfigureAwait(false);
+            }
+
+            if (tags is { Count: > 0 })
+            {
+                await sqsQueue.TagQueueAsync(sqsQueue.Uri.ToString(), tags, cancellationToken).ConfigureAwait(false);
             }
 
             eventPublisher.QueueUrl = sqsQueue.Uri;
