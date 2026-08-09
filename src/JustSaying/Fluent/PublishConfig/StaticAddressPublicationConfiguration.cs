@@ -30,7 +30,8 @@ internal sealed class StaticAddressPublicationConfiguration(
             messageConverter,
             loggerFactory,
             exceptionHandler,
-            exceptionBatchHandler)
+            exceptionBatchHandler,
+            bus.Config.MessageMetadataProvider)
         {
             MessageResponseLogger = bus.Config.MessageResponseLogger,
             MessageBatchResponseLogger = bus.PublishBatchConfiguration?.MessageBatchResponseLogger

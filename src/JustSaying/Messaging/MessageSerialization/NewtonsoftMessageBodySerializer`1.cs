@@ -47,6 +47,14 @@ public sealed class NewtonsoftMessageBodySerializer<T> : IMessageBodySerializer<
     /// </summary>
     /// <param name="message">The message to serialize.</param>
     /// <returns>A JSON string representation of the message.</returns>
+    /// <remarks>
+    /// Newtonsoft.Json always builds its contract from the runtime type, so a derived instance passed as
+    /// <typeparamref name="T"/> is serialized with its derived members included. This differs from
+    /// <see cref="SystemTextJsonMessageBodySerializer{T}"/>, which serializes the declared type
+    /// <typeparamref name="T"/> and omits derived-only members. In JustSaying's own publish path the two
+    /// coincide, because publishers — and therefore serializers — are resolved by each message's concrete
+    /// runtime type.
+    /// </remarks>
     public string Serialize(T message)
     {
         return JsonConvert.SerializeObject(message, _settings);
