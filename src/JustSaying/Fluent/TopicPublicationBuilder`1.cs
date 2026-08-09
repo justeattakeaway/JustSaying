@@ -30,10 +30,6 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
 
     private PublishCompressionOptions CompressionOptions { get; set; }
 
-    private bool IsRawMessage { get; set; }
-
-    private ServerSideEncryption Encryption { get; set; }
-
     private Func<Exception, T, bool> ExceptionHandler { get; set; }
 
     private Func<Exception, IReadOnlyCollection<T>, bool> ExceptionBatchHandler { get; set; }
@@ -176,16 +172,6 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
     }
 
     /// <summary>
-    /// Publishes the message body verbatim, without JustSaying's metadata conventions.
-    /// </summary>
-    /// <returns>The current <see cref="TopicPublicationBuilder{T}"/>.</returns>
-    public TopicPublicationBuilder<T> WithRawMessages()
-    {
-        IsRawMessage = true;
-        return this;
-    }
-
-    /// <summary>
     /// Configures an exception handler to use when publishing a message fails.
     /// </summary>
     /// <param name="exceptionHandler">A delegate to invoke if an exception is thrown while publishing.</param>
@@ -281,7 +267,6 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
                 CompressionOptions,
                 bus.Config.DefaultCompressionOptions,
                 isSelfDescribing: serializer is ISelfDescribingMessageBodySerializer),
-            IsRawMessage = IsRawMessage,
         };
 
         if (SubjectSet)
