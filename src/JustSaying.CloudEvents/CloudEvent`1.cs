@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+
 namespace JustSaying.CloudEvents;
 
 /// <summary>
@@ -32,8 +34,10 @@ public sealed class CloudEvent<T> where T : class
         Extensions = extensions ?? EmptyExtensions;
     }
 
+    // Shared across every instance created without extensions, so it has to be genuinely read-only:
+    // a bare Dictionary could be cast back and mutated, leaking data between unrelated messages.
     private static readonly IReadOnlyDictionary<string, string> EmptyExtensions =
-        new Dictionary<string, string>(StringComparer.Ordinal);
+        new ReadOnlyDictionary<string, string>(new Dictionary<string, string>(StringComparer.Ordinal));
 
     /// <summary>Gets the deserialized <c>data</c> payload.</summary>
     public T Data { get; }

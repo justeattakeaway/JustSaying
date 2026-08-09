@@ -217,6 +217,7 @@ public class WhenAQueueCarriesMultipleMessageTypes : IntegrationTestBase
                 cancelled.Type.ShouldBe(cancelledType);
                 cancelled.Source.ShouldBe(new Uri("https://orders.example.com"));
             });
+    }
 
     [Test]
     public async Task Then_Two_Types_Resolving_To_The_Same_Name_Fail_Fast()

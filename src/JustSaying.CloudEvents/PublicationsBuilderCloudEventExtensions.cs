@@ -29,8 +29,9 @@ public static class PublicationsBuilderCloudEventExtensions
     /// per message.
     /// </param>
     /// <param name="topicName">
-    /// The name of the topic to publish to, or <see langword="null"/> to name it by the topic naming
-    /// convention applied to <typeparamref name="T"/>.
+    /// The name of the topic to publish to, or <see langword="null"/> (or blank) to name it by the topic
+    /// naming convention applied to <typeparamref name="T"/>. Both publish shapes must agree on the
+    /// name, so a blank name is treated as "not provided" rather than as an explicit empty name.
     /// </param>
     /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
     [SuppressMessage("ApiDesign", "RS0027:API with optional parameter(s) should have the most parameters amongst its public overloads",
@@ -48,7 +49,7 @@ public static class PublicationsBuilderCloudEventExtensions
         // The bare-model publication: publishing a T writes a CloudEvent with defaulted metadata.
         publications.WithTopic<T>(builder =>
         {
-            if (topicName is not null)
+            if (!string.IsNullOrWhiteSpace(topicName))
             {
                 builder.WithTopicName(topicName);
             }
@@ -61,7 +62,7 @@ public static class PublicationsBuilderCloudEventExtensions
         // Subject reflects the payload type too.
         publications.WithTopic<CloudEvent<T>>(builder =>
         {
-            if (topicName is not null)
+            if (!string.IsNullOrWhiteSpace(topicName))
             {
                 builder.WithTopicName(topicName);
             }
@@ -100,8 +101,9 @@ public static class PublicationsBuilderCloudEventExtensions
     /// per message.
     /// </param>
     /// <param name="queueName">
-    /// The name of the queue to publish to, or <see langword="null"/> to name it by the queue naming
-    /// convention applied to <typeparamref name="T"/>.
+    /// The name of the queue to publish to, or <see langword="null"/> (or blank) to name it by the queue
+    /// naming convention applied to <typeparamref name="T"/>. Both publish shapes must agree on the
+    /// name, so a blank name is treated as "not provided" rather than as an explicit empty name.
     /// </param>
     /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
     [SuppressMessage("ApiDesign", "RS0027:API with optional parameter(s) should have the most parameters amongst its public overloads",
@@ -119,7 +121,7 @@ public static class PublicationsBuilderCloudEventExtensions
         // The bare-model publication: publishing a T writes a CloudEvent with defaulted metadata.
         publications.WithQueue<T>(builder =>
         {
-            if (queueName is not null)
+            if (!string.IsNullOrWhiteSpace(queueName))
             {
                 builder.WithQueueName(queueName);
             }
@@ -131,7 +133,7 @@ public static class PublicationsBuilderCloudEventExtensions
         // Same queue — named after the payload type T, not the CloudEvent<T> wrapper.
         publications.WithQueue<CloudEvent<T>>(builder =>
         {
-            if (queueName is not null)
+            if (!string.IsNullOrWhiteSpace(queueName))
             {
                 builder.WithQueueName(queueName);
             }
