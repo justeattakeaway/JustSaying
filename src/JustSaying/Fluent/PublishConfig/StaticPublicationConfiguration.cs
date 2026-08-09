@@ -43,7 +43,8 @@ internal sealed class StaticPublicationConfiguration(
             new OutboundMessageConverter(PublishDestinationType.Topic, serializer.Erase(), new MessageCompressionRegistry([new GzipMessageBodyCompression()]), compressionOptions, subject, writeConfiguration.IsRawMessage),
             loggerFactory,
             null,
-            null)
+            null,
+            bus.Config.MessageMetadataProvider)
         {
             MessageResponseLogger = bus.Config.MessageResponseLogger,
             MessageBatchResponseLogger = bus.PublishBatchConfiguration?.MessageBatchResponseLogger

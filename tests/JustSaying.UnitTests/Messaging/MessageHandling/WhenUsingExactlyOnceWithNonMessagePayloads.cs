@@ -67,4 +67,37 @@ public class WhenUsingExactlyOnceWithNonMessagePayloads
         handler.ReceivedMessages.ShouldContain(x => x.OrderRef == "order-123");
         messageLock.MessageLockRequests.ShouldContain(r => r.key.StartsWith("order-123-", StringComparison.Ordinal));
     }
+
+    [Test]
+    public async Task WhenTheKeySelectorReturnsAnEmptyKey_ThenHandlingThrows()
+    {
+        var messageLock = new FakeMessageLock();
+
+        var resolver = new InMemoryServiceResolver(sc => sc
+            .AddLogging(l => l.AddTextWriter(OutputHelper))
+            .AddSingleton<IMessageLockAsync>(messageLock));
+
+        var middleware = new HandlerMiddlewareBuilder(resolver, resolver)
+            .UseExactlyOnce<PocoOrder>("poco-lock", deduplicationKeySelector: m => m.OrderRef)
+            .UseHandler(ctx => new InspectableHandler<PocoOrder>())
+            .Build();
+
+        var context = new HandleMessageContext(
+            "test-queue",
+            new Message(),
+            new PocoOrder { OrderRef = "  " },
+            typeof(PocoOrder),
+            new FakeVisibilityUpdater(),
+            new FakeMessageDeleter(),
+            new Uri("http://test-queue"),
+            new MessageAttributes());
+
+        // An empty key would make every such payload share one lock, silently deduplicating
+        // unrelated messages.
+        var exception = await Should.ThrowAsync<InvalidOperationException>(
+            () => middleware.RunAsync(context, null, CancellationToken.None));
+
+        exception.Message.ShouldContain(nameof(PocoOrder));
+        messageLock.MessageLockRequests.ShouldBeEmpty();
+    }
 }
