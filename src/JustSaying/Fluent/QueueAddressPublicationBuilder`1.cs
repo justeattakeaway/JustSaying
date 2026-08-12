@@ -150,12 +150,14 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T> w
         var metadataRegistry = serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>();
         if (metadataRegistry != null)
         {
-            metadataRegistry.SetRegion(_queueAddress.RegionName);
+            // The queue's region comes from its address and may differ from the bus's configured
+            // region, so it is captured on the publication rather than as the registry default.
             metadataRegistry.AddPublication(new PublicationMetadata(
                 MessagingDestinationKind.SqsQueue,
                 _queueAddress.QueueUrl.Segments[_queueAddress.QueueUrl.Segments.Length - 1].TrimEnd('/'),
                 isDynamic: false,
-                [new MessageTypeMetadata(typeof(T), subject)]));
+                [new MessageTypeMetadata(typeof(T), subject)],
+                _queueAddress.RegionName));
         }
 
         if (MiddlewareConfiguration != null)

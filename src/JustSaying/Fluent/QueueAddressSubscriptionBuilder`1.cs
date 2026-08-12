@@ -141,13 +141,15 @@ public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         var metadataRegistry = serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>();
         if (metadataRegistry != null)
         {
-            metadataRegistry.SetRegion(_queueAddress.RegionName);
+            // The queue's region comes from its address and may differ from the bus's configured
+            // region, so it is captured on the subscription rather than as the registry default.
             metadataRegistry.AddSubscription(new SubscriptionMetadata(
                 queue.QueueName,
                 topicName: null,
                 attachedQueueConfig.SubscriptionGroupName,
                 attachedQueueConfig.RawMessageDelivery,
-                [new MessageTypeMetadata(typeof(T), bus.MessageTypeRegistry.GetLogicalName(typeof(T)))]));
+                [new MessageTypeMetadata(typeof(T), bus.MessageTypeRegistry.GetLogicalName(typeof(T)))],
+                _queueAddress.RegionName));
         }
 
         logger.LogInformation(
