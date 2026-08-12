@@ -65,7 +65,7 @@ public sealed class AsyncApiDocumentGenerator
 
         AddServers(document, primaryRegion);
 
-        var identities = new Dictionary<string, ChannelIdentity>(StringComparer.Ordinal);
+        var channels = new Dictionary<string, ChannelState>(StringComparer.Ordinal);
         var operationMessages = new Dictionary<string, List<MessageTypeMetadata>>(StringComparer.Ordinal);
 
         foreach (var publication in _registry.Publications)
@@ -76,9 +76,9 @@ public sealed class AsyncApiDocumentGenerator
                 continue;
             }
 
-            var channelKey = AddChannel(
+            var channel = AddChannel(
                 document,
-                identities,
+                channels,
                 primaryRegion,
                 publication.DestinationName,
                 publication.DestinationKind,
@@ -88,15 +88,15 @@ public sealed class AsyncApiDocumentGenerator
 
             // Several publications can target the same destination with different message
             // types; the operation is rebuilt from the merged set so none are dropped.
-            string operationKey = Sanitize($"send-{channelKey}");
+            string operationKey = Sanitize($"send-{channel.Key}");
             var merged = MergeOperationMessages(operationMessages, operationKey, publication.Messages);
 
             document.Operations[operationKey] = new AsyncApiOperation()
             {
                 Action = AsyncApiAction.Send,
-                Channel = new AsyncApiChannelReference($"#/channels/{channelKey}"),
+                Channel = new AsyncApiChannelReference($"#/channels/{channel.Key}"),
                 Summary = $"Publish {Join(merged)} to {publication.DestinationName}.",
-                Messages = [.. merged.Select((m) => new AsyncApiMessageReference($"#/channels/{channelKey}/messages/{MessageKey(m)}"))],
+                Messages = [.. merged.Select((m) => new AsyncApiMessageReference($"#/channels/{channel.Key}/messages/{channel.MessageKeys[WireName(m)]}"))],
             };
         }
 
@@ -106,9 +106,9 @@ public sealed class AsyncApiDocumentGenerator
                 ? $"The {subscription.QueueName} SQS queue, subscribed to the {subscription.TopicName} SNS topic."
                 : $"The {subscription.QueueName} SQS queue.";
 
-            var channelKey = AddChannel(
+            var channel = AddChannel(
                 document,
-                identities,
+                channels,
                 primaryRegion,
                 subscription.QueueName,
                 MessagingDestinationKind.SqsQueue,
@@ -116,15 +116,15 @@ public sealed class AsyncApiDocumentGenerator
                 description,
                 subscription.Messages);
 
-            string operationKey = Sanitize($"receive-{channelKey}");
+            string operationKey = Sanitize($"receive-{channel.Key}");
             var merged = MergeOperationMessages(operationMessages, operationKey, subscription.Messages);
 
             document.Operations[operationKey] = new AsyncApiOperation()
             {
                 Action = AsyncApiAction.Receive,
-                Channel = new AsyncApiChannelReference($"#/channels/{channelKey}"),
+                Channel = new AsyncApiChannelReference($"#/channels/{channel.Key}"),
                 Summary = $"Receive {Join(merged)} from {subscription.QueueName}.",
-                Messages = [.. merged.Select((m) => new AsyncApiMessageReference($"#/channels/{channelKey}/messages/{MessageKey(m)}"))],
+                Messages = [.. merged.Select((m) => new AsyncApiMessageReference($"#/channels/{channel.Key}/messages/{channel.MessageKeys[WireName(m)]}"))],
             };
         }
 
@@ -192,9 +192,24 @@ public sealed class AsyncApiDocumentGenerator
 
     private sealed record ChannelIdentity(string Address, MessagingDestinationKind Kind, string Region);
 
-    private string AddChannel(
+    private sealed class ChannelState(string key, AsyncApiChannel channel, ChannelIdentity identity)
+    {
+        public string Key { get; } = key;
+
+        public AsyncApiChannel Channel { get; } = channel;
+
+        public ChannelIdentity Identity { get; } = identity;
+
+        /// <summary>
+        /// Gets the key each message wire name was allocated within this channel, so that
+        /// operation references point at the message the channel actually holds.
+        /// </summary>
+        public Dictionary<string, string> MessageKeys { get; } = new(StringComparer.Ordinal);
+    }
+
+    private ChannelState AddChannel(
         AsyncApiDocument document,
-        Dictionary<string, ChannelIdentity> identities,
+        Dictionary<string, ChannelState> channels,
         string primaryRegion,
         string address,
         MessagingDestinationKind kind,
@@ -203,24 +218,25 @@ public sealed class AsyncApiDocumentGenerator
         IReadOnlyList<MessageTypeMetadata> messages)
     {
         var identity = new ChannelIdentity(address, kind, region);
+        string kindSuffix = kind == MessagingDestinationKind.SnsTopic ? "topic" : "queue";
 
         // A topic and a queue can share a name, the same name can exist in two regions, and
         // distinct addresses can sanitize to the same key; each is a different destination, so
         // the channel keys are kept distinct. A publication and subscription on the same queue
         // share an identity and reuse the one channel.
-        string channelKey = Sanitize(address);
-        if (identities.TryGetValue(channelKey, out var existing) && existing != identity)
+        List<string> candidates = [Sanitize(address), Sanitize($"{address}-{kindSuffix}")];
+        if (region != null)
         {
-            channelKey = Sanitize($"{address}-{(kind == MessagingDestinationKind.SnsTopic ? "topic" : "queue")}");
-            if (identities.TryGetValue(channelKey, out existing) && existing != identity)
-            {
-                channelKey = Sanitize($"{address}-{(kind == MessagingDestinationKind.SnsTopic ? "topic" : "queue")}-{region}");
-            }
+            candidates.Add(Sanitize($"{address}-{kindSuffix}-{region}"));
         }
 
-        if (!document.Channels.TryGetValue(channelKey, out var channel))
+        string channelKey = AllocateKey(
+            candidates,
+            (key) => !channels.TryGetValue(key, out var existing) || existing.Identity == identity);
+
+        if (!channels.TryGetValue(channelKey, out var state))
         {
-            channel = new AsyncApiChannel()
+            var channel = new AsyncApiChannel()
             {
                 Address = address,
                 Description = description,
@@ -236,15 +252,49 @@ public sealed class AsyncApiDocumentGenerator
             }
 
             document.Channels[channelKey] = channel;
-            identities[channelKey] = identity;
+            channels[channelKey] = state = new ChannelState(channelKey, channel, identity);
         }
 
         foreach (var message in messages)
         {
-            channel.Messages[MessageKey(message)] = CreateMessage(message);
+            string wireName = WireName(message);
+
+            // Distinct wire names can sanitize to the same key, so each is allocated a key of
+            // its own rather than overwriting the message already under that key.
+            if (!state.MessageKeys.TryGetValue(wireName, out var messageKey))
+            {
+                messageKey = AllocateKey([Sanitize(wireName)], (key) => !state.Channel.Messages.ContainsKey(key));
+                state.MessageKeys[wireName] = messageKey;
+            }
+
+            state.Channel.Messages[messageKey] = CreateMessage(message);
         }
 
-        return channelKey;
+        return state;
+    }
+
+    /// <summary>
+    /// Returns the first candidate key that is available, or, when every candidate is taken,
+    /// the last candidate with a deterministic numeric suffix appended until it is available.
+    /// </summary>
+    private static string AllocateKey(IReadOnlyList<string> candidates, Func<string, bool> isAvailable)
+    {
+        foreach (var candidate in candidates)
+        {
+            if (isAvailable(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        for (int i = 2; ; i++)
+        {
+            string candidate = $"{candidates[^1]}-{i}";
+            if (isAvailable(candidate))
+            {
+                return candidate;
+            }
+        }
     }
 
     private List<MessageTypeMetadata> MergeOperationMessages(
@@ -259,7 +309,8 @@ public sealed class AsyncApiDocumentGenerator
 
         foreach (var message in messages)
         {
-            if (!merged.Any((m) => MessageKey(m) == MessageKey(message)))
+            string wireName = WireName(message);
+            if (!merged.Any((m) => WireName(m) == wireName))
             {
                 merged.Add(message);
             }
@@ -360,8 +411,6 @@ public sealed class AsyncApiDocumentGenerator
 
         return options;
     }
-
-    private string MessageKey(MessageTypeMetadata metadata) => Sanitize(WireName(metadata));
 
     private string Join(IReadOnlyList<MessageTypeMetadata> messages)
         => string.Join(", ", messages.Select((m) => m.MessageType.Name));
