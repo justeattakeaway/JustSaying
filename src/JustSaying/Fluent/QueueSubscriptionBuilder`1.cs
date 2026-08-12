@@ -5,6 +5,7 @@ using JustSaying.Extensions;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageSerialization;
+using JustSaying.Messaging.Metadata;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Models;
 using JustSaying.Naming;
@@ -160,6 +161,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
 
         AwsTools.MessageHandling.ISqsQueue sqsQueue;
         string queueName;
+        string region;
 
         if (_destination.IsAddress)
         {
@@ -196,6 +198,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
 
             sqsQueue = queue;
             queueName = queue.QueueName;
+            region = _destination.Address.RegionName;
         }
         else
         {
@@ -221,7 +224,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
             _destination.Infrastructure?.Apply(subscriptionConfig);
 
             var config = bus.Config;
-            var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
+            region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
 
             subscriptionConfig.ApplyTopicNamingConvention<T>(config.TopicNamingConvention);
             subscriptionConfig.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
@@ -256,6 +259,18 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
             .Build();
 
         bus.AddMessageMiddleware<T>(queueName, handlerMiddleware);
+
+        var metadataRegistry = serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>();
+        if (metadataRegistry != null)
+        {
+            metadataRegistry.SetRegion(region);
+            metadataRegistry.AddSubscription(new SubscriptionMetadata(
+                queueName,
+                topicName: null,
+                SubscriptionGroupName ?? queueName,
+                RawMessageDelivery,
+                [new MessageTypeMetadata(typeof(T), bus.MessageTypeRegistry.GetLogicalName(typeof(T)))]));
+        }
 
         logger.LogInformation(
             "Added a message handler for message type for '{MessageType}' on queue '{QueueName}'.",

@@ -51,3 +51,5 @@ JustSaying.CloudEvents.CloudEventOptions.DataSerializationFactory.set -> void
 JustSaying.CloudEvents.CloudEventOptions.UseAsDefault.get -> bool
 JustSaying.CloudEvents.CloudEventOptions.UseAsDefault.set -> void
 static Microsoft.Extensions.DependencyInjection.CloudEventsServiceCollectionExtensions.AddJustSayingCloudEvents(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, System.Action<JustSaying.CloudEvents.CloudEventOptions> configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection
+JustSaying.CloudEvents.CloudEventOptions.TryGetCloudEventType(System.Type messageType, out string type) -> bool
+JustSaying.CloudEvents.CloudEventSerializationFactory.DataSerializerFactory.get -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializationFactory
