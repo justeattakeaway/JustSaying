@@ -44,3 +44,5 @@ static JustSaying.Fluent.PublicationsBuilderCloudEventExtensions.WithCloudEventT
 static JustSaying.Fluent.PublicationsBuilderCloudEventExtensions.WithCloudEventTopic<T>(this JustSaying.Fluent.PublicationsBuilder publications, JustSaying.Fluent.TopicDestination destination, string type, System.Uri source) -> JustSaying.Fluent.PublicationsBuilder
 static JustSaying.Fluent.PublicationsBuilderCloudEventExtensions.WithCloudEventQueue<T>(this JustSaying.Fluent.PublicationsBuilder publications, JustSaying.Fluent.QueueDestination destination, string type) -> JustSaying.Fluent.PublicationsBuilder
 static JustSaying.Fluent.PublicationsBuilderCloudEventExtensions.WithCloudEventQueue<T>(this JustSaying.Fluent.PublicationsBuilder publications, JustSaying.Fluent.QueueDestination destination, string type, System.Uri source) -> JustSaying.Fluent.PublicationsBuilder
+JustSaying.CloudEvents.CloudEventOptions.TryGetCloudEventType(System.Type messageType, out string type) -> bool
+JustSaying.CloudEvents.CloudEventSerializationFactory.DataSerializerFactory.get -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializationFactory

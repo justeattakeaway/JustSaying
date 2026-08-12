@@ -4,6 +4,7 @@ using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageSerialization;
+using JustSaying.Messaging.Metadata;
 using JustSaying.Messaging.Middleware;
 using Microsoft.Extensions.Logging;
 
@@ -195,6 +196,7 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
 
         ISqsQueue sqsQueue;
         string queueName;
+        string region;
         if (_destination.IsAddress)
         {
             // A pre-existing queue: never created, so only the read-time settings apply.
@@ -205,6 +207,7 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
             var queue = new QueueAddressQueue(_destination.Address, sqsClient);
             sqsQueue = queue;
             queueName = queue.QueueName;
+            region = _destination.Address.RegionName;
         }
         else
         {
@@ -222,7 +225,7 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
             subscriptionConfig.Validate();
 
             var config = bus.Config;
-            var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
+            region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
 
             var queue = creator.EnsureQueueExists(region, subscriptionConfig);
             bus.AddStartupTask(queue.StartupTask);
@@ -247,6 +250,18 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
             MessageConverter = new InboundMessageConverter(serializerResolver, bus.CompressionRegistry, _rawMessageDelivery),
             SqsQueue = sqsQueue,
         });
+
+        var metadataRegistry = serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>();
+        if (metadataRegistry != null)
+        {
+            metadataRegistry.SetRegion(region);
+            metadataRegistry.AddSubscription(new SubscriptionMetadata(
+                queueName,
+                topicName: null,
+                _subscriptionGroupName ?? queueName,
+                _rawMessageDelivery,
+                [.. _registrations.Select((r) => new MessageTypeMetadata(r.MessageType, namesByRegistration[r]))]));
+        }
 
         logger.LogInformation(
             "Created multi-type SQS subscriber on queue '{QueueName}' handling {MessageTypeCount} message types.",

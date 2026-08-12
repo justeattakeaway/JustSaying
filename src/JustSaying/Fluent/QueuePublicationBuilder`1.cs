@@ -4,6 +4,7 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
+using JustSaying.Messaging.Metadata;
 using JustSaying.Messaging.Middleware;
 using Microsoft.Extensions.Logging;
 
@@ -190,13 +191,15 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
                 typeof(T));
         }
 
+        var metadataRegistry = serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>();
+
         if (_destination.IsAddress)
         {
-            ConfigureForAddress(bus, proxy, loggerFactory, logger, compressionRegistry, compressionOptions, subject, serializer, isRawMessage);
+            ConfigureForAddress(bus, proxy, loggerFactory, logger, compressionRegistry, compressionOptions, subject, serializer, isRawMessage, metadataRegistry);
         }
         else
         {
-            ConfigureForOwnedQueue(bus, proxy, loggerFactory, logger, compressionRegistry, compressionOptions, subject, serializer, isRawMessage);
+            ConfigureForOwnedQueue(bus, proxy, loggerFactory, logger, compressionRegistry, compressionOptions, subject, serializer, isRawMessage, metadataRegistry);
         }
 
         if (MiddlewareConfiguration != null)
@@ -216,7 +219,8 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
         PublishCompressionOptions compressionOptions,
         string subject,
         IMessageBodySerializer<T> serializer,
-        bool isRawMessage)
+        bool isRawMessage,
+        IMessagingMetadataRegistry metadataRegistry)
     {
         if (_shouldCheckQueueExistence)
         {
@@ -289,6 +293,16 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
 
         bus.AddMessagePublisher<T>(eventPublisher);
 
+        if (metadataRegistry != null)
+        {
+            metadataRegistry.SetRegion(region);
+            metadataRegistry.AddPublication(new PublicationMetadata(
+                MessagingDestinationKind.SqsQueue,
+                writeConfiguration.QueueName,
+                isDynamic: false,
+                [new MessageTypeMetadata(typeof(T), subject)]));
+        }
+
         logger.LogInformation(
             "Created SQS publisher for message type '{MessageType}' on queue '{QueueName}'.",
             typeof(T),
@@ -304,7 +318,8 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
         PublishCompressionOptions compressionOptions,
         string subject,
         IMessageBodySerializer<T> serializer,
-        bool isRawMessage)
+        bool isRawMessage,
+        IMessagingMetadataRegistry metadataRegistry)
     {
         if (QueueName is not null)
         {
@@ -338,6 +353,16 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
         };
 
         bus.AddMessagePublisher<T>(eventPublisher);
+
+        if (metadataRegistry != null)
+        {
+            metadataRegistry.SetRegion(queueAddress.RegionName);
+            metadataRegistry.AddPublication(new PublicationMetadata(
+                MessagingDestinationKind.SqsQueue,
+                queueAddress.QueueUrl.Segments[queueAddress.QueueUrl.Segments.Length - 1].TrimEnd('/'),
+                isDynamic: false,
+                [new MessageTypeMetadata(typeof(T), subject)]));
+        }
 
         logger.LogInformation(
             "Created SQS queue publisher on queue URL '{QueueName}' for message type '{MessageType}'",
