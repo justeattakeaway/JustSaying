@@ -10,6 +10,9 @@ namespace JustSaying.AsyncApi;
 internal static class JsonSchemaNodeMapper
 {
     public static AsyncApiJsonSchema Map(JsonNode node)
+        => Map(node, node, new HashSet<string>(StringComparer.Ordinal));
+
+    private static AsyncApiJsonSchema Map(JsonNode node, JsonNode root, HashSet<string> activeRefs)
     {
         var schema = new AsyncApiJsonSchema();
 
@@ -27,6 +30,31 @@ internal static class JsonSchemaNodeMapper
         if (node is not JsonObject obj)
         {
             return schema;
+        }
+
+        // The schema exporter emits "$ref" as a JSON Pointer into the schema itself for recursive
+        // types (for example "#/properties/Left"). Those pointers are relative to the exported
+        // schema's root and would not resolve once embedded in the wider AsyncAPI document, so the
+        // referenced subschema is inlined instead. Cycles are broken by emitting an empty schema
+        // when a pointer refers back into a subschema that is already being expanded.
+        if (obj.TryGetPropertyValue("$ref", out var refNode)
+            && refNode is JsonValue refValue
+            && refValue.TryGetValue(out string pointer))
+        {
+            if (!activeRefs.Add(pointer))
+            {
+                return schema;
+            }
+
+            try
+            {
+                var target = ResolvePointer(root, pointer);
+                return target == null ? schema : Map(target, root, activeRefs);
+            }
+            finally
+            {
+                activeRefs.Remove(pointer);
+            }
         }
 
         foreach (var property in obj)
@@ -49,19 +77,19 @@ internal static class JsonSchemaNodeMapper
                     schema.Pattern = (string)property.Value;
                     break;
                 case "properties":
-                    schema.Properties = ((JsonObject)property.Value).ToDictionary((p) => p.Key, (p) => Map(p.Value));
+                    schema.Properties = ((JsonObject)property.Value).ToDictionary((p) => p.Key, (p) => Map(p.Value, root, activeRefs));
                     break;
                 case "patternProperties":
-                    schema.PatternProperties = ((JsonObject)property.Value).ToDictionary((p) => p.Key, (p) => Map(p.Value));
+                    schema.PatternProperties = ((JsonObject)property.Value).ToDictionary((p) => p.Key, (p) => Map(p.Value, root, activeRefs));
                     break;
                 case "required":
                     schema.Required = new HashSet<string>(((JsonArray)property.Value).Select((i) => (string)i), StringComparer.Ordinal);
                     break;
                 case "items":
-                    schema.Items = Map(property.Value);
+                    schema.Items = Map(property.Value, root, activeRefs);
                     break;
                 case "additionalProperties":
-                    schema.AdditionalProperties = Map(property.Value);
+                    schema.AdditionalProperties = Map(property.Value, root, activeRefs);
                     break;
                 case "enum":
                     schema.Enum = [.. ((JsonArray)property.Value).Select((i) => new AsyncApiAny(i?.DeepClone()))];
@@ -91,16 +119,16 @@ internal static class JsonSchemaNodeMapper
                     schema.MaxItems = (int)property.Value;
                     break;
                 case "anyOf":
-                    schema.AnyOf = [.. ((JsonArray)property.Value).Select(Map)];
+                    schema.AnyOf = [.. ((JsonArray)property.Value).Select((i) => Map(i, root, activeRefs))];
                     break;
                 case "allOf":
-                    schema.AllOf = [.. ((JsonArray)property.Value).Select(Map)];
+                    schema.AllOf = [.. ((JsonArray)property.Value).Select((i) => Map(i, root, activeRefs))];
                     break;
                 case "oneOf":
-                    schema.OneOf = [.. ((JsonArray)property.Value).Select(Map)];
+                    schema.OneOf = [.. ((JsonArray)property.Value).Select((i) => Map(i, root, activeRefs))];
                     break;
                 case "not":
-                    schema.Not = Map(property.Value);
+                    schema.Not = Map(property.Value, root, activeRefs);
                     break;
                 default:
                     // Keywords the AsyncAPI model has no slot for (for example "$comment") are dropped.
@@ -109,6 +137,40 @@ internal static class JsonSchemaNodeMapper
         }
 
         return schema;
+    }
+
+    private static JsonNode ResolvePointer(JsonNode root, string pointer)
+    {
+        if (pointer == "#")
+        {
+            return root;
+        }
+
+        if (!pointer.StartsWith("#/", StringComparison.Ordinal))
+        {
+            // The exporter only produces local JSON Pointers; anything else is not resolvable here.
+            return null;
+        }
+
+        JsonNode current = root;
+        foreach (var rawToken in pointer.Substring(2).Split('/'))
+        {
+            if (current == null)
+            {
+                return null;
+            }
+
+            // RFC 6901 escaping: "~1" is "/" and "~0" is "~".
+            string token = rawToken.Replace("~1", "/").Replace("~0", "~");
+            current = current switch
+            {
+                JsonObject o => o.TryGetPropertyValue(token, out var child) ? child : null,
+                JsonArray a => int.TryParse(token, out int index) && index >= 0 && index < a.Count ? a[index] : null,
+                _ => null,
+            };
+        }
+
+        return current;
     }
 
     private static SchemaType MapType(JsonNode typeNode)

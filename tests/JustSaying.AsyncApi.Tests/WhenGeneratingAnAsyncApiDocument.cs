@@ -113,6 +113,16 @@ public class WhenGeneratingAnAsyncApiDocument
     }
 
     [Test]
+    public async Task CancellationIsObservedWhenWritingTheDocument()
+    {
+        var provider = BuildServiceProvider().GetRequiredService<IAsyncApiDocumentProvider>();
+        using var writer = new StringWriter();
+
+        await Assert.That(async () => await provider.GenerateAsync(provider.GetDocumentNames()[0], writer, new CancellationToken(canceled: true)))
+            .Throws<OperationCanceledException>();
+    }
+
+    [Test]
     public async Task TheBusIsNotStartedByDocumentGeneration()
     {
         var serviceProvider = BuildServiceProvider();
