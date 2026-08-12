@@ -356,12 +356,14 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
 
         if (metadataRegistry != null)
         {
-            metadataRegistry.SetRegion(queueAddress.RegionName);
+            // The queue's region comes from its address and may differ from the bus's configured
+            // region, so it is captured on the publication rather than as the registry default.
             metadataRegistry.AddPublication(new PublicationMetadata(
                 MessagingDestinationKind.SqsQueue,
                 queueAddress.QueueUrl.Segments[queueAddress.QueueUrl.Segments.Length - 1].TrimEnd('/'),
                 isDynamic: false,
-                [new MessageTypeMetadata(typeof(T), subject)]));
+                [new MessageTypeMetadata(typeof(T), subject)],
+                queueAddress.RegionName));
         }
 
         logger.LogInformation(

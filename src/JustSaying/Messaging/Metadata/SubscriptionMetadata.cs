@@ -14,6 +14,7 @@ public sealed class SubscriptionMetadata
     /// <param name="subscriptionGroupName">The name of the subscription group the queue belongs to.</param>
     /// <param name="rawMessageDelivery">Whether the subscription uses raw message delivery.</param>
     /// <param name="messages">The message type(s) handled from the queue.</param>
+    /// <param name="region">The AWS region of the queue when it was addressed explicitly (for example by ARN or URL), or <see langword="null"/> when the queue is in the bus's configured region.</param>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="queueName"/> or <paramref name="messages"/> is <see langword="null"/>.
     /// </exception>
@@ -22,13 +23,15 @@ public sealed class SubscriptionMetadata
         string topicName,
         string subscriptionGroupName,
         bool rawMessageDelivery,
-        IReadOnlyList<MessageTypeMetadata> messages)
+        IReadOnlyList<MessageTypeMetadata> messages,
+        string region = null)
     {
         QueueName = queueName ?? throw new ArgumentNullException(nameof(queueName));
         TopicName = topicName;
         SubscriptionGroupName = subscriptionGroupName;
         RawMessageDelivery = rawMessageDelivery;
         Messages = messages ?? throw new ArgumentNullException(nameof(messages));
+        Region = string.IsNullOrEmpty(region) ? null : region;
     }
 
     /// <summary>
@@ -56,4 +59,10 @@ public sealed class SubscriptionMetadata
     /// Gets the message type(s) handled from the queue.
     /// </summary>
     public IReadOnlyList<MessageTypeMetadata> Messages { get; }
+
+    /// <summary>
+    /// Gets the AWS region of the queue when it was addressed explicitly (for example by
+    /// ARN or URL), or <see langword="null"/> when the queue is in the bus's configured region.
+    /// </summary>
+    public string Region { get; }
 }

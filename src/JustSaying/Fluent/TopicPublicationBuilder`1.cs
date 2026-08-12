@@ -371,12 +371,14 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
         var metadataRegistry = _serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>();
         if (metadataRegistry != null)
         {
-            metadataRegistry.SetRegion(arn.Region);
+            // The topic's region comes from its ARN and may differ from the bus's configured
+            // region, so it is captured on the publication rather than as the registry default.
             metadataRegistry.AddPublication(new PublicationMetadata(
                 MessagingDestinationKind.SnsTopic,
                 TopicAddressCustomizer != null ? null : arn.Resource,
                 isDynamic: TopicAddressCustomizer != null,
-                [new MessageTypeMetadata(typeof(T), subject)]));
+                [new MessageTypeMetadata(typeof(T), subject)],
+                arn.Region));
         }
 
         loggerFactory.CreateLogger<TopicPublicationBuilder<T>>().LogInformation(
