@@ -1,0 +1,52 @@
+<Project>
+  <PropertyGroup>
+    <_JustSayingAsyncApiToolPath>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\tools\net8.0\JustSaying.AsyncApi.GetDocument.dll'))</_JustSayingAsyncApiToolPath>
+    <_JustSayingAsyncApiFileListPath>$(IntermediateOutputPath)JustSayingAsyncApi.cache</_JustSayingAsyncApiFileListPath>
+  </PropertyGroup>
+
+  <!--
+    Generates the application's AsyncAPI document(s) after every build, analogous to
+    Microsoft.Extensions.ApiDescription.Server's build-time OpenAPI generation. The tool runs
+    with the application's deps.json and runtimeconfig.json so the application's assemblies
+    resolve normally; the application's host is built (never started) to collect the configured
+    publications and subscriptions.
+  -->
+  <Target Name="GenerateJustSayingAsyncApiDocuments"
+          AfterTargets="Build"
+          Inputs="$(TargetPath);$(ProjectDepsFilePath);$(ProjectRuntimeConfigFilePath)"
+          Outputs="$(_JustSayingAsyncApiFileListPath)"
+          Condition=" '$(JustSayingAsyncApiGenerateDocumentsOnBuild)' == 'true' AND
+                      '$(DesignTimeBuild)' != 'true' AND
+                      '$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND
+                      $([MSBuild]::VersionGreaterThanOrEquals('$(TargetFrameworkVersion)', '8.0')) AND
+                      '$(OutputType)' == 'Exe' ">
+    <Error Condition=" !Exists('$(_JustSayingAsyncApiToolPath)') "
+           Text="The JustSaying AsyncAPI generation tool was not found at '$(_JustSayingAsyncApiToolPath)'. The JustSaying.AsyncApi.BuildTools package may be corrupt; try restoring again." />
+    <Error Condition=" !Exists('$(ProjectDepsFilePath)') "
+           Text="Build-time AsyncAPI generation requires a dependencies file ($(ProjectDepsFilePath)). Do not set GenerateDependencyFile to 'false', or set JustSayingAsyncApiGenerateDocumentsOnBuild to 'false' to disable generation." />
+
+    <PropertyGroup>
+      <_JustSayingAsyncApiCommand>dotnet exec --depsfile "$(ProjectDepsFilePath)" --runtimeconfig "$(ProjectRuntimeConfigFilePath)"</_JustSayingAsyncApiCommand>
+      <_JustSayingAsyncApiCommand Condition=" '$(NuGetPackageRoot)' != '' ">$(_JustSayingAsyncApiCommand) --additionalprobingpath "$(NuGetPackageRoot.TrimEnd('\').TrimEnd('/'))"</_JustSayingAsyncApiCommand>
+      <_JustSayingAsyncApiCommand>$(_JustSayingAsyncApiCommand) "$(_JustSayingAsyncApiToolPath)" --assembly "$(TargetPath)" --output "$(JustSayingAsyncApiDocumentsDirectory)" --file-list "$(_JustSayingAsyncApiFileListPath)"</_JustSayingAsyncApiCommand>
+    </PropertyGroup>
+
+    <!--
+      The tool reports its own failures in the canonical MSBuild error format, which Exec
+      surfaces as build errors; IgnoreExitCode avoids also dumping the whole command line as a
+      second error. The Error task below catches any failure where the tool could not report.
+    -->
+    <Exec Command="$(_JustSayingAsyncApiCommand)"
+          WorkingDirectory="$(TargetDir)"
+          StandardOutputImportance="normal"
+          IgnoreExitCode="true">
+      <Output TaskParameter="ExitCode" PropertyName="_JustSayingAsyncApiExitCode" />
+    </Exec>
+    <Error Condition=" '$(_JustSayingAsyncApiExitCode)' != '0' "
+           Text="AsyncAPI document generation for '$(MSBuildProjectName)' failed with exit code $(_JustSayingAsyncApiExitCode). Set JustSayingAsyncApiGenerateDocumentsOnBuild to 'false' to disable build-time generation." />
+
+    <ItemGroup>
+      <FileWrites Include="$(_JustSayingAsyncApiFileListPath)" />
+    </ItemGroup>
+  </Target>
+</Project>

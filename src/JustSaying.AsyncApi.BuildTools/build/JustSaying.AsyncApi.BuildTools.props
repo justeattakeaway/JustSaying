@@ -1,0 +1,8 @@
+<Project>
+  <PropertyGroup>
+    <!-- Set to 'false' to reference the package without generating documents on every build. -->
+    <JustSayingAsyncApiGenerateDocumentsOnBuild Condition=" '$(JustSayingAsyncApiGenerateDocumentsOnBuild)' == '' ">true</JustSayingAsyncApiGenerateDocumentsOnBuild>
+    <!-- The directory the generated documents are written to. -->
+    <JustSayingAsyncApiDocumentsDirectory Condition=" '$(JustSayingAsyncApiDocumentsDirectory)' == '' ">$(MSBuildProjectDirectory)</JustSayingAsyncApiDocumentsDirectory>
+  </PropertyGroup>
+</Project>
