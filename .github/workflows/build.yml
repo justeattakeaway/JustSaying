@@ -247,24 +247,21 @@ jobs:
         node-version: '24'
 
     - name: Install scip-dotnet
-      run: dotnet tool install --global scip-dotnet
-
-    - name: Convert slnx to sln
-      shell: pwsh
+      working-directory: ${{ runner.temp }}
+      env:
+        # The latest scip-dotnet release (0.2.14) bundles Roslyn 4.4.0, which crashes with a
+        # NullReferenceException when indexing newer C# language features. Upstream has already
+        # fixed this on main (Roslyn 5.3.0, plus native .slnx support) but has not published a
+        # release yet, so build the tool from a pinned commit until one is available.
+        SCIP_DOTNET_COMMIT: 47884461a79839fb74c99e6a0a7978cd7eb62476
       run: |
-        # Create a new .sln file
-        dotnet new sln -f sln -n JustSaying -o .
-        # Get all projects from the .slnx file and add them to the .sln file
-        # Skip first 2 lines which are the header ("Project(s)" and "----------")
-        $projects = dotnet sln JustSaying.slnx list | Select-Object -Skip 2
-        foreach ($project in $projects) {
-          if ($project.Trim()) {
-            dotnet sln JustSaying.sln add $project
-          }
-        }
+        git clone https://github.com/sourcegraph/scip-dotnet.git scip-dotnet
+        git -C scip-dotnet checkout "${SCIP_DOTNET_COMMIT}"
+        dotnet pack scip-dotnet/ScipDotnet/ScipDotnet.csproj --configuration Release --output scip-dotnet/artifacts
+        dotnet tool install --global scip-dotnet --version 0.2.15 --add-source scip-dotnet/artifacts
 
     - name: Generate SCIP index
-      run: scip-dotnet index JustSaying.sln
+      run: scip-dotnet index JustSaying.slnx
 
     - name: Install Sourcegraph CLI
       run: npm install -g @sourcegraph/src
