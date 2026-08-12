@@ -60,7 +60,9 @@ public class WhenGeneratingAnAsyncApiDocument
         using var document = await GenerateAsync(BuildServiceProvider());
         var root = document.RootElement;
 
-        await Assert.That(root.GetProperty("asyncapi").GetString()).StartsWith("3.");
+        // ByteBard hardcodes the emitted spec version; the public docs say 3.1, so a ByteBard
+        // upgrade that changes the emitted version must fail here and be reflected in the docs.
+        await Assert.That(root.GetProperty("asyncapi").GetString()).IsEqualTo("3.1.0");
         await Assert.That(root.GetProperty("info").GetProperty("title").GetString()).IsEqualTo("Orders");
         await Assert.That(root.GetProperty("info").GetProperty("version").GetString()).IsEqualTo("2.1.0");
 
