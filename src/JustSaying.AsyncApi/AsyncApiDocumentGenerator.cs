@@ -5,11 +5,12 @@ using ByteBard.AsyncAPI.Models;
 using JustSaying.CloudEvents;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Metadata;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AsyncApi;
 
 /// <summary>
-/// Generates an AsyncAPI 3.0 document from the publications and subscriptions captured in an
+/// Generates an AsyncAPI 3.1 document from the publications and subscriptions captured in an
 /// <see cref="IMessagingMetadataRegistry"/>.
 /// </summary>
 public sealed class AsyncApiDocumentGenerator
@@ -20,6 +21,18 @@ public sealed class AsyncApiDocumentGenerator
     private readonly AsyncApiOptions _options;
     private readonly IMessageBodySerializationFactory _serializationFactory;
     private readonly CloudEventOptions _cloudEventOptions;
+    private readonly ILogger<AsyncApiDocumentGenerator> _logger;
+
+    static AsyncApiDocumentGenerator()
+    {
+        // ByteBard's writer materializes these enum arrays reflectively (Enum.GetValues, which
+        // calls Array.CreateInstance): SchemaType[] for every schema "type" keyword and
+        // ReferenceType[] when parsing "#/components/..." references. A Native AOT image only
+        // contains array types that are constructed statically somewhere, so construct them
+        // here or the writer throws NotSupportedException at runtime under Native AOT.
+        _ = Enum.GetValues<SchemaType>();
+        _ = Enum.GetValues<ReferenceType>();
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AsyncApiDocumentGenerator"/> class.
@@ -28,6 +41,7 @@ public sealed class AsyncApiDocumentGenerator
     /// <param name="options">The options configuring the generated document.</param>
     /// <param name="serializationFactory">The message body serialization factory in use, used to discover the payload wire contract.</param>
     /// <param name="cloudEventOptions">The CloudEvents options, when CloudEvents support is configured.</param>
+    /// <param name="logger">The logger used to surface why parts of the document are omitted.</param>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="registry"/> or <paramref name="options"/> is <see langword="null"/>.
     /// </exception>
@@ -35,12 +49,14 @@ public sealed class AsyncApiDocumentGenerator
         IMessagingMetadataRegistry registry,
         AsyncApiOptions options,
         IMessageBodySerializationFactory serializationFactory = null,
-        CloudEventOptions cloudEventOptions = null)
+        CloudEventOptions cloudEventOptions = null,
+        ILogger<AsyncApiDocumentGenerator> logger = null)
     {
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _serializationFactory = serializationFactory;
         _cloudEventOptions = cloudEventOptions;
+        _logger = logger;
     }
 
     /// <summary>
@@ -65,6 +81,14 @@ public sealed class AsyncApiDocumentGenerator
 
         AddServers(document, primaryRegion);
 
+        if (_registry.Publications.Count == 0 && _registry.Subscriptions.Count == 0)
+        {
+            _logger?.LogWarning(
+                "The generated AsyncAPI document is empty: no publications or subscriptions were captured. " +
+                "If the application does configure messaging, ensure AddJustSaying ran in the same service collection before the document was generated.");
+        }
+
+        var serializerOptions = ResolveSerializerOptions();
         var channels = new Dictionary<string, ChannelState>(StringComparer.Ordinal);
         var operationMessages = new Dictionary<string, List<MessageTypeMetadata>>(StringComparer.Ordinal);
 
@@ -73,6 +97,9 @@ public sealed class AsyncApiDocumentGenerator
             if (publication.IsDynamic)
             {
                 // A dynamic destination has no static address; there is no channel to document.
+                _logger?.LogWarning(
+                    "Publication of {MessageTypes} uses a dynamic destination name computed per message, so it has no static address and is omitted from the AsyncAPI document.",
+                    Join(publication.Messages));
                 continue;
             }
 
@@ -84,7 +111,8 @@ public sealed class AsyncApiDocumentGenerator
                 publication.DestinationKind,
                 publication.Region ?? _registry.Region,
                 $"The {publication.DestinationName} {(publication.DestinationKind == MessagingDestinationKind.SnsTopic ? "SNS topic" : "SQS queue")}.",
-                publication.Messages);
+                publication.Messages,
+                serializerOptions);
 
             // Several publications can target the same destination with different message
             // types; the operation is rebuilt from the merged set so none are dropped.
@@ -114,7 +142,8 @@ public sealed class AsyncApiDocumentGenerator
                 MessagingDestinationKind.SqsQueue,
                 subscription.Region ?? _registry.Region,
                 description,
-                subscription.Messages);
+                subscription.Messages,
+                serializerOptions);
 
             string operationKey = Sanitize($"receive-{channel.Key}");
             var merged = MergeOperationMessages(operationMessages, operationKey, subscription.Messages);
@@ -124,6 +153,7 @@ public sealed class AsyncApiDocumentGenerator
                 Action = AsyncApiAction.Receive,
                 Channel = new AsyncApiChannelReference($"#/channels/{channel.Key}"),
                 Summary = $"Receive {Join(merged)} from {subscription.QueueName}.",
+                Description = DeliveryDescription(subscription),
                 Messages = [.. merged.Select((m) => new AsyncApiMessageReference($"#/channels/{channel.Key}/messages/{channel.MessageKeys[WireName(m)]}"))],
             };
         }
@@ -215,7 +245,8 @@ public sealed class AsyncApiDocumentGenerator
         MessagingDestinationKind kind,
         string region,
         string description,
-        IReadOnlyList<MessageTypeMetadata> messages)
+        IReadOnlyList<MessageTypeMetadata> messages,
+        JsonSerializerOptions serializerOptions)
     {
         var identity = new ChannelIdentity(address, kind, region);
         string kindSuffix = kind == MessagingDestinationKind.SnsTopic ? "topic" : "queue";
@@ -267,7 +298,7 @@ public sealed class AsyncApiDocumentGenerator
                 state.MessageKeys[wireName] = messageKey;
             }
 
-            state.Channel.Messages[messageKey] = CreateMessage(message);
+            state.Channel.Messages[messageKey] = CreateMessage(message, serializerOptions);
         }
 
         return state;
@@ -319,36 +350,103 @@ public sealed class AsyncApiDocumentGenerator
         return merged;
     }
 
-    private AsyncApiMessage CreateMessage(MessageTypeMetadata metadata)
+    /// <summary>
+    /// Describes how documented payloads actually arrive on the queue. Without raw message
+    /// delivery, SNS wraps each message in its notification envelope, so the SQS body is not
+    /// the documented payload itself.
+    /// </summary>
+    private static string DeliveryDescription(SubscriptionMetadata subscription)
+    {
+        if (subscription.TopicName == null)
+        {
+            return null;
+        }
+
+        return subscription.RawMessageDelivery
+            ? "The topic subscription uses raw message delivery: the SQS message body is the documented message payload."
+            : "The topic subscription does not use raw message delivery: the SQS message body is the Amazon SNS notification envelope, and the documented message payload is the JSON-encoded string in its \"Message\" property.";
+    }
+
+    private AsyncApiMessage CreateMessage(MessageTypeMetadata metadata, JsonSerializerOptions serializerOptions)
     {
         string name = WireName(metadata);
 
         var message = new AsyncApiMessage()
         {
             Name = name,
-            Title = metadata.MessageType.Name,
+            Title = FriendlyTypeName(metadata.MessageType),
             ContentType = _cloudEventOptions != null ? CloudEventsContentType : "application/json",
         };
 
-        var serializerOptions = ResolveSerializerOptions();
-        if (serializerOptions != null)
-        {
-            try
-            {
-                var schemaNode = serializerOptions.GetJsonSchemaAsNode(metadata.MessageType, new JsonSchemaExporterOptions
-                {
-                    TreatNullObliviousAsNonNullable = true,
-                });
+        var payloadSchema = ExportPayloadSchema(metadata.MessageType, serializerOptions);
 
-                message.Payload = JsonSchemaNodeMapper.Map(schemaNode);
-            }
-            catch (NotSupportedException)
-            {
-                // The serializer cannot describe this type; the message is documented without a payload schema.
-            }
+        if (_cloudEventOptions != null)
+        {
+            // The wire format is the CloudEvents structured-mode envelope with the message under
+            // "data"; documenting the bare message schema would hand consumers the wrong shape.
+            message.Payload = CreateCloudEventEnvelopeSchema(metadata, payloadSchema);
+        }
+        else if (payloadSchema != null)
+        {
+            message.Payload = payloadSchema;
         }
 
         return message;
+    }
+
+    private AsyncApiJsonSchema ExportPayloadSchema(Type messageType, JsonSerializerOptions serializerOptions)
+    {
+        if (serializerOptions == null)
+        {
+            return null;
+        }
+
+        try
+        {
+            var schemaNode = serializerOptions.GetJsonSchemaAsNode(messageType, new JsonSchemaExporterOptions
+            {
+                TreatNullObliviousAsNonNullable = true,
+            });
+
+            return JsonSchemaNodeMapper.Map(schemaNode);
+        }
+        catch (NotSupportedException exception)
+        {
+            // The serializer cannot describe this type; the message is documented without a payload schema.
+            _logger?.LogWarning(
+                "A payload schema for message type {MessageType} could not be derived ({Reason}); the message is documented without one.",
+                messageType,
+                exception.Message);
+            return null;
+        }
+    }
+
+    private AsyncApiJsonSchema CreateCloudEventEnvelopeSchema(MessageTypeMetadata metadata, AsyncApiJsonSchema dataSchema)
+    {
+        var typeSchema = new AsyncApiJsonSchema() { Type = SchemaType.String };
+        if (_cloudEventOptions.TryGetCloudEventType(metadata.MessageType, out var cloudEventType))
+        {
+            typeSchema.Const = new AsyncApiAny(cloudEventType);
+        }
+
+        // Mirrors the envelope written by CloudEventMessageBodySerializer. Additional properties
+        // stay allowed so that CloudEvents extension attributes remain valid.
+        return new AsyncApiJsonSchema()
+        {
+            Type = SchemaType.Object,
+            Description = $"A CloudEvents 1.0 structured-mode JSON envelope carrying {FriendlyTypeName(metadata.MessageType)} in its \"data\" member.",
+            Properties = new Dictionary<string, AsyncApiJsonSchema>(StringComparer.Ordinal)
+            {
+                ["specversion"] = new() { Type = SchemaType.String, Const = new AsyncApiAny("1.0") },
+                ["id"] = new() { Type = SchemaType.String, MinLength = 1 },
+                ["source"] = new() { Type = SchemaType.String, Format = "uri-reference" },
+                ["type"] = typeSchema,
+                ["time"] = new() { Type = SchemaType.String, Format = "date-time" },
+                ["datacontenttype"] = new() { Type = SchemaType.String },
+                ["data"] = dataSchema ?? new AsyncApiJsonSchema(),
+            },
+            Required = new HashSet<string>(StringComparer.Ordinal) { "specversion", "id", "source", "type", "data" },
+        };
     }
 
     private string WireName(MessageTypeMetadata metadata)
@@ -387,6 +485,10 @@ public sealed class AsyncApiDocumentGenerator
 
             if (options == null)
             {
+                _logger?.LogWarning(
+                    "The message body serialization factory ({SerializationFactory}) is not System.Text.Json-based, so the wire contract cannot be derived and messages are documented without payload schemas. " +
+                    "Set AsyncApiOptions.SerializerOptions to options matching the wire format to document payload schemas.",
+                    factory.GetType());
                 return null;
             }
         }
@@ -398,6 +500,9 @@ public sealed class AsyncApiDocumentGenerator
             // to, so messages are documented without payload schemas.
             if (!JsonSerializer.IsReflectionEnabledByDefault)
             {
+                _logger?.LogWarning(
+                    "Reflection-based serialization is disabled and the serializer options have no TypeInfoResolver, so messages are documented without payload schemas. " +
+                    "Use serializer options with a source-generated JsonSerializerContext to document payload schemas.");
                 return null;
             }
 
@@ -413,7 +518,29 @@ public sealed class AsyncApiDocumentGenerator
     }
 
     private string Join(IReadOnlyList<MessageTypeMetadata> messages)
-        => string.Join(", ", messages.Select((m) => m.MessageType.Name));
+        => string.Join(", ", messages.Select((m) => FriendlyTypeName(m.MessageType)));
+
+    /// <summary>
+    /// Renders a type name for display, expanding closed generics (for example
+    /// <c>Envelope&lt;OrderPlaced&gt;</c> rather than <c>Envelope`1</c>). Wire names are never
+    /// derived from this; they stay faithful to the registered logical name.
+    /// </summary>
+    private static string FriendlyTypeName(Type type)
+    {
+        if (!type.IsGenericType)
+        {
+            return type.Name;
+        }
+
+        string name = type.Name;
+        int backtickIndex = name.IndexOf('`');
+        if (backtickIndex > 0)
+        {
+            name = name.Remove(backtickIndex);
+        }
+
+        return $"{name}<{string.Join(", ", type.GenericTypeArguments.Select(FriendlyTypeName))}>";
+    }
 
     private static string Sanitize(string value)
     {

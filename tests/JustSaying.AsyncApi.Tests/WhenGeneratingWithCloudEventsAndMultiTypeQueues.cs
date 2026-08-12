@@ -72,6 +72,28 @@ public class WhenGeneratingWithCloudEventsAndMultiTypeQueues
     }
 
     [Test]
+    public async Task ThePayloadDocumentsTheCloudEventsEnvelope()
+    {
+        using var document = await GenerateAsync();
+        var root = document.RootElement;
+
+        var message = root.GetProperty("channels").GetProperty("orderplaced").GetProperty("messages").GetProperty("com.example.orders.placed");
+        var payload = message.GetProperty("payload");
+
+        // The wire format is the CloudEvents structured-mode envelope, not the bare data schema.
+        var properties = payload.GetProperty("properties");
+        await Assert.That(properties.GetProperty("specversion").GetProperty("const").GetString()).IsEqualTo("1.0");
+        await Assert.That(properties.GetProperty("type").GetProperty("const").GetString()).IsEqualTo("com.example.orders.placed");
+        await Assert.That(properties.GetProperty("source").GetProperty("format").GetString()).IsEqualTo("uri-reference");
+
+        var required = payload.GetProperty("required").EnumerateArray().Select((r) => r.GetString()).ToList();
+        await Assert.That(required).Contains("data");
+
+        var dataProperties = properties.GetProperty("data").GetProperty("properties");
+        await Assert.That(dataProperties.TryGetProperty("OrderId", out _)).IsTrue();
+    }
+
+    [Test]
     public async Task AMultiTypeQueueBecomesOneChannelWithAMessagesMap()
     {
         using var document = await GenerateAsync();
