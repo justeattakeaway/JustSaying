@@ -3,6 +3,7 @@ using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageSerialization;
+using JustSaying.Messaging.Metadata;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Models;
 using JustSaying.Naming;
@@ -204,6 +205,18 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
             .Build();
 
         bus.AddMessageMiddleware<T>(subscriptionConfig.QueueName, handlerMiddleware);
+
+        var metadataRegistry = serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>();
+        if (metadataRegistry != null)
+        {
+            metadataRegistry.SetRegion(region);
+            metadataRegistry.AddSubscription(new SubscriptionMetadata(
+                subscriptionConfig.QueueName,
+                topicName: null,
+                subscriptionConfig.SubscriptionGroupName,
+                subscriptionConfig.RawMessageDelivery,
+                [new MessageTypeMetadata(typeof(T), bus.MessageTypeRegistry.GetLogicalName(typeof(T)))]));
+        }
 
         logger.LogInformation(
             "Added a message handler for message type for '{MessageType}' on topic '{TopicName}' and queue '{QueueName}'.",

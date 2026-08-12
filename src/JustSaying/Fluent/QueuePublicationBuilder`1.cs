@@ -4,6 +4,7 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
+using JustSaying.Messaging.Metadata;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
@@ -190,6 +191,17 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
         bus.AddStartupTask(StartupTask);
 
         bus.AddMessagePublisher<T>(eventPublisher);
+
+        var metadataRegistry = serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>();
+        if (metadataRegistry != null)
+        {
+            metadataRegistry.SetRegion(region);
+            metadataRegistry.AddPublication(new PublicationMetadata(
+                MessagingDestinationKind.SqsQueue,
+                writeConfiguration.QueueName,
+                isDynamic: false,
+                [new MessageTypeMetadata(typeof(T), subject)]));
+        }
 
         if (MiddlewareConfiguration != null)
         {

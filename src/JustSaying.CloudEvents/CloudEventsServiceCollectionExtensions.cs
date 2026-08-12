@@ -35,6 +35,8 @@ public static class CloudEventsServiceCollectionExtensions
         var options = new CloudEventOptions();
         configure(options);
 
+        services.TryAddSingleton(options);
+
         services.TryAddSingleton<IMessageBodySerializationFactory>(serviceProvider =>
         {
             var config = serviceProvider.GetRequiredService<IMessagingConfig>();
