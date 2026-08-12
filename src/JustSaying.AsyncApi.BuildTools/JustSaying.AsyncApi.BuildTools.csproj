@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>JustSaying.AsyncApi.GetDocument</AssemblyName>
+    <Description>Build-time AsyncAPI document generation for applications that use JustSaying.</Description>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IsPackable>true</IsPackable>
+    <Nullable>enable</Nullable>
+    <!-- The package intentionally has no lib/ folder or dependencies; it ships a tool and MSBuild targets. -->
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+    <OutputType>Exe</OutputType>
+    <PackageId>JustSaying.AsyncApi.BuildTools</PackageId>
+    <PackageTags>aws,sns,sqs,asyncapi,msbuild</PackageTags>
+    <RootNamespace>JustSaying.AsyncApi.GetDocument</RootNamespace>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <TargetFramework>net8.0</TargetFramework>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_PackGetDocumentTool</TargetsForTfmSpecificContentInPackage>
+    <UseAppHost>false</UseAppHost>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="build\**" Pack="true" PackagePath="build" />
+  </ItemGroup>
+  <Target Name="_PackGetDocumentTool">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(TargetPath)" PackagePath="tools/net8.0/" />
+    </ItemGroup>
+  </Target>
+</Project>

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    A minimal JustSaying application used by JustSaying.AsyncApi.Tests to exercise the
+    JustSaying.AsyncApi.GetDocument tool the way the JustSaying.AsyncApi.BuildTools MSBuild
+    targets invoke it. Environment variables (see Program.cs) put the app into the failure
+    modes the tool reports build errors for.
+  -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>JustSaying.AsyncApi.Tests.App</RootNamespace>
+    <SignAssembly>false</SignAssembly>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\JustSaying\JustSaying.csproj" />
+    <ProjectReference Include="..\..\src\JustSaying.AsyncApi\JustSaying.AsyncApi.csproj" />
+    <ProjectReference Include="..\..\src\JustSaying.Extensions.DependencyInjection.Microsoft\JustSaying.Extensions.DependencyInjection.Microsoft.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+  </ItemGroup>
+</Project>
