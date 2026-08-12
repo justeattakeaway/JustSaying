@@ -32,6 +32,6 @@ internal sealed class AsyncApiDocumentProvider(IServiceProvider serviceProvider)
         var generator = serviceProvider.GetRequiredService<AsyncApiDocumentGenerator>();
         var document = generator.Generate();
 
-        await writer.WriteAsync(document.SerializeAsJson(AsyncApiVersion.AsyncApi3_0)).ConfigureAwait(false);
+        await writer.WriteAsync(document.SerializeAsJson(AsyncApiVersion.AsyncApi3_0).AsMemory(), cancellationToken).ConfigureAwait(false);
     }
 }
