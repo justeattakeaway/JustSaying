@@ -61,7 +61,12 @@ public sealed class AsyncApiDocumentGenerator
             DefaultContentType = _cloudEventOptions != null ? CloudEventsContentType : "application/json",
         };
 
-        AddServers(document);
+        string primaryRegion = PrimaryRegion();
+
+        AddServers(document, primaryRegion);
+
+        var identities = new Dictionary<string, ChannelIdentity>(StringComparer.Ordinal);
+        var operationMessages = new Dictionary<string, List<MessageTypeMetadata>>(StringComparer.Ordinal);
 
         foreach (var publication in _registry.Publications)
         {
@@ -73,17 +78,25 @@ public sealed class AsyncApiDocumentGenerator
 
             var channelKey = AddChannel(
                 document,
+                identities,
+                primaryRegion,
                 publication.DestinationName,
                 publication.DestinationKind,
+                publication.Region ?? _registry.Region,
                 $"The {publication.DestinationName} {(publication.DestinationKind == MessagingDestinationKind.SnsTopic ? "SNS topic" : "SQS queue")}.",
                 publication.Messages);
 
-            document.Operations[Sanitize($"send-{channelKey}")] = new AsyncApiOperation()
+            // Several publications can target the same destination with different message
+            // types; the operation is rebuilt from the merged set so none are dropped.
+            string operationKey = Sanitize($"send-{channelKey}");
+            var merged = MergeOperationMessages(operationMessages, operationKey, publication.Messages);
+
+            document.Operations[operationKey] = new AsyncApiOperation()
             {
                 Action = AsyncApiAction.Send,
                 Channel = new AsyncApiChannelReference($"#/channels/{channelKey}"),
-                Summary = $"Publish {Join(publication.Messages)} to {publication.DestinationName}.",
-                Messages = [.. publication.Messages.Select((m) => new AsyncApiMessageReference($"#/channels/{channelKey}/messages/{MessageKey(m)}"))],
+                Summary = $"Publish {Join(merged)} to {publication.DestinationName}.",
+                Messages = [.. merged.Select((m) => new AsyncApiMessageReference($"#/channels/{channelKey}/messages/{MessageKey(m)}"))],
             };
         }
 
@@ -95,17 +108,23 @@ public sealed class AsyncApiDocumentGenerator
 
             var channelKey = AddChannel(
                 document,
+                identities,
+                primaryRegion,
                 subscription.QueueName,
                 MessagingDestinationKind.SqsQueue,
+                subscription.Region ?? _registry.Region,
                 description,
                 subscription.Messages);
 
-            document.Operations[Sanitize($"receive-{channelKey}")] = new AsyncApiOperation()
+            string operationKey = Sanitize($"receive-{channelKey}");
+            var merged = MergeOperationMessages(operationMessages, operationKey, subscription.Messages);
+
+            document.Operations[operationKey] = new AsyncApiOperation()
             {
                 Action = AsyncApiAction.Receive,
                 Channel = new AsyncApiChannelReference($"#/channels/{channelKey}"),
-                Summary = $"Receive {Join(subscription.Messages)} from {subscription.QueueName}.",
-                Messages = [.. subscription.Messages.Select((m) => new AsyncApiMessageReference($"#/channels/{channelKey}/messages/{MessageKey(m)}"))],
+                Summary = $"Receive {Join(merged)} from {subscription.QueueName}.",
+                Messages = [.. merged.Select((m) => new AsyncApiMessageReference($"#/channels/{channelKey}/messages/{MessageKey(m)}"))],
             };
         }
 
@@ -114,22 +133,42 @@ public sealed class AsyncApiDocumentGenerator
         return document;
     }
 
-    private void AddServers(AsyncApiDocument document)
+    /// <summary>
+    /// The region whose servers get the plain "sns"/"sqs" keys; destinations in any other
+    /// region reference a region-suffixed server. This is the bus's configured region, or,
+    /// when only explicitly-addressed destinations exist, their sole region.
+    /// </summary>
+    private string PrimaryRegion()
     {
-        var region = _registry.Region;
-        if (region == null)
+        if (_registry.Region != null)
         {
-            return;
+            return _registry.Region;
         }
 
-        bool anyTopics = _registry.Publications.Any((p) => p.DestinationKind == MessagingDestinationKind.SnsTopic)
-            || _registry.Subscriptions.Any((s) => s.TopicName != null);
-        bool anyQueues = _registry.Publications.Any((p) => p.DestinationKind == MessagingDestinationKind.SqsQueue)
-            || _registry.Subscriptions.Count > 0;
+        var regions = _registry.Publications.Select((p) => p.Region)
+            .Concat(_registry.Subscriptions.Select((s) => s.Region))
+            .Where((r) => r != null)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
 
-        if (anyTopics)
+        return regions.Count == 1 ? regions[0] : null;
+    }
+
+    private void AddServers(AsyncApiDocument document, string primaryRegion)
+    {
+        var topicRegions = _registry.Publications
+            .Where((p) => p.DestinationKind == MessagingDestinationKind.SnsTopic)
+            .Select((p) => p.Region ?? _registry.Region)
+            .Concat(_registry.Subscriptions.Where((s) => s.TopicName != null).Select((s) => s.Region ?? _registry.Region));
+
+        var queueRegions = _registry.Publications
+            .Where((p) => p.DestinationKind == MessagingDestinationKind.SqsQueue)
+            .Select((p) => p.Region ?? _registry.Region)
+            .Concat(_registry.Subscriptions.Select((s) => s.Region ?? _registry.Region));
+
+        foreach (var region in topicRegions.Where((r) => r != null).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal))
         {
-            document.Servers["sns"] = new AsyncApiServer()
+            document.Servers[ServerKey("sns", region, primaryRegion)] = new AsyncApiServer()
             {
                 Host = $"sns.{region}.amazonaws.com",
                 Protocol = "sns",
@@ -137,9 +176,9 @@ public sealed class AsyncApiDocumentGenerator
             };
         }
 
-        if (anyQueues)
+        foreach (var region in queueRegions.Where((r) => r != null).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal))
         {
-            document.Servers["sqs"] = new AsyncApiServer()
+            document.Servers[ServerKey("sqs", region, primaryRegion)] = new AsyncApiServer()
             {
                 Host = $"sqs.{region}.amazonaws.com",
                 Protocol = "sqs",
@@ -148,18 +187,35 @@ public sealed class AsyncApiDocumentGenerator
         }
     }
 
+    private static string ServerKey(string protocol, string region, string primaryRegion)
+        => region == primaryRegion ? protocol : Sanitize($"{protocol}-{region}");
+
+    private sealed record ChannelIdentity(string Address, MessagingDestinationKind Kind, string Region);
+
     private string AddChannel(
         AsyncApiDocument document,
+        Dictionary<string, ChannelIdentity> identities,
+        string primaryRegion,
         string address,
         MessagingDestinationKind kind,
+        string region,
         string description,
         IReadOnlyList<MessageTypeMetadata> messages)
     {
+        var identity = new ChannelIdentity(address, kind, region);
+
+        // A topic and a queue can share a name, the same name can exist in two regions, and
+        // distinct addresses can sanitize to the same key; each is a different destination, so
+        // the channel keys are kept distinct. A publication and subscription on the same queue
+        // share an identity and reuse the one channel.
         string channelKey = Sanitize(address);
-        if (document.Channels.TryGetValue(channelKey, out var existing) && existing.Address != address)
+        if (identities.TryGetValue(channelKey, out var existing) && existing != identity)
         {
-            // A topic and a queue can share a name; keep the channel keys distinct.
             channelKey = Sanitize($"{address}-{(kind == MessagingDestinationKind.SnsTopic ? "topic" : "queue")}");
+            if (identities.TryGetValue(channelKey, out existing) && existing != identity)
+            {
+                channelKey = Sanitize($"{address}-{(kind == MessagingDestinationKind.SnsTopic ? "topic" : "queue")}-{region}");
+            }
         }
 
         if (!document.Channels.TryGetValue(channelKey, out var channel))
@@ -170,13 +226,17 @@ public sealed class AsyncApiDocumentGenerator
                 Description = description,
             };
 
-            string serverKey = kind == MessagingDestinationKind.SnsTopic ? "sns" : "sqs";
-            if (document.Servers.ContainsKey(serverKey))
+            if (region != null)
             {
-                channel.Servers.Add(new AsyncApiServerReference($"#/servers/{serverKey}"));
+                string serverKey = ServerKey(kind == MessagingDestinationKind.SnsTopic ? "sns" : "sqs", region, primaryRegion);
+                if (document.Servers.ContainsKey(serverKey))
+                {
+                    channel.Servers.Add(new AsyncApiServerReference($"#/servers/{serverKey}"));
+                }
             }
 
             document.Channels[channelKey] = channel;
+            identities[channelKey] = identity;
         }
 
         foreach (var message in messages)
@@ -185,6 +245,27 @@ public sealed class AsyncApiDocumentGenerator
         }
 
         return channelKey;
+    }
+
+    private List<MessageTypeMetadata> MergeOperationMessages(
+        Dictionary<string, List<MessageTypeMetadata>> operationMessages,
+        string operationKey,
+        IReadOnlyList<MessageTypeMetadata> messages)
+    {
+        if (!operationMessages.TryGetValue(operationKey, out var merged))
+        {
+            operationMessages[operationKey] = merged = [];
+        }
+
+        foreach (var message in messages)
+        {
+            if (!merged.Any((m) => MessageKey(m) == MessageKey(message)))
+            {
+                merged.Add(message);
+            }
+        }
+
+        return merged;
     }
 
     private AsyncApiMessage CreateMessage(MessageTypeMetadata metadata)
@@ -241,9 +322,22 @@ public sealed class AsyncApiDocumentGenerator
                 factory = cloudEventFactory.DataSerializerFactory;
             }
 
-            options = factory is SystemTextJsonSerializationFactory systemTextJsonFactory
-                ? systemTextJsonFactory.SerializerOptions
-                : SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions;
+            options = factory switch
+            {
+                SystemTextJsonSerializationFactory systemTextJsonFactory => systemTextJsonFactory.SerializerOptions,
+                null => SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions,
+                // A Newtonsoft or custom factory's wire contract cannot be derived from
+                // System.Text.Json options (for example, JustSaying's Newtonsoft serializer
+                // writes enums as strings), so rather than documenting a schema that may not
+                // match the wire format, messages are documented without payload schemas
+                // unless AsyncApiOptions.SerializerOptions is supplied explicitly.
+                _ => null,
+            };
+
+            if (options == null)
+            {
+                return null;
+            }
         }
 
         if (options.TypeInfoResolver == null)
