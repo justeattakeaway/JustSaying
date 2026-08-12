@@ -4,7 +4,9 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
+using JustSaying.Messaging.Metadata;
 using JustSaying.Messaging.Middleware;
+using JustSaying.Naming;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent;
@@ -300,6 +302,21 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
         bus.AddStartupTask(config.StartupTask);
         bus.AddMessagePublisher<T>(config.Publisher);
         bus.AddMessageBatchPublisher<T>(config.BatchPublisher);
+
+        var metadataRegistry = _serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>();
+        if (metadataRegistry != null)
+        {
+            var wireName = SubjectSet
+                ? Subject
+                : SubjectResolver?.Invoke(bus.MessageTypeRegistry) ?? bus.MessageTypeRegistry.GetLogicalName(typeof(T));
+
+            metadataRegistry.SetRegion(region);
+            metadataRegistry.AddPublication(new PublicationMetadata(
+                MessagingDestinationKind.SnsTopic,
+                TopicNameCustomizer != null ? null : bus.Config.TopicNamingConvention.Apply<T>(topicName),
+                isDynamic: TopicNameCustomizer != null,
+                [new MessageTypeMetadata(typeof(T), wireName)]));
+        }
     }
 
     private void ConfigureForAddress(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
@@ -350,6 +367,17 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
 
         bus.AddMessagePublisher<T>(publisherConfig.Publisher);
         bus.AddMessageBatchPublisher<T>(publisherConfig.BatchPublisher);
+
+        var metadataRegistry = _serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>();
+        if (metadataRegistry != null)
+        {
+            metadataRegistry.SetRegion(arn.Region);
+            metadataRegistry.AddPublication(new PublicationMetadata(
+                MessagingDestinationKind.SnsTopic,
+                TopicAddressCustomizer != null ? null : arn.Resource,
+                isDynamic: TopicAddressCustomizer != null,
+                [new MessageTypeMetadata(typeof(T), subject)]));
+        }
 
         loggerFactory.CreateLogger<TopicPublicationBuilder<T>>().LogInformation(
             "Created SNS topic publisher on topic '{TopicName}' for message type '{MessageType}'",

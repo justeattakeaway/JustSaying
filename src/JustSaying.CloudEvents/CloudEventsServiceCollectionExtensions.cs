@@ -53,6 +53,8 @@ public static class CloudEventsServiceCollectionExtensions
         var options = new CloudEventOptions();
         configure?.Invoke(options);
 
+        services.TryAddSingleton(options);
+
         services.TryAddSingleton(serviceProvider =>
         {
             var config = serviceProvider.GetRequiredService<IMessagingConfig>();
