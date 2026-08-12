@@ -13,6 +13,7 @@ public sealed class PublicationMetadata
     /// <param name="destinationName">The resolved destination name, or <see langword="null"/> when the destination is dynamic.</param>
     /// <param name="isDynamic">Whether the destination is computed per-message at publish time.</param>
     /// <param name="messages">The message type(s) published to the destination.</param>
+    /// <param name="region">The AWS region of the destination when it was addressed explicitly (for example by ARN), or <see langword="null"/> when the destination is in the bus's configured region.</param>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="messages"/> is <see langword="null"/>.
     /// </exception>
@@ -20,12 +21,14 @@ public sealed class PublicationMetadata
         MessagingDestinationKind destinationKind,
         string destinationName,
         bool isDynamic,
-        IReadOnlyList<MessageTypeMetadata> messages)
+        IReadOnlyList<MessageTypeMetadata> messages,
+        string region = null)
     {
         DestinationKind = destinationKind;
         DestinationName = destinationName;
         IsDynamic = isDynamic;
         Messages = messages ?? throw new ArgumentNullException(nameof(messages));
+        Region = string.IsNullOrEmpty(region) ? null : region;
     }
 
     /// <summary>
@@ -49,4 +52,10 @@ public sealed class PublicationMetadata
     /// Gets the message type(s) published to the destination.
     /// </summary>
     public IReadOnlyList<MessageTypeMetadata> Messages { get; }
+
+    /// <summary>
+    /// Gets the AWS region of the destination when it was addressed explicitly (for example
+    /// by ARN), or <see langword="null"/> when the destination is in the bus's configured region.
+    /// </summary>
+    public string Region { get; }
 }

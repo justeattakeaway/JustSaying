@@ -160,7 +160,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
 
         AwsTools.MessageHandling.ISqsQueue sqsQueue;
         string queueName;
-        string region;
+        string queueRegion = null;
 
         if (_destination.IsAddress)
         {
@@ -190,7 +190,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
 
             sqsQueue = queue;
             queueName = queue.QueueName;
-            region = _destination.Address.RegionName;
+            queueRegion = _destination.Address.RegionName;
         }
         else
         {
@@ -216,7 +216,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
             _destination.Infrastructure?.Apply(subscriptionConfig);
 
             var config = bus.Config;
-            region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
+            var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
 
             subscriptionConfig.ApplyTopicNamingConvention<T>(config.TopicNamingConvention);
             subscriptionConfig.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
@@ -254,13 +254,20 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
         var metadataRegistry = serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>();
         if (metadataRegistry != null)
         {
-            metadataRegistry.SetRegion(region);
+            if (queueRegion is null)
+            {
+                metadataRegistry.SetRegion(bus.Config.Region);
+            }
+
+            // A queue addressed by URL or ARN carries its own region, which may differ from the bus's
+            // configured region, so it is captured on the subscription rather than as the registry default.
             metadataRegistry.AddSubscription(new SubscriptionMetadata(
                 queueName,
                 topicName: null,
                 SubscriptionGroupName ?? queueName,
                 RawMessageDelivery,
-                [new MessageTypeMetadata(typeof(T), bus.MessageTypeRegistry.GetLogicalName(typeof(T)))]));
+                [new MessageTypeMetadata(typeof(T), bus.MessageTypeRegistry.GetLogicalName(typeof(T)))],
+                queueRegion));
         }
 
         logger.LogInformation(
