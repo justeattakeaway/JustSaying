@@ -1,5 +1,5 @@
 JustSaying.AsyncApi.AsyncApiDocumentGenerator
-JustSaying.AsyncApi.AsyncApiDocumentGenerator.AsyncApiDocumentGenerator(JustSaying.Messaging.Metadata.IMessagingMetadataRegistry registry, JustSaying.AsyncApi.AsyncApiOptions options, JustSaying.Messaging.MessageSerialization.IMessageBodySerializationFactory serializationFactory = null, JustSaying.CloudEvents.CloudEventOptions cloudEventOptions = null) -> void
+JustSaying.AsyncApi.AsyncApiDocumentGenerator.AsyncApiDocumentGenerator(JustSaying.Messaging.Metadata.IMessagingMetadataRegistry registry, JustSaying.AsyncApi.AsyncApiOptions options, JustSaying.Messaging.MessageSerialization.IMessageBodySerializationFactory serializationFactory = null, JustSaying.CloudEvents.CloudEventOptions cloudEventOptions = null, Microsoft.Extensions.Logging.ILogger<JustSaying.AsyncApi.AsyncApiDocumentGenerator> logger = null) -> void
 JustSaying.AsyncApi.AsyncApiDocumentGenerator.Generate() -> ByteBard.AsyncAPI.Models.AsyncApiDocument
 JustSaying.AsyncApi.AsyncApiOptions
 JustSaying.AsyncApi.AsyncApiOptions.AsyncApiOptions() -> void
