@@ -361,7 +361,7 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
         var config = bus.Config;
         ISqsQueue sqsQueue;
         string queueName;
-        string region;
+        string queueRegion = null;
         if (_destination.IsAddress)
         {
             if (_topics.Count > 0)
@@ -392,7 +392,7 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
 
             sqsQueue = queue;
             queueName = queue.QueueName;
-            region = _destination.Address.RegionName;
+            queueRegion = _destination.Address.RegionName;
         }
         else
         {
@@ -402,7 +402,7 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
                     $"{nameof(WithQueueExistenceCheck)} only applies to a pre-existing queue; a queue JustSaying owns is created on startup.");
             }
 
-            region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
+            var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
             queueName = _destination.Name;
 
             // The queue name is explicit for a multi-type subscription, so no naming convention is applied.
@@ -487,13 +487,20 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
         var metadataRegistry = serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>();
         if (metadataRegistry != null)
         {
-            metadataRegistry.SetRegion(region);
+            if (queueRegion is null)
+            {
+                metadataRegistry.SetRegion(bus.Config.Region);
+            }
+
+            // A queue addressed by URL or ARN carries its own region, which may differ from the bus's
+            // configured region, so it is captured on the subscription rather than as the registry default.
             metadataRegistry.AddSubscription(new SubscriptionMetadata(
                 queueName,
                 topicName: null,
                 _subscriptionGroupName ?? queueName,
                 _rawMessageDelivery,
-                [.. _registrations.Select((r) => new MessageTypeMetadata(r.MessageType, namesByRegistration[r]))]));
+                [.. _registrations.Select((r) => new MessageTypeMetadata(r.MessageType, namesByRegistration[r]))],
+                queueRegion));
         }
 
         logger.LogInformation(
