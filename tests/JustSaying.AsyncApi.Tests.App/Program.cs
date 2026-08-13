@@ -5,6 +5,13 @@ using JustSaying.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
+if (Environment.GetEnvironmentVariable("JUSTSAYING_TESTAPP_BLOCK_STARTUP") == "1")
+{
+    // Simulates an application that does slow work before building its host, to exercise the
+    // generation tool's entry point timeout.
+    Thread.Sleep(TimeSpan.FromMinutes(4));
+}
+
 var builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.AddJustSaying(config =>

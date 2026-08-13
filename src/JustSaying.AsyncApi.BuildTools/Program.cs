@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Hosting;
 
 namespace JustSaying.AsyncApi.GetDocument;
@@ -16,6 +17,8 @@ internal static class Program
 {
     private const string ProviderTypeName = "JustSaying.AsyncApi.IAsyncApiDocumentProvider";
     private const string ProviderAssemblyName = "JustSaying.AsyncApi";
+    private const string DefaultDocumentName = "asyncapi";
+    private const string TimeoutPropertyName = "JustSayingAsyncApiEntryPointTimeoutSeconds";
 
     private static readonly TimeSpan GenerationTimeout = TimeSpan.FromMinutes(2);
 
@@ -24,6 +27,8 @@ internal static class Program
         string? assemblyPath = null;
         string? outputDirectory = null;
         string? fileListPath = null;
+        string? fileName = null;
+        string? entryPointTimeout = null;
 
         for (var i = 0; i < args.Length - 1; i++)
         {
@@ -38,12 +43,34 @@ internal static class Program
                 case "--file-list":
                     fileListPath = args[++i];
                     break;
+                case "--file-name":
+                    fileName = args[++i];
+                    break;
+                case "--entry-point-timeout":
+                    entryPointTimeout = args[++i];
+                    break;
             }
         }
 
         if (assemblyPath is null || outputDirectory is null)
         {
-            return Error(1, "Usage: JustSaying.AsyncApi.GetDocument --assembly <path> --output <directory> [--file-list <path>]");
+            return Error(1, "Usage: JustSaying.AsyncApi.GetDocument --assembly <path> --output <directory> [--file-list <path>] [--file-name <name>] [--entry-point-timeout <seconds>]");
+        }
+
+        if (fileName is not null && !Regex.IsMatch(fileName, "^[A-Za-z0-9_.-]+$"))
+        {
+            return Error(1, $"The file name '{fileName}' is invalid. File names must contain only letters, digits, '.', '-' and '_'.");
+        }
+
+        TimeSpan? waitTimeout = null;
+        if (entryPointTimeout is not null)
+        {
+            if (!uint.TryParse(entryPointTimeout, out var timeoutSeconds) || timeoutSeconds == 0)
+            {
+                return Error(1, $"The entry point timeout '{entryPointTimeout}' is invalid. Specify a positive number of seconds.");
+            }
+
+            waitTimeout = TimeSpan.FromSeconds(timeoutSeconds);
         }
 
         Assembly assembly;
@@ -56,7 +83,7 @@ internal static class Program
             return Error(2, $"Failed to load the application assembly '{assemblyPath}': {exception.Message}");
         }
 
-        var serviceProviderFactory = HostFactoryResolver.ResolveServiceProviderFactory(assembly);
+        var serviceProviderFactory = HostFactoryResolver.ResolveServiceProviderFactory(assembly, waitTimeout);
         if (serviceProviderFactory is null)
         {
             return Error(3,
@@ -73,10 +100,21 @@ internal static class Program
         catch (Exception exception)
         {
             var reason = (exception as TargetInvocationException)?.InnerException ?? exception;
+
+            if (reason is InvalidOperationException && reason.Message.StartsWith("Timed out waiting for the entry point", StringComparison.Ordinal))
+            {
+                return Error(4,
+                    $"The entry point of '{assembly.GetName().Name}' did not build its host within {(waitTimeout ?? TimeSpan.FromMinutes(5)).TotalSeconds:0} seconds. " +
+                    $"If the application does slow work before building the host, raise the {TimeoutPropertyName} MSBuild property, " +
+                    "or skip that work during generation (the entry assembly is 'JustSaying.AsyncApi.GetDocument' while a document is generated).");
+            }
+
             return Error(4,
                 $"The entry point of '{assembly.GetName().Name}' threw while building the host: {reason.Message} " +
                 "The application's Program runs during document generation (its host is built but never started); " +
-                "it must be able to reach the host Build() call at build time.");
+                "it must be able to reach the host Build() call at build time. " +
+                "Note that the entry point is invoked with the arguments ['--applicationName', '<assembly name>'], " +
+                "and that the entry assembly is 'JustSaying.AsyncApi.GetDocument' while a document is generated.");
         }
 
         if (services is null)
@@ -111,7 +149,7 @@ internal static class Program
 
         try
         {
-            return GenerateDocuments(provider, getDocumentNames, generateAsync, outputDirectory, fileListPath);
+            return GenerateDocuments(provider, getDocumentNames, generateAsync, outputDirectory, fileListPath, fileName);
         }
         catch (Exception exception)
         {
@@ -125,14 +163,15 @@ internal static class Program
         MethodInfo getDocumentNames,
         MethodInfo generateAsync,
         string outputDirectory,
-        string? fileListPath)
+        string? fileListPath,
+        string? fileName)
     {
         Directory.CreateDirectory(outputDirectory);
 
         var generatedFiles = new List<string>();
         foreach (var documentName in (IEnumerable<string>)getDocumentNames.Invoke(provider, null)!)
         {
-            var filePath = Path.Combine(outputDirectory, SanitizeFileName(documentName) + ".json");
+            var filePath = Path.Combine(outputDirectory, GetDocumentFileName(documentName, fileName));
 
             using var writer = new StringWriter();
             var task = (Task)generateAsync.Invoke(provider, [documentName, writer, CancellationToken.None])!;
@@ -192,6 +231,20 @@ internal static class Program
         {
             return null;
         }
+    }
+
+    /// <summary>
+    /// Names the output file. The default document keeps the configured file name alone
+    /// (<c>asyncapi.json</c>, or <c>MyProject.json</c> when the file name is overridden);
+    /// any additional documents are suffixed with the document name, mirroring
+    /// Microsoft.Extensions.ApiDescription.Server's naming.
+    /// </summary>
+    private static string GetDocumentFileName(string documentName, string? fileName)
+    {
+        fileName ??= DefaultDocumentName;
+        return string.Equals(documentName, DefaultDocumentName, StringComparison.Ordinal)
+            ? fileName + ".json"
+            : $"{fileName}_{SanitizeFileName(documentName)}.json";
     }
 
     private static string SanitizeFileName(string documentName)
