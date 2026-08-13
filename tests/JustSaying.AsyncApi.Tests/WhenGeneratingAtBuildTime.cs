@@ -56,6 +56,48 @@ public class WhenGeneratingAtBuildTime
     }
 
     [Test]
+    public async Task TheFileNameCanBeOverridden()
+    {
+        using var outputDirectory = new TemporaryDirectory();
+
+        var result = await RunTool(outputDirectory.Path, extraArguments: ["--file-name", "My.Sample-App"]);
+
+        await Assert.That(result.ExitCode).IsEqualTo(0);
+        var documentPath = Path.Combine(outputDirectory.Path, "My.Sample-App.json");
+        await Assert.That(File.Exists(documentPath)).IsTrue();
+
+        var fileList = await File.ReadAllLinesAsync(Path.Combine(outputDirectory.Path, "files.txt"));
+        await Assert.That(fileList).Contains(documentPath);
+    }
+
+    [Test]
+    public async Task AnInvalidFileNameFailsWithAnError()
+    {
+        using var outputDirectory = new TemporaryDirectory();
+
+        var result = await RunTool(outputDirectory.Path, extraArguments: ["--file-name", "not/a valid?name"]);
+
+        await Assert.That(result.ExitCode).IsNotEqualTo(0);
+        await Assert.That(result.StandardError).Contains("error JSAA");
+        await Assert.That(result.StandardError).Contains("file name");
+    }
+
+    [Test]
+    public async Task ASlowEntryPointFailsFastWithTheConfiguredTimeout()
+    {
+        using var outputDirectory = new TemporaryDirectory();
+
+        var result = await RunTool(
+            outputDirectory.Path,
+            extraArguments: ["--entry-point-timeout", "2"],
+            ("JUSTSAYING_TESTAPP_BLOCK_STARTUP", "1"));
+
+        await Assert.That(result.ExitCode).IsNotEqualTo(0);
+        await Assert.That(result.StandardError).Contains("error JSAA");
+        await Assert.That(result.StandardError).Contains("JustSayingAsyncApiEntryPointTimeoutSeconds");
+    }
+
+    [Test]
     public async Task AMissingHandlerFailsWithAnErrorExplainingWhatToRegister()
     {
         using var outputDirectory = new TemporaryDirectory();
@@ -79,7 +121,13 @@ public class WhenGeneratingAtBuildTime
         await Assert.That(result.StandardError).Contains("AddJustSayingAsyncApi");
     }
 
-    private static async Task<ToolResult> RunTool(string outputDirectory, params (string Name, string Value)[] environment)
+    private static Task<ToolResult> RunTool(string outputDirectory, params (string Name, string Value)[] environment)
+        => RunTool(outputDirectory, extraArguments: [], environment);
+
+    private static async Task<ToolResult> RunTool(
+        string outputDirectory,
+        string[] extraArguments,
+        params (string Name, string Value)[] environment)
     {
         var appDirectory = GetAssemblyMetadata("TestAppDirectory");
         var toolPath = GetAssemblyMetadata("GetDocumentToolPath");
@@ -107,6 +155,11 @@ public class WhenGeneratingAtBuildTime
                 Path.Combine(outputDirectory, "files.txt"),
             },
         };
+
+        foreach (var argument in extraArguments)
+        {
+            startInfo.ArgumentList.Add(argument);
+        }
 
         foreach (var (name, value) in environment)
         {
