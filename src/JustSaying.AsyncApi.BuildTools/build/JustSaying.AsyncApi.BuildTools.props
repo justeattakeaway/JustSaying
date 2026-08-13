@@ -4,5 +4,18 @@
     <JustSayingAsyncApiGenerateDocumentsOnBuild Condition=" '$(JustSayingAsyncApiGenerateDocumentsOnBuild)' == '' ">true</JustSayingAsyncApiGenerateDocumentsOnBuild>
     <!-- The directory the generated documents are written to. -->
     <JustSayingAsyncApiDocumentsDirectory Condition=" '$(JustSayingAsyncApiDocumentsDirectory)' == '' ">$(MSBuildProjectDirectory)</JustSayingAsyncApiDocumentsDirectory>
+    <!--
+      The file name (without extension) of the generated document. When several projects share a
+      documents directory, give each a unique name — for example '$(MSBuildProjectName)', which
+      produces '<ProjectName>.json' per project instead of colliding on 'asyncapi.json'.
+    -->
+    <JustSayingAsyncApiDocumentFileName Condition=" '$(JustSayingAsyncApiDocumentFileName)' == '' ">asyncapi</JustSayingAsyncApiDocumentFileName>
+    <!--
+      How long document generation waits for the application's entry point to build its host
+      before failing the build. Applications that do slow work before building the host (for
+      example migrations or waiting on a dependency) can raise this, or skip that work when
+      generating: the entry assembly is 'JustSaying.AsyncApi.GetDocument' during generation.
+    -->
+    <JustSayingAsyncApiEntryPointTimeoutSeconds Condition=" '$(JustSayingAsyncApiEntryPointTimeoutSeconds)' == '' ">60</JustSayingAsyncApiEntryPointTimeoutSeconds>
   </PropertyGroup>
 </Project>

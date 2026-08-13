@@ -19,6 +19,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="build\**" Pack="true" PackagePath="build" />
+    <None Include="buildMultiTargeting\**" Pack="true" PackagePath="buildMultiTargeting" />
   </ItemGroup>
   <Target Name="_PackGetDocumentTool">
     <ItemGroup>

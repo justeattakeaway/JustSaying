@@ -5,21 +5,18 @@
   </PropertyGroup>
 
   <!--
-    Generates the application's AsyncAPI document(s) after every build, analogous to
+    Generates the application's AsyncAPI document(s), analogous to
     Microsoft.Extensions.ApiDescription.Server's build-time OpenAPI generation. The tool runs
     with the application's deps.json and runtimeconfig.json so the application's assemblies
     resolve normally; the application's host is built (never started) to collect the configured
     publications and subscriptions.
+
+    This target can also be invoked directly (dotnet msbuild -t:GenerateJustSayingAsyncApiDocuments),
+    for example when JustSayingAsyncApiGenerateDocumentsOnBuild is 'false'.
   -->
   <Target Name="GenerateJustSayingAsyncApiDocuments"
-          AfterTargets="Build"
           Inputs="$(TargetPath);$(ProjectDepsFilePath);$(ProjectRuntimeConfigFilePath)"
-          Outputs="$(_JustSayingAsyncApiFileListPath)"
-          Condition=" '$(JustSayingAsyncApiGenerateDocumentsOnBuild)' == 'true' AND
-                      '$(DesignTimeBuild)' != 'true' AND
-                      '$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND
-                      $([MSBuild]::VersionGreaterThanOrEquals('$(TargetFrameworkVersion)', '8.0')) AND
-                      '$(OutputType)' == 'Exe' ">
+          Outputs="$(_JustSayingAsyncApiFileListPath)">
     <Error Condition=" !Exists('$(_JustSayingAsyncApiToolPath)') "
            Text="The JustSaying AsyncAPI generation tool was not found at '$(_JustSayingAsyncApiToolPath)'. The JustSaying.AsyncApi.BuildTools package may be corrupt; try restoring again." />
     <Error Condition=" !Exists('$(ProjectDepsFilePath)') "
@@ -29,6 +26,8 @@
       <_JustSayingAsyncApiCommand>dotnet exec --depsfile "$(ProjectDepsFilePath)" --runtimeconfig "$(ProjectRuntimeConfigFilePath)"</_JustSayingAsyncApiCommand>
       <_JustSayingAsyncApiCommand Condition=" '$(NuGetPackageRoot)' != '' ">$(_JustSayingAsyncApiCommand) --additionalprobingpath "$(NuGetPackageRoot.TrimEnd('\').TrimEnd('/'))"</_JustSayingAsyncApiCommand>
       <_JustSayingAsyncApiCommand>$(_JustSayingAsyncApiCommand) "$(_JustSayingAsyncApiToolPath)" --assembly "$(TargetPath)" --output "$(JustSayingAsyncApiDocumentsDirectory)" --file-list "$(_JustSayingAsyncApiFileListPath)"</_JustSayingAsyncApiCommand>
+      <_JustSayingAsyncApiCommand Condition=" '$(JustSayingAsyncApiDocumentFileName)' != '' ">$(_JustSayingAsyncApiCommand) --file-name "$(JustSayingAsyncApiDocumentFileName)"</_JustSayingAsyncApiCommand>
+      <_JustSayingAsyncApiCommand Condition=" '$(JustSayingAsyncApiEntryPointTimeoutSeconds)' != '' ">$(_JustSayingAsyncApiCommand) --entry-point-timeout "$(JustSayingAsyncApiEntryPointTimeoutSeconds)"</_JustSayingAsyncApiCommand>
     </PropertyGroup>
 
     <!--
@@ -49,4 +48,22 @@
       <FileWrites Include="$(_JustSayingAsyncApiFileListPath)" />
     </ItemGroup>
   </Target>
+
+  <!--
+    Ties generation into every build. Multi-targeted projects are handled by the
+    buildMultiTargeting targets instead (one generation per build, not one per framework), so
+    this hook only applies when the project builds a single target framework. Test projects are
+    executables on modern test frameworks but are never JustSaying applications, so they are
+    excluded.
+  -->
+  <Target Name="_GenerateJustSayingAsyncApiDocumentsAfterBuild"
+          AfterTargets="Build"
+          DependsOnTargets="GenerateJustSayingAsyncApiDocuments"
+          Condition=" '$(JustSayingAsyncApiGenerateDocumentsOnBuild)' == 'true' AND
+                      '$(DesignTimeBuild)' != 'true' AND
+                      '$(IsTestProject)' != 'true' AND
+                      '$(TargetFrameworks)' == '' AND
+                      '$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND
+                      $([MSBuild]::VersionGreaterThanOrEquals('$(TargetFrameworkVersion)', '8.0')) AND
+                      '$(OutputType)' == 'Exe' " />
 </Project>

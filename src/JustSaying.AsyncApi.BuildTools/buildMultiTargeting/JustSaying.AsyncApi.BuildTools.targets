@@ -1,0 +1,35 @@
+<Project>
+  <!--
+    In a multi-targeted project the document is generated once per build rather than once per
+    target framework: the inner-build hook is disabled (see the build/ targets) and this outer
+    target invokes generation for the first target framework the tool supports (.NET 8+). The
+    document describes the application's messaging contract, which does not vary by framework.
+  -->
+  <Target Name="GenerateJustSayingAsyncApiDocuments">
+    <ItemGroup>
+      <_JustSayingAsyncApiTargetFramework Include="$(TargetFrameworks)" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_JustSayingAsyncApiGenerationTargetFramework
+          Condition=" '$(_JustSayingAsyncApiGenerationTargetFramework)' == '' AND
+                      $([System.Text.RegularExpressions.Regex]::IsMatch('%(_JustSayingAsyncApiTargetFramework.Identity)', '^net(8|9|[1-9][0-9])\.')) ">%(_JustSayingAsyncApiTargetFramework.Identity)</_JustSayingAsyncApiGenerationTargetFramework>
+    </PropertyGroup>
+
+    <Message Importance="normal"
+             Condition=" '$(_JustSayingAsyncApiGenerationTargetFramework)' == '' "
+             Text="Skipping AsyncAPI document generation for '$(MSBuildProjectName)': none of the target frameworks ($(TargetFrameworks)) is .NET 8 or later." />
+    <MSBuild Condition=" '$(_JustSayingAsyncApiGenerationTargetFramework)' != '' "
+             Projects="$(MSBuildProjectFile)"
+             Targets="GenerateJustSayingAsyncApiDocuments"
+             Properties="TargetFramework=$(_JustSayingAsyncApiGenerationTargetFramework)"
+             RemoveProperties="RuntimeIdentifier" />
+  </Target>
+
+  <Target Name="_GenerateJustSayingAsyncApiDocumentsAfterBuild"
+          AfterTargets="Build"
+          DependsOnTargets="GenerateJustSayingAsyncApiDocuments"
+          Condition=" '$(JustSayingAsyncApiGenerateDocumentsOnBuild)' == 'true' AND
+                      '$(DesignTimeBuild)' != 'true' AND
+                      '$(IsTestProject)' != 'true' AND
+                      '$(OutputType)' == 'Exe' " />
+</Project>
