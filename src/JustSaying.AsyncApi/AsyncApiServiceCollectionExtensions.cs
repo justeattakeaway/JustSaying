@@ -13,7 +13,7 @@ public static class AsyncApiServiceCollectionExtensions
     /// Adds AsyncAPI document generation for the JustSaying messaging bus. Registers an
     /// <see cref="IMessagingMetadataRegistry"/>, which the fluent builders populate with
     /// publication and subscription metadata as the bus is configured, and an
-    /// <see cref="IAsyncApiDocumentProvider"/> that generates AsyncAPI 3.1 documents from it.
+    /// <see cref="IAsyncApiDocumentProvider"/> that generates AsyncAPI 3.0 documents from it.
     /// </summary>
     /// <param name="services">The service collection to add AsyncAPI support to.</param>
     /// <param name="configure">An optional delegate used to configure the <see cref="AsyncApiOptions"/>.</param>

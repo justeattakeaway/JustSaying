@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 namespace JustSaying.AsyncApi;
 
 /// <summary>
-/// Generates an AsyncAPI 3.1 document from the publications and subscriptions captured in an
+/// Generates an AsyncAPI 3.0 document from the publications and subscriptions captured in an
 /// <see cref="IMessagingMetadataRegistry"/>.
 /// </summary>
 public sealed class AsyncApiDocumentGenerator
