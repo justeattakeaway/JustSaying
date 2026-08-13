@@ -8,21 +8,29 @@
   <Target Name="GenerateJustSayingAsyncApiDocuments">
     <ItemGroup>
       <_JustSayingAsyncApiTargetFramework Include="$(TargetFrameworks)" />
+      <_JustSayingAsyncApiSupportedTargetFramework
+          Include="@(_JustSayingAsyncApiTargetFramework)"
+          Condition=" $([System.Text.RegularExpressions.Regex]::IsMatch('%(Identity)', '^net(8|9|[1-9][0-9])\.')) " />
     </ItemGroup>
     <PropertyGroup>
+      <_JustSayingAsyncApiSupportedTargetFrameworks>@(_JustSayingAsyncApiSupportedTargetFramework)</_JustSayingAsyncApiSupportedTargetFrameworks>
       <_JustSayingAsyncApiGenerationTargetFramework
-          Condition=" '$(_JustSayingAsyncApiGenerationTargetFramework)' == '' AND
-                      $([System.Text.RegularExpressions.Regex]::IsMatch('%(_JustSayingAsyncApiTargetFramework.Identity)', '^net(8|9|[1-9][0-9])\.')) ">%(_JustSayingAsyncApiTargetFramework.Identity)</_JustSayingAsyncApiGenerationTargetFramework>
+          Condition=" '$(_JustSayingAsyncApiSupportedTargetFrameworks)' != '' ">$(_JustSayingAsyncApiSupportedTargetFrameworks.Split(';')[0])</_JustSayingAsyncApiGenerationTargetFramework>
     </PropertyGroup>
 
     <Message Importance="normal"
              Condition=" '$(_JustSayingAsyncApiGenerationTargetFramework)' == '' "
              Text="Skipping AsyncAPI document generation for '$(MSBuildProjectName)': none of the target frameworks ($(TargetFrameworks)) is .NET 8 or later." />
+    <!--
+      The runtime identifier (and any other global properties, such as SelfContained) flow
+      through to the inner invocation so it evaluates the same output paths the outer build
+      just produced: an outer build with a runtime identifier only builds RID-specific
+      outputs, so dropping it here would point generation at files that were never built.
+    -->
     <MSBuild Condition=" '$(_JustSayingAsyncApiGenerationTargetFramework)' != '' "
              Projects="$(MSBuildProjectFile)"
              Targets="GenerateJustSayingAsyncApiDocuments"
-             Properties="TargetFramework=$(_JustSayingAsyncApiGenerationTargetFramework)"
-             RemoveProperties="RuntimeIdentifier" />
+             Properties="TargetFramework=$(_JustSayingAsyncApiGenerationTargetFramework)" />
   </Target>
 
   <Target Name="_GenerateJustSayingAsyncApiDocumentsAfterBuild"
