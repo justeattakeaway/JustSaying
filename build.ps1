@@ -134,12 +134,12 @@ ForEach ($libraryProject in $libraryProjects) {
 }
 
 if (($null -ne $env:CI) -And ($EnableIntegrationTests -eq $true)) {
-    $LocalStackImage = "localstack/localstack:3.5.0"
-    $LocalStackPort = "4566"
+    $FlociImage = "floci/floci:1.6.0"
+    $FlociPort = "4566"
     $containerRunner = Get-ContainerRunnerCommand
-    & $containerRunner pull --quiet $LocalStackImage
-    & $containerRunner run --detach --name localstack --publish "${LocalStackPort}:${LocalStackPort}" $LocalStackImage
-    $env:AWS_SERVICE_URL = "http://localhost:$LocalStackPort"
+    & $containerRunner pull --quiet $FlociImage
+    & $containerRunner run --detach --name floci --publish "${FlociPort}:${FlociPort}" $FlociImage
+    $env:AWS_SERVICE_URL = "http://localhost:$FlociPort"
 }
 
 if (-Not $SkipTests) {
