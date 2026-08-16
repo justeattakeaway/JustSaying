@@ -134,23 +134,39 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
         {
             using var linkedCts =
                 CancellationTokenSource.CreateLinkedTokenSource(stoppingToken, receiveTimeout.Token);
+            using var receiveCompleted = new CancellationTokenSource();
 
-            var context = new ReceiveMessagesContext
+            Task pauseWatcher = _messageReceivePauseSignal is null
+                ? null
+                : CancelWhenPausedAsync(linkedCts, receiveCompleted.Token);
+
+            try
             {
-                Count = count,
-                QueueName = _sqsQueueReader.QueueName,
-                RegionName = _sqsQueueReader.RegionSystemName,
-            };
+                var context = new ReceiveMessagesContext
+                {
+                    Count = count,
+                    QueueName = _sqsQueueReader.QueueName,
+                    RegionName = _sqsQueueReader.RegionSystemName,
+                };
 
-            _requestMessageAttributeNames.Add("content");
+                _requestMessageAttributeNames.Add("content");
 
-            messages = await _sqsMiddleware.RunAsync(context,
-                    async ct =>
-                        await _sqsQueueReader
-                            .GetMessagesAsync(count, _sqsWaitTime, _requestMessageAttributeNames.ToList(), ct)
-                            .ConfigureAwait(false),
-                    linkedCts.Token)
-                .ConfigureAwait(false);
+                messages = await _sqsMiddleware.RunAsync(context,
+                        async ct =>
+                            await _sqsQueueReader
+                                .GetMessagesAsync(count, _sqsWaitTime, _requestMessageAttributeNames.ToList(), ct)
+                                .ConfigureAwait(false),
+                        linkedCts.Token)
+                    .ConfigureAwait(false);
+            }
+            finally
+            {
+                if (pauseWatcher is not null)
+                {
+                    receiveCompleted.Cancel();
+                    await pauseWatcher.ConfigureAwait(false);
+                }
+            }
         }
         finally
         {
@@ -164,6 +180,37 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
         }
 
         return messages;
+    }
+
+    /// <summary>
+    /// Cancels an in-flight receive call when the pause signal is paused, so that pausing takes effect
+    /// immediately rather than once the current long poll completes. <see cref="IMessageReceivePauseSignal"/>
+    /// has no change notification, so the signal is polled while the receive call is in flight.
+    /// </summary>
+    private async Task CancelWhenPausedAsync(CancellationTokenSource receiveCancellation, CancellationToken receiveCompleted)
+    {
+        try
+        {
+            while (!receiveCompleted.IsCancellationRequested)
+            {
+                if (_messageReceivePauseSignal.IsPaused)
+                {
+                    _logger.LogInformation(
+                        "Receiving messages was paused, cancelling in-flight receive call for queue '{QueueName}' in region '{Region}'.",
+                        _sqsQueueReader.QueueName,
+                        _sqsQueueReader.RegionSystemName);
+
+                    receiveCancellation.Cancel();
+                    return;
+                }
+
+                await Task.Delay(PauseReceivingBusyWaitDelay, receiveCompleted).ConfigureAwait(false);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // The receive call completed before the pause signal was paused
+        }
     }
 
     public InterrogationResult Interrogate()

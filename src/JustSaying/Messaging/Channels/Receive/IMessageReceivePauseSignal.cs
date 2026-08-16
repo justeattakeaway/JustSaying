@@ -8,6 +8,12 @@ public interface IMessageReceivePauseSignal
     /// <summary>
     /// Sets status to pause receiving
     /// </summary>
+    /// <remarks>
+    /// Pausing cancels any in-flight <c>ReceiveMessage</c> call. Messages that SQS was in the
+    /// process of serving to that call may remain invisible until their visibility timeout
+    /// expires, so occasionally a message is delayed rather than being immediately received
+    /// by another consumer.
+    /// </remarks>
     void Pause();
 
     /// <summary>
