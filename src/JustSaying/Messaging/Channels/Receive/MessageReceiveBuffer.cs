@@ -132,13 +132,14 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
 
         try
         {
+            using var pauseCts = new CancellationTokenSource();
             using var linkedCts =
-                CancellationTokenSource.CreateLinkedTokenSource(stoppingToken, receiveTimeout.Token);
+                CancellationTokenSource.CreateLinkedTokenSource(stoppingToken, receiveTimeout.Token, pauseCts.Token);
             using var receiveCompleted = new CancellationTokenSource();
 
             Task pauseWatcher = _messageReceivePauseSignal is null
                 ? null
-                : CancelWhenPausedAsync(linkedCts, receiveCompleted.Token);
+                : CancelWhenPausedAsync(pauseCts, receiveCompleted.Token);
 
             try
             {
@@ -158,6 +159,13 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
                                 .ConfigureAwait(false),
                         linkedCts.Token)
                     .ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (pauseCts.IsCancellationRequested && !stoppingToken.IsCancellationRequested)
+            {
+                // The receive call was cancelled by the pause signal, and the receive middleware let the
+                // cancellation propagate. Swallow it so the buffer stays alive to resume later; shutdown
+                // and read timeout cancellations keep their existing behaviour.
+                messages = null;
             }
             finally
             {
