@@ -1,10 +1,8 @@
 version: "2"
 services:
-  localstack:
-    container_name: localstack
+  floci:
+    container_name: floci
     restart: unless-stopped
-    image: localstack/localstack:3.5.0
+    image: floci/floci:1.6.0
     ports:
       - 4566:4566
-    environment:
-      LS_LOG: debug

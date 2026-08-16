@@ -40,7 +40,12 @@ public class WhenUsingStructureMap(ITestOutputHelper outputHelper)
                                     .WithServiceUri(TestEnvironment.SimulatorUrl))
                             .Messaging((options) => options.WithRegion("eu-west-1"))
                             .Publications((options) => options.WithQueue<SimpleMessage>())
-                            .Subscriptions((options) => options.ForQueue<SimpleMessage>());
+                            .Subscriptions((options) => options.ForQueue<SimpleMessage>(
+                                // A message published while the simulator is serving an in-flight long poll can be
+                                // marked in-flight without being delivered, and is then only redelivered once the
+                                // visibility timeout expires; keep it short so that happens within the assertion window
+                                (queue) => queue.WithReadConfiguration(
+                                    (read) => read.WithVisibilityTimeout(TimeSpan.FromSeconds(2)))));
                     });
             });
 
