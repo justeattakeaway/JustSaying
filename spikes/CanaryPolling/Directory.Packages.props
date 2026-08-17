@@ -1,0 +1,9 @@
+<Project>
+  <!-- Extend the repo's central package versions with the released JustSaying
+       packages: the spike tests published bits, not the local source. -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Packages.props', '$(MSBuildThisFileDirectory)..'))" />
+  <ItemGroup>
+    <PackageVersion Include="JustSaying" Version="8.1.1" />
+    <PackageVersion Include="JustSaying.Extensions.DependencyInjection.Microsoft" Version="8.1.1" />
+  </ItemGroup>
+</Project>
