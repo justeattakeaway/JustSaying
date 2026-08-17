@@ -91,6 +91,7 @@ public sealed class AsyncApiDocumentGenerator
         var serializerOptions = ResolveSerializerOptions();
         var channels = new Dictionary<string, ChannelState>(StringComparer.Ordinal);
         var operationMessages = new Dictionary<string, List<MessageTypeMetadata>>(StringComparer.Ordinal);
+        var envelopeOperations = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (var publication in _registry.Publications)
         {
@@ -119,11 +120,17 @@ public sealed class AsyncApiDocumentGenerator
             string operationKey = Sanitize($"send-{channel.Key}");
             var merged = MergeOperationMessages(operationMessages, operationKey, publication.Messages);
 
+            if (publication.UsesQueueEnvelope)
+            {
+                envelopeOperations.Add(operationKey);
+            }
+
             document.Operations[operationKey] = new AsyncApiOperation()
             {
                 Action = AsyncApiAction.Send,
                 Channel = new AsyncApiChannelReference($"#/channels/{channel.Key}"),
                 Summary = $"Publish {Join(merged)} to {publication.DestinationName}.",
+                Description = envelopeOperations.Contains(operationKey) ? QueueEnvelopeDescription : null,
                 Messages = [.. merged.Select((m) => new AsyncApiMessageReference($"#/channels/{channel.Key}/messages/{channel.MessageKeys[WireName(m)]}"))],
             };
         }
@@ -349,6 +356,16 @@ public sealed class AsyncApiDocumentGenerator
 
         return merged;
     }
+
+    /// <summary>
+    /// Describes how documented payloads are actually written to the queue. Without raw messages,
+    /// JustSaying wraps the payload in its own queue envelope, so the SQS body is not the
+    /// documented payload itself.
+    /// </summary>
+    private const string QueueEnvelopeDescription =
+        "The publisher wraps each message in JustSaying's queue envelope: the SQS message body is " +
+        "{ \"Message\": \"...\", \"Subject\": \"...\" }, and the documented message payload is the JSON-encoded string in its \"Message\" property. " +
+        "Publish with raw messages to send the payload verbatim instead.";
 
     /// <summary>
     /// Describes how documented payloads actually arrive on the queue. Without raw message
