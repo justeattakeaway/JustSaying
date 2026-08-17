@@ -25,6 +25,7 @@ $libraryProjects = @(
     (Join-Path $solutionPath "src" "JustSaying.Extensions.DependencyInjection.Microsoft" "JustSaying.Extensions.DependencyInjection.Microsoft.csproj"),
     (Join-Path $solutionPath "src" "JustSaying.Extensions.DependencyInjection.StructureMap" "JustSaying.Extensions.DependencyInjection.StructureMap.csproj"),
     (Join-Path $solutionPath "src" "JustSaying.Extensions.OpenTelemetry" "JustSaying.Extensions.OpenTelemetry.csproj"),
+    (Join-Path $solutionPath "src" "JustSaying.CloudEvents" "JustSaying.CloudEvents.csproj"),
     (Join-Path $solutionPath "src" "JustSaying.AsyncApi" "JustSaying.AsyncApi.csproj"),
     (Join-Path $solutionPath "src" "JustSaying.AsyncApi.BuildTools" "JustSaying.AsyncApi.BuildTools.csproj")
 )
