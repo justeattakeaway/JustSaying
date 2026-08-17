@@ -200,7 +200,8 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
                 MessagingDestinationKind.SqsQueue,
                 writeConfiguration.QueueName,
                 isDynamic: false,
-                [new MessageTypeMetadata(typeof(T), subject)]));
+                [new MessageTypeMetadata(typeof(T), subject)],
+                usesQueueEnvelope: !isRawMessage));
         }
 
         if (MiddlewareConfiguration != null)

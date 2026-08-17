@@ -157,7 +157,8 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T> w
                 _queueAddress.QueueUrl.Segments[_queueAddress.QueueUrl.Segments.Length - 1].TrimEnd('/'),
                 isDynamic: false,
                 [new MessageTypeMetadata(typeof(T), subject)],
-                _queueAddress.RegionName));
+                _queueAddress.RegionName,
+                usesQueueEnvelope: !isRawMessage));
         }
 
         if (MiddlewareConfiguration != null)
