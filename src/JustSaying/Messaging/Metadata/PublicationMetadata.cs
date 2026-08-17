@@ -14,6 +14,7 @@ public sealed class PublicationMetadata
     /// <param name="isDynamic">Whether the destination is computed per-message at publish time.</param>
     /// <param name="messages">The message type(s) published to the destination.</param>
     /// <param name="region">The AWS region of the destination when it was addressed explicitly (for example by ARN), or <see langword="null"/> when the destination is in the bus's configured region.</param>
+    /// <param name="usesQueueEnvelope">Whether messages are wrapped in JustSaying's <c>{ "Message", "Subject" }</c> queue envelope before being sent.</param>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="messages"/> is <see langword="null"/>.
     /// </exception>
@@ -22,13 +23,15 @@ public sealed class PublicationMetadata
         string destinationName,
         bool isDynamic,
         IReadOnlyList<MessageTypeMetadata> messages,
-        string region = null)
+        string region = null,
+        bool usesQueueEnvelope = false)
     {
         DestinationKind = destinationKind;
         DestinationName = destinationName;
         IsDynamic = isDynamic;
         Messages = messages ?? throw new ArgumentNullException(nameof(messages));
         Region = string.IsNullOrEmpty(region) ? null : region;
+        UsesQueueEnvelope = usesQueueEnvelope;
     }
 
     /// <summary>
@@ -58,4 +61,12 @@ public sealed class PublicationMetadata
     /// by ARN), or <see langword="null"/> when the destination is in the bus's configured region.
     /// </summary>
     public string Region { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether messages are wrapped in JustSaying's
+    /// <c>{ "Message", "Subject" }</c> queue envelope before being sent, in which case the SQS
+    /// message body is the envelope rather than the message payload itself. Always
+    /// <see langword="false"/> for an SNS topic, which has no such envelope.
+    /// </summary>
+    public bool UsesQueueEnvelope { get; }
 }
