@@ -4,9 +4,10 @@
 roughly N/100−N purely by adjusting their own polling, given only a broadcast signal
 (no pod-to-pod communication, no infrastructure routing, no pod scaling)?
 
-**Answer: yes — validated against real AWS SQS across all three traffic regimes.** The
-mechanism is pulse-width modulation (PWM) of JustSaying's built-in
-`IMessageReceivePauseSignal`, using public API only — no changes to JustSaying itself.
+**Answer: yes — validated against real AWS SQS across backlog, steady and idle traffic,
+with zero stranded messages.** The mechanism is a pulse-width-modulation (PWM) gate in
+JustSaying's receive middleware — public API only, no changes to JustSaying itself, and
+no dependency on any particular JustSaying version.
 
 ## Layout
 
@@ -34,20 +35,17 @@ communicate": the only things they share are the queue and the signal file.
 (`Subscriptions.WithDefaults(d => d.WithCustomMiddleware(...))`) and enforces a PWM
 clock: for `weight × period` of each cycle polls pass through untouched — the pod
 competes for messages *exactly like an unthrottled pod* — and for the rest of the cycle
-the next poll simply isn't started, at a random phase per pod. Because an on-window pod
-is indistinguishable from an unthrottled one, the achieved share depends only on the
-duty cycle — not on how the broker arbitrates between concurrent long-pollers. And
-because a poll, once issued, always completes naturally, no message is ever stranded
-mid-delivery: the casualty rate is zero by construction.
+the next poll simply isn't started, at a random phase per pod.
 
-The one coupling this keeps: the last poll of a window lingers up to the receive wait
-into the off-window, so the wait must stay well under the period (1s wait / 10s period
-validated; under flowing traffic polls return in milliseconds, so the linger only exists
-on an idle queue). An earlier iteration instead pulsed `IMessageReceivePauseSignal`,
-which JustSaying 8.1.1 honours by *cancelling* the in-flight poll — prompt, and the
-right behaviour for operational "stop consuming now", but the cancellations strand a
-small percentage of messages until the visibility timeout (see the casualties section);
-that variant lost the A/B and its code was removed.
+Two properties fall out of that:
+
+- **The split doesn't depend on broker arbitration.** An on-window pod is
+  indistinguishable from an unthrottled one, so the achieved share depends only on the
+  duty cycle — not on how SQS picks between concurrent long-pollers.
+- **No message is ever stranded.** A poll, once issued, always completes naturally and
+  its messages are processed. There is nothing to cancel, so there's no way to leave a
+  message invisible mid-delivery. Measured casualty rate is zero, even when pulsing at a
+  1s period (see the history section for the variant where this wasn't true).
 
 Weight semantics: `1.0` = normal pod, `0.0` = fully parked (a clean "drain this pool"
 switch), in between = duty cycle. The percentage → weight mapping belongs to rollout
@@ -57,105 +55,88 @@ tooling, which knows the replica counts (the demo uses weight 0.327 to target 20
 The signal is a JSON file mapping pool → weight, re-read on timestamp change:
 `{"primary": 1.0, "canary": 0.33}`. A ConfigMap-mounted file (updated in place by
 Kubernetes, no restarts) fits this exactly; an env-refreshed flag service works the same.
+Weight changes apply within a PWM cycle, in-place.
 
-## Results on real AWS SQS (`--regimes --aws`, 20% canary target, 2v2 pods)
+## Results on real AWS SQS (gate mechanism, 20% canary target, 2v2 pods)
+
+Traffic regimes (`--regimes --aws`; 1s receive wait, 10s period — 2s for the backlog):
 
 | Regime | What it exercises | Observed | Modeled |
 |---|---|---|---|
-| Backlog (12k pre-loaded, pods flat out) | backpressure / poll-rate share | **27.5%** | 24.6% |
-| Steady (30 msg/s, queue near-empty) | continuous arrival-limited flow | **23.1%** | 20.0% |
-| Idle (1 msg / 2s, all pods parked) | SQS fairness among parked long-polls | **20.0%** | ~25% |
+| Backlog (12k pre-loaded, pods flat out) | backpressure / poll-rate share | **28.7%** | 24.6% |
+| Steady (30 msg/s, queue near-empty) | continuous arrival-limited flow | **22.8%** | 20.0% |
+| Idle (1 msg / 2s, all pods parked) | SQS fairness among parked long-polls | **28.3%** (n=120) | 25.4% |
 
-The idle result is the important one: **real SQS distributes sparse messages roughly
-uniformly among parked long-pollers**, so the split holds even when every worker is
-sitting idle in an empty long poll. The weight-sweep demo (canary 0.33 → 1.0 → 0.0 under
-steady load) tracks 20% → 50% → 0% within a couple of points, with changes applying in
-seconds, in-place.
+Latency/casualty validation (`--longpoll --aws`), including a deliberately brutal churn
+scenario — a **1-second** PWM period, i.e. the canaries stop and start roughly every
+660ms under 30 msg/s of load:
 
-## Hard-won tuning rules (violate these and the split degrades badly)
+| Scenario | Split | Casualties (≥15s latency) | Max latency | Accounted for |
+|---|---|---|---|---|
+| Steady | 19.1% | 0 | 0.2s | 100% |
+| Idle | 20.0% | 0 | 0.2s | 100% |
+| Churn, 1s period | 21.4% | **0** | **0.2s** | **3,486 / 3,486** |
 
-1. **Keep the in-process pipeline shallow.** Pausing only stops *fetching* — anything
+Nothing was dead-lettered in any run. The weight-sweep demo (canary 0.33 → 1.0 → 0.0
+under steady load) tracks 20% → 50% → 0% within a couple of points, with changes
+applying in seconds.
+
+The idle result answers the question this whole approach hinges on: **real SQS
+distributes sparse messages roughly uniformly among parked long-pollers**, so the split
+holds even when every worker is sitting idle in an empty long poll.
+
+## Tuning rules (violate these and the split degrades)
+
+1. **Keep the receive wait well under the PWM period.** The gate never interrupts a
+   poll, so the last poll of each on-window lingers up to the wait time into the
+   off-window. 1s wait with a 10s period is the validated combination; the linger only
+   exists at all on an idle queue (under flowing traffic polls return in milliseconds).
+   A 1s long-poll wait costs ~3¢/pod/day in empty requests and doesn't affect delivery
+   latency.
+2. **Keep the in-process pipeline shallow.** Gating only defers *fetching* — anything
    already prefetched/buffered still gets processed during the off-window. With
-   JustSaying's defaults (prefetch 10, multiplexer capacity 100) a canary pod hoarded
-   100+ messages per on-window under backlog and the observed share was 42.5% instead of
-   ~25%. With prefetch 5 / multiplexer 10 it landed at 27.5%. Bound the buffered work to
-   well under one PWM off-window of processing.
-2. **(Pre-8.1.1 only) Keep the receive wait well under the PWM period.** Before
-   JustSaying 8.1.1, a pause didn't cancel an already-parked long poll, which lingered up
-   to the wait time into the off-window — with a production-default 20s wait and a short
-   period the canary never stopped listening and the split collapsed toward 50/50.
-   **JustSaying 8.1.1 / 7.4.1 fix this** ([#2287](https://github.com/justeattakeaway/JustSaying/issues/2287)):
-   `Pause()` now cancels the in-flight receive, and the 20s-wait + 10s-period combination
-   measured 23.5% steady / ~11-29% idle (small samples) on real SQS. See the casualties
-   section below for the cost.
+   JustSaying's defaults (prefetch 10, multiplexer capacity 100) a throttled pod hoarded
+   100+ messages per on-window under backlog and its share inflated from ~25% to 42.5%.
+   With prefetch 5 / multiplexer 10 it landed at 28.7%. Bound the buffered work to well
+   under one off-window of processing.
 3. **The averaging window must span many PWM periods.** A backlog that drains in 1–2
    periods gets a lumpy split (whichever pods happened to be on). Size the period so
-   drains/evaluation windows cover ≥10 periods.
+   drains/evaluation windows cover ≥10 periods; 10s suits weights ≥ ~20%, stretch it as
+   the weight shrinks so the on-window (`period × weight`) stays at a few seconds.
 
-## Casualties under pause-cancellation (the removed variant, measured on real AWS)
+## How we got here (variants tried and rejected)
 
-Cancelling a receive that SQS is mid-way through serving leaves those messages invisible
-until the visibility timeout (30s), when they are redelivered — "casualties": received but
-not processed until ~30s later. Measured on real SQS with 20s waits (casualty = handled
-with >15s end-to-end latency; normal latency is well under 1s):
-
-| Config | Cancellations | Casualty rate | Notes |
-|---|---|---|---|
-| Period 10s (sane) | ~6/min per canary pod | **1.3–1.8%** | max latency 60–120s, nothing dead-lettered |
-| Period 1s (extreme churn) | ~1/s per canary pod | **2.8–4.4%** | ~0.4% still bouncing after 2 min; **2 of 1,785 messages dead-lettered in one run (~0.1%)** |
-
-Details worth knowing:
-
-- Casualties bounce in ~30s steps and can bounce repeatedly (max observed 120s = 4
-  bounces). With a 1s period the 30s visibility timeout is an exact multiple of the PWM
-  period, so a redelivery lands at the *same phase* and can be cancelled again —
-  **jitter the period** (e.g. 9–11s randomised per cycle) to break the resonance.
-- Each bounce increments `ApproximateReceiveCount`, so enough bounces exhaust the error
-  queue redrive and the message is **dead-lettered without ever failing in a handler**.
-  Only observed in the extreme 1s-period config. Mitigations: longer/jittered period,
-  and/or raise the retry count on queues subject to canary throttling.
-- Messages are never lost — delayed or dead-lettered only.
-- One full-length run showed a steady-phase anomaly (47% share, one canary apparently
-  unthrottled for a minute) that did not reproduce across two further runs; the weight
-  watcher now logs read failures so a stuck weight would be visible.
-
-The spike now consumes the released `JustSaying` 8.1.1 packages from NuGet (see
-`Directory.Packages.props`), so these numbers reflect what ships.
-
-## The A/B that decided it (gate vs pause-signal variant)
-
-Same PWM clock, different enforcement point: instead of pulsing the pause signal (which
-cancels the in-flight poll), `GatedReceiveMiddleware` sits in the receive pipeline
-(`WithCustomMiddleware`) and simply doesn't *start* the next poll until the on-window
-opens. A poll, once issued, always completes naturally — so casualties are impossible by
-construction. The trade: the last poll of a window lingers up to the receive wait into
-the off-window, so the wait must stay well under the period (1s wait / 10s period; under
-flowing traffic polls return in milliseconds anyway, so the linger only exists on an
-idle queue). Works on any JustSaying version — no 8.1.1 dependency.
-
-A/B on real AWS SQS, identical scenarios (20% target):
-
-| | Pause signal + 8.1.1 cancellation (20s wait) | Middleware gate (1s wait) |
-|---|---|---|
-| Steady split | 23.5% | **19.1%** |
-| Idle split | ~11–29% (small n) | **20.0%** |
-| Churn split (1s period) | 16.9% | **21.4%** |
-| Casualties (churn) | 2.8–4.4%, max 120s, ~0.1% DLQ'd | **0, max latency 0.2s, 0 DLQ'd** |
-| Messages accounted | ~99.6% within 2 min | **100%** |
-
-Verdict: use the gate for the always-on traffic-shaping loop; keep the pause signal
-(with its 8.1.1 prompt-cancel behaviour) for what it's really for — operational "stop
-consuming now". The 1s receive wait costs ~3¢/pod/day in empty requests and does not
-affect delivery latency.
+- **Proportional poll pacing** (same middleware seam, delay each poll by
+  `duration / weight`): exact under backlog, but on a near-empty queue the share is
+  decided by how the broker arbitrates between parked long-pollers — it starved to ~7%
+  on the emulators. PWM replaced it because an on-window pod needs no arbitration
+  fairness at all.
+- **PWM by pulsing `IMessageReceivePauseSignal`**: worked, and drove a real JustSaying
+  fix — before 8.1.1/7.4.1 a pause didn't affect the in-flight long poll, so
+  production-default 20s waits swamped the off-windows
+  ([#2287](https://github.com/justeattakeaway/JustSaying/issues/2287)). 8.1.1 made
+  `Pause()` cancel the in-flight receive, which fixed the split (23.5% steady on a 20%
+  target with stock 20s waits) but at a price: a cancelled receive can strand messages
+  SQS was mid-way through serving, invisible until the 30s visibility timeout. Measured:
+  1.3–1.8% of messages delayed ≥30s at a 10s period, 2.8–4.4% at a 1s period with
+  multi-bounces to 120s (30s visibility being an exact multiple of the period means a
+  redelivery lands at the same PWM phase and gets re-cancelled), and ~0.1% dead-lettered
+  without ever failing in a handler. An A/B against the gate on identical scenarios
+  (gate: better split, zero casualties, 100% accounted) settled it, and the pause-signal
+  variant's code was removed from this spike. Pause + prompt cancellation remains the
+  right tool for its actual job — operational "stop consuming now" — just not for an
+  always-on shaping loop pulsing it six times a minute.
 
 ## Emulator caveat
 
 Both LocalSqsSnsMessaging in-memory and floci showed **deterministic, unfair arbitration
-among parked long-pollers when the queue is idle** (in the sparse test on floci, one
-primary pod received *every* message; the canary got zero). All waiters park on one
-`Channel<Message>` and the wake race systematically favours particular pollers. Fine for
-functional tests, misleading for fairness experiments — validate distribution behaviour
-on real SQS. (Possibly worth randomizing in LocalSqsSnsMessaging to better model SQS.)
+among parked long-pollers when the queue is idle** (in one sparse test on floci, a single
+pod received *every* message). All waiters park on one `Channel<Message>` and the wake
+race systematically favours particular pollers. Fine for functional tests, misleading for
+fairness experiments — validate distribution behaviour on real SQS. (The gate is largely
+immune — that's rather the point — but the *measurements* of fairness-sensitive variants
+were only trustworthy on real SQS. Write-up for the LocalSqsSnsMessaging project in
+`localsqssnsmessaging-longpoll-fairness.md`.)
 
 ## Running it
 
@@ -171,8 +152,11 @@ dotnet run -- --quick             # shorter phases, noisier numbers (combines wi
 FLOCI_URL=http://... dotnet run   # use an existing floci/SQS-compatible endpoint
 ```
 
-AWS mode resolves the region from the CLI and borrows credentials via
-`aws configure export-credentials`, so `aws login` / SSO sessions work.
+The spike consumes the released `JustSaying` 8.1.1 packages from NuGet (see
+`Directory.Packages.props`), so results reflect what ships. AWS mode resolves the region
+from the CLI and borrows credentials via `aws configure export-credentials`, so
+`aws login` / SSO sessions work (note the exported token can expire during long runs; if
+queue cleanup fails, delete queues prefixed `canary-orders-` manually).
 
 ## Notes for a real rollout
 
@@ -184,10 +168,6 @@ AWS mode resolves the region from the CLI and borrows credentials via
   visibility timeouts, error queues, or redrive. (A reject/re-release scheme via
   `ChangeMessageVisibility(0)` was considered and dropped: it inflates
   `ApproximateReceiveCount` and DLQs a slice of traffic under redrive policies.)
-- An earlier iteration tried pacing individual `ReceiveMessage` calls proportionally in
-  the same middleware seam: exact under backlog but broker-arbitration-dependent when the
-  queue is near-empty (starved to ~7% on the emulators). PWM won on robustness; the gate
-  keeps PWM but enforces it at that seam.
 - Productizing inside JustSaying would be a small opt-in helper wiring a weight source to
   the gate middleware (`AddCanaryPolling(...)`); everything here works today from app
   code, on any JustSaying version.
