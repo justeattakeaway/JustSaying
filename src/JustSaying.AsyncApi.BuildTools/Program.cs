@@ -174,7 +174,10 @@ internal static class Program
             var filePath = Path.Combine(outputDirectory, GetDocumentFileName(documentName, fileName));
 
             using var writer = new StringWriter();
-            var task = (Task)generateAsync.Invoke(provider, [documentName, writer, CancellationToken.None])!;
+
+            // Generation runs synchronously up to its first await, so the call itself is made on
+            // the worker task; invoking it here would leave that work outside the timeout.
+            var task = Task.Run(() => (Task)generateAsync.Invoke(provider, [documentName, writer, CancellationToken.None])!);
             if (!task.Wait(GenerationTimeout))
             {
                 return Error(9, $"Generating the AsyncAPI document '{documentName}' did not complete within {GenerationTimeout.TotalSeconds:0} seconds.");
