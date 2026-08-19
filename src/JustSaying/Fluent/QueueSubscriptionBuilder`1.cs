@@ -16,8 +16,7 @@ namespace JustSaying.Fluent;
 /// <typeparam name="T">
 /// The type of the message.
 /// </typeparam>
-public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T>
-    where T : Message
+public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where T : class
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="QueueSubscriptionBuilder{T}"/> class.
@@ -189,7 +188,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T>
 
         var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
         var compressionRegistry = bus.CompressionRegistry;
-        bus.AddQueue(subscriptionConfig.SubscriptionGroupName, new SqsSource { MessageConverter = new InboundMessageConverter(serializer, compressionRegistry, subscriptionConfig.RawMessageDelivery), SqsQueue = queue.Queue });
+        bus.AddQueue(subscriptionConfig.SubscriptionGroupName, new SqsSource { MessageConverter = new InboundMessageConverter(serializer.Erase(), compressionRegistry, subscriptionConfig.RawMessageDelivery), SqsQueue = queue.Queue });
 
         logger.LogInformation(
             "Created SQS subscriber for message type '{MessageType}' on queue '{QueueName}'.",

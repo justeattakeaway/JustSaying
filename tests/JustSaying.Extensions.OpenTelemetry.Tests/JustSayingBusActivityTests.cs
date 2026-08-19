@@ -27,6 +27,10 @@ public class JustSayingBusActivityTests
             .Build();
 
         var config = Substitute.For<IMessagingConfig>();
+        // A substituted config auto-substitutes the metadata provider, whose GetId would return "";
+        // the bus reads the message id through it, so give it the real default.
+        config.MessageMetadataProvider.Returns(new MessagingConfig().MessageMetadataProvider);
+
         var publisher = Substitute.For<IMessagePublisher>();
         var monitor = Substitute.For<IMessageMonitor>();
         var serializationFactory = Substitute.For<IMessageBodySerializationFactory>();
@@ -111,14 +115,14 @@ public class JustSayingBusActivityTests
             NullLoggerFactory.Instance, monitor);
         bus.AddMessagePublisher<SimpleMessage>(publisher);
 
-        var messages = new List<Message>
+        var messages = new List<SimpleMessage>
         {
             new SimpleMessage { Id = Guid.NewGuid() },
             new SimpleMessage { Id = Guid.NewGuid() }
         };
 
         // Act
-        await bus.PublishAsync(messages, null, CancellationToken.None);
+        await bus.PublishBatchAsync(messages, null, CancellationToken.None);
         tracerProvider.ForceFlush();
 
         // Assert
@@ -148,8 +152,8 @@ public class JustSayingBusActivityTests
         config.PublishFailureBackoff.Returns(TimeSpan.Zero);
 
         var publisher = Substitute.For<IMessagePublisher, IMessageBatchPublisher>();
-        ((IMessageBatchPublisher)publisher).PublishAsync(
-                Arg.Any<IReadOnlyCollection<Message>>(),
+        ((IMessageBatchPublisher)publisher).PublishBatchAsync(
+                Arg.Any<IEnumerable<SimpleMessage>>(),
                 Arg.Any<PublishBatchMetadata>(),
                 Arg.Any<CancellationToken>())
             .Returns(Task.FromException(new InvalidOperationException("Batch publish failed")));
@@ -161,7 +165,7 @@ public class JustSayingBusActivityTests
             NullLoggerFactory.Instance, monitor);
         bus.AddMessagePublisher<SimpleMessage>(publisher);
 
-        var messages = new List<Message>
+        var messages = new List<SimpleMessage>
         {
             new SimpleMessage { Id = Guid.NewGuid() },
             new SimpleMessage { Id = Guid.NewGuid() }
@@ -169,7 +173,7 @@ public class JustSayingBusActivityTests
 
         // Act
         await Should.ThrowAsync<InvalidOperationException>(
-            () => bus.PublishAsync(messages, null, CancellationToken.None));
+            () => bus.PublishBatchAsync(messages, null, CancellationToken.None));
         tracerProvider.ForceFlush();
 
         // Assert
