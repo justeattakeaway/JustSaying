@@ -122,24 +122,24 @@ internal static class Program
             return Error(4, $"The entry point of '{assembly.GetName().Name}' built a host, but no service provider could be obtained from it.");
         }
 
-        var providerType = FindProviderType();
-        if (providerType is null)
+        var documentProviderType = FindDocumentProviderType();
+        if (documentProviderType is null)
         {
             return Error(5,
                 $"'{assembly.GetName().Name}' does not reference the {ProviderAssemblyName} package, which provides the document generator. " +
                 $"Add a reference to {ProviderAssemblyName} and call AddJustSayingAsyncApi() when configuring services.");
         }
 
-        var provider = services.GetService(providerType);
-        if (provider is null)
+        var documentProvider = services.GetService(documentProviderType);
+        if (documentProvider is null)
         {
             return Error(6,
                 "No AsyncAPI document provider is registered with the application's service provider. " +
                 "Call AddJustSayingAsyncApi() when configuring the application's services.");
         }
 
-        var getDocumentNames = providerType.GetMethod("GetDocumentNames", Type.EmptyTypes);
-        var generateAsync = providerType.GetMethod("GenerateAsync", [typeof(string), typeof(TextWriter), typeof(CancellationToken)]);
+        var getDocumentNames = documentProviderType.GetMethod("GetDocumentNames", Type.EmptyTypes);
+        var generateAsync = documentProviderType.GetMethod("GenerateAsync", [typeof(string), typeof(TextWriter), typeof(CancellationToken)]);
         if (getDocumentNames is null || generateAsync is null || !typeof(IEnumerable<string>).IsAssignableFrom(getDocumentNames.ReturnType))
         {
             return Error(7,
@@ -149,7 +149,7 @@ internal static class Program
 
         try
         {
-            return GenerateDocuments(provider, getDocumentNames, generateAsync, outputDirectory, fileListPath, fileName);
+            return GenerateDocuments(documentProvider, getDocumentNames, generateAsync, outputDirectory, fileListPath, fileName);
         }
         catch (Exception exception)
         {
@@ -159,7 +159,7 @@ internal static class Program
     }
 
     private static int GenerateDocuments(
-        object provider,
+        object documentProvider,
         MethodInfo getDocumentNames,
         MethodInfo generateAsync,
         string outputDirectory,
@@ -169,7 +169,7 @@ internal static class Program
         Directory.CreateDirectory(outputDirectory);
 
         var generatedFiles = new List<string>();
-        foreach (var documentName in (IEnumerable<string>)getDocumentNames.Invoke(provider, null)!)
+        foreach (var documentName in (IEnumerable<string>)getDocumentNames.Invoke(documentProvider, null)!)
         {
             var filePath = Path.Combine(outputDirectory, GetDocumentFileName(documentName, fileName));
 
@@ -177,7 +177,7 @@ internal static class Program
 
             // Generation runs synchronously up to its first await, so the call itself is made on
             // the worker task; invoking it here would leave that work outside the timeout.
-            var task = Task.Run(() => (Task)generateAsync.Invoke(provider, [documentName, writer, CancellationToken.None])!);
+            var task = Task.Run(() => (Task)generateAsync.Invoke(documentProvider, [documentName, writer, CancellationToken.None])!);
             if (!task.Wait(GenerationTimeout))
             {
                 return Error(9, $"Generating the AsyncAPI document '{documentName}' did not complete within {GenerationTimeout.TotalSeconds:0} seconds.");
@@ -213,7 +213,7 @@ internal static class Program
         return 0;
     }
 
-    private static Type? FindProviderType()
+    private static Type? FindDocumentProviderType()
     {
         foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
         {
