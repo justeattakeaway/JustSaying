@@ -1,4 +1,5 @@
 using JustSaying.AwsTools;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
@@ -17,14 +18,15 @@ namespace JustSaying.Fluent;
 /// </summary>
 public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<object>
 {
-    private readonly string _queueName;
+    private readonly QueueDestination _destination;
     private readonly List<IMessageTypeRegistration> _registrations = [];
     private readonly List<IMessageTypeDiscriminator> _discriminators = [];
-    private Action<SqsReadConfiguration> _configureReads;
+    private string _subscriptionGroupName;
+    private bool _rawMessageDelivery;
 
-    internal MultiTypeQueueSubscriptionBuilder(string queueName)
+    internal MultiTypeQueueSubscriptionBuilder(QueueDestination destination)
     {
-        _queueName = queueName ?? throw new ArgumentNullException(nameof(queueName));
+        _destination = destination ?? throw new ArgumentNullException(nameof(destination));
     }
 
     /// <summary>
@@ -40,7 +42,43 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
     public MultiTypeQueueSubscriptionBuilder Handling<TMessage>(string typeName = null, Action<HandlerMiddlewareBuilder> middlewareConfiguration = null)
         where TMessage : class
     {
+        if (typeName is null)
+        {
+            // With no explicit wire name, this type is routed by its logical name — the SNS Subject.
+            // Make sure the Subject discriminator is in the chain even when another registration has
+            // added its own (for example CloudEvents), so native and enveloped types can share a queue.
+            EnsureDiscriminator(static () => new SubjectMessageTypeDiscriminator());
+        }
+
         _registrations.Add(new MessageTypeRegistration<TMessage>(typeName, middlewareConfiguration));
+        return this;
+    }
+
+    /// <summary>
+    /// Registers a message type that can arrive on this queue, with a custom serializer built from the
+    /// bus's <see cref="IServiceResolver"/> rather than resolved from the app-wide serialization
+    /// factory. This is the seam a serializer package (such as CloudEvents) uses to give a registration
+    /// its own serializer — resolved from the container — so one queue can mix envelope formats.
+    /// </summary>
+    /// <typeparam name="TMessage">The message type the handler receives.</typeparam>
+    /// <param name="typeName">The value the discriminator emits on the wire for this type, or <see langword="null"/> to derive it via <paramref name="typeNameResolver"/>.</param>
+    /// <param name="serializerFactory">Builds the serializer for <typeparamref name="TMessage"/> from the bus's service resolver.</param>
+    /// <param name="typeNameResolver">Derives the wire type name from the bus's service resolver when <paramref name="typeName"/> is <see langword="null"/> (for example, a CloudEvents <c>type</c> from configuration).</param>
+    /// <param name="middlewareConfiguration">An optional middleware configuration for this type's handler.</param>
+    /// <returns>The current <see cref="MultiTypeQueueSubscriptionBuilder"/>.</returns>
+    /// <remarks>
+    /// Internal extensibility seam used by serializer packages (such as JustSaying.CloudEvents, which
+    /// exposes it via <c>HandlingCloudEvent&lt;T&gt;</c>); not part of the public surface.
+    /// </remarks>
+    internal MultiTypeQueueSubscriptionBuilder Handling<TMessage>(
+        string typeName,
+        Func<IServiceResolver, IMessageBodySerializer<TMessage>> serializerFactory,
+        Func<IServiceResolver, string> typeNameResolver = null,
+        Action<HandlerMiddlewareBuilder> middlewareConfiguration = null)
+        where TMessage : class
+    {
+        if (serializerFactory is null) throw new ArgumentNullException(nameof(serializerFactory));
+        _registrations.Add(new MessageTypeRegistration<TMessage>(typeName, middlewareConfiguration, serializerFactory, typeNameResolver));
         return this;
     }
 
@@ -58,13 +96,52 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
     }
 
     /// <summary>
-    /// Configures the SQS read configuration for the queue.
+    /// Adds a discriminator of type <typeparamref name="TDiscriminator"/> to the chain unless one is
+    /// already present, so a registration helper can guarantee the discriminator it needs is configured
+    /// without duplicating it. Internal extensibility seam used by serializer packages (such as
+    /// JustSaying.CloudEvents, whose <c>HandlingCloudEvent&lt;T&gt;</c> ensures a
+    /// <c>CloudEventTypeDiscriminator</c>).
     /// </summary>
-    /// <param name="configure">A delegate to configure SQS reads.</param>
-    /// <returns>The current <see cref="MultiTypeQueueSubscriptionBuilder"/>.</returns>
-    public MultiTypeQueueSubscriptionBuilder WithReadConfiguration(Action<SqsReadConfiguration> configure)
+    internal MultiTypeQueueSubscriptionBuilder EnsureDiscriminator<TDiscriminator>(Func<TDiscriminator> factory)
+        where TDiscriminator : IMessageTypeDiscriminator
     {
-        _configureReads = configure ?? throw new ArgumentNullException(nameof(configure));
+        if (factory is null) throw new ArgumentNullException(nameof(factory));
+
+        foreach (var existing in _discriminators)
+        {
+            if (existing is TDiscriminator)
+            {
+                return this;
+            }
+        }
+
+        _discriminators.Add(factory());
+        return this;
+    }
+
+    /// <summary>
+    /// Configures the subscription group this subscription's reads are coordinated under. Defaults to
+    /// the queue name.
+    /// </summary>
+    /// <param name="subscriptionGroupName">The name of the subscription group.</param>
+    /// <returns>The current <see cref="MultiTypeQueueSubscriptionBuilder"/>.</returns>
+    /// <exception cref="ArgumentException"><paramref name="subscriptionGroupName"/> is <see langword="null"/> or empty.</exception>
+    public MultiTypeQueueSubscriptionBuilder WithSubscriptionGroup(string subscriptionGroupName)
+    {
+        if (string.IsNullOrEmpty(subscriptionGroupName)) throw new ArgumentException("Parameter cannot be null or empty.", nameof(subscriptionGroupName));
+
+        _subscriptionGroupName = subscriptionGroupName;
+        return this;
+    }
+
+    /// <summary>
+    /// Declares that this queue's message bodies arrive verbatim, without JustSaying's
+    /// <c>{ "Subject", "Message" }</c> envelope or the SNS notification wrapper.
+    /// </summary>
+    /// <returns>The current <see cref="MultiTypeQueueSubscriptionBuilder"/>.</returns>
+    public MultiTypeQueueSubscriptionBuilder WithRawMessageDelivery()
+    {
+        _rawMessageDelivery = true;
         return this;
     }
 
@@ -88,34 +165,19 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
 
         var logger = loggerFactory.CreateLogger<MultiTypeQueueSubscriptionBuilder>();
 
-        var subscriptionConfig = new SqsReadConfiguration(SubscriptionType.PointToPoint)
-        {
-            QueueName = _queueName,
-        };
-
-        _configureReads?.Invoke(subscriptionConfig);
-
-        // The queue name is explicit for a multi-type subscription, so no naming convention is applied.
-        subscriptionConfig.QueueName = _queueName;
-        subscriptionConfig.SubscriptionGroupName ??= subscriptionConfig.QueueName;
-        subscriptionConfig.Validate();
-
-        var config = bus.Config;
-        var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
-
         // The discriminator value is what routes an inbound message to a serializer, so a blank or
         // duplicated one is a misconfiguration that would otherwise silently deserialize messages as the
-        // wrong type. Resolve the names up front, before any queue is created.
+        // wrong type. Resolve the names up front, before any queue is created or looked up.
         var namesByRegistration = new Dictionary<IMessageTypeRegistration, string>();
         var typesByName = new Dictionary<string, Type>(StringComparer.Ordinal);
         foreach (var registration in _registrations)
         {
-            var typeName = registration.TypeName ?? bus.MessageTypeRegistry.GetLogicalName(registration.MessageType);
+            var typeName = registration.ResolveTypeName(bus, serviceResolver);
 
             if (string.IsNullOrWhiteSpace(typeName))
             {
                 throw new InvalidOperationException(
-                    $"The message type '{registration.MessageType.FullName}' registered on the multi-type queue subscription for '{subscriptionConfig.QueueName}' " +
+                    $"The message type '{registration.MessageType.FullName}' registered on the multi-type queue subscription for '{_destination.Name ?? _destination.Address?.QueueUrl?.ToString()}' " +
                     $"resolved to a null or empty type name. Pass an explicit name to {nameof(Handling)}<T>(typeName).");
             }
 
@@ -123,7 +185,7 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
             {
                 throw new InvalidOperationException(
                     $"The message types '{existingType.FullName}' and '{registration.MessageType.FullName}' registered on the multi-type queue subscription for " +
-                    $"'{subscriptionConfig.QueueName}' both resolve to the type name '{typeName}'. Each type on a queue must have a distinct name; " +
+                    $"'{_destination.Name ?? _destination.Address?.QueueUrl?.ToString()}' both resolve to the type name '{typeName}'. Each type on a queue must have a distinct name; " +
                     $"pass an explicit name to {nameof(Handling)}<T>(typeName).");
             }
 
@@ -131,14 +193,48 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
             namesByRegistration[registration] = typeName;
         }
 
-        var queue = creator.EnsureQueueExists(region, subscriptionConfig);
-        bus.AddStartupTask(queue.StartupTask);
+        ISqsQueue sqsQueue;
+        string queueName;
+        if (_destination.IsAddress)
+        {
+            // A pre-existing queue: never created, so only the read-time settings apply.
+            var sqsClient = awsClientFactoryProxy
+                .GetAwsClientFactory()
+                .GetSqsClient(Amazon.RegionEndpoint.GetBySystemName(_destination.Address.RegionName));
+
+            var queue = new QueueAddressQueue(_destination.Address, sqsClient);
+            sqsQueue = queue;
+            queueName = queue.QueueName;
+        }
+        else
+        {
+            // The queue name is explicit for a multi-type subscription, so no naming convention is applied.
+            var subscriptionConfig = new SqsReadConfiguration(SubscriptionType.PointToPoint)
+            {
+                QueueName = _destination.Name,
+                Tags = _destination.Infrastructure?.Tags ?? new Dictionary<string, string>(StringComparer.Ordinal),
+                RawMessageDelivery = _rawMessageDelivery,
+            };
+
+            _destination.Infrastructure?.Apply(subscriptionConfig);
+
+            subscriptionConfig.SubscriptionGroupName = _subscriptionGroupName ?? subscriptionConfig.QueueName;
+            subscriptionConfig.Validate();
+
+            var config = bus.Config;
+            var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
+
+            var queue = creator.EnsureQueueExists(region, subscriptionConfig);
+            bus.AddStartupTask(queue.StartupTask);
+            sqsQueue = queue.Queue;
+            queueName = subscriptionConfig.QueueName;
+        }
 
         var serializersByName = new Dictionary<string, IMessageBodySerializer>(StringComparer.Ordinal);
         foreach (var registration in _registrations)
         {
-            serializersByName[namesByRegistration[registration]] = registration.CreateErasedSerializer(bus);
-            registration.RegisterHandler(bus, handlerResolver, serviceResolver, subscriptionConfig.QueueName);
+            serializersByName[namesByRegistration[registration]] = registration.CreateErasedSerializer(bus, serviceResolver);
+            registration.RegisterHandler(bus, handlerResolver, serviceResolver, queueName);
         }
 
         var discriminators = _discriminators.Count > 0
@@ -146,15 +242,15 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
             : [new SubjectMessageTypeDiscriminator()];
         var serializerResolver = new DiscriminatingInboundMessageSerializerResolver(discriminators, serializersByName);
 
-        bus.AddQueue(subscriptionConfig.SubscriptionGroupName, new SqsSource
+        bus.AddQueue(_subscriptionGroupName ?? queueName, new SqsSource
         {
-            MessageConverter = new InboundMessageConverter(serializerResolver, bus.CompressionRegistry, subscriptionConfig.RawMessageDelivery),
-            SqsQueue = queue.Queue,
+            MessageConverter = new InboundMessageConverter(serializerResolver, bus.CompressionRegistry, _rawMessageDelivery),
+            SqsQueue = sqsQueue,
         });
 
         logger.LogInformation(
             "Created multi-type SQS subscriber on queue '{QueueName}' handling {MessageTypeCount} message types.",
-            subscriptionConfig.QueueName,
+            queueName,
             _registrations.Count);
     }
 
@@ -162,22 +258,33 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
     {
         Type MessageType { get; }
 
-        string TypeName { get; }
+        string ResolveTypeName(JustSayingBus bus, IServiceResolver serviceResolver);
 
-        IMessageBodySerializer CreateErasedSerializer(JustSayingBus bus);
+        IMessageBodySerializer CreateErasedSerializer(JustSayingBus bus, IServiceResolver serviceResolver);
 
         void RegisterHandler(JustSayingBus bus, IHandlerResolver handlerResolver, IServiceResolver serviceResolver, string queueName);
     }
 
-    private sealed class MessageTypeRegistration<TMessage>(string typeName, Action<HandlerMiddlewareBuilder> middlewareConfiguration)
+    private sealed class MessageTypeRegistration<TMessage>(
+        string typeName,
+        Action<HandlerMiddlewareBuilder> middlewareConfiguration,
+        Func<IServiceResolver, IMessageBodySerializer<TMessage>> serializerFactory = null,
+        Func<IServiceResolver, string> typeNameResolver = null)
         : IMessageTypeRegistration where TMessage : class
     {
         public Type MessageType => typeof(TMessage);
 
-        public string TypeName => typeName;
+        // Precedence: an explicit type name wins; otherwise a resolver (e.g. the configured CloudEvents
+        // `type`); otherwise the type's logical name (the SNS Subject).
+        public string ResolveTypeName(JustSayingBus bus, IServiceResolver serviceResolver)
+            => typeName
+               ?? typeNameResolver?.Invoke(serviceResolver)
+               ?? bus.MessageTypeRegistry.GetLogicalName(typeof(TMessage));
 
-        public IMessageBodySerializer CreateErasedSerializer(JustSayingBus bus)
-            => bus.MessageBodySerializerFactory.GetSerializer<TMessage>().Erase();
+        public IMessageBodySerializer CreateErasedSerializer(JustSayingBus bus, IServiceResolver serviceResolver)
+            => (serializerFactory is null
+                ? bus.MessageBodySerializerFactory.GetSerializer<TMessage>()
+                : serializerFactory(serviceResolver)).Erase();
 
         public void RegisterHandler(JustSayingBus bus, IHandlerResolver handlerResolver, IServiceResolver serviceResolver, string queueName)
         {

@@ -115,6 +115,114 @@ pipeline.UseExactlyOnce<OrderPlaced>("orders-handler",
 
 If a non-`Message` type is used without a `deduplicationKeySelector`, `UseExactlyOnce` throws at registration (startup) rather than degrading silently at runtime. A selector that returns null or whitespace for a given message also throws when that message is handled, rather than collapsing unrelated messages onto a shared lock key.
 
+## One publication per message type
+
+Registering two publications for the same message type (for example `WithTopic<Order>()` twice, or a
+`WithTopic<Order>()` alongside a `WithQueue<Order>()`) previously last-write-wins: the earlier
+registration was silently discarded. v9 throws at startup instead:
+
+> A publisher for message type 'Order' is already registered. Each message type can only have one publication.
+
+If you hit this, remove the redundant registration — only one of them was ever taking effect.
+
+## Destinations are values: `TopicDestination` and `QueueDestination`
+
+The fluent registration API is rebuilt around two destination values. A `TopicDestination` or `QueueDestination` says
+*which* resource a registration targets and — when JustSaying owns it — *how to create it*; the
+registration builders configure publish/read-time behaviour only, and are the same type whether
+the resource is created by JustSaying or already exists:
+
+```csharp
+p.WithTopic<OrderPlaced>();                                   // by convention, created
+p.WithTopic<OrderPlaced>(TopicDestination.Named("orders"));              // by name, created
+p.WithTopic<OrderPlaced>(TopicDestination.Named("orders", t => t
+    .WithTag("team", "payments")
+    .WithEncryption(masterKeyId)));                           // creation config lives on the value
+p.WithTopic<OrderPlaced>(TopicDestination.FromArn(topicArn));            // pre-existing, never created —
+                                                              // no creation config to mis-set
+
+s.ForQueue<Refund>(QueueDestination.Named("refunds", q => q
+    .WithMessageRetention(TimeSpan.FromDays(4))
+    .WithNoErrorQueue()));
+s.ForQueue<Refund>(QueueDestination.FromUri(queueUri));
+s.ForQueue(QueueDestination.FromUri(queueUri), q => q                    // multi-type over an existing queue
+    .Handling<OrderPlaced>()
+    .HandlingCloudEvent<ParcelShipped>("com.example.parcel-shipped"));
+
+s.ForTopic<OrderPlaced>(cfg => cfg
+    .WithQueue(QueueDestination.Named("orders-sub", q => q.WithTag("team", "payments")))
+    .WithFilterPolicy(filterPolicyJson)
+    .WithSubscriptionGroup("orders"));
+```
+
+This restructures the v8 fluent surface:
+
+- **Removed:** `WithWriteConfiguration(...)`, `WithReadConfiguration(...)`, `WithTag(...)` on the
+  registration builders, the `SnsWriteConfigurationBuilder`/`SqsWriteConfigurationBuilder`/
+  `SqsReadConfigurationBuilder` wrappers, and the `TopicAddressPublicationBuilder`/
+  `QueueAddressPublicationBuilder`/`QueueAddressSubscriptionBuilder` classes.
+- **Where each knob went:** queue/topic creation settings (retention, visibility timeout,
+  delivery delay, error-queue settings, encryption, tags) → `TopicDestination.Named`/`QueueDestination.Named`/
+  `*.ByConvention` configuration; publish-time settings → the builder (`WithSubject`,
+  `WithCompression`, `WithRawMessages`, `WithExceptionHandler`); subscription settings on
+  `ForTopic` → the builder (`WithRawMessageDelivery`, `WithFilterPolicy`,
+  `WithTopicSourceAccount`); read-time settings → the builder (`WithSubscriptionGroup`,
+  `WithRawMessageDelivery`).
+- **Kept:** `WithTopicArn<T>`, `WithQueueArn/Url/Uri<T>`, `ForQueueArn/Url/Uri<T>` remain, now
+  delegating to the unified methods; their configure lambdas are retyped to the merged builders,
+  which carry every member the old address builders had — most v8 call sites recompile unchanged.
+- **Now works everywhere:** publish exception handlers apply to created topics too (previously
+  the fluent create path silently dropped them), and compression consistently falls back to the
+  bus-wide default options in every mode.
+
+The CloudEvents registrations take the same values, so they never need per-address variants:
+
+```csharp
+p.WithCloudEventTopic<ParcelShipped>(TopicDestination.FromArn(topicArn),
+    "com.example.parcel-shipped", source);
+p.WithCloudEventQueue<OrderCancelled>(QueueDestination.FromUrl(queueUrl),
+    "com.example.order-cancelled", source);
+```
+
+## CloudEvents (new package: `JustSaying.CloudEvents`)
+
+v9 can publish and consume [CloudEvents 1.0](https://github.com/cloudevents/spec) structured-mode envelopes via the new `JustSaying.CloudEvents` package. The envelope is chosen **per registration**, not per application: `services.AddJustSayingCloudEvents(...)` registers the CloudEvents serializer as its own service and leaves the app-wide default serializer untouched, so legacy, plain-JSON and CloudEvents registrations coexist in one app.
+
+```csharp
+services.AddJustSayingCloudEvents();
+
+// publications — only the CloudEvents registration writes CloudEvents
+p.WithTopic<OrderPlaced>();                                       // legacy (Message-derived)
+p.WithTopic<PaymentTaken>();                                      // plain JSON POCO
+p.WithCloudEventTopic<ParcelShipped>("com.example.parcel-shipped",
+    source: new Uri("https://orders.example.com"));               // CloudEvents
+
+// point-to-point queue publications have a matching registration; the CloudEvents
+// serializer is self-describing, so the envelope goes to the queue verbatim
+// (no { "Subject", "Message" } wrapper)
+p.WithCloudEventQueue<OrderCancelled>("com.example.order-cancelled",
+    source: new Uri("https://orders.example.com"));
+
+// subscriptions — one queue can mix native and CloudEvents messages
+s.ForQueue("orders", q => q
+    .Handling<LegacyOrderPlaced>()                                // native, routed by Subject
+    .HandlingCloudEvent<ParcelShipped>("com.example.parcel-shipped")   // handler receives CloudEvent<T>
+    .HandlingCloudEventData<OrderCancelled>("com.example.order-cancelled")); // handler receives bare T
+```
+
+For an all-CloudEvents application, opt the CloudEvents serializer in as the app-wide default — then plain `WithTopic<T>`/`ForQueue<T>` registrations speak CloudEvents too, and every published type must have a `type` mapped in `CloudEventOptions` (an unmapped type fails at startup):
+
+```csharp
+services.AddJustSayingCloudEvents(options =>
+{
+    options.Source = new Uri("https://orders.example.com");
+    options.MapType<OrderPlaced>("com.example.order-placed");
+},
+useAsDefault: true);
+```
+
+Single-type subscriptions can also override their serializer per registration via `WithMessageBodySerializer(IMessageBodySerializer<T>)`, now available on the `ForTopic<T>`/`ForQueue<T>` builders as well as `ForQueueUrl<T>`/`ForQueueArn<T>`.
+
 ## New extensibility seams
 
 Available on `IMessagingConfig`:
