@@ -35,6 +35,12 @@ public sealed class CloudEventSerializationFactory : IMessageBodySerializationFa
         }
     }
 
+    /// <summary>
+    /// Gets the factory whose serializers handle the CloudEvents <c>data</c> payload,
+    /// which describes the wire contract of the payload, for example for schema generation.
+    /// </summary>
+    public IMessageBodySerializationFactory DataSerializerFactory => _dataSerializerFactory;
+
     /// <inheritdoc />
     public IMessageBodySerializer<TMessage> GetSerializer<TMessage>() where TMessage : class
     {

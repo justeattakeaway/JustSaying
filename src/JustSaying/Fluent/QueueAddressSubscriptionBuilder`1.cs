@@ -6,6 +6,7 @@ using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageSerialization;
+using JustSaying.Messaging.Metadata;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
@@ -136,6 +137,20 @@ public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
             .Build();
 
         bus.AddMessageMiddleware<T>(queue.QueueName, handlerMiddleware);
+
+        var metadataRegistry = serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>();
+        if (metadataRegistry != null)
+        {
+            // The queue's region comes from its address and may differ from the bus's configured
+            // region, so it is captured on the subscription rather than as the registry default.
+            metadataRegistry.AddSubscription(new SubscriptionMetadata(
+                queue.QueueName,
+                topicName: null,
+                attachedQueueConfig.SubscriptionGroupName,
+                attachedQueueConfig.RawMessageDelivery,
+                [new MessageTypeMetadata(typeof(T), bus.MessageTypeRegistry.GetLogicalName(typeof(T)))],
+                _queueAddress.RegionName));
+        }
 
         logger.LogInformation(
             "Added a message handler for message type for '{MessageType}' on queue '{QueueName}'",

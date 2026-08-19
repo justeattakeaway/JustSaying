@@ -322,3 +322,42 @@ JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.WithDiscriminator(JustSaying
 *REMOVED*static JustSaying.Messaging.MessagePublisherExtensions.PublishAsync(this JustSaying.Messaging.IMessagePublisher publisher, System.Collections.Generic.IEnumerable<JustSaying.Models.Message> messages, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
 *REMOVED*static JustSaying.Messaging.MessagePublisherExtensions.PublishAsync(this JustSaying.Messaging.IMessagePublisher publisher, System.Collections.Generic.IEnumerable<JustSaying.Models.Message> messages) -> System.Threading.Tasks.Task
 *REMOVED*static JustSaying.Messaging.Middleware.ExactlyOnceHandlerMiddlewareBuilderExtensions.UseExactlyOnce<TMessage>(this JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder builder, string lockKey, System.TimeSpan? lockDuration = null) -> JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder
+JustSaying.Messaging.Metadata.IMessagingMetadataRegistry
+JustSaying.Messaging.Metadata.IMessagingMetadataRegistry.AddPublication(JustSaying.Messaging.Metadata.PublicationMetadata publication) -> void
+JustSaying.Messaging.Metadata.IMessagingMetadataRegistry.AddSubscription(JustSaying.Messaging.Metadata.SubscriptionMetadata subscription) -> void
+JustSaying.Messaging.Metadata.IMessagingMetadataRegistry.Publications.get -> System.Collections.Generic.IReadOnlyCollection<JustSaying.Messaging.Metadata.PublicationMetadata>
+JustSaying.Messaging.Metadata.IMessagingMetadataRegistry.Region.get -> string
+JustSaying.Messaging.Metadata.IMessagingMetadataRegistry.SetRegion(string region) -> void
+JustSaying.Messaging.Metadata.IMessagingMetadataRegistry.Subscriptions.get -> System.Collections.Generic.IReadOnlyCollection<JustSaying.Messaging.Metadata.SubscriptionMetadata>
+JustSaying.Messaging.Metadata.MessageTypeMetadata
+JustSaying.Messaging.Metadata.MessageTypeMetadata.MessageTypeMetadata(System.Type messageType, string wireName) -> void
+JustSaying.Messaging.Metadata.MessageTypeMetadata.MessageType.get -> System.Type
+JustSaying.Messaging.Metadata.MessageTypeMetadata.WireName.get -> string
+JustSaying.Messaging.Metadata.MessagingDestinationKind
+JustSaying.Messaging.Metadata.MessagingDestinationKind.SnsTopic = 0 -> JustSaying.Messaging.Metadata.MessagingDestinationKind
+JustSaying.Messaging.Metadata.MessagingDestinationKind.SqsQueue = 1 -> JustSaying.Messaging.Metadata.MessagingDestinationKind
+JustSaying.Messaging.Metadata.MessagingMetadataRegistry
+JustSaying.Messaging.Metadata.MessagingMetadataRegistry.AddPublication(JustSaying.Messaging.Metadata.PublicationMetadata publication) -> void
+JustSaying.Messaging.Metadata.MessagingMetadataRegistry.AddSubscription(JustSaying.Messaging.Metadata.SubscriptionMetadata subscription) -> void
+JustSaying.Messaging.Metadata.MessagingMetadataRegistry.MessagingMetadataRegistry() -> void
+JustSaying.Messaging.Metadata.MessagingMetadataRegistry.Publications.get -> System.Collections.Generic.IReadOnlyCollection<JustSaying.Messaging.Metadata.PublicationMetadata>
+JustSaying.Messaging.Metadata.MessagingMetadataRegistry.Region.get -> string
+JustSaying.Messaging.Metadata.MessagingMetadataRegistry.SetRegion(string region) -> void
+JustSaying.Messaging.Metadata.MessagingMetadataRegistry.Subscriptions.get -> System.Collections.Generic.IReadOnlyCollection<JustSaying.Messaging.Metadata.SubscriptionMetadata>
+JustSaying.Messaging.Metadata.PublicationMetadata
+JustSaying.Messaging.Metadata.PublicationMetadata.DestinationKind.get -> JustSaying.Messaging.Metadata.MessagingDestinationKind
+JustSaying.Messaging.Metadata.PublicationMetadata.DestinationName.get -> string
+JustSaying.Messaging.Metadata.PublicationMetadata.IsDynamic.get -> bool
+JustSaying.Messaging.Metadata.PublicationMetadata.Messages.get -> System.Collections.Generic.IReadOnlyList<JustSaying.Messaging.Metadata.MessageTypeMetadata>
+JustSaying.Messaging.Metadata.PublicationMetadata.PublicationMetadata(JustSaying.Messaging.Metadata.MessagingDestinationKind destinationKind, string destinationName, bool isDynamic, System.Collections.Generic.IReadOnlyList<JustSaying.Messaging.Metadata.MessageTypeMetadata> messages, string region = null, bool usesQueueEnvelope = false) -> void
+JustSaying.Messaging.Metadata.PublicationMetadata.Region.get -> string
+JustSaying.Messaging.Metadata.PublicationMetadata.UsesQueueEnvelope.get -> bool
+JustSaying.Messaging.Metadata.SubscriptionMetadata
+JustSaying.Messaging.Metadata.SubscriptionMetadata.Messages.get -> System.Collections.Generic.IReadOnlyList<JustSaying.Messaging.Metadata.MessageTypeMetadata>
+JustSaying.Messaging.Metadata.SubscriptionMetadata.QueueName.get -> string
+JustSaying.Messaging.Metadata.SubscriptionMetadata.RawMessageDelivery.get -> bool
+JustSaying.Messaging.Metadata.SubscriptionMetadata.SubscriptionGroupName.get -> string
+JustSaying.Messaging.Metadata.SubscriptionMetadata.SubscriptionMetadata(string queueName, string topicName, string subscriptionGroupName, bool rawMessageDelivery, System.Collections.Generic.IReadOnlyList<JustSaying.Messaging.Metadata.MessageTypeMetadata> messages, string region = null) -> void
+JustSaying.Messaging.Metadata.SubscriptionMetadata.Region.get -> string
+JustSaying.Messaging.Metadata.SubscriptionMetadata.TopicName.get -> string
+JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializationFactory.SerializerOptions.get -> System.Text.Json.JsonSerializerOptions

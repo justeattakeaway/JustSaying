@@ -1,7 +1,9 @@
 using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Messaging.Metadata;
 using JustSaying.Messaging.Middleware;
+using JustSaying.Naming;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent;
@@ -205,6 +207,21 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
         bus.AddStartupTask(config.StartupTask);
         bus.AddMessagePublisher<T>(config.Publisher);
         bus.AddMessageBatchPublisher<T>(config.BatchPublisher);
+
+        var metadataRegistry = serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>();
+        if (metadataRegistry != null)
+        {
+            var wireName = writeConfiguration.SubjectSet
+                ? writeConfiguration.Subject
+                : bus.MessageTypeRegistry.GetLogicalName(typeof(T));
+
+            metadataRegistry.SetRegion(region);
+            metadataRegistry.AddPublication(new PublicationMetadata(
+                MessagingDestinationKind.SnsTopic,
+                TopicNameCustomizer != null ? null : bus.Config.TopicNamingConvention.Apply<T>(TopicName),
+                isDynamic: TopicNameCustomizer != null,
+                [new MessageTypeMetadata(typeof(T), wireName)]));
+        }
 
         if (MiddlewareConfiguration != null)
         {

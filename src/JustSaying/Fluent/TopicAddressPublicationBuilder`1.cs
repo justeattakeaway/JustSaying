@@ -3,6 +3,7 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
+using JustSaying.Messaging.Metadata;
 using JustSaying.Messaging.Middleware;
 using Microsoft.Extensions.Logging;
 
@@ -158,6 +159,19 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T> w
 
         bus.AddMessagePublisher<T>(publisherConfig.Publisher);
         bus.AddMessageBatchPublisher<T>(publisherConfig.BatchPublisher);
+
+        var metadataRegistry = serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>();
+        if (metadataRegistry != null)
+        {
+            // The topic's region comes from its ARN and may differ from the bus's configured
+            // region, so it is captured on the publication rather than as the registry default.
+            metadataRegistry.AddPublication(new PublicationMetadata(
+                MessagingDestinationKind.SnsTopic,
+                TopicAddressCustomizer != null ? null : arn.Resource,
+                isDynamic: TopicAddressCustomizer != null,
+                [new MessageTypeMetadata(typeof(T), subject)],
+                arn.Region));
+        }
 
         if (MiddlewareConfiguration != null)
         {

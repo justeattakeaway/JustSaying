@@ -4,6 +4,7 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Compression;
+using JustSaying.Messaging.Metadata;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
@@ -145,6 +146,20 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T> w
         CompressionEncodingValidator.ValidateEncoding(bus.CompressionRegistry, compressionOptions);
 
         bus.AddMessagePublisher<T>(eventPublisher);
+
+        var metadataRegistry = serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>();
+        if (metadataRegistry != null)
+        {
+            // The queue's region comes from its address and may differ from the bus's configured
+            // region, so it is captured on the publication rather than as the registry default.
+            metadataRegistry.AddPublication(new PublicationMetadata(
+                MessagingDestinationKind.SqsQueue,
+                _queueAddress.QueueUrl.Segments[_queueAddress.QueueUrl.Segments.Length - 1].TrimEnd('/'),
+                isDynamic: false,
+                [new MessageTypeMetadata(typeof(T), subject)],
+                _queueAddress.RegionName,
+                usesQueueEnvelope: !isRawMessage));
+        }
 
         if (MiddlewareConfiguration != null)
         {

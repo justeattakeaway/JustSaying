@@ -17,3 +17,5 @@ JustSaying.CloudEvents.CloudEventTypeDiscriminator.CloudEventTypeDiscriminator()
 JustSaying.CloudEvents.CloudEventTypeDiscriminator.TryGetMessageTypeName(JustSaying.Messaging.MessageDiscriminationContext context, out string typeName) -> bool
 Microsoft.Extensions.DependencyInjection.CloudEventsServiceCollectionExtensions
 static Microsoft.Extensions.DependencyInjection.CloudEventsServiceCollectionExtensions.AddJustSayingCloudEvents(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, System.Action<JustSaying.CloudEvents.CloudEventOptions> configure, System.Text.Json.JsonSerializerOptions dataSerializerOptions = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection
+JustSaying.CloudEvents.CloudEventOptions.TryGetCloudEventType(System.Type messageType, out string type) -> bool
+JustSaying.CloudEvents.CloudEventSerializationFactory.DataSerializerFactory.get -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializationFactory

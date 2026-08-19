@@ -3,6 +3,7 @@ using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageSerialization;
+using JustSaying.Messaging.Metadata;
 using JustSaying.Messaging.Middleware;
 using Microsoft.Extensions.Logging;
 
@@ -151,6 +152,18 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
             MessageConverter = new InboundMessageConverter(serializerResolver, bus.CompressionRegistry, subscriptionConfig.RawMessageDelivery),
             SqsQueue = queue.Queue,
         });
+
+        var metadataRegistry = serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>();
+        if (metadataRegistry != null)
+        {
+            metadataRegistry.SetRegion(region);
+            metadataRegistry.AddSubscription(new SubscriptionMetadata(
+                subscriptionConfig.QueueName,
+                topicName: null,
+                subscriptionConfig.SubscriptionGroupName,
+                subscriptionConfig.RawMessageDelivery,
+                [.. _registrations.Select((r) => new MessageTypeMetadata(r.MessageType, namesByRegistration[r]))]));
+        }
 
         logger.LogInformation(
             "Created multi-type SQS subscriber on queue '{QueueName}' handling {MessageTypeCount} message types.",
