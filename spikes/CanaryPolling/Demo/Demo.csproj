@@ -12,8 +12,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Shared\CanaryDemo.Shared.csproj" />
-    <!-- Build-order only: the demo launches SampleApp as separate processes. -->
+    <!-- Build-order only: the demo launches these as separate processes. -->
     <ProjectReference Include="..\SampleApp\SampleApp.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\SqsProxy\SqsProxy.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>

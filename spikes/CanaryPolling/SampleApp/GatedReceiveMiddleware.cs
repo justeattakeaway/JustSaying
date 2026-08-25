@@ -1,5 +1,5 @@
-using System.Diagnostics;
 using Amazon.SQS.Model;
+using CanaryDemo.Shared;
 using JustSaying.Messaging.Middleware.Receive;
 using Microsoft.Extensions.Logging;
 
@@ -38,49 +38,5 @@ public sealed class GatedReceiveMiddleware(PwmGate gate, ILogger<DefaultReceiveM
         }
 
         return await base.RunInnerAsync(context, func, stoppingToken).ConfigureAwait(false);
-    }
-}
-
-/// <summary>
-/// The PWM clock: on for <c>weight × period</c>, off for the rest, random phase per pod.
-/// Weight comes from the watched rollout signal on every check, so changes apply within
-/// 250ms; weight 1 never gates, weight 0 parks the pod (checked every 250ms).
-/// </summary>
-public sealed class PwmGate(PoolWeightWatcher weights, TimeSpan period)
-{
-    private static readonly TimeSpan RecheckDelay = TimeSpan.FromMilliseconds(250);
-
-    private readonly long _startTimestamp = Stopwatch.GetTimestamp();
-    private readonly double _phaseOffsetMs = Random.Shared.NextDouble() * period.TotalMilliseconds;
-
-    public async Task WaitForOnWindowAsync(CancellationToken cancellationToken)
-    {
-        while (true)
-        {
-            double weight = weights.CurrentWeight;
-
-            if (weight >= 1d)
-            {
-                return;
-            }
-
-            if (weight > 0d)
-            {
-                double positionMs = (Stopwatch.GetElapsedTime(_startTimestamp).TotalMilliseconds + _phaseOffsetMs)
-                    % period.TotalMilliseconds;
-                if (positionMs < period.TotalMilliseconds * weight)
-                {
-                    return;
-                }
-
-                double untilWindowOpensMs = period.TotalMilliseconds - positionMs;
-                await Task.Delay(TimeSpan.FromMilliseconds(Math.Min(untilWindowOpensMs, RecheckDelay.TotalMilliseconds)), cancellationToken)
-                    .ConfigureAwait(false);
-            }
-            else
-            {
-                await Task.Delay(RecheckDelay, cancellationToken).ConfigureAwait(false);
-            }
-        }
     }
 }

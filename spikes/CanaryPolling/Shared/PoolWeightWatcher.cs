@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 
-namespace SampleApp;
+namespace CanaryDemo.Shared;
 
 /// <summary>
 /// The pod's view of the rollout signal: a JSON file mapping pool name to weight,

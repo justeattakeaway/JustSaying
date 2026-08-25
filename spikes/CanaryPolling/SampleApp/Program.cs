@@ -25,6 +25,11 @@ var pwmPeriod = TimeSpan.FromSeconds(double.Parse(builder.Configuration["PWM_PER
 var receiveWait = TimeSpan.FromSeconds(double.Parse(builder.Configuration["RECEIVE_WAIT_SECONDS"] ?? "1"));
 var handlerWork = TimeSpan.FromMilliseconds(double.Parse(builder.Configuration["HANDLER_WORK_MS"] ?? "5"));
 
+// GATE_ENABLED=false turns the in-app throttle off entirely, leaving a completely
+// vanilla JustSaying consumer — used when the traffic shaping happens in a proxy
+// between the pod and SQS instead.
+bool gateEnabled = !bool.TryParse(builder.Configuration["GATE_ENABLED"], out bool ge) || ge;
+
 // When SQS_ENDPOINT is set we point the SDK at floci; when it isn't, the default
 // AWS credential chain and real SQS are used, like any production service.
 string sqsEndpoint = builder.Configuration["SQS_ENDPOINT"];
@@ -56,14 +61,20 @@ builder.Services
             // The canary throttle: the PWM gate holds each poll until the on-window.
             // Note the receive wait (1s) is deliberately well under the PWM period —
             // the last poll of a window lingers up to one wait into the off-window.
-            sub.WithDefaults(d => d
-                .WithDefaultReceiveMessagesWaitTime(receiveWait)
-                .WithDefaultConcurrencyLimit(8)
-                .WithDefaultPrefetch(5)
-                .WithDefaultMultiplexerCapacity(10)
-                .WithCustomMiddleware(new GatedReceiveMiddleware(
-                    new PwmGate(sp.GetRequiredService<PoolWeightWatcher>(), pwmPeriod),
-                    sp.GetRequiredService<ILogger<JustSaying.Messaging.Middleware.Receive.DefaultReceiveMessagesMiddleware>>())));
+            sub.WithDefaults(d =>
+            {
+                d.WithDefaultReceiveMessagesWaitTime(receiveWait)
+                    .WithDefaultConcurrencyLimit(8)
+                    .WithDefaultPrefetch(5)
+                    .WithDefaultMultiplexerCapacity(10);
+
+                if (gateEnabled)
+                {
+                    d.WithCustomMiddleware(new GatedReceiveMiddleware(
+                        new PwmGate(sp.GetRequiredService<PoolWeightWatcher>(), pwmPeriod),
+                        sp.GetRequiredService<ILogger<JustSaying.Messaging.Middleware.Receive.DefaultReceiveMessagesMiddleware>>()));
+                }
+            });
             sub.ForQueue<CanaryOrder>(q => q.WithQueueName(queueName));
         });
     });

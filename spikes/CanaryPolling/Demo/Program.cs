@@ -38,6 +38,18 @@ bool regimes = args.Contains("--regimes");
 bool longPoll = args.Contains("--longpoll");
 bool quick = args.Contains("--quick");
 
+// --proxy: shape traffic in an SQS-aware proxy between the pods and the queue (the
+// Istio/Envoy model) instead of inside the pods — pods run as completely vanilla
+// consumers (GATE_ENABLED=false) pointed at a per-pool proxy listener. floci-only:
+// an explicit (non-transparent) proxy in front of real AWS would need to re-sign
+// requests, because SigV4 covers the Host header (see README).
+bool proxyMode = args.Contains("--proxy");
+if (proxyMode && useAws)
+{
+    Console.Error.WriteLine("--proxy is floci-only: an explicit proxy breaks SigV4 against real AWS (Host header is signed). In Istio the interception is transparent, so the signature survives.");
+    return;
+}
+
 // 2 canary pods at this weight vs 2 primary pods at 1.0 targets a 20% canary share.
 // The exact share the PWM model predicts differs slightly per regime (printed per
 // scenario); owning that mapping is rollout tooling's job in real life.
@@ -86,7 +98,7 @@ string queueName = $"canary-orders-{runId}";
 string weightsFile = Path.Combine(Path.GetTempPath(), $"canary-weights-{runId}.json");
 
 Console.WriteLine($"""
-    Canary rollout demo — PWM via the receive-middleware gate ({(longPoll ? "casualty validation" : regimes ? "traffic-regime validation" : "weight sweep")})
+    Canary rollout demo — PWM via {(proxyMode ? "an SQS-aware proxy (the Istio model, pods unmodified)" : "the receive-middleware gate")} ({(longPoll ? "casualty validation" : regimes ? "traffic-regime validation" : "weight sweep")})
     Backend: {(useAws ? $"AWS SQS ({region})" : $"floci ({flociUrl})")}
     Queue: {queueName}
     Signal file: {weightsFile}
@@ -124,11 +136,15 @@ var publisher = producerServices.GetRequiredService<IMessagePublisher>();
 var batchPublisher = producerServices.GetRequiredService<IMessageBatchPublisher>();
 await publisher.StartAsync(CancellationToken.None);
 
-string sampleAppDll = LocateSampleAppDll();
+string sampleAppDll = LocateDll("SampleApp");
 
 try
 {
-    if (longPoll)
+    if (proxyMode)
+    {
+        await RunProxySweepAsync();
+    }
+    else if (longPoll)
     {
         await RunLongPollAsync();
     }
@@ -256,6 +272,112 @@ async Task RunRegimesAsync()
     // E[k/(k+2)] for k ~ Binomial(2, p). In the idle regime p gains ~wait/period of
     // lingering receive per cycle.
     static double ShareWhenOpenFractionIs(double p) => (2 * p * (1 - p)) / 3 + (p * p) / 2;
+}
+
+// The Istio model: pods are completely vanilla consumers (in-app gate disabled), and the
+// PWM shaping happens in the SqsProxy sitting between them and the queue. Each pool hits
+// its own proxy listener port — standing in for per-workload sidecar config — and the
+// proxy watches the same weights file the pods would have. Same weight sweep as the
+// default demo, so the results are directly comparable.
+async Task RunProxySweepAsync()
+{
+    var phaseDuration = TimeSpan.FromSeconds(quick ? 15 : 30);
+    (double Weight, double Target)[] phases = [(CanaryWeight, 0.20), (1.0, 0.50), (0.0, 0.00)];
+    const int PrimaryPort = 4610;
+    const int CanaryPort = 4611;
+
+    WriteWeights(phases[0].Weight);
+
+    // Start the proxy.
+    var proxyPsi = new ProcessStartInfo("dotnet", $"exec \"{LocateDll("SqsProxy")}\"")
+    {
+        RedirectStandardOutput = true,
+        RedirectStandardError = true,
+        UseShellExecute = false,
+    };
+    proxyPsi.Environment["UPSTREAM"] = flociUrl;
+    proxyPsi.Environment["PRIMARY_PORT"] = PrimaryPort.ToString(CultureInfo.InvariantCulture);
+    proxyPsi.Environment["CANARY_PORT"] = CanaryPort.ToString(CultureInfo.InvariantCulture);
+    proxyPsi.Environment["WEIGHTS_FILE"] = weightsFile;
+    proxyPsi.Environment["PWM_PERIOD_SECONDS"] = "10";
+
+    using var proxy = Process.Start(proxyPsi) ?? throw new InvalidOperationException("Failed to start SqsProxy.");
+    proxy.ErrorDataReceived += (_, e) =>
+    {
+        if (!string.IsNullOrWhiteSpace(e.Data))
+        {
+            Console.Error.WriteLine($"  [proxy] {e.Data}");
+        }
+    };
+    proxy.BeginErrorReadLine();
+    proxy.BeginOutputReadLine();
+
+    var pods = new List<PodProcess>();
+    try
+    {
+        using var health = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };
+        await WaitUntilAsync(
+            async () =>
+            {
+                try
+                {
+                    using var response = await health.GetAsync($"http://127.0.0.1:{PrimaryPort}/healthz");
+                    return response.IsSuccessStatusCode;
+                }
+                catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+                {
+                    return false;
+                }
+            },
+            TimeSpan.FromSeconds(15),
+            "SqsProxy did not become healthy");
+        Console.WriteLine($"  proxy up: primary → :{PrimaryPort}, canary → :{CanaryPort}, upstream {flociUrl}");
+
+        // Vanilla pods: no in-app throttle, each pool pointed at its proxy listener.
+        foreach (var (name, pool) in new[] { ("primary-1", "primary"), ("primary-2", "primary"), ("canary-1", "canary"), ("canary-2", "canary") })
+        {
+            var env = PodEnv(pwmPeriodSeconds: 10, receiveWaitSeconds: 1, handlerWorkMs: 5);
+            env["GATE_ENABLED"] = "false";
+            env["SQS_ENDPOINT"] = $"http://127.0.0.1:{(pool == "canary" ? CanaryPort : PrimaryPort)}";
+            pods.Add(PodProcess.Start(name, pool, sampleAppDll, env));
+        }
+
+        Console.WriteLine($"  started {pods.Count} vanilla pods, waiting for them to come up...");
+        await WaitUntilAsync(
+            () => Task.FromResult(pods.All(p => p.HasReported)),
+            TimeSpan.FromSeconds(90),
+            "pods did not start reporting");
+
+        foreach (var (weight, target) in phases)
+        {
+            WriteWeights(weight);
+            Console.WriteLine($"Canary weight → {weight:0.00} (signal read by the PROXY; steady load {SteadyMessagesPerSecond} msg/s for {phaseDuration.TotalSeconds:0}s)");
+
+            await Task.Delay(TimeSpan.FromSeconds(4));
+            var before = Snapshot(pods);
+            await PublishSteadyAsync(SteadyMessagesPerSecond, phaseDuration);
+            await Task.Delay(TimeSpan.FromSeconds(3));
+
+            Report(pods, before, $"weight {weight:0.00}", target);
+            Console.WriteLine();
+        }
+
+        ReportLatency(pods);
+    }
+    finally
+    {
+        DisposePods(pods);
+        try
+        {
+            if (!proxy.HasExited)
+            {
+                proxy.Kill(entireProcessTree: true);
+            }
+        }
+        catch (InvalidOperationException)
+        {
+        }
+    }
 }
 
 // Validates that the gate throttle never strands messages: casualties (a message caught
@@ -573,16 +695,16 @@ static async Task WaitUntilAsync(Func<Task<bool>> condition, TimeSpan timeout, s
     throw new TimeoutException(timeoutMessage);
 }
 
-string LocateSampleAppDll()
+string LocateDll(string projectName)
 {
     // With the repo's UseArtifactsOutput layout, sibling project outputs live at
-    // artifacts/bin/<Project>/<configuration>/. Resolve SampleApp's relative to our own.
+    // artifacts/bin/<Project>/<configuration>/. Resolve them relative to our own.
     string baseDir = AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar);
     string configuration = Path.GetFileName(baseDir);
-    string dll = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "SampleApp", configuration, "SampleApp.dll"));
+    string dll = Path.GetFullPath(Path.Combine(baseDir, "..", "..", projectName, configuration, $"{projectName}.dll"));
     if (!File.Exists(dll))
     {
-        throw new FileNotFoundException($"SampleApp.dll not found at {dll}; build the SampleApp project first.");
+        throw new FileNotFoundException($"{projectName}.dll not found at {dll}; build the {projectName} project first.");
     }
 
     return dll;

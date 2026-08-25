@@ -19,11 +19,15 @@ SampleApp/   the consumer "pod" — what a real service would ship
   PoolWeightWatcher.cs   the rollout signal: a watched weights file (ConfigMap-shaped)
   OrderHandler.cs        stand-in message processing + demo stats line
   BusRunnerService.cs    starts the bus
+SqsProxy/    the infra-level alternative (the Istio model): an SQS-aware proxy that
+             runs the same PWM gate between vanilla pods and the queue — the logic an
+             Envoy ext_proc/WASM filter would host (see the proxy section below)
 Demo/        demo/load orchestration only — nothing here is part of the mechanism
   Program.cs             starts floci or targets real AWS, spawns pods as separate OS
                          processes, writes the weights file, generates load, reports
   PodProcess.cs          process launch + stdout stats collection
-Shared/      message contract + floci-pointed AWS client factory
+Shared/      message contract, floci client factory, and the shared throttle
+             primitives (PwmGate clock + PoolWeightWatcher signal)
 ```
 
 Pods run as separate OS processes because that's the honest version of "pods cannot
@@ -104,6 +108,51 @@ holds even when every worker is sitting idle in an empty long poll.
    drains/evaluation windows cover ≥10 periods; 10s suits weights ≥ ~20%, stretch it as
    the weight shrinks so the on-window (`period × weight`) stays at a few seconds.
 
+## The proxy variant: shaping at the infrastructure layer (the Istio model)
+
+It's been suggested the same result could come from proxying the SQS API (e.g. Istio
+intercepting egress to SQS) and doing the "routing" there. That intuition holds, with
+one reframe: for a pull-based queue there's nothing to *route* — there's one queue and
+the pods come to it — but the proxy can run **exactly the same PWM gate** on the
+`ReceiveMessage` calls passing through it. `SqsProxy/` prototypes this: pods run as
+**completely vanilla consumers** (in-app gate off), each pool points at its own proxy
+listener, and the proxy parks off-window `ReceiveMessage` calls for up to their own
+`WaitTimeSeconds` before answering with an empty poll — forwarding them if the window
+opens mid-park. Requests are never mutated and never cancelled, so the SigV4 signature
+and the zero-casualty property both survive. Sends, deletes and queue management pass
+straight through.
+
+Measured (`--proxy`, floci, same sweep as the in-app gate): **17–20% / 49–51% / 0.0%**
+against 20/50/0 targets, casualties 0, max end-to-end latency 0.1s — indistinguishable
+from the in-app gate, with zero application involvement.
+
+Mapping the prototype onto a real Istio deployment:
+
+- **Interception**: a `ServiceEntry` for `sqs.<region>.amazonaws.com` brings SQS into
+  the mesh; sidecars capture the egress. Because SQS is HTTPS-only, the filter can only
+  see the API call if the app→sidecar leg is plaintext with **TLS origination** at the
+  sidecar/egress gateway (`DestinationRule`) — a real config decision, not a default.
+- **The filter**: parking a request needs async timers, which rules out Envoy's Lua
+  filter. The real options are an **ext_proc** gRPC processor or a **WASM plugin** — or
+  skip sidecar filters entirely and deploy this prototype as a small in-mesh egress
+  service, which is operationally the simplest and what the prototype literally is.
+- **Pool identity + weight**: per-`Deployment` filter config via `workloadSelector`
+  (the prototype's two listener ports stand in for this), with the weight pushed to the
+  filter/service by rollout tooling — the same single-writer signal as the weights file.
+- **SigV4 is the sharp edge**: the Host header is signed, so a *transparent* intercept
+  (Istio) preserves signatures against real AWS, but an *explicit* proxy (SDK
+  `ServiceURL` pointed at it, like this local prototype) would have to re-sign every
+  forwarded request. That's why `--proxy` is floci-only locally; in-cluster Istio
+  doesn't have this problem.
+
+Trade-offs vs the in-app gate: the proxy needs **no app or library changes at all** and
+shapes *every* SQS consumer stack (raw SDK, AWS.Messaging, Brighter — not just
+JustSaying), with one central knob. In exchange you put a new component on the critical
+consumption path (proxy outage = consumption outage), it must understand both SQS wire
+protocols (JSON and Query), and the TLS/identity plumbing above is real work. The
+in-app gate is ~60 lines in services you already own; the proxy is the better shape if
+canarying needs to cover consumers you *don't* own.
+
 ## How we got here (variants tried and rejected)
 
 - **Proportional poll pacing** (same middleware seam, delay each poll by
@@ -148,6 +197,8 @@ dotnet run -- --regimes --aws     # the real thing: AWS SQS via your CLI credent
                                   #   queues are created with a unique name and deleted after)
 dotnet run -- --longpoll --aws    # steady/idle at the recommended config + 1s-period churn,
                                   #   with end-to-end latency + casualty accounting
+dotnet run -- --proxy             # the Istio model: vanilla pods, PWM in the SqsProxy
+                                  #   (floci-only — see the proxy section on SigV4)
 dotnet run -- --quick             # shorter phases, noisier numbers (combines with the above)
 FLOCI_URL=http://... dotnet run   # use an existing floci/SQS-compatible endpoint
 ```
