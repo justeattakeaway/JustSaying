@@ -19,16 +19,15 @@ string Required(string key) =>
 string podName = Required("POD_NAME");
 string poolName = Required("POOL_NAME");
 string queueName = Required("QUEUE_NAME");
-string weightsFile = Required("WEIGHTS_FILE");
 string region = builder.Configuration["AWS_REGION"] ?? "eu-west-1";
-var pwmPeriod = TimeSpan.FromSeconds(double.Parse(builder.Configuration["PWM_PERIOD_SECONDS"] ?? "10"));
 var receiveWait = TimeSpan.FromSeconds(double.Parse(builder.Configuration["RECEIVE_WAIT_SECONDS"] ?? "1"));
 var handlerWork = TimeSpan.FromMilliseconds(double.Parse(builder.Configuration["HANDLER_WORK_MS"] ?? "5"));
 
-// GATE_ENABLED=false turns the in-app throttle off entirely, leaving a completely
-// vanilla JustSaying consumer — used when the traffic shaping happens in a proxy
-// between the pod and SQS instead.
-bool gateEnabled = !bool.TryParse(builder.Configuration["GATE_ENABLED"], out bool ge) || ge;
+// The in-app canary gate is opt-in: it exists only if a weights file is configured.
+// With no WEIGHTS_FILE this is a completely vanilla JustSaying consumer — which is the
+// whole pod when the traffic shaping happens in a proxy between it and SQS instead.
+string weightsFile = builder.Configuration["WEIGHTS_FILE"];
+var pwmPeriod = TimeSpan.FromSeconds(double.Parse(builder.Configuration["PWM_PERIOD_SECONDS"] ?? "10"));
 
 // When SQS_ENDPOINT is set we point the SDK at floci; when it isn't, the default
 // AWS credential chain and real SQS are used, like any production service.
@@ -68,11 +67,14 @@ builder.Services
                     .WithDefaultPrefetch(5)
                     .WithDefaultMultiplexerCapacity(10);
 
-                if (gateEnabled)
+                if (weightsFile is not null)
                 {
+                    var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
                     d.WithCustomMiddleware(new GatedReceiveMiddleware(
-                        new PwmGate(sp.GetRequiredService<PoolWeightWatcher>(), pwmPeriod),
-                        sp.GetRequiredService<ILogger<JustSaying.Messaging.Middleware.Receive.DefaultReceiveMessagesMiddleware>>()));
+                        new PwmGate(
+                            new PoolWeightWatcher(weightsFile, poolName, loggerFactory.CreateLogger<PoolWeightWatcher>()),
+                            pwmPeriod),
+                        loggerFactory.CreateLogger<JustSaying.Messaging.Middleware.Receive.DefaultReceiveMessagesMiddleware>()));
                 }
             });
             sub.ForQueue<CanaryOrder>(q => q.WithQueueName(queueName));
@@ -80,7 +82,6 @@ builder.Services
     });
 
 builder.Services
-    .AddSingleton(sp => new PoolWeightWatcher(weightsFile, poolName, sp.GetRequiredService<ILogger<PoolWeightWatcher>>()))
     .AddHostedService<BusRunnerService>()
     .AddHostedService(sp => new StatsReporter(sp.GetRequiredService<HandledCounter>(), poolName, podName));
 

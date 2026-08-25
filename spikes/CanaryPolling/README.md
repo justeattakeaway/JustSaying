@@ -122,6 +122,12 @@ opens mid-park. Requests are never mutated and never cancelled, so the SigV4 sig
 and the zero-casualty property both survive. Sends, deletes and queue management pass
 straight through.
 
+"Vanilla" is literal: in proxy mode the pods receive **no canary configuration at all** —
+no weights file, no PWM knobs, no flags (the in-app gate only exists when a weights file
+is configured). The pod behaves exactly as any existing SQS consumer does today; an
+off-window poll just looks like an empty long poll, which is ordinary SQS behaviour, not
+something the application reacts to. The proxy owns the entire mechanism.
+
 Measured (`--proxy`, floci, same sweep as the in-app gate): **17–20% / 49–51% / 0.0%**
 against 20/50/0 targets, casualties 0, max end-to-end latency 0.1s — indistinguishable
 from the in-app gate, with zero application involvement.

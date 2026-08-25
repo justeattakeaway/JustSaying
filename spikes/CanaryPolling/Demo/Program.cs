@@ -40,9 +40,9 @@ bool quick = args.Contains("--quick");
 
 // --proxy: shape traffic in an SQS-aware proxy between the pods and the queue (the
 // Istio/Envoy model) instead of inside the pods — pods run as completely vanilla
-// consumers (GATE_ENABLED=false) pointed at a per-pool proxy listener. floci-only:
-// an explicit (non-transparent) proxy in front of real AWS would need to re-sign
-// requests, because SigV4 covers the Host header (see README).
+// consumers with zero canary configuration, pointed at a per-pool proxy listener.
+// floci-only: an explicit (non-transparent) proxy in front of real AWS would need to
+// re-sign requests, because SigV4 covers the Host header (see README).
 bool proxyMode = args.Contains("--proxy");
 if (proxyMode && useAws)
 {
@@ -274,11 +274,11 @@ async Task RunRegimesAsync()
     static double ShareWhenOpenFractionIs(double p) => (2 * p * (1 - p)) / 3 + (p * p) / 2;
 }
 
-// The Istio model: pods are completely vanilla consumers (in-app gate disabled), and the
-// PWM shaping happens in the SqsProxy sitting between them and the queue. Each pool hits
-// its own proxy listener port — standing in for per-workload sidecar config — and the
-// proxy watches the same weights file the pods would have. Same weight sweep as the
-// default demo, so the results are directly comparable.
+// The Istio model: pods are completely vanilla consumers — the in-app gate simply does
+// not exist for them (no weights file configured), and ALL the shaping happens in the
+// SqsProxy sitting between them and the queue. Each pool hits its own proxy listener
+// port — standing in for per-workload sidecar config — and only the proxy watches the
+// weights file. Same weight sweep as the default demo, so results are comparable.
 async Task RunProxySweepAsync()
 {
     var phaseDuration = TimeSpan.FromSeconds(quick ? 15 : 30);
@@ -333,16 +333,19 @@ async Task RunProxySweepAsync()
             "SqsProxy did not become healthy");
         Console.WriteLine($"  proxy up: primary → :{PrimaryPort}, canary → :{CanaryPort}, upstream {flociUrl}");
 
-        // Vanilla pods: no in-app throttle, each pool pointed at its proxy listener.
+        // Truly vanilla pods: no weights file, no PWM knobs — zero canary configuration.
+        // The only pool-specific setting is which endpoint they talk to, standing in for
+        // Istio's transparent per-workload interception.
         foreach (var (name, pool) in new[] { ("primary-1", "primary"), ("primary-2", "primary"), ("canary-1", "canary"), ("canary-2", "canary") })
         {
             var env = PodEnv(pwmPeriodSeconds: 10, receiveWaitSeconds: 1, handlerWorkMs: 5);
-            env["GATE_ENABLED"] = "false";
+            env.Remove("WEIGHTS_FILE");
+            env.Remove("PWM_PERIOD_SECONDS");
             env["SQS_ENDPOINT"] = $"http://127.0.0.1:{(pool == "canary" ? CanaryPort : PrimaryPort)}";
             pods.Add(PodProcess.Start(name, pool, sampleAppDll, env));
         }
 
-        Console.WriteLine($"  started {pods.Count} vanilla pods, waiting for them to come up...");
+        Console.WriteLine($"  started {pods.Count} vanilla pods (zero canary config), waiting for them to come up...");
         await WaitUntilAsync(
             () => Task.FromResult(pods.All(p => p.HasReported)),
             TimeSpan.FromSeconds(90),
