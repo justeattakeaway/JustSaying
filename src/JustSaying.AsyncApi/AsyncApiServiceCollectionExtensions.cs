@@ -36,7 +36,6 @@ public static class AsyncApiServiceCollectionExtensions
             serviceProvider.GetRequiredService<IMessagingMetadataRegistry>(),
             serviceProvider.GetRequiredService<AsyncApiOptions>(),
             serviceProvider.GetService<JustSaying.Messaging.MessageSerialization.IMessageBodySerializationFactory>(),
-            serviceProvider.GetService<JustSaying.CloudEvents.CloudEventOptions>(),
             serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger<AsyncApiDocumentGenerator>>()));
         services.TryAddSingleton<IAsyncApiDocumentProvider, AsyncApiDocumentProvider>();
 

@@ -275,7 +275,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
                 topicName: null,
                 SubscriptionGroupName ?? queueName,
                 RawMessageDelivery,
-                [new MessageTypeMetadata(typeof(T), bus.MessageTypeRegistry.GetLogicalName(typeof(T)))],
+                [new MessageTypeMetadata(typeof(T), bus.MessageTypeRegistry.GetLogicalName(typeof(T)), serializer)],
                 queueRegion));
         }
 
