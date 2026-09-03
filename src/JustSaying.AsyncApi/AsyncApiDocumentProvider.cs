@@ -33,17 +33,40 @@ internal sealed class AsyncApiDocumentProvider(IServiceProvider serviceProvider)
         }
         catch (Exception exception) when (exception is InvalidOperationException or HandlerNotRegisteredWithContainerException or NotSupportedException)
         {
-            throw new InvalidOperationException(
-                "Generating an AsyncAPI document builds the JustSaying messaging bus (without starting it), and building the bus failed. " +
-                "A common cause in documentation-only entry points is a subscription whose message handler is not registered; " +
-                "handlers must be registered (for example with AddJustSayingHandler) even when only generating a document. " +
-                $"The underlying error was: {exception.Message}",
-                exception);
+            // Lead with the actual error; the bus-build context and the handler hint come after, and the
+            // hint only when a missing handler is what failed, so a CloudEvents or naming misconfiguration
+            // is not mislabelled as a handler problem.
+            string message =
+                $"{exception.Message} " +
+                "(Generating an AsyncAPI document builds the JustSaying messaging bus, without starting it, and building the bus failed.";
+
+            if (IsMissingHandler(exception))
+            {
+                message +=
+                    " Handlers must be registered, for example with AddJustSayingHandler, even in a documentation-only entry point, " +
+                    "because the bus resolves each subscription's handler when it is built.";
+            }
+
+            throw new InvalidOperationException(message + ")", exception);
         }
 
         var generator = serviceProvider.GetRequiredService<AsyncApiDocumentGenerator>();
         var document = generator.Generate();
 
         await writer.WriteAsync(document.SerializeAsJson(AsyncApiVersion.AsyncApi3_0).AsMemory(), cancellationToken).ConfigureAwait(false);
+    }
+
+    private static bool IsMissingHandler(Exception exception)
+    {
+        for (var current = exception; current != null; current = current.InnerException)
+        {
+            if (current is HandlerNotRegisteredWithContainerException ||
+                current.Message.Contains("No handler for message type", StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

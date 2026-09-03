@@ -85,13 +85,16 @@ public class WhenDocumentingSnsDeliveryMode
     }
 
     [Test]
-    public async Task APointToPointSubscriptionHasNoDeliveryModeDescription()
+    public async Task APointToPointSubscriptionDescribesTheQueueEnvelopeInsteadOfSns()
     {
         using var document = await GenerateAsync(rawMessageDelivery: false);
         var root = document.RootElement;
 
-        // The SQS body of a point-to-point queue is the payload itself; there is no envelope to call out.
+        // A point-to-point queue never sees the SNS notification envelope, but its producer may wrap
+        // the payload in JustSaying's queue envelope, which the consumer accepts either way.
         var operation = root.GetProperty("operations").GetProperty("receive-orderdispatched");
-        await Assert.That(operation.TryGetProperty("description", out _)).IsFalse();
+        var description = operation.GetProperty("description").GetString();
+        await Assert.That(description).DoesNotContain("notification envelope");
+        await Assert.That(description).Contains("queue envelope");
     }
 }

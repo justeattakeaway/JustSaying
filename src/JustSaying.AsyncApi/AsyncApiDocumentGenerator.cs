@@ -111,7 +111,7 @@ public sealed class AsyncApiDocumentGenerator
 
         var channels = new Dictionary<string, ChannelState>(StringComparer.Ordinal);
         var operationMessages = new Dictionary<string, List<MessageTypeMetadata>>(StringComparer.Ordinal);
-        var envelopeOperations = new HashSet<string>(StringComparer.Ordinal);
+        var envelopedMessages = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
 
         foreach (var publication in _registry.Publications)
         {
@@ -141,7 +141,15 @@ public sealed class AsyncApiDocumentGenerator
 
             if (publication.UsesQueueEnvelope)
             {
-                envelopeOperations.Add(operationKey);
+                if (!envelopedMessages.TryGetValue(operationKey, out var enveloped))
+                {
+                    envelopedMessages[operationKey] = enveloped = new HashSet<string>(StringComparer.Ordinal);
+                }
+
+                foreach (var message in publication.Messages)
+                {
+                    enveloped.Add(WireName(message));
+                }
             }
 
             document.Operations[operationKey] = new AsyncApiOperation()
@@ -149,7 +157,7 @@ public sealed class AsyncApiDocumentGenerator
                 Action = AsyncApiAction.Send,
                 Channel = new AsyncApiChannelReference($"#/channels/{channel.Key}"),
                 Summary = $"Publish {Join(merged)} to {publication.DestinationName}.",
-                Description = envelopeOperations.Contains(operationKey) ? QueueEnvelopeDescription : null,
+                Description = QueueEnvelopeDescription(merged, envelopedMessages.GetValueOrDefault(operationKey)),
                 Messages = [.. merged.Select((m) => new AsyncApiMessageReference($"#/channels/{channel.Key}/messages/{channel.MessageKeys[WireName(m)]}"))],
             };
         }
@@ -382,26 +390,53 @@ public sealed class AsyncApiDocumentGenerator
         return merged;
     }
 
+    private const string QueueEnvelopeShape = "{ \"Message\": \"...\", \"Subject\": \"...\" }";
+
     /// <summary>
     /// Describes how documented payloads are actually written to the queue. Without raw messages,
     /// JustSaying wraps the payload in its own queue envelope, so the SQS body is not the
-    /// documented payload itself.
+    /// documented payload itself. A queue can carry a mix — for example a legacy message alongside
+    /// a self-describing CloudEvent, which is never wrapped — so the envelope is described per
+    /// message rather than for the operation as a whole.
     /// </summary>
-    private const string QueueEnvelopeDescription =
-        "The publisher wraps each message in JustSaying's queue envelope: the SQS message body is " +
-        "{ \"Message\": \"...\", \"Subject\": \"...\" }, and the documented message payload is the JSON-encoded string in its \"Message\" property. " +
-        "Publish with raw messages to send the payload verbatim instead.";
+    private string QueueEnvelopeDescription(IReadOnlyList<MessageTypeMetadata> messages, HashSet<string> envelopedWireNames)
+    {
+        if (envelopedWireNames == null || envelopedWireNames.Count == 0)
+        {
+            return null;
+        }
+
+        var enveloped = messages.Where((m) => envelopedWireNames.Contains(WireName(m))).ToList();
+        var verbatim = messages.Where((m) => !envelopedWireNames.Contains(WireName(m))).ToList();
+
+        string subject = verbatim.Count == 0 ? "The publisher wraps each message" : $"The publisher wraps {Join(enveloped)}";
+        string description =
+            $"{subject} in JustSaying's queue envelope: the SQS message body is {QueueEnvelopeShape}, " +
+            "and the documented message payload is the JSON-encoded string in its \"Message\" property. " +
+            "Publish with raw messages to send the payload verbatim instead.";
+
+        if (verbatim.Count > 0)
+        {
+            description += $" {Join(verbatim)} {(verbatim.Count == 1 ? "is" : "are")} sent verbatim: the SQS message body is the documented message payload.";
+        }
+
+        return description;
+    }
 
     /// <summary>
     /// Describes how documented payloads actually arrive on the queue. Without raw message
     /// delivery, SNS wraps each message in its notification envelope, so the SQS body is not
-    /// the documented payload itself.
+    /// the documented payload itself. A point-to-point subscription that does not use raw message
+    /// delivery accepts either the bare payload or JustSaying's queue envelope, since the producer
+    /// decides which it sends.
     /// </summary>
     private static string DeliveryDescription(SubscriptionMetadata subscription)
     {
         if (subscription.TopicName == null)
         {
-            return null;
+            return subscription.RawMessageDelivery
+                ? "The queue subscription uses raw message delivery: the SQS message body is the documented message payload."
+                : $"The queue subscription accepts the SQS message body either as the documented message payload or wrapped in JustSaying's queue envelope, {QueueEnvelopeShape}, with the documented message payload as the JSON-encoded string in its \"Message\" property.";
         }
 
         return subscription.RawMessageDelivery
@@ -613,7 +648,7 @@ public sealed class AsyncApiDocumentGenerator
             _logger?.LogWarning(
                 "The message body serializer ({Serializer}) is not System.Text.Json-based, so the wire contract cannot be derived and its messages are documented without payload schemas. " +
                 "Set AsyncApiOptions.SerializerOptions to options matching the wire format to document payload schemas.",
-                serializer.GetType());
+                FriendlyTypeName(serializer.GetType()));
         }
 
         return null;
