@@ -11,9 +11,12 @@ namespace JustSaying.Messaging.MessageSerialization;
 /// Provides serialization and deserialization functionality for messages of type <typeparamref name="T"/> using System.Text.Json.
 /// </summary>
 /// <typeparam name="T">The type of message to be serialized or deserialized.</typeparam>
-public sealed class SystemTextJsonMessageBodySerializer<T> : IMessageBodySerializer<T> where T : class
+public sealed class SystemTextJsonMessageBodySerializer<T> : IMessageBodySerializer<T>, ISystemTextJsonMessageBodySerializer where T : class
 {
     private readonly JsonSerializerOptions _options;
+
+    /// <inheritdoc />
+    public JsonSerializerOptions SerializerOptions => _options;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SystemTextJsonMessageBodySerializer{T}"/> class with default JSON serializer options.

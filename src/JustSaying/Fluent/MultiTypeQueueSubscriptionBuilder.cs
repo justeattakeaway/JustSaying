@@ -234,9 +234,11 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
         }
 
         var serializersByName = new Dictionary<string, IMessageBodySerializer>(StringComparer.Ordinal);
+        var serializersByRegistration = new Dictionary<IMessageTypeRegistration, object>();
         foreach (var registration in _registrations)
         {
-            serializersByName[namesByRegistration[registration]] = registration.CreateErasedSerializer(bus, serviceResolver);
+            serializersByName[namesByRegistration[registration]] = registration.CreateErasedSerializer(bus, serviceResolver, out var serializer);
+            serializersByRegistration[registration] = serializer;
             registration.RegisterHandler(bus, handlerResolver, serviceResolver, queueName);
         }
 
@@ -266,7 +268,7 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
                 topicName: null,
                 _subscriptionGroupName ?? queueName,
                 _rawMessageDelivery,
-                [.. _registrations.Select((r) => new MessageTypeMetadata(r.MessageType, namesByRegistration[r]))],
+                [.. _registrations.Select((r) => new MessageTypeMetadata(r.MessageType, namesByRegistration[r], serializersByRegistration[r]))],
                 queueRegion));
         }
 
@@ -282,7 +284,12 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
 
         string ResolveTypeName(JustSayingBus bus, IServiceResolver serviceResolver);
 
-        IMessageBodySerializer CreateErasedSerializer(JustSayingBus bus, IServiceResolver serviceResolver);
+        /// <summary>
+        /// Creates the serializer for this registration's message type, returning the type-erased
+        /// view used to deserialize inbound bodies and, via <paramref name="serializer"/>, the
+        /// typed instance itself so the registration can be described (for example for AsyncAPI).
+        /// </summary>
+        IMessageBodySerializer CreateErasedSerializer(JustSayingBus bus, IServiceResolver serviceResolver, out object serializer);
 
         void RegisterHandler(JustSayingBus bus, IHandlerResolver handlerResolver, IServiceResolver serviceResolver, string queueName);
     }
@@ -303,10 +310,15 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
                ?? typeNameResolver?.Invoke(serviceResolver)
                ?? bus.MessageTypeRegistry.GetLogicalName(typeof(TMessage));
 
-        public IMessageBodySerializer CreateErasedSerializer(JustSayingBus bus, IServiceResolver serviceResolver)
-            => (serializerFactory is null
+        public IMessageBodySerializer CreateErasedSerializer(JustSayingBus bus, IServiceResolver serviceResolver, out object serializer)
+        {
+            var typed = serializerFactory is null
                 ? bus.MessageBodySerializerFactory.GetSerializer<TMessage>()
-                : serializerFactory(serviceResolver)).Erase();
+                : serializerFactory(serviceResolver);
+
+            serializer = typed;
+            return typed.Erase();
+        }
 
         public void RegisterHandler(JustSayingBus bus, IHandlerResolver handlerResolver, IServiceResolver serviceResolver, string queueName)
         {

@@ -17,11 +17,21 @@ public sealed class AsyncApiDocumentGenerator
 {
     private const string CloudEventsContentType = "application/cloudevents+json";
 
+    private const string JsonContentType = "application/json";
+
     private readonly IMessagingMetadataRegistry _registry;
     private readonly AsyncApiOptions _options;
     private readonly IMessageBodySerializationFactory _serializationFactory;
-    private readonly CloudEventOptions _cloudEventOptions;
     private readonly ILogger<AsyncApiDocumentGenerator> _logger;
+    private readonly object _syncRoot = new();
+
+    // Per-generation state: each registration is described once, and the serializer-derived
+    // schema options and non-System.Text.Json warnings are computed once per serializer.
+    private readonly Dictionary<MessageTypeMetadata, MessageDescription> _descriptions = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<JsonSerializerOptions, JsonSerializerOptions> _schemaOptions = new(ReferenceEqualityComparer.Instance);
+    private readonly HashSet<Type> _undescribableSerializers = [];
+    private JsonSerializerOptions _fallbackSchemaOptions;
+    private bool _fallbackSchemaOptionsResolved;
 
     static AsyncApiDocumentGenerator()
     {
@@ -39,8 +49,11 @@ public sealed class AsyncApiDocumentGenerator
     /// </summary>
     /// <param name="registry">The registry of captured publications and subscriptions.</param>
     /// <param name="options">The options configuring the generated document.</param>
-    /// <param name="serializationFactory">The message body serialization factory in use, used to discover the payload wire contract.</param>
-    /// <param name="cloudEventOptions">The CloudEvents options, when CloudEvents support is configured.</param>
+    /// <param name="serializationFactory">
+    /// The app-wide message body serialization factory, used to discover the payload wire contract of a
+    /// registration whose own serializer was not captured. Each captured registration is described from
+    /// the serializer it actually uses (see <see cref="MessageTypeMetadata.Serializer"/>).
+    /// </param>
     /// <param name="logger">The logger used to surface why parts of the document are omitted.</param>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="registry"/> or <paramref name="options"/> is <see langword="null"/>.
@@ -49,13 +62,11 @@ public sealed class AsyncApiDocumentGenerator
         IMessagingMetadataRegistry registry,
         AsyncApiOptions options,
         IMessageBodySerializationFactory serializationFactory = null,
-        CloudEventOptions cloudEventOptions = null,
         ILogger<AsyncApiDocumentGenerator> logger = null)
     {
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _serializationFactory = serializationFactory;
-        _cloudEventOptions = cloudEventOptions;
         _logger = logger;
     }
 
@@ -64,6 +75,16 @@ public sealed class AsyncApiDocumentGenerator
     /// </summary>
     /// <returns>The generated <see cref="AsyncApiDocument"/>.</returns>
     public AsyncApiDocument Generate()
+    {
+        // The per-serializer caches are shared across generations, so serialize them: generation is
+        // rare (build time or a documentation request), and the registry is immutable by then.
+        lock (_syncRoot)
+        {
+            return GenerateCore();
+        }
+    }
+
+    private AsyncApiDocument GenerateCore()
     {
         var document = new AsyncApiDocument()
         {
@@ -74,7 +95,7 @@ public sealed class AsyncApiDocumentGenerator
                 Version = _options.Version,
                 Description = _options.Description,
             },
-            DefaultContentType = _cloudEventOptions != null ? CloudEventsContentType : "application/json",
+            DefaultContentType = JsonContentType,
         };
 
         string primaryRegion = PrimaryRegion();
@@ -88,7 +109,6 @@ public sealed class AsyncApiDocumentGenerator
                 "If the application does configure messaging, ensure AddJustSaying ran in the same service collection before the document was generated.");
         }
 
-        var serializerOptions = ResolveSerializerOptions();
         var channels = new Dictionary<string, ChannelState>(StringComparer.Ordinal);
         var operationMessages = new Dictionary<string, List<MessageTypeMetadata>>(StringComparer.Ordinal);
         var envelopeOperations = new HashSet<string>(StringComparer.Ordinal);
@@ -112,8 +132,7 @@ public sealed class AsyncApiDocumentGenerator
                 publication.DestinationKind,
                 publication.Region ?? _registry.Region,
                 $"The {publication.DestinationName} {(publication.DestinationKind == MessagingDestinationKind.SnsTopic ? "SNS topic" : "SQS queue")}.",
-                publication.Messages,
-                serializerOptions);
+                publication.Messages);
 
             // Several publications can target the same destination with different message
             // types; the operation is rebuilt from the merged set so none are dropped.
@@ -149,8 +168,7 @@ public sealed class AsyncApiDocumentGenerator
                 MessagingDestinationKind.SqsQueue,
                 subscription.Region ?? _registry.Region,
                 description,
-                subscription.Messages,
-                serializerOptions);
+                subscription.Messages);
 
             string operationKey = Sanitize($"receive-{channel.Key}");
             var merged = MergeOperationMessages(operationMessages, operationKey, subscription.Messages);
@@ -163,6 +181,14 @@ public sealed class AsyncApiDocumentGenerator
                 Description = DeliveryDescription(subscription),
                 Messages = [.. merged.Select((m) => new AsyncApiMessageReference($"#/channels/{channel.Key}/messages/{channel.MessageKeys[WireName(m)]}"))],
             };
+        }
+
+        // Every message states its own content type; the document-level default is only a
+        // convenience for readers, so it reflects the one format in use when there is one.
+        var contentTypes = _descriptions.Values.Select((d) => d.ContentType).Distinct(StringComparer.Ordinal).ToList();
+        if (contentTypes.Count == 1)
+        {
+            document.DefaultContentType = contentTypes[0];
         }
 
         _options.PostProcess?.Invoke(document);
@@ -252,8 +278,7 @@ public sealed class AsyncApiDocumentGenerator
         MessagingDestinationKind kind,
         string region,
         string description,
-        IReadOnlyList<MessageTypeMetadata> messages,
-        JsonSerializerOptions serializerOptions)
+        IReadOnlyList<MessageTypeMetadata> messages)
     {
         var identity = new ChannelIdentity(address, kind, region);
         string kindSuffix = kind == MessagingDestinationKind.SnsTopic ? "topic" : "queue";
@@ -305,7 +330,7 @@ public sealed class AsyncApiDocumentGenerator
                 state.MessageKeys[wireName] = messageKey;
             }
 
-            state.Channel.Messages[messageKey] = CreateMessage(message, serializerOptions);
+            state.Channel.Messages[messageKey] = CreateMessage(message);
         }
 
         return state;
@@ -384,31 +409,78 @@ public sealed class AsyncApiDocumentGenerator
             : "The topic subscription does not use raw message delivery: the SQS message body is the Amazon SNS notification envelope, and the documented message payload is the JSON-encoded string in its \"Message\" property.";
     }
 
-    private AsyncApiMessage CreateMessage(MessageTypeMetadata metadata, JsonSerializerOptions serializerOptions)
+    private AsyncApiMessage CreateMessage(MessageTypeMetadata metadata)
     {
-        string name = WireName(metadata);
+        var description = Describe(metadata);
 
         var message = new AsyncApiMessage()
         {
-            Name = name,
-            Title = FriendlyTypeName(metadata.MessageType),
-            ContentType = _cloudEventOptions != null ? CloudEventsContentType : "application/json",
+            Name = description.WireName,
+            Title = FriendlyTypeName(description.PayloadType),
+            ContentType = description.ContentType,
         };
 
-        var payloadSchema = ExportPayloadSchema(metadata.MessageType, serializerOptions);
-
-        if (_cloudEventOptions != null)
+        if (description.Payload != null)
         {
-            // The wire format is the CloudEvents structured-mode envelope with the message under
-            // "data"; documenting the bare message schema would hand consumers the wrong shape.
-            message.Payload = CreateCloudEventEnvelopeSchema(metadata, payloadSchema);
-        }
-        else if (payloadSchema != null)
-        {
-            message.Payload = payloadSchema;
+            message.Payload = description.Payload;
         }
 
         return message;
+    }
+
+    /// <summary>
+    /// How a registration's message appears on the wire: the name it is identified by, the CLR
+    /// type readers know it as, and the content type and schema of the body.
+    /// </summary>
+    private sealed record MessageDescription(string WireName, Type PayloadType, string ContentType, AsyncApiJsonSchema Payload);
+
+    private string WireName(MessageTypeMetadata metadata) => Describe(metadata).WireName;
+
+    /// <summary>
+    /// Describes a registration from the serializer it actually uses. Serialization is configured
+    /// per registration, so this — not any application-wide setting — is what determines whether a
+    /// message is plain JSON or a CloudEvents envelope, and which options shape its schema.
+    /// </summary>
+    private MessageDescription Describe(MessageTypeMetadata metadata)
+    {
+        if (_descriptions.TryGetValue(metadata, out var description))
+        {
+            return description;
+        }
+
+        var body = DescribeBody(metadata.MessageType, metadata.Serializer);
+
+        // A CloudEvent is identified by its `type`; anything else by its registered logical name.
+        string wireName = (metadata.Serializer as ICloudEventMessageBodySerializer)?.Type
+            ?? metadata.WireName
+            ?? metadata.MessageType.Name;
+
+        description = new MessageDescription(wireName, body.PayloadType, body.ContentType, body.Payload);
+        _descriptions[metadata] = description;
+        return description;
+    }
+
+    private (Type PayloadType, string ContentType, AsyncApiJsonSchema Payload) DescribeBody(Type messageType, object serializer)
+    {
+        switch (serializer)
+        {
+            case ICloudEventMessageBodySerializer cloudEvent:
+                // The wire format is the CloudEvents structured-mode envelope with the payload under
+                // "data"; documenting the bare payload schema would hand consumers the wrong shape.
+                // Whether the handler sees the envelope or just the data is the same on the wire.
+                var data = DescribeBody(cloudEvent.DataType, cloudEvent.DataSerializer);
+                return (cloudEvent.DataType, CloudEventsContentType, CreateCloudEventEnvelopeSchema(cloudEvent, data.Payload));
+
+            case ISystemTextJsonMessageBodySerializer systemTextJson:
+                return (messageType, JsonContentType, ExportPayloadSchema(messageType, SchemaOptions(systemTextJson.SerializerOptions)));
+
+            case null:
+                // The registration's serializer was not captured; fall back to the app-wide factory.
+                return (messageType, JsonContentType, ExportPayloadSchema(messageType, FallbackSchemaOptions()));
+
+            default:
+                return (messageType, JsonContentType, ExportPayloadSchema(messageType, UndescribableSerializerSchemaOptions(serializer)));
+        }
     }
 
     private AsyncApiJsonSchema ExportPayloadSchema(Type messageType, JsonSerializerOptions serializerOptions)
@@ -438,20 +510,26 @@ public sealed class AsyncApiDocumentGenerator
         }
     }
 
-    private AsyncApiJsonSchema CreateCloudEventEnvelopeSchema(MessageTypeMetadata metadata, AsyncApiJsonSchema dataSchema)
+    private static AsyncApiJsonSchema CreateCloudEventEnvelopeSchema(ICloudEventMessageBodySerializer serializer, AsyncApiJsonSchema dataSchema)
     {
         var typeSchema = new AsyncApiJsonSchema() { Type = SchemaType.String };
-        if (_cloudEventOptions.TryGetCloudEventType(metadata.MessageType, out var cloudEventType))
+        if (serializer.Type != null)
         {
-            typeSchema.Const = new AsyncApiAny(cloudEventType);
+            typeSchema.Const = new AsyncApiAny(serializer.Type);
         }
 
-        // Mirrors the envelope written by CloudEventMessageBodySerializer. Additional properties
-        // stay allowed so that CloudEvents extension attributes remain valid.
+        var dataContentTypeSchema = new AsyncApiJsonSchema() { Type = SchemaType.String };
+        if (serializer.DataContentType != null)
+        {
+            dataContentTypeSchema.Const = new AsyncApiAny(serializer.DataContentType);
+        }
+
+        // Mirrors the envelope written by the CloudEvents serializers. Additional properties stay
+        // allowed so that CloudEvents extension attributes remain valid.
         return new AsyncApiJsonSchema()
         {
             Type = SchemaType.Object,
-            Description = $"A CloudEvents 1.0 structured-mode JSON envelope carrying {FriendlyTypeName(metadata.MessageType)} in its \"data\" member.",
+            Description = $"A CloudEvents 1.0 structured-mode JSON envelope carrying {FriendlyTypeName(serializer.DataType)} in its \"data\" member.",
             Properties = new Dictionary<string, AsyncApiJsonSchema>(StringComparer.Ordinal)
             {
                 ["specversion"] = new() { Type = SchemaType.String, Const = new AsyncApiAny("1.0") },
@@ -459,58 +537,38 @@ public sealed class AsyncApiDocumentGenerator
                 ["source"] = new() { Type = SchemaType.String, Format = "uri-reference" },
                 ["type"] = typeSchema,
                 ["time"] = new() { Type = SchemaType.String, Format = "date-time" },
-                ["datacontenttype"] = new() { Type = SchemaType.String },
+                ["datacontenttype"] = dataContentTypeSchema,
+                ["subject"] = new() { Type = SchemaType.String },
                 ["data"] = dataSchema ?? new AsyncApiJsonSchema(),
             },
             Required = new HashSet<string>(StringComparer.Ordinal) { "specversion", "id", "source", "type", "data" },
         };
     }
 
-    private string WireName(MessageTypeMetadata metadata)
+    /// <summary>
+    /// The options to export schemas with for a System.Text.Json serializer, honouring an explicit
+    /// <see cref="AsyncApiOptions.SerializerOptions"/> override and ensuring a type info resolver.
+    /// </summary>
+    private JsonSerializerOptions SchemaOptions(JsonSerializerOptions serializerOptions)
     {
-        if (_cloudEventOptions != null && _cloudEventOptions.TryGetCloudEventType(metadata.MessageType, out var cloudEventType))
+        if (_options.SerializerOptions != null)
         {
-            return cloudEventType;
+            serializerOptions = _options.SerializerOptions;
         }
 
-        return metadata.WireName ?? metadata.MessageType.Name;
-    }
-
-    private JsonSerializerOptions ResolveSerializerOptions()
-    {
-        var options = _options.SerializerOptions;
-
-        if (options == null)
+        if (serializerOptions == null)
         {
-            var factory = _serializationFactory;
-            if (factory is CloudEventSerializationFactory cloudEventFactory)
-            {
-                factory = cloudEventFactory.DataSerializerFactory;
-            }
-
-            options = factory switch
-            {
-                SystemTextJsonSerializationFactory systemTextJsonFactory => systemTextJsonFactory.SerializerOptions,
-                null => SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions,
-                // A Newtonsoft or custom factory's wire contract cannot be derived from
-                // System.Text.Json options (for example, JustSaying's Newtonsoft serializer
-                // writes enums as strings), so rather than documenting a schema that may not
-                // match the wire format, messages are documented without payload schemas
-                // unless AsyncApiOptions.SerializerOptions is supplied explicitly.
-                _ => null,
-            };
-
-            if (options == null)
-            {
-                _logger?.LogWarning(
-                    "The message body serialization factory ({SerializationFactory}) is not System.Text.Json-based, so the wire contract cannot be derived and messages are documented without payload schemas. " +
-                    "Set AsyncApiOptions.SerializerOptions to options matching the wire format to document payload schemas.",
-                    factory.GetType());
-                return null;
-            }
+            return null;
         }
 
-        if (options.TypeInfoResolver == null)
+        if (_schemaOptions.TryGetValue(serializerOptions, out var schemaOptions))
+        {
+            return schemaOptions;
+        }
+
+        schemaOptions = serializerOptions;
+
+        if (serializerOptions.TypeInfoResolver == null)
         {
             // The schema exporter requires a resolver to be set explicitly; the serializers rely on
             // it being applied lazily. Under Native AOT there is no reflection resolver to fall back
@@ -520,22 +578,84 @@ public sealed class AsyncApiDocumentGenerator
                 _logger?.LogWarning(
                     "Reflection-based serialization is disabled and the serializer options have no TypeInfoResolver, so messages are documented without payload schemas. " +
                     "Use serializer options with a source-generated JsonSerializerContext to document payload schemas.");
-                return null;
+                schemaOptions = null;
             }
-
-#pragma warning disable IL2026, IL3050
-            options = new JsonSerializerOptions(options)
+            else
             {
-                TypeInfoResolver = JsonSerializerOptions.Default.TypeInfoResolver,
-            };
+#pragma warning disable IL2026, IL3050
+                schemaOptions = new JsonSerializerOptions(serializerOptions)
+                {
+                    TypeInfoResolver = JsonSerializerOptions.Default.TypeInfoResolver,
+                };
 #pragma warning restore IL2026, IL3050
+            }
         }
 
-        return options;
+        _schemaOptions[serializerOptions] = schemaOptions;
+        return schemaOptions;
+    }
+
+    /// <summary>
+    /// A Newtonsoft or custom serializer's wire contract cannot be derived from System.Text.Json
+    /// options (for example, JustSaying's Newtonsoft serializer writes enums as strings), so rather
+    /// than documenting a schema that may not match the wire format, its messages are documented
+    /// without payload schemas unless <see cref="AsyncApiOptions.SerializerOptions"/> is supplied.
+    /// </summary>
+    private JsonSerializerOptions UndescribableSerializerSchemaOptions(object serializer)
+    {
+        if (_options.SerializerOptions != null)
+        {
+            return SchemaOptions(_options.SerializerOptions);
+        }
+
+        if (_undescribableSerializers.Add(serializer.GetType()))
+        {
+            _logger?.LogWarning(
+                "The message body serializer ({Serializer}) is not System.Text.Json-based, so the wire contract cannot be derived and its messages are documented without payload schemas. " +
+                "Set AsyncApiOptions.SerializerOptions to options matching the wire format to document payload schemas.",
+                serializer.GetType());
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// The options to export schemas with for a registration whose serializer was not captured,
+    /// derived from the app-wide serialization factory.
+    /// </summary>
+    private JsonSerializerOptions FallbackSchemaOptions()
+    {
+        if (_fallbackSchemaOptionsResolved)
+        {
+            return _fallbackSchemaOptions;
+        }
+
+        _fallbackSchemaOptionsResolved = true;
+
+        if (_options.SerializerOptions != null)
+        {
+            return _fallbackSchemaOptions = SchemaOptions(_options.SerializerOptions);
+        }
+
+        switch (_serializationFactory)
+        {
+            case SystemTextJsonSerializationFactory systemTextJsonFactory:
+                return _fallbackSchemaOptions = SchemaOptions(systemTextJsonFactory.SerializerOptions);
+
+            case null:
+                return _fallbackSchemaOptions = SchemaOptions(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions);
+
+            default:
+                _logger?.LogWarning(
+                    "The message body serialization factory ({SerializationFactory}) is not System.Text.Json-based, so the wire contract cannot be derived and messages are documented without payload schemas. " +
+                    "Set AsyncApiOptions.SerializerOptions to options matching the wire format to document payload schemas.",
+                    _serializationFactory.GetType());
+                return null;
+        }
     }
 
     private string Join(IReadOnlyList<MessageTypeMetadata> messages)
-        => string.Join(", ", messages.Select((m) => FriendlyTypeName(m.MessageType)));
+        => string.Join(", ", messages.Select((m) => FriendlyTypeName(Describe(m).PayloadType)).Distinct(StringComparer.Ordinal));
 
     /// <summary>
     /// Renders a type name for display, expanding closed generics (for example

@@ -34,11 +34,5 @@ public sealed class CloudEventOptions
         return this;
     }
 
-    /// <summary>
-    /// Gets the CloudEvents <c>type</c> attribute registered for a message type, if any.
-    /// </summary>
-    /// <param name="messageType">The message type to look up.</param>
-    /// <param name="type">The registered CloudEvents <c>type</c>, or <see langword="null"/> if none is registered.</param>
-    /// <returns><see langword="true"/> if a CloudEvents <c>type</c> is registered for <paramref name="messageType"/>.</returns>
-    public bool TryGetCloudEventType(Type messageType, out string type) => _typeNames.TryGetValue(messageType, out type);
+    internal bool TryGetCloudEventType(Type messageType, out string type) => _typeNames.TryGetValue(messageType, out type);
 }

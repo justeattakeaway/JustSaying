@@ -300,7 +300,7 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
                 MessagingDestinationKind.SqsQueue,
                 writeConfiguration.QueueName,
                 isDynamic: false,
-                [new MessageTypeMetadata(typeof(T), subject)],
+                [new MessageTypeMetadata(typeof(T), subject, serializer)],
                 usesQueueEnvelope: !isRawMessage));
         }
 
@@ -363,7 +363,7 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
                 MessagingDestinationKind.SqsQueue,
                 queueAddress.QueueUrl.Segments[queueAddress.QueueUrl.Segments.Length - 1].TrimEnd('/'),
                 isDynamic: false,
-                [new MessageTypeMetadata(typeof(T), subject)],
+                [new MessageTypeMetadata(typeof(T), subject, serializer)],
                 queueAddress.RegionName,
                 usesQueueEnvelope: !isRawMessage));
         }
