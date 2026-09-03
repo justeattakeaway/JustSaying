@@ -271,6 +271,12 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
 
         var client = proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region));
 
+        // Resolved once here (rather than inside each built configuration) so the same instance both
+        // serializes messages and describes the publication's wire format in the metadata registry.
+        var serializer = SerializerOverride is null
+            ? bus.MessageBodySerializerFactory.GetSerializer<T>()
+            : SerializerOverride(_serviceResolver);
+
         Func<Exception, object, bool> exceptionHandler =
             ExceptionHandler is null ? null : (ex, message) => ExceptionHandler(ex, (T)message);
         Func<Exception, IReadOnlyCollection<object>, bool> exceptionBatchHandler =
@@ -286,7 +292,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
                 exceptionHandler,
                 exceptionBatchHandler,
                 serviceResolver: _serviceResolver,
-                serializerFactory: SerializerOverride,
+                serializerFactory: (_) => serializer,
                 subjectResolver: SubjectResolver);
 
         var topicName = TopicName ?? _destination.Name;
@@ -315,7 +321,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
                 MessagingDestinationKind.SnsTopic,
                 TopicNameCustomizer != null ? null : bus.Config.TopicNamingConvention.Apply<T>(topicName),
                 isDynamic: TopicNameCustomizer != null,
-                [new MessageTypeMetadata(typeof(T), wireName)]));
+                [new MessageTypeMetadata(typeof(T), wireName, serializer)]));
         }
     }
 
@@ -377,7 +383,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
                 MessagingDestinationKind.SnsTopic,
                 TopicAddressCustomizer != null ? null : arn.Resource,
                 isDynamic: TopicAddressCustomizer != null,
-                [new MessageTypeMetadata(typeof(T), subject)],
+                [new MessageTypeMetadata(typeof(T), subject, serializer)],
                 arn.Region));
         }
 

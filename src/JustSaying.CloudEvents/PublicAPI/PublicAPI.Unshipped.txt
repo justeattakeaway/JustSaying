@@ -44,5 +44,19 @@ static JustSaying.Fluent.PublicationsBuilderCloudEventExtensions.WithCloudEventT
 static JustSaying.Fluent.PublicationsBuilderCloudEventExtensions.WithCloudEventTopic<T>(this JustSaying.Fluent.PublicationsBuilder publications, JustSaying.Fluent.TopicDestination destination, string type, System.Uri source) -> JustSaying.Fluent.PublicationsBuilder
 static JustSaying.Fluent.PublicationsBuilderCloudEventExtensions.WithCloudEventQueue<T>(this JustSaying.Fluent.PublicationsBuilder publications, JustSaying.Fluent.QueueDestination destination, string type) -> JustSaying.Fluent.PublicationsBuilder
 static JustSaying.Fluent.PublicationsBuilderCloudEventExtensions.WithCloudEventQueue<T>(this JustSaying.Fluent.PublicationsBuilder publications, JustSaying.Fluent.QueueDestination destination, string type, System.Uri source) -> JustSaying.Fluent.PublicationsBuilder
-JustSaying.CloudEvents.CloudEventOptions.TryGetCloudEventType(System.Type messageType, out string type) -> bool
-JustSaying.CloudEvents.CloudEventSerializationFactory.DataSerializerFactory.get -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializationFactory
+JustSaying.CloudEvents.ICloudEventMessageBodySerializer
+JustSaying.CloudEvents.ICloudEventMessageBodySerializer.DataContentType.get -> string
+JustSaying.CloudEvents.ICloudEventMessageBodySerializer.DataSerializer.get -> object
+JustSaying.CloudEvents.ICloudEventMessageBodySerializer.DataType.get -> System.Type
+JustSaying.CloudEvents.ICloudEventMessageBodySerializer.Source.get -> System.Uri
+JustSaying.CloudEvents.ICloudEventMessageBodySerializer.Type.get -> string
+JustSaying.CloudEvents.CloudEventMessageBodySerializer<TMessage>.DataContentType.get -> string
+JustSaying.CloudEvents.CloudEventMessageBodySerializer<TMessage>.DataSerializer.get -> object
+JustSaying.CloudEvents.CloudEventMessageBodySerializer<TMessage>.DataType.get -> System.Type
+JustSaying.CloudEvents.CloudEventMessageBodySerializer<TMessage>.Source.get -> System.Uri
+JustSaying.CloudEvents.CloudEventMessageBodySerializer<TMessage>.Type.get -> string
+JustSaying.CloudEvents.CloudEventEnvelopeBodySerializer<T>.DataContentType.get -> string
+JustSaying.CloudEvents.CloudEventEnvelopeBodySerializer<T>.DataSerializer.get -> object
+JustSaying.CloudEvents.CloudEventEnvelopeBodySerializer<T>.DataType.get -> System.Type
+JustSaying.CloudEvents.CloudEventEnvelopeBodySerializer<T>.Source.get -> System.Uri
+JustSaying.CloudEvents.CloudEventEnvelopeBodySerializer<T>.Type.get -> string

@@ -290,7 +290,7 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
                 subscriptionConfig.TopicName,
                 subscriptionConfig.SubscriptionGroupName,
                 subscriptionConfig.RawMessageDelivery,
-                [new MessageTypeMetadata(typeof(T), bus.MessageTypeRegistry.GetLogicalName(typeof(T)))]));
+                [new MessageTypeMetadata(typeof(T), bus.MessageTypeRegistry.GetLogicalName(typeof(T)), serializer)]));
         }
 
         logger.LogInformation(

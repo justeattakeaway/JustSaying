@@ -13,7 +13,7 @@ namespace JustSaying.CloudEvents;
 /// serialized by an inner <see cref="IMessageBodySerializer{TMessage}"/>.
 /// </summary>
 /// <typeparam name="TMessage">The type of message to be serialized or deserialized.</typeparam>
-public sealed class CloudEventMessageBodySerializer<TMessage> : IMessageBodySerializer<TMessage>, ISelfDescribingMessageBodySerializer where TMessage : class
+public sealed class CloudEventMessageBodySerializer<TMessage> : IMessageBodySerializer<TMessage>, ISelfDescribingMessageBodySerializer, ICloudEventMessageBodySerializer where TMessage : class
 {
     private const string SpecVersion = "1.0";
 
@@ -22,6 +22,21 @@ public sealed class CloudEventMessageBodySerializer<TMessage> : IMessageBodySeri
     private readonly Uri _source;
     private readonly string _type;
     private readonly string _dataContentType;
+
+    /// <inheritdoc />
+    public string Type => _type;
+
+    /// <inheritdoc />
+    public Uri Source => _source;
+
+    /// <inheritdoc />
+    public string DataContentType => _dataContentType;
+
+    /// <inheritdoc />
+    public System.Type DataType => typeof(TMessage);
+
+    /// <inheritdoc />
+    public object DataSerializer => _dataSerializer;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CloudEventMessageBodySerializer{TMessage}"/> class.
