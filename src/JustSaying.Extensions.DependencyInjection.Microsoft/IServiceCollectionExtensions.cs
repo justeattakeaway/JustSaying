@@ -1,4 +1,7 @@
 using System.ComponentModel;
+#if NET8_0_OR_GREATER
+using System.Diagnostics.CodeAnalysis;
+#endif
 using JustSaying;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
@@ -141,7 +144,7 @@ public static class IServiceCollectionExtensions
         services.TryAddSingleton<IMessageContextAccessor>(serviceProvider => serviceProvider.GetRequiredService<MessageContextAccessor>());
         services.TryAddSingleton<IMessageContextReader>(serviceProvider => serviceProvider.GetRequiredService<MessageContextAccessor>());
 
-        services.TryAddSingleton<IMessageBodySerializationFactory, NewtonsoftSerializationFactory>();
+        services.TryAddSingleton<IMessageBodySerializationFactory>(_ => new SystemTextJsonSerializationFactory(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions));
         services.TryAddSingleton<IMessageSubjectProvider, GenericMessageSubjectProvider>();
         services.TryAddSingleton<IVerifyAmazonQueues, AmazonQueueCreator>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IMessageBodyCompression, GzipMessageBodyCompression>());
@@ -214,7 +217,12 @@ public static class IServiceCollectionExtensions
     /// <exception cref="ArgumentNullException">
     /// <paramref name="services"/> is <see langword="null"/>.
     /// </exception>
-    public static IServiceCollection AddJustSayingHandler<TMessage, THandler>(this IServiceCollection services)
+    public static IServiceCollection AddJustSayingHandler<
+        TMessage,
+#if NET8_0_OR_GREATER
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+#endif
+        THandler>(this IServiceCollection services)
         where TMessage : class
         where THandler : class, IHandlerAsync<TMessage>
     {
