@@ -4,6 +4,7 @@ using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageSerialization;
+using JustSaying.Messaging.Metadata;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Models;
 using JustSaying.Naming;
@@ -159,6 +160,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
 
         AwsTools.MessageHandling.ISqsQueue sqsQueue;
         string queueName;
+        string queueRegion = null;
 
         if (_destination.IsAddress)
         {
@@ -188,6 +190,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
 
             sqsQueue = queue;
             queueName = queue.QueueName;
+            queueRegion = _destination.Address.RegionName;
         }
         else
         {
@@ -247,6 +250,25 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
             .Build();
 
         bus.AddMessageMiddleware<T>(queueName, handlerMiddleware);
+
+        var metadataRegistry = serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>();
+        if (metadataRegistry != null)
+        {
+            if (queueRegion is null)
+            {
+                metadataRegistry.SetRegion(bus.Config.Region);
+            }
+
+            // A queue addressed by URL or ARN carries its own region, which may differ from the bus's
+            // configured region, so it is captured on the subscription rather than as the registry default.
+            metadataRegistry.AddSubscription(new SubscriptionMetadata(
+                queueName,
+                topicName: null,
+                SubscriptionGroupName ?? queueName,
+                RawMessageDelivery,
+                [new MessageTypeMetadata(typeof(T), bus.MessageTypeRegistry.GetLogicalName(typeof(T)), serializer)],
+                queueRegion));
+        }
 
         logger.LogInformation(
             "Added a message handler for message type for '{MessageType}' on queue '{QueueName}'.",

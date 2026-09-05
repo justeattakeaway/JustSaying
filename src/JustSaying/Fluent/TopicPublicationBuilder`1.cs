@@ -4,7 +4,9 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
+using JustSaying.Messaging.Metadata;
 using JustSaying.Messaging.Middleware;
+using JustSaying.Naming;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent;
@@ -269,6 +271,12 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
 
         var client = proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region));
 
+        // Resolved once here (rather than inside each built configuration) so the same instance both
+        // serializes messages and describes the publication's wire format in the metadata registry.
+        var serializer = SerializerOverride is null
+            ? bus.MessageBodySerializerFactory.GetSerializer<T>()
+            : SerializerOverride(_serviceResolver);
+
         Func<Exception, object, bool> exceptionHandler =
             ExceptionHandler is null ? null : (ex, message) => ExceptionHandler(ex, (T)message);
         Func<Exception, IReadOnlyCollection<object>, bool> exceptionBatchHandler =
@@ -284,7 +292,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
                 exceptionHandler,
                 exceptionBatchHandler,
                 serviceResolver: _serviceResolver,
-                serializerFactory: SerializerOverride,
+                serializerFactory: (_) => serializer,
                 subjectResolver: SubjectResolver);
 
         var topicName = TopicName ?? _destination.Name;
@@ -300,6 +308,21 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
         bus.AddStartupTask(config.StartupTask);
         bus.AddMessagePublisher<T>(config.Publisher);
         bus.AddMessageBatchPublisher<T>(config.BatchPublisher);
+
+        var metadataRegistry = _serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>();
+        if (metadataRegistry != null)
+        {
+            var wireName = SubjectSet
+                ? Subject
+                : SubjectResolver?.Invoke(bus.MessageTypeRegistry) ?? bus.MessageTypeRegistry.GetLogicalName(typeof(T));
+
+            metadataRegistry.SetRegion(region);
+            metadataRegistry.AddPublication(new PublicationMetadata(
+                MessagingDestinationKind.SnsTopic,
+                TopicNameCustomizer != null ? null : bus.Config.TopicNamingConvention.Apply<T>(topicName),
+                isDynamic: TopicNameCustomizer != null,
+                [new MessageTypeMetadata(typeof(T), wireName, serializer)]));
+        }
     }
 
     private void ConfigureForAddress(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
@@ -350,6 +373,19 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
 
         bus.AddMessagePublisher<T>(publisherConfig.Publisher);
         bus.AddMessageBatchPublisher<T>(publisherConfig.BatchPublisher);
+
+        var metadataRegistry = _serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>();
+        if (metadataRegistry != null)
+        {
+            // The topic's region comes from its ARN and may differ from the bus's configured
+            // region, so it is captured on the publication rather than as the registry default.
+            metadataRegistry.AddPublication(new PublicationMetadata(
+                MessagingDestinationKind.SnsTopic,
+                TopicAddressCustomizer != null ? null : arn.Resource,
+                isDynamic: TopicAddressCustomizer != null,
+                [new MessageTypeMetadata(typeof(T), subject, serializer)],
+                arn.Region));
+        }
 
         loggerFactory.CreateLogger<TopicPublicationBuilder<T>>().LogInformation(
             "Created SNS topic publisher on topic '{TopicName}' for message type '{MessageType}'",
