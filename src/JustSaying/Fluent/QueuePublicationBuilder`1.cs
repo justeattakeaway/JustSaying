@@ -5,88 +5,114 @@ using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware;
-using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent;
 
 /// <summary>
-/// A class representing a builder for a queue publication. This class cannot be inherited.
+/// A builder for a queue publication's publish-time behaviour. The destination — which queue, and
+/// (when JustSaying owns it) how to create it — is a <see cref="QueueDestination"/> value supplied at
+/// registration; this builder is the same whether the queue is created by JustSaying or already
+/// exists, and exposes no infrastructure configuration. This class cannot be inherited.
 /// </summary>
 /// <typeparam name="T">
 /// The type of the message published to the queue.
 /// </typeparam>
 public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T : class
 {
+    private readonly QueueDestination _destination;
+
+    private string QueueName { get; set; }
+
+    private string Subject { get; set; }
+
+    private bool SubjectSet { get; set; }
+
+    private PublishCompressionOptions CompressionOptions { get; set; }
+
+    private bool _isRawMessage;
+
+    private bool _shouldCheckQueueExistence;
+
+    private Action<PublishMiddlewareBuilder> MiddlewareConfiguration { get; set; }
+
+    /// <summary>
+    /// An optional custom serializer for this publication, used instead of the per-type default from
+    /// the bus's serialization factory. Built from the bus's <see cref="IServiceResolver"/> so a
+    /// serializer package can resolve its own serialization services from the container without
+    /// replacing the app-wide factory. Internal extensibility seam for serializer packages (such as
+    /// JustSaying.CloudEvents, which exposes it via <c>WithCloudEventQueue&lt;T&gt;</c>).
+    /// </summary>
+    internal Func<IServiceResolver, IMessageBodySerializer<T>> SerializerOverride { get; set; }
+
+    /// <summary>
+    /// An optional resolver for the <c>Subject</c> written into the queue envelope, used instead of the
+    /// logical name of <typeparamref name="T"/>. Internal extensibility seam used by wrapper
+    /// publications so the subject reflects the payload type rather than the wrapper type.
+    /// </summary>
+    internal Func<IMessageTypeRegistry, string> SubjectResolver { get; set; }
+
+    /// <summary>
+    /// An optional resolver for the queue name, applied when no explicit name is set — instead of the
+    /// naming convention keyed on <typeparamref name="T"/>. Internal extensibility seam used by wrapper
+    /// publications (such as CloudEvents envelopes) so the queue is named after the payload type rather
+    /// than the wrapper type.
+    /// </summary>
+    internal Func<JustSaying.Naming.IQueueNamingConvention, string> QueueNameResolver { get; set; }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="QueuePublicationBuilder{T}"/> class.
     /// </summary>
     internal QueuePublicationBuilder()
+        : this(QueueDestination.ByConvention())
     { }
 
     /// <summary>
-    /// Gets or sets a delegate to a method to use to configure SQS writes.
+    /// Initializes a new instance of the <see cref="QueuePublicationBuilder{T}"/> class for the
+    /// specified destination.
     /// </summary>
-    private Action<SqsWriteConfiguration> ConfigureWrites { get; set; }
-
-    private string QueueName { get; set; } = string.Empty;
-
-    private Action<PublishMiddlewareBuilder> MiddlewareConfiguration { get; set; }
-
-    private bool _isRawMessage;
-
-    /// <summary>
-    /// Configures the SQS write configuration.
-    /// </summary>
-    /// <param name="configure">A delegate to a method to use to configure SQS writes.</param>
-    /// <returns>
-    /// The current <see cref="QueuePublicationBuilder{T}"/>.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">
-    /// <paramref name="configure"/> is <see langword="null"/>.
-    /// </exception>
-    public QueuePublicationBuilder<T> WithWriteConfiguration(
-        Action<SqsWriteConfigurationBuilder> configure)
+    /// <param name="destination">The queue the publication targets.</param>
+    internal QueuePublicationBuilder(QueueDestination destination)
     {
-        if (configure == null)
-        {
-            throw new ArgumentNullException(nameof(configure));
-        }
-
-        var builder = new SqsWriteConfigurationBuilder();
-
-        configure(builder);
-
-        ConfigureWrites = builder.Configure;
-        return this;
+        _destination = destination ?? throw new ArgumentNullException(nameof(destination));
     }
 
     /// <summary>
-    /// Configures the SQS write configuration.
+    /// Configures the SQS queue name, rather than using the naming convention. Equivalent to
+    /// registering the publication against <see cref="QueueDestination.Named(string)"/>.
     /// </summary>
-    /// <param name="configure">A delegate to a method to use to configure SQS writes.</param>
-    /// <returns>
-    /// The current <see cref="QueuePublicationBuilder{T}"/>.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">
-    /// <paramref name="configure"/> is <see langword="null"/>.
-    /// </exception>
-    public QueuePublicationBuilder<T> WithWriteConfiguration(Action<SqsWriteConfiguration> configure)
-    {
-        ConfigureWrites = configure ?? throw new ArgumentNullException(nameof(configure));
-        return this;
-    }
-
-    /// <summary>
-    /// Configures the SQS Queue name, rather than using the naming convention.
-    /// </summary>
-    /// <param name="name">The name of the queue to subscribe to.</param>
+    /// <param name="name">The name of the queue to publish to.</param>
     /// <returns>
     /// The current <see cref="QueuePublicationBuilder{T}"/>.
     /// </returns>
     public QueuePublicationBuilder<T> WithQueueName(string name)
     {
         QueueName = name ?? throw new ArgumentNullException(nameof(name));
+        return this;
+    }
+
+    /// <summary>
+    /// Configures the <c>Subject</c> written into the queue envelope, instead of the message type's
+    /// logical name.
+    /// </summary>
+    /// <param name="subject">The subject to write.</param>
+    /// <returns>The current <see cref="QueuePublicationBuilder{T}"/>.</returns>
+    public QueuePublicationBuilder<T> WithSubject(string subject)
+    {
+        Subject = subject;
+        SubjectSet = true;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the compression options for publishing messages.
+    /// </summary>
+    /// <param name="compressionOptions">The compression options to use when publishing messages.</param>
+    /// <returns>The current <see cref="QueuePublicationBuilder{T}"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="compressionOptions"/> is <see langword="null"/>.</exception>
+    public QueuePublicationBuilder<T> WithCompression(PublishCompressionOptions compressionOptions)
+    {
+        CompressionOptions = compressionOptions ?? throw new ArgumentNullException(nameof(compressionOptions));
         return this;
     }
 
@@ -100,6 +126,19 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
     public QueuePublicationBuilder<T> WithRawMessages()
     {
         _isRawMessage = true;
+        return this;
+    }
+
+    /// <summary>
+    /// Checks that the configured SQS queue exists before the bus starts publishing messages. Only
+    /// applicable for a pre-existing queue (a queue JustSaying owns is created on startup).
+    /// </summary>
+    /// <returns>
+    /// The current <see cref="QueuePublicationBuilder{T}"/>.
+    /// </returns>
+    public QueuePublicationBuilder<T> WithQueueExistenceCheck()
+    {
+        _shouldCheckQueueExistence = true;
         return this;
     }
 
@@ -128,35 +167,87 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
             typeof(T));
 
         var config = bus.Config;
+        var compressionRegistry = bus.CompressionRegistry;
+        var compressionOptions = CompressionOptions ?? config.DefaultCompressionOptions;
+        CompressionEncodingValidator.ValidateEncoding(compressionRegistry, compressionOptions);
+
+        var subject = SubjectSet
+            ? Subject
+            : SubjectResolver?.Invoke(bus.MessageTypeRegistry) ?? bus.MessageTypeRegistry.GetLogicalName(typeof(T));
+
+        var serializer = SerializerOverride is null
+            ? bus.MessageBodySerializerFactory.GetSerializer<T>()
+            : SerializerOverride(serviceResolver);
+        // A self-describing serializer (for example CloudEvents) already carries the message's type
+        // metadata, so the {Message, Subject} queue envelope would just double-wrap it.
+        var isSelfDescribing = serializer is ISelfDescribingMessageBodySerializer;
+        var isRawMessage = _isRawMessage || isSelfDescribing;
+
+        if (isSelfDescribing && !_isRawMessage)
+        {
+            logger.LogInformation(
+                "Publishing '{MessageType}' to the queue without the queue envelope because its serializer is self-describing.",
+                typeof(T));
+        }
+
+        if (_destination.IsAddress)
+        {
+            ConfigureForAddress(bus, proxy, loggerFactory, logger, compressionRegistry, compressionOptions, subject, serializer, isRawMessage);
+        }
+        else
+        {
+            ConfigureForOwnedQueue(bus, proxy, loggerFactory, logger, compressionRegistry, compressionOptions, subject, serializer, isRawMessage);
+        }
+
+        if (MiddlewareConfiguration != null)
+        {
+            var middlewareBuilder = new PublishMiddlewareBuilder(serviceResolver);
+            middlewareBuilder.Configure(MiddlewareConfiguration);
+            bus.AddPublishMiddleware<T>(middlewareBuilder.Build());
+        }
+    }
+
+    private void ConfigureForOwnedQueue(
+        JustSayingBus bus,
+        IAwsClientFactoryProxy proxy,
+        ILoggerFactory loggerFactory,
+        ILogger logger,
+        Messaging.Compression.MessageCompressionRegistry compressionRegistry,
+        PublishCompressionOptions compressionOptions,
+        string subject,
+        IMessageBodySerializer<T> serializer,
+        bool isRawMessage)
+    {
+        if (_shouldCheckQueueExistence)
+        {
+            throw new InvalidOperationException(
+                $"{nameof(WithQueueExistenceCheck)} only applies to a pre-existing queue; a queue JustSaying owns is created on startup.");
+        }
+
+        if (QueueName is not null && _destination.Name is not null)
+        {
+            throw new InvalidOperationException(
+                $"The queue is named both by the {nameof(QueueDestination)} destination ('{_destination.Name}') and {nameof(WithQueueName)} ('{QueueName}'); name it once.");
+        }
+
+        var config = bus.Config;
         var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
 
         var writeConfiguration = new SqsWriteConfiguration
         {
-            QueueName = QueueName
+            QueueName = QueueName ?? _destination.Name ?? string.Empty,
         };
-        ConfigureWrites?.Invoke(writeConfiguration);
+
+        _destination.Infrastructure?.Apply(writeConfiguration);
+
+        if (string.IsNullOrEmpty(writeConfiguration.QueueName) && QueueNameResolver is not null)
+        {
+            writeConfiguration.QueueName = QueueNameResolver(config.QueueNamingConvention);
+        }
         writeConfiguration.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
 
         var regionEndpoint = RegionEndpoint.GetBySystemName(region);
         var sqsClient = proxy.GetAwsClientFactory().GetSqsClient(regionEndpoint);
-
-        var compressionRegistry = bus.CompressionRegistry;
-        var compressionOptions = writeConfiguration.CompressionOptions;
-        var subject = bus.MessageTypeRegistry.GetLogicalName(typeof(T));
-
-        var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
-        // A self-describing serializer (for example CloudEvents) already carries the message's type
-        // metadata, so the {Message, Subject} queue envelope would just double-wrap it.
-        var isSelfDescribing = serializer is ISelfDescribingMessageBodySerializer;
-        var isRawMessage = _isRawMessage || writeConfiguration.IsRawMessage || isSelfDescribing;
-
-        if (isSelfDescribing && !_isRawMessage && !writeConfiguration.IsRawMessage)
-        {
-            logger.LogInformation(
-                "Publishing '{MessageType}' to queue '{QueueName}' without the queue envelope because its serializer is self-describing.",
-                typeof(T),
-                writeConfiguration.QueueName);
-        }
 
         var eventPublisher = new SqsMessagePublisher(
             sqsClient,
@@ -177,11 +268,18 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
             loggerFactory);
 #pragma warning restore 618
 
+        var tags = _destination.Infrastructure?.Tags;
+
         async Task StartupTask(CancellationToken cancellationToken)
         {
             if (!await sqsQueue.ExistsAsync(cancellationToken).ConfigureAwait(false))
             {
                 await sqsQueue.CreateAsync(writeConfiguration, cancellationToken: cancellationToken).ConfigureAwait(false);
+            }
+
+            if (tags is { Count: > 0 })
+            {
+                await sqsQueue.TagQueueAsync(sqsQueue.Uri.ToString(), tags, cancellationToken).ConfigureAwait(false);
             }
 
             eventPublisher.QueueUrl = sqsQueue.Uri;
@@ -191,16 +289,59 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
 
         bus.AddMessagePublisher<T>(eventPublisher);
 
-        if (MiddlewareConfiguration != null)
-        {
-            var middlewareBuilder = new PublishMiddlewareBuilder(serviceResolver);
-            middlewareBuilder.Configure(MiddlewareConfiguration);
-            bus.AddPublishMiddleware<T>(middlewareBuilder.Build());
-        }
-
         logger.LogInformation(
             "Created SQS publisher for message type '{MessageType}' on queue '{QueueName}'.",
             typeof(T),
             writeConfiguration.QueueName);
+    }
+
+    private void ConfigureForAddress(
+        JustSayingBus bus,
+        IAwsClientFactoryProxy proxy,
+        ILoggerFactory loggerFactory,
+        ILogger logger,
+        Messaging.Compression.MessageCompressionRegistry compressionRegistry,
+        PublishCompressionOptions compressionOptions,
+        string subject,
+        IMessageBodySerializer<T> serializer,
+        bool isRawMessage)
+    {
+        if (QueueName is not null)
+        {
+            throw new InvalidOperationException(
+                $"A queue addressed by URL or ARN cannot also be named; remove the {nameof(WithQueueName)} call.");
+        }
+
+        var queueAddress = _destination.Address;
+        var sqsClient = proxy.GetAwsClientFactory().GetSqsClient(RegionEndpoint.GetBySystemName(queueAddress.RegionName));
+
+        if (_shouldCheckQueueExistence)
+        {
+            var queue = new QueueAddressQueue(queueAddress, sqsClient);
+            bus.AddStartupTask(async cancellationToken =>
+            {
+                if (!await queue.ExistsAsync(cancellationToken).ConfigureAwait(false))
+                {
+                    throw new InvalidOperationException(
+                        $"SQS queue '{queue.QueueName}' with URL '{queue.Uri}' does not exist.");
+                }
+            });
+        }
+
+        var eventPublisher = new SqsMessagePublisher(
+            queueAddress.QueueUrl,
+            sqsClient,
+            new OutboundMessageConverter(PublishDestinationType.Queue, serializer.Erase(), compressionRegistry, compressionOptions, subject, isRawMessage),
+            loggerFactory)
+        {
+            MessageResponseLogger = bus.Config.MessageResponseLogger
+        };
+
+        bus.AddMessagePublisher<T>(eventPublisher);
+
+        logger.LogInformation(
+            "Created SQS queue publisher on queue URL '{QueueName}' for message type '{MessageType}'",
+            queueAddress.QueueUrl,
+            typeof(T));
     }
 }

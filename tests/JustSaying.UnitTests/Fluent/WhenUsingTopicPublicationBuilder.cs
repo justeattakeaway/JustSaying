@@ -1,4 +1,3 @@
-using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
 using JustSaying.TestingFramework;
 
@@ -9,25 +8,25 @@ public class WhenUsingTopicPublicationBuilder
     private readonly TopicPublicationBuilder<Order> _sut = new();
 
     [Test]
+    public void ShouldThrowArgumentNullExceptionWhenTopicNameIsNull()
+    {
+        // Act + Assert
+        Should.Throw<ArgumentNullException>(() => _sut.WithTopicName((string)null));
+    }
+
+    [Test]
+    public void ShouldThrowArgumentNullExceptionWhenCompressionOptionsAreNull()
+    {
+        // Act + Assert
+        Should.Throw<ArgumentNullException>(() => _sut.WithCompression(null));
+    }
+
+    [Test]
     [Arguments("")]
     [Arguments(null)]
-    public void ShouldThrowArgumentExceptionWhenAddingInvalidTag(string actualTagKey)
+    public void ShouldThrowArgumentExceptionWhenTopicInfrastructureTagIsInvalid(string tagKey)
     {
         // Act + Assert
-        Should.Throw<ArgumentException>(() => _sut.WithTag(actualTagKey));
-    }
-
-    [Test]
-    public void ShouldThrowArgumentExceptionWhenWriteConfigurationBuilderIsNull()
-    {
-        // Act + Assert
-        Should.Throw<ArgumentNullException>(() => _sut.WithWriteConfiguration((Action<SnsWriteConfigurationBuilder>) null));
-    }
-
-    [Test]
-    public void ShouldThrowArgumentExceptionWhenWriteConfigurationIsNull()
-    {
-        // Act + Assert
-        Should.Throw<ArgumentNullException>(() => _sut.WithWriteConfiguration((Action<SnsWriteConfiguration>) null));
+        Should.Throw<ArgumentException>(() => TopicDestination.ByConvention(t => t.WithTag(tagKey)));
     }
 }

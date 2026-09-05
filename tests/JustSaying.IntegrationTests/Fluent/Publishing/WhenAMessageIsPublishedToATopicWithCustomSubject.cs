@@ -19,7 +19,7 @@ public class WhenAMessageIsPublishedToATopicWithCustomSubject : IntegrationTestB
                 (builder) =>
                 {
                     builder.Client((options) => options.WithClientFactory(() => awsClientFactory));
-                    builder.WithLoopbackTopicAndPublicationOptions<SimpleMessage>(UniqueName, configure => configure.WithWriteConfiguration(wc => wc.Subject = "RandomSubject"));
+                    builder.WithLoopbackTopicAndPublicationOptions<SimpleMessage>(UniqueName, configure => configure.WithSubject("RandomSubject"));
                 })
             .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 
