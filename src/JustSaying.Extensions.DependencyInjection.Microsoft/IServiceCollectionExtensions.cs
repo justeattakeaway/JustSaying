@@ -132,6 +132,7 @@ public static class IServiceCollectionExtensions
         services.TryAddSingleton<IPublishConfiguration>((p) => p.GetRequiredService<MessagingConfig>());
         services.TryAddSingleton<IPublishBatchConfiguration>((p) => p.GetRequiredService<MessagingConfig>());
         services.TryAddSingleton<IMessageMonitor, NullOpMessageMonitor>();
+        services.TryAddTransient<IMessageMetadataProvider>((p) => p.GetRequiredService<IMessagingConfig>().MessageMetadataProvider);
 
         services.TryAddTransient<LoggingMiddleware>();
         services.TryAddTransient<SqsPostProcessorMiddleware>();
@@ -214,7 +215,7 @@ public static class IServiceCollectionExtensions
     /// <paramref name="services"/> is <see langword="null"/>.
     /// </exception>
     public static IServiceCollection AddJustSayingHandler<TMessage, THandler>(this IServiceCollection services)
-        where TMessage : Message
+        where TMessage : class
         where THandler : class, IHandlerAsync<TMessage>
     {
         if (services == null)
@@ -244,7 +245,7 @@ public static class IServiceCollectionExtensions
     public static IServiceCollection AddJustSayingHandlers<TMessage>(
         this IServiceCollection services,
         IEnumerable<IHandlerAsync<TMessage>> handlers)
-        where TMessage : Message
+        where TMessage : class
     {
         if (services == null)
         {

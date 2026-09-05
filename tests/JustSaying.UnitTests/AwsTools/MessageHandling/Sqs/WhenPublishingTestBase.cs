@@ -35,7 +35,7 @@ public abstract class WhenPublishingTestBase
     internal static OutboundMessageConverter CreateConverter(bool isRawMessage = false)
     {
         return new OutboundMessageConverter(PublishDestinationType.Queue,
-            SimpleMessage.Serializer,
+            SimpleMessage.Serializer.Erase(),
             new MessageCompressionRegistry(),
             new PublishCompressionOptions(),
             nameof(SimpleMessage),

@@ -287,7 +287,7 @@ public class MessagingBusBuilderTests
         public void HandleTime(TimeSpan duration)
         { }
 
-        public void Handled(Message message)
+        public void Handled(object message)
         { }
 
         public void IncrementThrottlingStatistic()
