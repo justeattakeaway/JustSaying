@@ -1,23 +1,23 @@
-using JustSaying.Models;
-
 namespace JustSaying.Messaging.MessageSerialization;
 
 /// <summary>
-/// Defines the contract for serializing and deserializing message bodies.
+/// Defines the type-erased contract for serializing and deserializing message bodies, used
+/// internally at the type-erased dispatch boundary. Custom serializers should implement the
+/// strongly-typed <see cref="IMessageBodySerializer{TMessage}"/> instead.
 /// </summary>
-public interface IMessageBodySerializer
+internal interface IMessageBodySerializer
 {
     /// <summary>
     /// Serializes a message into a string representation.
     /// </summary>
     /// <param name="message">The message to serialize.</param>
     /// <returns>A string representation of the serialized message.</returns>
-    string Serialize(Message message);
+    string Serialize(object message);
 
     /// <summary>
     /// Deserializes a string representation back into a message object.
     /// </summary>
     /// <param name="message">The string representation of the message to deserialize.</param>
     /// <returns>The deserialized message object.</returns>
-    Message Deserialize(string message);
+    object Deserialize(string message);
 }

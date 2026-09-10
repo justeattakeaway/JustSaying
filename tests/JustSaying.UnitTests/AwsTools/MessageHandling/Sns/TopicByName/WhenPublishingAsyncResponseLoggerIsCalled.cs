@@ -31,7 +31,7 @@ public class WhenPublishingAsyncResultLoggerIsCalled : WhenPublishingTestBase
             MessageResponseLogger = (r, m) =>
             {
                 _response = r;
-                _message = m;
+                _message = (Message)m;
             }
         };
 

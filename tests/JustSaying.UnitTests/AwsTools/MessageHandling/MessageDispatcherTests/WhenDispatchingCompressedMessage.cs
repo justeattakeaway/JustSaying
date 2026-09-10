@@ -7,6 +7,7 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Compression;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
@@ -24,7 +25,7 @@ public class WhenDispatchingCompressedMessage
         var originalMessage = new SimpleMessage { Id = Guid.NewGuid() };
         var decompressorRegistry =
             new MessageCompressionRegistry([new GzipMessageBodyCompression()]);
-        var messageConverter = new InboundMessageConverter(SimpleMessage.Serializer, decompressorRegistry, false);
+        var messageConverter = new InboundMessageConverter(SimpleMessage.Serializer.Erase(), decompressorRegistry, false);
 
         string payload = JsonSerializer.Serialize(originalMessage, originalMessage.GetType(), new JsonSerializerOptions
         {
