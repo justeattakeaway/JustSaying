@@ -13,7 +13,7 @@ namespace JustSaying.CloudEvents;
 /// handled by an inner <see cref="IMessageBodySerializer{TMessage}"/>.
 /// </summary>
 /// <typeparam name="T">The type of the <c>data</c> payload.</typeparam>
-public sealed class CloudEventEnvelopeBodySerializer<T> : IMessageBodySerializer<CloudEvent<T>>, ISelfDescribingMessageBodySerializer
+public sealed class CloudEventEnvelopeBodySerializer<T> : IMessageBodySerializer<CloudEvent<T>>, ISelfDescribingMessageBodySerializer, ICloudEventMessageBodySerializer
     where T : class
 {
     private const string SpecVersion = "1.0";
@@ -29,6 +29,21 @@ public sealed class CloudEventEnvelopeBodySerializer<T> : IMessageBodySerializer
     private readonly Uri _source;
     private readonly string _type;
     private readonly string _dataContentType;
+
+    /// <inheritdoc />
+    public string Type => _type;
+
+    /// <inheritdoc />
+    public Uri Source => _source;
+
+    /// <inheritdoc />
+    public string DataContentType => _dataContentType;
+
+    /// <inheritdoc />
+    public System.Type DataType => typeof(T);
+
+    /// <inheritdoc />
+    public object DataSerializer => _dataSerializer;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CloudEventEnvelopeBodySerializer{T}"/> class.

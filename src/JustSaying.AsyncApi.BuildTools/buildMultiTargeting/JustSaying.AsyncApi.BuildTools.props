@@ -1,0 +1,3 @@
+<Project>
+  <Import Project="../build/JustSaying.AsyncApi.BuildTools.props" />
+</Project>

@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <NoWarn>$(NoWarn);CA1707;CA2007</NoWarn>
+    <RootNamespace>JustSaying.AsyncApi.Tests</RootNamespace>
+    <SignAssembly>false</SignAssembly>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\JustSaying.AsyncApi\JustSaying.AsyncApi.csproj" />
+    <ProjectReference Include="..\..\src\JustSaying.CloudEvents\JustSaying.CloudEvents.csproj" />
+    <ProjectReference Include="..\..\src\JustSaying\JustSaying.csproj" />
+    <ProjectReference Include="..\..\src\JustSaying.Extensions.DependencyInjection.Microsoft\JustSaying.Extensions.DependencyInjection.Microsoft.csproj" />
+    <ProjectReference Include="..\..\tests\JustSaying.TestingFramework\JustSaying.TestingFramework.csproj" />
+  </ItemGroup>
+  <!--
+    The build-time generation tests spawn the JustSaying.AsyncApi.GetDocument tool against the
+    JustSaying.AsyncApi.Tests.App application, so both must be built (but are not referenced as
+    assemblies), and the tests find their outputs via the assembly metadata below.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\JustSaying.AsyncApi.BuildTools\JustSaying.AsyncApi.BuildTools.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\JustSaying.AsyncApi.Tests.App\JustSaying.AsyncApi.Tests.App.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Projects under tests/ and src/ have different artifacts roots (each tree has its own Directory.Build.props). -->
+    <AssemblyMetadata Include="TestAppDirectory" Value="$([MSBuild]::NormalizeDirectory('$(ArtifactsPath)', 'bin', 'JustSaying.AsyncApi.Tests.App', '$(Configuration.ToLowerInvariant())'))" />
+    <AssemblyMetadata Include="GetDocumentToolPath" Value="$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '..', '..', 'artifacts', 'bin', 'JustSaying.AsyncApi.BuildTools', '$(Configuration.ToLowerInvariant())', 'JustSaying.AsyncApi.GetDocument.dll'))" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="TUnit" />
+  </ItemGroup>
+</Project>

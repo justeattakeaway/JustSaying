@@ -4,6 +4,7 @@ using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageSerialization;
+using JustSaying.Messaging.Metadata;
 using JustSaying.Messaging.Middleware;
 using Microsoft.Extensions.Logging;
 
@@ -195,6 +196,7 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
 
         ISqsQueue sqsQueue;
         string queueName;
+        string queueRegion = null;
         if (_destination.IsAddress)
         {
             // A pre-existing queue: never created, so only the read-time settings apply.
@@ -205,6 +207,7 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
             var queue = new QueueAddressQueue(_destination.Address, sqsClient);
             sqsQueue = queue;
             queueName = queue.QueueName;
+            queueRegion = _destination.Address.RegionName;
         }
         else
         {
@@ -231,9 +234,11 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
         }
 
         var serializersByName = new Dictionary<string, IMessageBodySerializer>(StringComparer.Ordinal);
+        var serializersByRegistration = new Dictionary<IMessageTypeRegistration, object>();
         foreach (var registration in _registrations)
         {
-            serializersByName[namesByRegistration[registration]] = registration.CreateErasedSerializer(bus, serviceResolver);
+            serializersByName[namesByRegistration[registration]] = registration.CreateErasedSerializer(bus, serviceResolver, out var serializer);
+            serializersByRegistration[registration] = serializer;
             registration.RegisterHandler(bus, handlerResolver, serviceResolver, queueName);
         }
 
@@ -248,6 +253,25 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
             SqsQueue = sqsQueue,
         });
 
+        var metadataRegistry = serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>();
+        if (metadataRegistry != null)
+        {
+            if (queueRegion is null)
+            {
+                metadataRegistry.SetRegion(bus.Config.Region);
+            }
+
+            // A queue addressed by URL or ARN carries its own region, which may differ from the bus's
+            // configured region, so it is captured on the subscription rather than as the registry default.
+            metadataRegistry.AddSubscription(new SubscriptionMetadata(
+                queueName,
+                topicName: null,
+                _subscriptionGroupName ?? queueName,
+                _rawMessageDelivery,
+                [.. _registrations.Select((r) => new MessageTypeMetadata(r.MessageType, namesByRegistration[r], serializersByRegistration[r]))],
+                queueRegion));
+        }
+
         logger.LogInformation(
             "Created multi-type SQS subscriber on queue '{QueueName}' handling {MessageTypeCount} message types.",
             queueName,
@@ -260,7 +284,12 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
 
         string ResolveTypeName(JustSayingBus bus, IServiceResolver serviceResolver);
 
-        IMessageBodySerializer CreateErasedSerializer(JustSayingBus bus, IServiceResolver serviceResolver);
+        /// <summary>
+        /// Creates the serializer for this registration's message type, returning the type-erased
+        /// view used to deserialize inbound bodies and, via <paramref name="serializer"/>, the
+        /// typed instance itself so the registration can be described (for example for AsyncAPI).
+        /// </summary>
+        IMessageBodySerializer CreateErasedSerializer(JustSayingBus bus, IServiceResolver serviceResolver, out object serializer);
 
         void RegisterHandler(JustSayingBus bus, IHandlerResolver handlerResolver, IServiceResolver serviceResolver, string queueName);
     }
@@ -281,10 +310,15 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
                ?? typeNameResolver?.Invoke(serviceResolver)
                ?? bus.MessageTypeRegistry.GetLogicalName(typeof(TMessage));
 
-        public IMessageBodySerializer CreateErasedSerializer(JustSayingBus bus, IServiceResolver serviceResolver)
-            => (serializerFactory is null
+        public IMessageBodySerializer CreateErasedSerializer(JustSayingBus bus, IServiceResolver serviceResolver, out object serializer)
+        {
+            var typed = serializerFactory is null
                 ? bus.MessageBodySerializerFactory.GetSerializer<TMessage>()
-                : serializerFactory(serviceResolver)).Erase();
+                : serializerFactory(serviceResolver);
+
+            serializer = typed;
+            return typed.Erase();
+        }
 
         public void RegisterHandler(JustSayingBus bus, IHandlerResolver handlerResolver, IServiceResolver serviceResolver, string queueName)
         {

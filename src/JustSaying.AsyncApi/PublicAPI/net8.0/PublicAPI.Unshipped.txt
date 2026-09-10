@@ -1,0 +1,22 @@
+JustSaying.AsyncApi.AsyncApiDocumentGenerator
+JustSaying.AsyncApi.AsyncApiDocumentGenerator.AsyncApiDocumentGenerator(JustSaying.Messaging.Metadata.IMessagingMetadataRegistry registry, JustSaying.AsyncApi.AsyncApiOptions options, JustSaying.Messaging.MessageSerialization.IMessageBodySerializationFactory serializationFactory = null, Microsoft.Extensions.Logging.ILogger<JustSaying.AsyncApi.AsyncApiDocumentGenerator> logger = null) -> void
+JustSaying.AsyncApi.AsyncApiDocumentGenerator.Generate() -> ByteBard.AsyncAPI.Models.AsyncApiDocument
+JustSaying.AsyncApi.AsyncApiOptions
+JustSaying.AsyncApi.AsyncApiOptions.AsyncApiOptions() -> void
+JustSaying.AsyncApi.AsyncApiOptions.Description.get -> string
+JustSaying.AsyncApi.AsyncApiOptions.Description.set -> void
+JustSaying.AsyncApi.AsyncApiOptions.Id.get -> string
+JustSaying.AsyncApi.AsyncApiOptions.Id.set -> void
+JustSaying.AsyncApi.AsyncApiOptions.PostProcess.get -> System.Action<ByteBard.AsyncAPI.Models.AsyncApiDocument>
+JustSaying.AsyncApi.AsyncApiOptions.PostProcess.set -> void
+JustSaying.AsyncApi.AsyncApiOptions.SerializerOptions.get -> System.Text.Json.JsonSerializerOptions
+JustSaying.AsyncApi.AsyncApiOptions.SerializerOptions.set -> void
+JustSaying.AsyncApi.AsyncApiOptions.Title.get -> string
+JustSaying.AsyncApi.AsyncApiOptions.Title.set -> void
+JustSaying.AsyncApi.AsyncApiOptions.Version.get -> string
+JustSaying.AsyncApi.AsyncApiOptions.Version.set -> void
+JustSaying.AsyncApi.IAsyncApiDocumentProvider
+JustSaying.AsyncApi.IAsyncApiDocumentProvider.GenerateAsync(string documentName, System.IO.TextWriter writer, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task
+JustSaying.AsyncApi.IAsyncApiDocumentProvider.GetDocumentNames() -> System.Collections.Generic.IReadOnlyList<string>
+Microsoft.Extensions.DependencyInjection.AsyncApiServiceCollectionExtensions
+static Microsoft.Extensions.DependencyInjection.AsyncApiServiceCollectionExtensions.AddJustSayingAsyncApi(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, System.Action<JustSaying.AsyncApi.AsyncApiOptions> configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection
