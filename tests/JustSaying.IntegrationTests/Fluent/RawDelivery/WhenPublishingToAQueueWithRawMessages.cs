@@ -19,8 +19,8 @@ public class WhenPublishingToAQueueWithRawMessages : IntegrationTestBase
             {
                 builder.Client((options) => options.WithClientFactory(() => awsClientFactory));
                 builder.WithLoopbackQueueAndPublicationOptions<SimpleMessage>(UniqueName,
-                    c => { c.WithWriteConfiguration(rc => rc.IsRawMessage = true); },
-                    c => { c.WithReadConfiguration(rc => rc.RawMessageDelivery = true); });
+                    c => c.WithRawMessages(),
+                    c => c.WithRawMessageDelivery());
             })
             .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 
@@ -68,7 +68,7 @@ public class WhenPublishingToAQueueWithRawMessages : IntegrationTestBase
                 builder.Client((options) => options.WithClientFactory(() => awsClientFactory));
                 builder.WithLoopbackQueueAndPublicationOptions<SimpleMessage>(UniqueName,
                     c => c.WithRawMessages(),
-                    c => c.WithReadConfiguration(rc => rc.RawMessageDelivery = true));
+                    c => c.WithRawMessageDelivery());
             })
             .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 

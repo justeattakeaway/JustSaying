@@ -25,23 +25,25 @@ public sealed class CloudEventMessageBodySerializer<TMessage> : IMessageBodySeri
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CloudEventMessageBodySerializer{TMessage}"/> class.
+    /// <paramref name="source"/> and <paramref name="type"/> are written only when serializing
+    /// (publishing); they may be <see langword="null"/> for a consume-only serializer, which unwraps
+    /// the inbound envelope's <c>data</c> without needing either.
     /// </summary>
     /// <param name="dataSerializer">The serializer used for the <c>data</c> payload.</param>
     /// <param name="metadataProvider">Provides the CloudEvents <c>id</c> and <c>time</c> from the message.</param>
-    /// <param name="source">The CloudEvents <c>source</c>.</param>
-    /// <param name="type">The CloudEvents <c>type</c> for this message type.</param>
+    /// <param name="source">The CloudEvents <c>source</c>, required to serialize.</param>
+    /// <param name="type">The CloudEvents <c>type</c> for this message type, required to serialize.</param>
     /// <param name="dataContentType">The CloudEvents <c>datacontenttype</c>. Defaults to <c>application/json</c>.</param>
     public CloudEventMessageBodySerializer(
         IMessageBodySerializer<TMessage> dataSerializer,
         IMessageMetadataProvider metadataProvider,
-        Uri source,
-        string type,
+        Uri source = null,
+        string type = null,
         string dataContentType = "application/json")
     {
         _dataSerializer = dataSerializer ?? throw new ArgumentNullException(nameof(dataSerializer));
         _metadataProvider = metadataProvider ?? throw new ArgumentNullException(nameof(metadataProvider));
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        if (string.IsNullOrEmpty(type)) throw new ArgumentException("Parameter cannot be null or empty.", nameof(type));
+        _source = source;
         _type = type;
         _dataContentType = dataContentType ?? "application/json";
     }
@@ -53,6 +55,11 @@ public sealed class CloudEventMessageBodySerializer<TMessage> : IMessageBodySeri
     /// <returns>The CloudEvents JSON.</returns>
     public string Serialize(TMessage message)
     {
+        var source = _source
+            ?? throw new InvalidOperationException($"A CloudEvents 'source' is required to publish '{typeof(TMessage).FullName}'; set CloudEventOptions.Source or pass one at the publication registration.");
+        var type = _type
+            ?? throw new InvalidOperationException($"A CloudEvents 'type' is required to publish '{typeof(TMessage).FullName}'; configure MapType<{typeof(TMessage).Name}>(...) or pass one at the publication registration.");
+
         var dataJson = _dataSerializer.Serialize(message);
 
         using var stream = new MemoryStream();
@@ -62,8 +69,8 @@ public sealed class CloudEventMessageBodySerializer<TMessage> : IMessageBodySeri
             writer.WriteString("specversion", SpecVersion);
             // CloudEvents requires a non-empty id; mint one when the payload carries none.
             writer.WriteString("id", _metadataProvider.GetId(message) ?? Guid.NewGuid().ToString());
-            writer.WriteString("source", _source.ToString());
-            writer.WriteString("type", _type);
+            writer.WriteString("source", source.ToString());
+            writer.WriteString("type", type);
             writer.WriteString("time", _metadataProvider.GetTimestamp(message) ?? DateTimeOffset.UtcNow);
             writer.WriteString("datacontenttype", _dataContentType);
 

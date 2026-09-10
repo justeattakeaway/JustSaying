@@ -25,7 +25,12 @@ internal sealed class StaticPublicationConfiguration(
         SnsWriteConfiguration writeConfiguration,
         IAmazonSimpleNotificationService snsClient,
         ILoggerFactory loggerFactory,
-        JustSayingBus bus) where T : class
+        JustSayingBus bus,
+        Func<Exception, object, bool> exceptionHandler = null,
+        Func<Exception, IReadOnlyCollection<object>, bool> exceptionBatchHandler = null,
+        IServiceResolver serviceResolver = null,
+        Func<IServiceResolver, IMessageBodySerializer<T>> serializerFactory = null,
+        Func<IMessageTypeRegistry, string> subjectResolver = null) where T : class
     {
         var readConfiguration = new SqsReadConfiguration(SubscriptionType.ToTopic)
         {
@@ -35,15 +40,19 @@ internal sealed class StaticPublicationConfiguration(
         readConfiguration.ApplyTopicNamingConvention<T>(bus.Config.TopicNamingConvention);
 
         var compressionOptions = writeConfiguration.CompressionOptions ?? bus.Config.DefaultCompressionOptions;
-        var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
-        var subject = writeConfiguration.SubjectSet ? writeConfiguration.Subject : bus.MessageTypeRegistry.GetLogicalName(typeof(T));
+        var serializer = (serializerFactory is null
+            ? bus.MessageBodySerializerFactory.GetSerializer<T>()
+            : serializerFactory(serviceResolver)).Erase();
+        var subject = writeConfiguration.SubjectSet
+            ? writeConfiguration.Subject
+            : subjectResolver?.Invoke(bus.MessageTypeRegistry) ?? bus.MessageTypeRegistry.GetLogicalName(typeof(T));
 
         var eventPublisher = new SnsMessagePublisher(
             snsClient,
-            new OutboundMessageConverter(PublishDestinationType.Topic, serializer.Erase(), new MessageCompressionRegistry([new GzipMessageBodyCompression()]), compressionOptions, subject, writeConfiguration.IsRawMessage),
+            new OutboundMessageConverter(PublishDestinationType.Topic, serializer, bus.CompressionRegistry, compressionOptions, subject, writeConfiguration.IsRawMessage),
             loggerFactory,
-            null,
-            null,
+            exceptionHandler ?? writeConfiguration.HandleException,
+            exceptionBatchHandler,
             bus.Config.MessageMetadataProvider)
         {
             MessageResponseLogger = bus.Config.MessageResponseLogger,

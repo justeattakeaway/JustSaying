@@ -16,8 +16,9 @@ public class WhenInterrogatingTheBus : IntegrationTestBase
         var services = GivenJustSaying()
             .ConfigureJustSaying((builder) =>
             {
+                // WithLoopbackTopic already registers the SimpleMessage topic publication; registering
+                // it a second time is now a startup error (one publication per message type).
                 builder.WithLoopbackTopic<SimpleMessage>(UniqueName);
-                builder.Publications(p => p.WithTopic<SimpleMessage>());
             })
             .AddSingleton(handler);
 
