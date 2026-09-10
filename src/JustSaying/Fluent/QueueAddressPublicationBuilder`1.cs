@@ -103,7 +103,7 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T> w
 
         var config = bus.Config;
         var compressionOptions = _compressionOptions ?? bus.Config.DefaultCompressionOptions;
-        var subject = _subjectSet ? _subject : bus.Config.MessageTypeRegistry.GetLogicalName(typeof(T));
+        var subject = _subjectSet ? _subject : bus.MessageTypeRegistry.GetLogicalName(typeof(T));
         var sqsClient = proxy.GetAwsClientFactory().GetSqsClient(RegionEndpoint.GetBySystemName(_queueAddress.RegionName));
 
         if (_shouldCheckQueueExistence)
@@ -119,10 +119,24 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T> w
             });
         }
 
+        var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
+        // A self-describing serializer (for example CloudEvents) already carries the message's type
+        // metadata, so the {Message, Subject} queue envelope would just double-wrap it.
+        var isSelfDescribing = serializer is ISelfDescribingMessageBodySerializer;
+        var isRawMessage = _isRawMessage || isSelfDescribing;
+
+        if (isSelfDescribing && !_isRawMessage)
+        {
+            logger.LogInformation(
+                "Publishing '{MessageType}' to queue '{QueueUrl}' without the queue envelope because its serializer is self-describing.",
+                typeof(T),
+                _queueAddress.QueueUrl);
+        }
+
         var eventPublisher = new SqsMessagePublisher(
             _queueAddress.QueueUrl,
             sqsClient,
-            new OutboundMessageConverter(PublishDestinationType.Queue, bus.MessageBodySerializerFactory.GetSerializer<T>().Erase(), new MessageCompressionRegistry([new GzipMessageBodyCompression()]), compressionOptions, subject, _isRawMessage),
+            new OutboundMessageConverter(PublishDestinationType.Queue, serializer.Erase(), new MessageCompressionRegistry([new GzipMessageBodyCompression()]), compressionOptions, subject, isRawMessage),
             loggerFactory,
             bus.Config.MessageMetadataProvider)
         {

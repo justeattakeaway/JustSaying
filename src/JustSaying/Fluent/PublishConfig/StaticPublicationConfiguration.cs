@@ -36,7 +36,7 @@ internal sealed class StaticPublicationConfiguration(
 
         var compressionOptions = writeConfiguration.CompressionOptions ?? bus.Config.DefaultCompressionOptions;
         var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
-        var subject = writeConfiguration.SubjectSet ? writeConfiguration.Subject : bus.Config.MessageTypeRegistry.GetLogicalName(typeof(T));
+        var subject = writeConfiguration.SubjectSet ? writeConfiguration.Subject : bus.MessageTypeRegistry.GetLogicalName(typeof(T));
 
         var eventPublisher = new SnsMessagePublisher(
             snsClient,
