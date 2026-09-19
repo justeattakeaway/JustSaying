@@ -37,26 +37,31 @@ public class WhenDiscriminatingCloudEventTypes
     }
 
     [Test]
-    public async Task ReturnsFalseForANonCloudEventThatHappensToHaveAType()
+    public async Task DoesNotClaimANativePayloadThatHappensToHaveATypeMember()
     {
-        var discriminator = new CloudEventTypeDiscriminator();
+        // A domain model with its own `type` property is not a CloudEvent, however much its value
+        // looks like one — claiming it would make a mixed queue's routing registration-order dependent.
+        const string body = """{"OrderId":"1","type":"com.justeattakeaway.orders.orderplaced"}""";
 
-        // A bare "type" property is far too weak a signal to claim a payload as a CloudEvent.
-        var body = """{"type":"pepperoni","size":"large"}""";
+        var resolved = new CloudEventTypeDiscriminator()
+            .TryGetMessageTypeName(new MessageDiscriminationContext(body, null, new()), out var typeName);
 
-        await Assert.That(discriminator.TryGetMessageTypeName(new MessageDiscriminationContext(body, null, new()), out var typeName)).IsFalse();
+        await Assert.That(resolved).IsFalse();
         await Assert.That(typeName).IsNull();
     }
 
     [Test]
-    public async Task ReturnsFalseWhenSpecVersionIsMissingOrEmpty()
+    [Arguments("""{"id":"1","source":"https://orders.example.com/","type":"orderplaced"}""")]
+    [Arguments("""{"specversion":"1.0","source":"https://orders.example.com/","type":"orderplaced"}""")]
+    [Arguments("""{"specversion":"1.0","id":"1","type":"orderplaced"}""")]
+    [Arguments("""{"specversion":"1.0","id":"1","source":"https://orders.example.com/"}""")]
+    [Arguments("""{"specversion":"1.0","id":"1","source":"https://orders.example.com/","type":""}""")]
+    [Arguments("""{"specversion":1.0,"id":"1","source":"https://orders.example.com/","type":"orderplaced"}""")]
+    public async Task ReturnsFalseWhenARequiredCloudEventAttributeIsMissing(string body)
     {
-        var discriminator = new CloudEventTypeDiscriminator();
+        var resolved = new CloudEventTypeDiscriminator()
+            .TryGetMessageTypeName(new MessageDiscriminationContext(body, null, new()), out _);
 
-        var noSpecVersion = """{"id":"1","source":"https://example.com/","type":"com.example.thing"}""";
-        var emptySpecVersion = """{"specversion":"","id":"1","source":"https://example.com/","type":"com.example.thing"}""";
-
-        await Assert.That(discriminator.TryGetMessageTypeName(new MessageDiscriminationContext(noSpecVersion, null, new()), out _)).IsFalse();
-        await Assert.That(discriminator.TryGetMessageTypeName(new MessageDiscriminationContext(emptySpecVersion, null, new()), out _)).IsFalse();
+        await Assert.That(resolved).IsFalse();
     }
 }
