@@ -54,6 +54,46 @@ await publisher.PublishBatchAsync(messages, metadata, cancellationToken);
 
 Rename batch calls accordingly. Single-message `PublishAsync` is unchanged.
 
+### The default serializer is now System.Text.Json
+
+The default message body serializer changes from **Newtonsoft.Json** to **System.Text.Json** (the source-generator-friendly path that enables Native AOT). This affects the default wire format — review for behavioural differences (for example, STJ is stricter about types and handles some constructs differently).
+
+To keep using Newtonsoft.Json, register the factory yourself. `AddJustSaying` registers the System.Text.Json factory with `TryAddSingleton`, so **register yours before the `AddJustSaying` call** and it wins:
+
+```csharp
+using JustSaying.Messaging.MessageSerialization;
+
+// Must come before AddJustSaying — the default is registered with TryAddSingleton.
+services.AddSingleton<IMessageBodySerializationFactory>(
+    new NewtonsoftSerializationFactory());
+
+services.AddJustSaying(builder => builder.Messaging(c => c.WithRegion("eu-west-1")));
+```
+
+Pass `JsonSerializerSettings` to the constructor if you were customising them:
+
+```csharp
+services.AddSingleton<IMessageBodySerializationFactory>(
+    new NewtonsoftSerializationFactory(new JsonSerializerSettings
+    {
+        NullValueHandling = NullValueHandling.Ignore,
+    }));
+```
+
+StructureMap resolves the *last* registration rather than the first, so there register it **after** `AddJustSaying`:
+
+```csharp
+var container = new Container(registry =>
+{
+    registry.AddJustSaying("eu-west-1");
+    registry.For<IMessageBodySerializationFactory>()
+            .Use(new NewtonsoftSerializationFactory())
+            .Singleton();
+});
+```
+
+Newtonsoft.Json remains fully supported as an opt-in. It is not Native-AOT-compatible, so `NewtonsoftSerializationFactory` is annotated with `[RequiresUnreferencedCode]` / `[RequiresDynamicCode]` and will produce trim/AOT warnings in a project that opts into those analysers.
+
 ### Serialization interface is generic
 
 `IMessageBodySerializer` is now the generic `IMessageBodySerializer<T>` on the public surface (an internal type-erased seam handles the runtime boundary). If you implement a custom serializer or serialization factory, update to the generic signatures. Routing and serialization remain by each message's runtime type, as in v8: a single (or batch) publish of a base-typed instance is still routed to, and serialized by, the publisher registered for its concrete type.
