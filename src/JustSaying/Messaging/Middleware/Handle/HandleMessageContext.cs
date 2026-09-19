@@ -1,6 +1,5 @@
 using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Models;
 
 
 // ReSharper disable once CheckNamespace
@@ -17,7 +16,7 @@ namespace JustSaying.Messaging.Middleware;
 public sealed class HandleMessageContext(
     string queueName,
     Amazon.SQS.Model.Message rawMessage,
-    Message message,
+    object message,
     Type messageType,
     IMessageVisibilityUpdater visibilityUpdater,
     IMessageDeleter messageDeleter,
@@ -38,7 +37,7 @@ public sealed class HandleMessageContext(
     /// <summary>
     /// The JustSaying message that was deserialized from SQS.
     /// </summary>
-    public Message Message { get; } = message;
+    public object Message { get; } = message;
 
     /// <summary>
     /// The Absolute Uri of the queue this message came from.

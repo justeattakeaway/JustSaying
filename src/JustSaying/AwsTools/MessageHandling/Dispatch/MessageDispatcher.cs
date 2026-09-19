@@ -34,7 +34,7 @@ internal sealed class MessageDispatcher : IMessageDispatcher
             return;
         }
 
-        (bool success, Message typedMessage, MessageAttributes attributes) =
+        (bool success, object typedMessage, MessageAttributes attributes) =
             await DeserializeMessage(messageContext, cancellationToken).ConfigureAwait(false);
 
         if (!success)
@@ -91,7 +91,7 @@ internal sealed class MessageDispatcher : IMessageDispatcher
 
     private static Activity StartConsumerActivity(
         IQueueMessageContext messageContext,
-        Message typedMessage,
+        object typedMessage,
         Type messageType,
         MessageAttributes attributes)
     {
@@ -124,7 +124,7 @@ internal sealed class MessageDispatcher : IMessageDispatcher
         return activity;
     }
 
-    private async Task<(bool success, Message typedMessage, MessageAttributes attributes)>
+    private async Task<(bool success, object typedMessage, MessageAttributes attributes)>
         DeserializeMessage(IQueueMessageContext messageContext, CancellationToken cancellationToken)
     {
         try

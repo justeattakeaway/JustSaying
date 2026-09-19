@@ -6,7 +6,6 @@ using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
-using Message = JustSaying.Models.Message;
 using MessageAttributeValue = Amazon.SQS.Model.MessageAttributeValue;
 
 namespace JustSaying.AwsTools.MessageHandling;
@@ -14,11 +13,13 @@ namespace JustSaying.AwsTools.MessageHandling;
 internal sealed class SqsMessagePublisher(
     IAmazonSQS client,
     OutboundMessageConverter messageConverter,
-    ILoggerFactory loggerFactory) : IMessagePublisher, IMessageBatchPublisher
+    ILoggerFactory loggerFactory,
+    IMessageMetadataProvider metadataProvider = null) : IMessagePublisher, IMessageBatchPublisher
 {
     private readonly ILogger _logger = loggerFactory.CreateLogger("JustSaying.Publish");
-    public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
-    public Action<MessageBatchResponse, IReadOnlyCollection<Message>> MessageBatchResponseLogger { get; set; }
+    private readonly IMessageMetadataProvider _metadataProvider = metadataProvider ?? DefaultMessageMetadataProvider.Instance;
+    public Action<MessageResponse, object> MessageResponseLogger { get; set; }
+    public Action<MessageBatchResponse, IReadOnlyCollection<object>> MessageBatchResponseLogger { get; set; }
 
     public Uri QueueUrl { get; internal set; }
 
@@ -26,7 +27,8 @@ internal sealed class SqsMessagePublisher(
         Uri queueUrl,
         IAmazonSQS client,
         OutboundMessageConverter messageConverter,
-        ILoggerFactory loggerFactory) : this(client, messageConverter, loggerFactory)
+        ILoggerFactory loggerFactory,
+        IMessageMetadataProvider metadataProvider = null) : this(client, messageConverter, loggerFactory, metadataProvider)
     {
         QueueUrl = queueUrl;
     }
@@ -35,11 +37,14 @@ internal sealed class SqsMessagePublisher(
     public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
     /// <inheritdoc/>
-    public async Task PublishAsync(Message message, CancellationToken cancellationToken)
-        => await PublishAsync(message, null, cancellationToken).ConfigureAwait(false);
+    public Task PublishAsync<TMessage>(TMessage message, CancellationToken cancellationToken) where TMessage : class
+        => PublishAsync(message, null, cancellationToken);
 
     /// <inheritdoc/>
-    public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
+    public Task PublishAsync<TMessage>(TMessage message, PublishMetadata metadata, CancellationToken cancellationToken) where TMessage : class
+        => PublishObjectAsync(message, metadata, cancellationToken);
+
+    private async Task PublishObjectAsync(object message, PublishMetadata metadata, CancellationToken cancellationToken)
     {
         EnsureQueueUrl();
 
@@ -64,7 +69,7 @@ internal sealed class SqsMessagePublisher(
         {
             _logger.LogInformation(
                 "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
-                message.Id,
+                MessageIdentity.GetId(message, _metadataProvider),
                 message.GetType().FullName,
                 "Queue",
                 request.QueueUrl);
@@ -82,7 +87,7 @@ internal sealed class SqsMessagePublisher(
         }
     }
 
-    private async Task<SendMessageRequest> BuildSendMessageRequestAsync(Message message, PublishMetadata metadata)
+    private async Task<SendMessageRequest> BuildSendMessageRequestAsync(object message, PublishMetadata metadata)
     {
         var (messageBody, attributes, _) = await messageConverter.ConvertToOutboundMessageAsync(message, metadata);
 
@@ -159,7 +164,10 @@ internal sealed class SqsMessagePublisher(
     }
 
     /// <inheritdoc/>
-    public async Task PublishAsync(IEnumerable<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
+    public Task PublishBatchAsync<TMessage>(IEnumerable<TMessage> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken) where TMessage : class
+        => PublishBatchObjectAsync(messages, metadata, cancellationToken);
+
+    private async Task PublishBatchObjectAsync(IEnumerable<object> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
     {
         EnsureQueueUrl();
 
@@ -243,7 +251,7 @@ internal sealed class SqsMessagePublisher(
         }
     }
 
-    private async Task<SendMessageBatchRequest> BuildSendMessageBatchRequestAsync(Message[] messages, PublishMetadata metadata)
+    private async Task<SendMessageBatchRequest> BuildSendMessageBatchRequestAsync(object[] messages, PublishMetadata metadata)
     {
         var entries = new List<SendMessageBatchRequestEntry>(messages.Length);
         int? delaySeconds = metadata?.Delay is { } delay ? (int)delay.TotalSeconds : null;
@@ -254,7 +262,7 @@ internal sealed class SqsMessagePublisher(
 
             var entry = new SendMessageBatchRequestEntry
             {
-                Id = message.UniqueKey(),
+                Id = MessageIdentity.GetBatchEntryId(message, _metadataProvider),
                 MessageBody = messageBody
             };
 

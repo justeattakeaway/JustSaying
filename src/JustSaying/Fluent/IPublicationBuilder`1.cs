@@ -11,7 +11,6 @@ namespace JustSaying.Fluent;
 /// The type of the messages to publish.
 /// </typeparam>
 internal interface IPublicationBuilder<out T>
-    where T : Message
 {
     /// <summary>
     /// Configures the publication for the <see cref="JustSayingBus"/>.

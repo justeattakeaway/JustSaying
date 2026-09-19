@@ -1,5 +1,4 @@
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Models;
 
 // ReSharper disable once CheckNamespace
 namespace JustSaying.Messaging.Middleware;
@@ -8,7 +7,7 @@ namespace JustSaying.Messaging.Middleware;
 /// This middleware is responsible for resolving a message handler and calling it.
 /// </summary>
 /// <typeparam name="T">The type of the message that the message handler handles.</typeparam>
-public sealed class HandlerInvocationMiddleware<T>(Func<HandlerResolutionContext, IHandlerAsync<T>> handlerResolver) : MiddlewareBase<HandleMessageContext, bool> where T : Message
+public sealed class HandlerInvocationMiddleware<T>(Func<HandlerResolutionContext, IHandlerAsync<T>> handlerResolver) : MiddlewareBase<HandleMessageContext, bool>
 {
     private readonly Func<HandlerResolutionContext, IHandlerAsync<T>> _handlerResolver = handlerResolver ?? throw new ArgumentNullException(nameof(handlerResolver));
 
