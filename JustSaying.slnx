@@ -53,6 +53,7 @@
     <File Path=".github/workflows/update-dotnet-sdk.yml" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/JustSaying.CloudEvents/JustSaying.CloudEvents.csproj" />
     <Project Path="src/JustSaying.Extensions.Aws/JustSaying.Extensions.Aws.csproj" />
     <Project Path="src/JustSaying.Extensions.DependencyInjection.Microsoft/JustSaying.Extensions.DependencyInjection.Microsoft.csproj" />
     <Project Path="src/JustSaying.Extensions.DependencyInjection.StructureMap/JustSaying.Extensions.DependencyInjection.StructureMap.csproj" />
@@ -62,6 +63,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/JustSaying.AotTest/JustSaying.AotTest.csproj" />
+    <Project Path="tests/JustSaying.CloudEvents.Tests/JustSaying.CloudEvents.Tests.csproj" />
     <Project Path="tests/JustSaying.Benchmark/JustSaying.Benchmark.csproj" />
     <Project Path="tests/JustSaying.Extensions.Aws.Tests/JustSaying.Extensions.Aws.Tests.csproj" />
     <Project Path="tests/JustSaying.Extensions.OpenTelemetry.Tests/JustSaying.Extensions.OpenTelemetry.Tests.csproj" />
