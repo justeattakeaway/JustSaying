@@ -166,9 +166,10 @@ internal sealed class SqsMessagePublisher(
         int maxCount = metadata?.BatchSize ?? JustSayingConstants.MaximumSqsBatchSize;
         maxCount = Math.Min(maxCount, JustSayingConstants.MaximumSqsBatchSize);
 
-        // SQS validates the combined size of every entry in the batch against the queue's
-        // maximum message size, so the batch has to be packed by size as well as by count.
-        int maxBytes = messageConverter.MaximumMessageSize;
+        // SQS validates the combined size of every entry in the batch, so the batch has to be packed by
+        // size as well as by count. Unlike SNS the budget is fixed: a queue's MaximumMessageSize only
+        // limits each message, it does not lower what a batch may add up to.
+        int maxBytes = JustSayingConstants.MaximumSqsBatchPayloadSize;
 
         Activity.Current?.SetTag("messaging.system", "aws_sqs");
         Activity.Current?.SetTag("messaging.destination.name", QueueUrl?.AbsoluteUri);

@@ -137,6 +137,14 @@ public static class JustSayingConstants
     public static int MaximumSqsMessageSize => 1024 * 1024;
 
     /// <summary>
+    /// The maximum combined size, in bytes, of all the messages in a single SQS batch request.
+    /// </summary>
+    /// <remarks>
+    /// The value is 1,048,576 bytes (1 MiB), and is not affected by the queue's <c>MaximumMessageSize</c> attribute.
+    /// </remarks>
+    public static int MaximumSqsBatchPayloadSize => 1024 * 1024;
+
+    /// <summary>
     /// The smallest value the SQS <c>MaximumMessageSize</c> queue attribute may be set to, in bytes.
     /// </summary>
     /// <remarks>

@@ -307,6 +307,6 @@ internal sealed class SnsMessagePublisher(
 
         AddMessageAttributes(entry, attributes);
 
-        return (entry, MessagePayloadSize.Calculate(messageToSend, attributes, subject));
+        return (entry, MessagePayloadSize.Calculate(messageToSend, attributes));
     }
 }

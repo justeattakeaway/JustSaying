@@ -111,9 +111,8 @@ internal sealed class OutboundMessageConverter : IOutboundMessageConverter
     /// <param name="attributes">The message attributes.</param>
     private int CalculateSize(string body, Dictionary<string, MessageAttributeValue> attributes)
     {
-        // For a queue the subject travels inside the envelope, so it is already counted in the body.
-        var subject = _destinationType == PublishDestinationType.Topic ? _subject : null;
-        return MessagePayloadSize.Calculate(body, attributes, subject);
+        // SNS does not count the subject. For a queue it travels inside the envelope, so it is part of the body.
+        return MessagePayloadSize.Calculate(body, attributes);
     }
 
     /// <summary>

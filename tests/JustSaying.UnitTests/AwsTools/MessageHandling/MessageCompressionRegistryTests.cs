@@ -263,6 +263,35 @@ public class MessageCompressionRegistryTests
         public string Message { get; set; }
     }
 
+    /// <summary>
+    /// SNS counts the body and the attributes towards the limit, but not the subject. Checked against SNS:
+    /// a 262,144 byte body publishes to a default topic with a 50 byte subject alongside it.
+    /// </summary>
+    [Test]
+    public async Task TheSubject_DoesNotCountTowardsTheTopicMaximum()
+    {
+        OutboundMessageConverter CreateConverterFor(int bodySize)
+            => new(
+                PublishDestinationType.Topic,
+                new JustSaying.UnitTests.Messaging.Channels.TestHelpers.FakeBodySerializer(new string('a', bodySize)),
+                _compressionRegistry,
+                new PublishCompressionOptions(),
+                new string('s', 50),
+                isRawMessage: false,
+                JustSayingConstants.DefaultSnsMaximumMessageSize);
+
+        // The converter adds attributes of its own, so measure those to land the message exactly on the limit.
+        var probe = await CreateConverterFor(1).ConvertToOutboundMessageAsync(new SimpleMessage(), null);
+        int attributesSize = MessagePayloadSize.Calculate(null, probe.MessageAttributes);
+        int bodySize = JustSayingConstants.DefaultSnsMaximumMessageSize - attributesSize;
+
+        var result = await CreateConverterFor(bodySize).ConvertToOutboundMessageAsync(new SimpleMessage(), null);
+        result.Body.Length.ShouldBe(bodySize);
+
+        await Should.ThrowAsync<MessageTooLargeException>(
+            async () => await CreateConverterFor(bodySize + 1).ConvertToOutboundMessageAsync(new SimpleMessage(), null));
+    }
+
     [Test]
     public async Task MessageOverTheDestinationMaximum_Throws()
     {

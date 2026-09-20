@@ -14,7 +14,8 @@ public class SqsWriteConfiguration : SqsBasicConfiguration
     /// SQS defaults a queue to <see cref="JustSayingConstants.DefaultSqsMaximumMessageSize"/>, so this only needs
     /// setting for a queue whose <c>MaximumMessageSize</c> attribute has been set lower, which is common for
     /// queues created by infrastructure tooling that still defaults to 256 KiB. The value is used as the budget
-    /// for compression and for packing batches. Valid values are between
+    /// for compression. It does not affect batching, SQS allows a batch to add up to 1 MiB whatever the queue's
+    /// limit. Valid values are between
     /// <see cref="JustSayingConstants.MinimumSqsMessageSize"/> and <see cref="JustSayingConstants.MaximumSqsMessageSize"/>.
     /// </para>
     /// <para>

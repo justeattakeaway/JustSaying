@@ -100,9 +100,10 @@ A message that is too large for the destination is always compressed, whatever t
 a threshold set above the destination's limit (easily done when one `DefaultCompressionOptions` is shared
 between 1 MiB queues and 256KB topics) won't cause a message that could have been made to fit to be rejected.
 
-The message attributes count towards the size, the same way AWS counts them. Note that compression only
-shrinks the body, so a small body with large attributes may not compress to anything smaller — JustSaying
-keeps the uncompressed body when compressing would not have helped.
+The message attributes count towards the size, the same way AWS counts them (name, data type and value,
+whereas the SNS subject does not count). Note that compression only shrinks the body, so a small body with
+large attributes may not compress to anything smaller — JustSaying keeps the uncompressed body when
+compressing would not have helped.
 
 ### MaximumMessageSize
 
@@ -133,7 +134,8 @@ x.WithTopicArn<LargeDataEvent>(topicArn, cfg => cfg.WithMaximumMessageSize(1024 
 Queues rarely need this, because SQS already defaults to 1 MiB. The exception is a queue whose
 `MaximumMessageSize` attribute has been set lower by whatever created it, where JustSaying would
 otherwise assume 1 MiB and leave messages uncompressed that the queue then rejects. Unlike the topic
-setting this only describes the queue, JustSaying does not apply it as a queue attribute:
+setting this only describes the queue, JustSaying does not apply it as a queue attribute. It also has no
+bearing on batching, SQS lets a batch add up to 1 MiB whatever the queue's own limit is:
 
 ```csharp
 x.WithQueue<LargeDataEvent>(cfg =>
