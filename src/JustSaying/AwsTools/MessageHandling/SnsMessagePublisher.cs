@@ -162,117 +162,143 @@ internal sealed class SnsMessagePublisher(
     /// <inheritdoc/>
     public async Task PublishAsync(IEnumerable<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
     {
-        int size = metadata?.BatchSize ?? JustSayingConstants.MaximumSnsBatchSize;
-        size = Math.Min(size, JustSayingConstants.MaximumSnsBatchSize);
+        int maxCount = metadata?.BatchSize ?? JustSayingConstants.MaximumSnsBatchSize;
+        maxCount = Math.Min(maxCount, JustSayingConstants.MaximumSnsBatchSize);
+
+        // SNS validates the combined size of every entry in the batch against the topic's
+        // MaximumMessageSize, so the batch has to be packed by size as well as by count.
+        int maxBytes = _messageConverter.MaximumMessageSize;
 
         Activity.Current?.SetTag("messaging.system", "aws_sns");
         Activity.Current?.SetTag("messaging.destination.name", Arn);
 
-        foreach (var chunk in messages.Chunk(size))
+        var entries = new List<PublishBatchRequestEntry>(maxCount);
+        var batched = new List<Message>(maxCount);
+        int batchBytes = 0;
+
+        foreach (var message in messages)
         {
-            var request = await BuildPublishBatchRequestAsync(chunk, metadata);
+            var (entry, entrySize) = await BuildPublishBatchEntryAsync(message, metadata);
 
-            PublishBatchResponse response = null;
-            try
+            if (entries.Count > 0 && (entries.Count >= maxCount || batchBytes + entrySize > maxBytes))
             {
-                response = await _client.PublishBatchAsync(request, cancellationToken).ConfigureAwait(false);
-            }
-            catch (AmazonServiceException ex)
-            {
-                _logger.LogWarning(ex, "Failed to publish batch of messages to SNS topic {TopicArn}.", request.TopicArn);
-
-                if (!ClientExceptionHandler(ex, chunk))
-                {
-                    throw new PublishBatchException($"Failed to publish batch of messages to SNS. Topic ARN: '{request.TopicArn}'.", ex);
-                }
+                await PublishBatchAsync(entries, batched, cancellationToken).ConfigureAwait(false);
+                entries = new List<PublishBatchRequestEntry>(maxCount);
+                batched = new List<Message>(maxCount);
+                batchBytes = 0;
             }
 
-            if (response is not null)
-            {
-                using var scope = _logger.BeginScope(new Dictionary<string, string> { ["AwsRequestId"] = response.ResponseMetadata?.RequestId });
+            entries.Add(entry);
+            batched.Add(message);
+            batchBytes += entrySize;
+        }
 
-                if (response.Successful is not null && response.Successful.Count > 0 && _logger.IsEnabled(LogLevel.Information))
+        if (entries.Count > 0)
+        {
+            await PublishBatchAsync(entries, batched, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private async Task PublishBatchAsync(
+        List<PublishBatchRequestEntry> entries,
+        IReadOnlyCollection<Message> chunk,
+        CancellationToken cancellationToken)
+    {
+        var request = new PublishBatchRequest
+        {
+            TopicArn = Arn,
+            PublishBatchRequestEntries = entries,
+        };
+
+        PublishBatchResponse response = null;
+        try
+        {
+            response = await _client.PublishBatchAsync(request, cancellationToken).ConfigureAwait(false);
+        }
+        catch (AmazonServiceException ex)
+        {
+            _logger.LogWarning(ex, "Failed to publish batch of messages to SNS topic {TopicArn}.", request.TopicArn);
+
+            if (!ClientExceptionHandler(ex, chunk))
+            {
+                throw new PublishBatchException($"Failed to publish batch of messages to SNS. Topic ARN: '{request.TopicArn}'.", ex);
+            }
+        }
+
+        if (response is not null)
+        {
+            using var scope = _logger.BeginScope(new Dictionary<string, string> { ["AwsRequestId"] = response.ResponseMetadata?.RequestId });
+
+            if (response.Successful is not null && response.Successful.Count > 0 && _logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation(
+                    "Published batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
+                    response.Successful.Count,
+                    "Topic",
+                    request.TopicArn);
+
+                foreach (var message in response.Successful)
                 {
                     _logger.LogInformation(
-                        "Published batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
-                        response.Successful.Count,
+                        "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
+                        message.Id,
+                        message.GetType().FullName,
                         "Topic",
                         request.TopicArn);
-
-                    foreach (var message in response.Successful)
-                    {
-                        _logger.LogInformation(
-                            "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
-                            message.Id,
-                            message.GetType().FullName,
-                            "Topic",
-                            request.TopicArn);
-                    }
                 }
+            }
 
-                if (response.Failed is not null && response.Failed.Count > 0 && _logger.IsEnabled(LogLevel.Error))
+            if (response.Failed is not null && response.Failed.Count > 0 && _logger.IsEnabled(LogLevel.Error))
+            {
+                _logger.LogError(
+                    "Failed to publish batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
+                    response.Failed.Count,
+                    "Topic",
+                    request.TopicArn);
+
+                foreach (var message in response.Failed)
                 {
                     _logger.LogError(
-                        "Failed to publish batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
-                        response.Failed.Count,
+                        "Failed to publish message {MessageId} to {DestinationType} '{MessageDestination}' with error code: {ErrorCode} is error on BatchAPI: {IsBatchAPIError}.",
+                        message.Id,
                         "Topic",
-                        request.TopicArn);
-
-                    foreach (var message in response.Failed)
-                    {
-                        _logger.LogError(
-                            "Failed to publish message {MessageId} to {DestinationType} '{MessageDestination}' with error code: {ErrorCode} is error on BatchAPI: {IsBatchAPIError}.",
-                            message.Id,
-                            "Topic",
-                            request.TopicArn,
-                            message.Code,
-                            message.SenderFault);
-                    }
+                        request.TopicArn,
+                        message.Code,
+                        message.SenderFault);
                 }
             }
+        }
 
-            if (MessageBatchResponseLogger is not null)
+        if (MessageBatchResponseLogger is not null)
+        {
+            var responseData = new MessageBatchResponse
             {
-                var responseData = new MessageBatchResponse
-                {
-                    SuccessfulMessageIds = response?.Successful?.Select(x => x.MessageId).ToArray(),
-                    FailedMessageIds = response?.Failed?.Select(x => x.Id).ToArray(),
-                    ResponseMetadata = response?.ResponseMetadata,
-                    HttpStatusCode = response?.HttpStatusCode,
-                };
+                SuccessfulMessageIds = response?.Successful?.Select(x => x.MessageId).ToArray(),
+                FailedMessageIds = response?.Failed?.Select(x => x.Id).ToArray(),
+                ResponseMetadata = response?.ResponseMetadata,
+                HttpStatusCode = response?.HttpStatusCode,
+            };
 
-                MessageBatchResponseLogger(responseData, chunk);
-            }
+            MessageBatchResponseLogger(responseData, chunk);
         }
     }
 
     private bool ClientExceptionHandler(Exception ex, IReadOnlyCollection<Message> messages)
         => _handleBatchException?.Invoke(ex, messages) ?? false;
 
-    private async Task<PublishBatchRequest> BuildPublishBatchRequestAsync(Message[] messages, PublishMetadata metadata)
+    private async Task<(PublishBatchRequestEntry Entry, int Size)> BuildPublishBatchEntryAsync(Message message, PublishMetadata metadata)
     {
-        var entries = new List<PublishBatchRequestEntry>(messages.Length);
+        var (messageToSend, attributes, subject) = await _messageConverter.ConvertToOutboundMessageAsync(message, metadata);
 
-        foreach (var message in messages)
+        PublishBatchRequestEntry entry = new()
         {
-            var (messageToSend, attributes, subject) = await _messageConverter.ConvertToOutboundMessageAsync(message, metadata);
-
-            PublishBatchRequestEntry request = new()
-            {
-                Id = message.UniqueKey(),
-                Subject = subject,
-                Message = messageToSend,
-            };
-
-            AddMessageAttributes(request, attributes);
-
-            entries.Add(request);
-        }
-
-        return new PublishBatchRequest
-        {
-            TopicArn = Arn,
-            PublishBatchRequestEntries = entries,
+            Id = message.UniqueKey(),
+            Subject = subject,
+            Message = messageToSend,
         };
+
+        AddMessageAttributes(entry, attributes);
+
+        return (entry, MessagePayloadSize.Calculate(messageToSend, attributes, subject));
     }
 }

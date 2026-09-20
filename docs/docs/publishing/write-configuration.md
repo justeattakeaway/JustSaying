@@ -66,7 +66,7 @@ cfg.WithWriteConfiguration(w =>
     w.CompressionOptions = new PublishCompressionOptions
     {
         CompressionEncoding = ContentEncodings.GzipBase64,
-        MessageLengthThreshold = 100_000 // Compress messages > 100KB
+        MessageLengthThreshold = 100_000 // Compress messages > 100KB (omit to derive from the destination limit)
     };
 });
 ```

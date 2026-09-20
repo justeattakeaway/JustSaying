@@ -6,6 +6,11 @@ namespace JustSaying.Messaging;
 internal interface IOutboundMessageConverter
 {
     /// <summary>
+    /// Gets the maximum size, in bytes, of a message the destination will accept.
+    /// </summary>
+    int MaximumMessageSize { get; }
+
+    /// <summary>
     /// Converts a message to a format suitable for publishing, applying necessary transformations and compression.
     /// </summary>
     /// <param name="message">The original message to be converted.</param>
