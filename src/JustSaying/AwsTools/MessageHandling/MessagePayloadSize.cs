@@ -41,6 +41,42 @@ internal static class MessagePayloadSize
     }
 
     /// <summary>
+    /// Packs items into batches that stay within both a maximum count and a maximum combined size, keeping their order.
+    /// </summary>
+    /// <param name="items">The items to pack.</param>
+    /// <param name="sizeOf">A delegate that returns the size, in bytes, of an item.</param>
+    /// <param name="maximumCount">The maximum number of items in a batch.</param>
+    /// <param name="maximumSize">The maximum combined size, in bytes, of the items in a batch.</param>
+    public static List<List<T>> Pack<T>(IEnumerable<T> items, Func<T, int> sizeOf, int maximumCount, int maximumSize)
+    {
+        var batches = new List<List<T>>();
+        var batch = new List<T>(maximumCount);
+        int batchSize = 0;
+
+        foreach (var item in items)
+        {
+            int size = sizeOf(item);
+
+            if (batch.Count > 0 && (batch.Count >= maximumCount || batchSize + size > maximumSize))
+            {
+                batches.Add(batch);
+                batch = new List<T>(maximumCount);
+                batchSize = 0;
+            }
+
+            batch.Add(item);
+            batchSize += size;
+        }
+
+        if (batch.Count > 0)
+        {
+            batches.Add(batch);
+        }
+
+        return batches;
+    }
+
+    /// <summary>
     /// Calculates the size, in bytes, that a single message attribute contributes to the payload.
     /// </summary>
     /// <param name="key">The attribute name.</param>

@@ -4,6 +4,7 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 using Message = JustSaying.Models.Message;
@@ -14,7 +15,7 @@ namespace JustSaying.AwsTools.MessageHandling;
 internal sealed class SqsMessagePublisher(
     IAmazonSQS client,
     OutboundMessageConverter messageConverter,
-    ILoggerFactory loggerFactory) : IMessagePublisher, IMessageBatchPublisher
+    ILoggerFactory loggerFactory) : IMessagePublisher, IMessageBatchPublisher, IPreparedBatchPublisher
 {
     private readonly ILogger _logger = loggerFactory.CreateLogger("JustSaying.Publish");
     public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
@@ -161,6 +162,15 @@ internal sealed class SqsMessagePublisher(
     /// <inheritdoc/>
     public async Task PublishAsync(IEnumerable<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
     {
+        foreach (var batch in await PrepareAsync([.. messages], metadata, cancellationToken).ConfigureAwait(false))
+        {
+            await batch.SendAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<PreparedBatch>> PrepareAsync(IReadOnlyCollection<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
+    {
         EnsureQueueUrl();
 
         int maxCount = metadata?.BatchSize ?? JustSayingConstants.MaximumSqsBatchSize;
@@ -174,50 +184,41 @@ internal sealed class SqsMessagePublisher(
         Activity.Current?.SetTag("messaging.system", "aws_sqs");
         Activity.Current?.SetTag("messaging.destination.name", QueueUrl?.AbsoluteUri);
 
-        // Every message is converted and packed before anything is sent, so that a message which
-        // cannot be published (one that is too large, say) fails the call before any of it has gone out.
-        var batches = new List<(List<SendMessageBatchRequestEntry> Entries, List<Message> Messages)>();
-        var entries = new List<SendMessageBatchRequestEntry>(maxCount);
-        var batched = new List<Message>(maxCount);
-        int batchBytes = 0;
+        // Every message is converted before anything is sent, so that a message which cannot be
+        // published (one that is too large, say) fails before any of the others have gone out.
+        var converted = new List<(Message Message, OutboundMessage Outbound, int Size)>(messages.Count);
 
         foreach (var message in messages)
         {
-            var (entry, entrySize) = await BuildSendMessageBatchEntryAsync(message, metadata);
-
-            if (entries.Count > 0 && (entries.Count >= maxCount || batchBytes + entrySize > maxBytes))
-            {
-                batches.Add((entries, batched));
-                entries = new List<SendMessageBatchRequestEntry>(maxCount);
-                batched = new List<Message>(maxCount);
-                batchBytes = 0;
-            }
-
-            entries.Add(entry);
-            batched.Add(message);
-            batchBytes += entrySize;
+            var outbound = await messageConverter.ConvertToOutboundMessageAsync(message, metadata, cancellationToken);
+            converted.Add((message, outbound, MessagePayloadSize.Calculate(outbound.Body, outbound.MessageAttributes)));
         }
 
-        if (entries.Count > 0)
+        var batches = new List<PreparedBatch>();
+
+        foreach (var batch in MessagePayloadSize.Pack(converted, static x => x.Size, maxCount, maxBytes))
         {
-            batches.Add((entries, batched));
+            batches.Add(new PreparedBatch(
+                [.. batch.Select(static x => x.Message)],
+                token => SendBatchAsync(batch, metadata, token)));
         }
 
-        foreach (var batch in batches)
-        {
-            await SendBatchAsync(batch.Entries, batch.Messages, cancellationToken).ConfigureAwait(false);
-        }
+        return batches;
     }
 
     private async Task SendBatchAsync(
-        List<SendMessageBatchRequestEntry> entries,
-        IReadOnlyCollection<Message> chunk,
+        List<(Message Message, OutboundMessage Outbound, int Size)> batch,
+        PublishMetadata metadata,
         CancellationToken cancellationToken)
     {
+        IReadOnlyCollection<Message> chunk = [.. batch.Select(static x => x.Message)];
+
+        // The request is built for each attempt, rather than once when the batch was prepared, as a binary
+        // attribute is sent as a stream that should not be relied on to be readable a second time.
         var request = new SendMessageBatchRequest
         {
             QueueUrl = QueueUrl.AbsoluteUri,
-            Entries = entries,
+            Entries = [.. batch.Select(x => BuildSendMessageBatchEntry(x.Message, x.Outbound, metadata))],
         };
 
         SendMessageBatchResponse response;
@@ -289,24 +290,22 @@ internal sealed class SqsMessagePublisher(
         }
     }
 
-    private async Task<(SendMessageBatchRequestEntry Entry, int Size)> BuildSendMessageBatchEntryAsync(Message message, PublishMetadata metadata)
+    private static SendMessageBatchRequestEntry BuildSendMessageBatchEntry(Message message, OutboundMessage outbound, PublishMetadata metadata)
     {
-        var (messageBody, attributes, _) = await messageConverter.ConvertToOutboundMessageAsync(message, metadata);
-
         var entry = new SendMessageBatchRequestEntry
         {
             Id = message.UniqueKey(),
-            MessageBody = messageBody
+            MessageBody = outbound.Body
         };
 
-        AddMessageAttributes(entry, attributes);
+        AddMessageAttributes(entry, outbound.MessageAttributes);
 
         if (metadata?.Delay is { } delay)
         {
             entry.DelaySeconds = (int)delay.TotalSeconds;
         }
 
-        return (entry, MessagePayloadSize.Calculate(messageBody, attributes));
+        return entry;
     }
 
     private void EnsureQueueUrl()

@@ -499,9 +499,6 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         Type messageType,
         CancellationToken cancellationToken)
     {
-        var batchSize = metadata?.BatchSize ?? 10;
-        batchSize = Math.Min(batchSize, 10);
-
         var activity = JustSayingDiagnostics.ActivitySource.StartActivity(
             $"{messageType.Name} publish",
             ActivityKind.Producer);
@@ -518,9 +515,33 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
 
         try
         {
-            foreach (var chunk in messages.Chunk(batchSize))
+            // The requests are worked out before any of them is made, so that each one can be retried on its
+            // own. Retrying anything larger would publish again whatever had already been accepted.
+            IReadOnlyList<PreparedBatch> batches = null;
+
+            await WithPublishRetriesAsync(
+                async token => batches = await publisher.PrepareBatchesAsync(messages, metadata, token).ConfigureAwait(false),
+                messages.Count,
+                messageType,
+                activity,
+                cancellationToken).ConfigureAwait(false);
+
+            foreach (var batch in batches)
             {
-                await PublishChunkAsync(publisher, chunk, metadata, messageType, activity, cancellationToken).ConfigureAwait(false);
+                await WithPublishRetriesAsync(
+                    async token =>
+                    {
+                        using (_monitor.MeasurePublish())
+                        {
+                            await batch.SendAsync(token).ConfigureAwait(false);
+                        }
+                    },
+                    batch.Messages.Count,
+                    messageType,
+                    activity,
+                    cancellationToken).ConfigureAwait(false);
+
+                JustSayingDiagnostics.ClientSentMessages.Add(batch.Messages.Count);
             }
         }
         finally
@@ -533,26 +554,18 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         }
     }
 
-    private async Task PublishChunkAsync(
-        IMessageBatchPublisher publisher,
-        Message[] chunk,
-        PublishBatchMetadata metadata,
+    private async Task WithPublishRetriesAsync(
+        Func<CancellationToken, Task> action,
+        int messageCount,
         Type messageType,
         Activity activity,
         CancellationToken cancellationToken)
     {
-        // Each chunk is retried on its own, so that a failure does not republish
-        // the chunks that have already been accepted.
         for (int attemptCount = 1; ; attemptCount++)
         {
             try
             {
-                using (_monitor.MeasurePublish())
-                {
-                    await publisher.PublishAsync(chunk, metadata, cancellationToken).ConfigureAwait(false);
-                }
-
-                JustSayingDiagnostics.ClientSentMessages.Add(chunk.Length);
+                await action(cancellationToken).ConfigureAwait(false);
                 return;
             }
             catch (Exception ex)
@@ -574,7 +587,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
                             }));
                     }
 
-                    JustSayingDiagnostics.ClientSentMessages.Add(chunk.Length,
+                    JustSayingDiagnostics.ClientSentMessages.Add(messageCount,
                         new KeyValuePair<string, object>("error.type", ex.GetType().FullName));
 
                     _log.LogError(
