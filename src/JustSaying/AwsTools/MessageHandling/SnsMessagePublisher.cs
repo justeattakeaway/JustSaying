@@ -4,6 +4,7 @@ using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
@@ -16,7 +17,7 @@ internal sealed class SnsMessagePublisher(
     IOutboundMessageConverter messageConverter,
     ILoggerFactory loggerFactory,
     Func<Exception, Message, bool> handleException,
-    Func<Exception, IReadOnlyCollection<Message>, bool> handleBatchException) : IMessagePublisher, IMessageBatchPublisher, IInterrogable
+    Func<Exception, IReadOnlyCollection<Message>, bool> handleBatchException) : IMessagePublisher, IMessageBatchPublisher, IPreparedBatchPublisher, IInterrogable
 {
     private readonly IOutboundMessageConverter _messageConverter = messageConverter;
     private readonly Func<Exception, Message, bool> _handleException = handleException;
@@ -162,6 +163,15 @@ internal sealed class SnsMessagePublisher(
     /// <inheritdoc/>
     public async Task PublishAsync(IEnumerable<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
     {
+        foreach (var batch in await PrepareAsync([.. messages], metadata, cancellationToken).ConfigureAwait(false))
+        {
+            await batch.SendAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<PreparedBatch>> PrepareAsync(IReadOnlyCollection<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
+    {
         int maxCount = metadata?.BatchSize ?? JustSayingConstants.MaximumSnsBatchSize;
         maxCount = Math.Min(maxCount, JustSayingConstants.MaximumSnsBatchSize);
 
@@ -172,50 +182,40 @@ internal sealed class SnsMessagePublisher(
         Activity.Current?.SetTag("messaging.system", "aws_sns");
         Activity.Current?.SetTag("messaging.destination.name", Arn);
 
-        // Every message is converted and packed before anything is sent, so that a message which
-        // cannot be published (one that is too large, say) fails the call before any of it has gone out.
-        var batches = new List<(List<PublishBatchRequestEntry> Entries, List<Message> Messages)>();
-        var entries = new List<PublishBatchRequestEntry>(maxCount);
-        var batched = new List<Message>(maxCount);
-        int batchBytes = 0;
+        // Every message is converted before anything is sent, so that a message which cannot be
+        // published (one that is too large, say) fails before any of the others have gone out.
+        var converted = new List<(Message Message, OutboundMessage Outbound, int Size)>(messages.Count);
 
         foreach (var message in messages)
         {
-            var (entry, entrySize) = await BuildPublishBatchEntryAsync(message, metadata);
-
-            if (entries.Count > 0 && (entries.Count >= maxCount || batchBytes + entrySize > maxBytes))
-            {
-                batches.Add((entries, batched));
-                entries = new List<PublishBatchRequestEntry>(maxCount);
-                batched = new List<Message>(maxCount);
-                batchBytes = 0;
-            }
-
-            entries.Add(entry);
-            batched.Add(message);
-            batchBytes += entrySize;
+            var outbound = await _messageConverter.ConvertToOutboundMessageAsync(message, metadata, cancellationToken);
+            converted.Add((message, outbound, MessagePayloadSize.Calculate(outbound.Body, outbound.MessageAttributes)));
         }
 
-        if (entries.Count > 0)
+        var batches = new List<PreparedBatch>();
+
+        foreach (var batch in MessagePayloadSize.Pack(converted, static x => x.Size, maxCount, maxBytes))
         {
-            batches.Add((entries, batched));
+            batches.Add(new PreparedBatch(
+                [.. batch.Select(static x => x.Message)],
+                token => PublishBatchAsync(batch, token)));
         }
 
-        foreach (var batch in batches)
-        {
-            await PublishBatchAsync(batch.Entries, batch.Messages, cancellationToken).ConfigureAwait(false);
-        }
+        return batches;
     }
 
     private async Task PublishBatchAsync(
-        List<PublishBatchRequestEntry> entries,
-        IReadOnlyCollection<Message> chunk,
+        List<(Message Message, OutboundMessage Outbound, int Size)> batch,
         CancellationToken cancellationToken)
     {
+        IReadOnlyCollection<Message> chunk = [.. batch.Select(static x => x.Message)];
+
+        // The request is built for each attempt, rather than once when the batch was prepared, as a binary
+        // attribute is sent as a stream that should not be relied on to be readable a second time.
         var request = new PublishBatchRequest
         {
             TopicArn = Arn,
-            PublishBatchRequestEntries = entries,
+            PublishBatchRequestEntries = [.. batch.Select(static x => BuildPublishBatchEntry(x.Message, x.Outbound))],
         };
 
         PublishBatchResponse response = null;
@@ -294,19 +294,17 @@ internal sealed class SnsMessagePublisher(
     private bool ClientExceptionHandler(Exception ex, IReadOnlyCollection<Message> messages)
         => _handleBatchException?.Invoke(ex, messages) ?? false;
 
-    private async Task<(PublishBatchRequestEntry Entry, int Size)> BuildPublishBatchEntryAsync(Message message, PublishMetadata metadata)
+    private static PublishBatchRequestEntry BuildPublishBatchEntry(Message message, OutboundMessage outbound)
     {
-        var (messageToSend, attributes, subject) = await _messageConverter.ConvertToOutboundMessageAsync(message, metadata);
-
         PublishBatchRequestEntry entry = new()
         {
             Id = message.UniqueKey(),
-            Subject = subject,
-            Message = messageToSend,
+            Subject = outbound.Subject,
+            Message = outbound.Body,
         };
 
-        AddMessageAttributes(entry, attributes);
+        AddMessageAttributes(entry, outbound.MessageAttributes);
 
-        return (entry, MessagePayloadSize.Calculate(messageToSend, attributes));
+        return entry;
     }
 }
