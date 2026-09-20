@@ -4,3 +4,4 @@ JustSaying.HandlerNotRegisteredWithContainerException.HandlerNotRegisteredWithCo
 JustSaying.Messaging.MessageSerialization.MessageFormatNotSupportedException.MessageFormatNotSupportedException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
 JustSaying.AwsTools.MessageHandling.PublishBatchException.PublishBatchException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
 JustSaying.AwsTools.MessageHandling.MessageTooLargeException.MessageTooLargeException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+override JustSaying.AwsTools.MessageHandling.MessageTooLargeException.GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
