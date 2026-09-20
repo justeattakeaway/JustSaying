@@ -8,31 +8,25 @@ namespace JustSaying.AwsTools.MessageHandling;
 /// </summary>
 /// <remarks>
 /// Both services count the message body and every part of each message attribute (name, data type and value)
-/// towards the limit. For batch requests the combined size of all entries is validated, not just each entry.
+/// towards the limit, and nothing else: an SNS subject and a batch entry's ID are not counted. For batch requests
+/// the combined size of all entries is validated, not just each entry.
 /// </remarks>
 internal static class MessagePayloadSize
 {
     /// <summary>
-    /// Calculates the size, in bytes, of a message body, subject and attributes.
+    /// Calculates the size, in bytes, of a message body and attributes.
     /// </summary>
     /// <param name="body">The message body.</param>
     /// <param name="attributes">The message attributes, if any.</param>
-    /// <param name="subject">The message subject, if any.</param>
     public static int Calculate(
         string body,
-        IReadOnlyDictionary<string, MessageAttributeValue> attributes,
-        string subject = null)
+        IReadOnlyDictionary<string, MessageAttributeValue> attributes)
     {
         int size = 0;
 
         if (body is not null)
         {
             size += Encoding.UTF8.GetByteCount(body);
-        }
-
-        if (subject is not null)
-        {
-            size += Encoding.UTF8.GetByteCount(subject);
         }
 
         if (attributes is not null)

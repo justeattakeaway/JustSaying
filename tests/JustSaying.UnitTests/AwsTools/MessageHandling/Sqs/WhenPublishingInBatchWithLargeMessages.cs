@@ -1,4 +1,5 @@
 using Amazon.SQS.Model;
+using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Compression;
@@ -10,16 +11,13 @@ using NSubstitute;
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs;
 
 /// <summary>
-/// SQS validates the combined size of every entry in a batch against the queue's MaximumMessageSize,
-/// so a batch of ten messages that are individually fine can still be rejected.
+/// SQS validates the combined size of every entry in a batch against a fixed 1 MiB, so a batch of ten
+/// messages that are individually fine can still be rejected.
 /// </summary>
 public class WhenPublishingInBatchWithLargeMessages : WhenPublishingTestBase
 {
     private const string Url = "https://blablabla/queuename";
-    private const int MessageBodySize = 100 * 1024;
-
-    // A queue whose MaximumMessageSize has been set below the 1 MiB SQS default.
-    private const int QueueMaximumMessageSize = 256 * 1024;
+    private const int MessageBodySize = 150 * 1024;
 
     private static readonly string Message = new('a', MessageBodySize);
 
@@ -32,7 +30,7 @@ public class WhenPublishingInBatchWithLargeMessages : WhenPublishingTestBase
             new PublishCompressionOptions(),
             nameof(SimpleMessage),
             isRawMessage: true,
-            QueueMaximumMessageSize);
+            JustSayingConstants.DefaultSqsMaximumMessageSize);
 
         var queue = new SqsMessagePublisher(new Uri(Url), Sqs, messageConverter, NullLoggerFactory.Instance);
         return Task.FromResult(queue);
@@ -58,15 +56,15 @@ public class WhenPublishingInBatchWithLargeMessages : WhenPublishingTestBase
     [Test]
     public void BatchesAreSplitBySizeNotJustCount()
     {
-        // Two 100 KiB entries fit under 256 KiB, three do not, so ten messages need five requests
+        // Six 150 KiB entries fit under 1 MiB, seven do not, so ten messages need two requests
         // rather than the single ten-entry request a count-only batcher would send.
-        Sqs.Received(5).SendMessageBatchAsync(Arg.Any<SendMessageBatchRequest>());
+        Sqs.Received(2).SendMessageBatchAsync(Arg.Any<SendMessageBatchRequest>());
     }
 
     [Test]
-    public void NoBatchExceedsTheQueueMaximum()
+    public void NoBatchExceedsTheBatchMaximum()
     {
-        Sqs.DidNotReceive().SendMessageBatchAsync(Arg.Is<SendMessageBatchRequest>(x => CombinedSize(x) > QueueMaximumMessageSize));
+        Sqs.DidNotReceive().SendMessageBatchAsync(Arg.Is<SendMessageBatchRequest>(x => CombinedSize(x) > JustSayingConstants.MaximumSqsBatchPayloadSize));
     }
 
     [Test]

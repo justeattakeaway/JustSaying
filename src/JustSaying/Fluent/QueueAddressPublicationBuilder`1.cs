@@ -80,7 +80,7 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
     /// JustSaying does not create or configure a queue it is given the address of, so tell it here if the queue
     /// has had its <c>MaximumMessageSize</c> attribute set below the SQS default of 1 MiB, which is common for
     /// queues created by infrastructure tooling that still defaults to 256 KiB. The value is used as the budget
-    /// for compression and for packing batches.
+    /// for compression. It does not affect batching, SQS allows a batch to add up to 1 MiB whatever the queue's limit.
     /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException">
     /// <paramref name="maximumMessageSize"/> is outside the range SQS accepts.

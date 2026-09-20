@@ -254,3 +254,4 @@ JustSaying.AwsTools.QueueCreation.SqsWriteConfiguration.MaximumMessageSize.get -
 JustSaying.AwsTools.QueueCreation.SqsWriteConfiguration.MaximumMessageSize.set -> void
 override JustSaying.AwsTools.QueueCreation.SqsWriteConfiguration.OnValidating() -> void
 JustSaying.Fluent.QueueAddressPublicationBuilder<T>.WithMaximumMessageSize(int maximumMessageSize) -> JustSaying.Fluent.QueueAddressPublicationBuilder<T>
+static JustSaying.AwsTools.JustSayingConstants.MaximumSqsBatchPayloadSize.get -> int

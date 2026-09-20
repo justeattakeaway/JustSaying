@@ -82,5 +82,5 @@ public class WhenPublishingInBatchWithLargeMessages : WhenPublishingTestBase
     }
 
     private static int CombinedSize(PublishBatchRequest request)
-        => request.PublishBatchRequestEntries.Sum(x => x.Message.Length + (x.Subject?.Length ?? 0));
+        => request.PublishBatchRequestEntries.Sum(x => x.Message.Length);
 }
