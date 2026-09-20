@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Text;
 using System.Text.Json.Nodes;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
@@ -24,7 +23,8 @@ internal sealed class OutboundMessageConverter : IOutboundMessageConverter
         MessageCompressionRegistry compressionRegistry,
         PublishCompressionOptions compressionOptions,
         string subject,
-        bool isRawMessage)
+        bool isRawMessage,
+        int maximumMessageSize)
     {
         _destinationType = destinationType;
         _bodySerializer = bodySerializer;
@@ -32,33 +32,105 @@ internal sealed class OutboundMessageConverter : IOutboundMessageConverter
         _compressionOptions = compressionOptions;
         _subject = subject;
         _isRawMessage = isRawMessage;
+        MaximumMessageSize = maximumMessageSize;
     }
+
+    /// <inheritdoc />
+    public int MaximumMessageSize { get; }
 
     public ValueTask<OutboundMessage> ConvertToOutboundMessageAsync(Message message, PublishMetadata publishMetadata, CancellationToken cancellationToken = default)
     {
-        var messageBody = _bodySerializer.Serialize(message);
+        var serializedBody = _bodySerializer.Serialize(message);
 
         Dictionary<string, MessageAttributeValue> attributeValues = new();
         AddMessageAttributes(attributeValues, publishMetadata);
         InjectTraceContext(attributeValues);
 
-        (string compressedMessage, string contentEncoding) = CompressMessageBody(messageBody, publishMetadata);
-        if (compressedMessage is not null)
+        var messageBody = ApplyEnvelope(serializedBody);
+        var messageSize = CalculateSize(messageBody, attributeValues);
+
+        if (ShouldCompress(messageSize))
         {
-            messageBody = compressedMessage;
-            attributeValues.Add(MessageAttributeKeys.ContentEncoding, new MessageAttributeValue { DataType = "String", StringValue = contentEncoding });
+            var compressionEncoding = _compressionOptions.CompressionEncoding;
+            var compression = _compressionRegistry.GetCompression(compressionEncoding)
+                ?? throw new InvalidOperationException($"No compression algorithm registered for encoding '{compressionEncoding}'.");
+
+            var compressedAttributes = new Dictionary<string, MessageAttributeValue>(attributeValues)
+            {
+                [MessageAttributeKeys.ContentEncoding] = new() { DataType = "String", StringValue = compressionEncoding }
+            };
+
+            var compressedBody = ApplyEnvelope(compression.Compress(serializedBody));
+            var compressedSize = CalculateSize(compressedBody, compressedAttributes);
+
+            // Compression is not guaranteed to be a win. Base64 alone adds about a third, so an
+            // incompressible payload comes out larger than it went in.
+            if (compressedSize < messageSize)
+            {
+                messageBody = compressedBody;
+                messageSize = compressedSize;
+                attributeValues = compressedAttributes;
+            }
         }
 
-        if (_destinationType == PublishDestinationType.Queue && !_isRawMessage)
+        if (messageSize > MaximumMessageSize)
         {
-            messageBody = new JsonObject
+            throw new MessageTooLargeException(
+                $"Message of type {message.GetType().FullName} is {messageSize} bytes, which exceeds the maximum of {MaximumMessageSize} bytes for this {(_destinationType == PublishDestinationType.Topic ? "topic" : "queue")}.")
             {
-                ["Message"] = messageBody,
-                ["Subject"] = _subject
-            }.ToJsonString();
+                MessageSize = messageSize,
+                MaximumMessageSize = MaximumMessageSize
+            };
         }
 
         return new ValueTask<OutboundMessage>(new OutboundMessage(messageBody, attributeValues, _subject));
+    }
+
+    /// <summary>
+    /// Wraps a message body in the JustSaying envelope, where the destination requires one.
+    /// </summary>
+    /// <param name="body">The message body to wrap.</param>
+    private string ApplyEnvelope(string body)
+    {
+        if (_destinationType != PublishDestinationType.Queue || _isRawMessage)
+        {
+            return body;
+        }
+
+        return new JsonObject
+        {
+            ["Message"] = body,
+            ["Subject"] = _subject
+        }.ToJsonString();
+    }
+
+    /// <summary>
+    /// Calculates the size of a message as AWS will measure it when validating against the destination's limit.
+    /// </summary>
+    /// <param name="body">The message body, including any envelope.</param>
+    /// <param name="attributes">The message attributes.</param>
+    private int CalculateSize(string body, Dictionary<string, MessageAttributeValue> attributes)
+    {
+        // For a queue the subject travels inside the envelope, so it is already counted in the body.
+        var subject = _destinationType == PublishDestinationType.Topic ? _subject : null;
+        return MessagePayloadSize.Calculate(body, attributes, subject);
+    }
+
+    /// <summary>
+    /// Determines whether a message of the given size should be compressed.
+    /// </summary>
+    /// <param name="messageSize">The size of the message, in bytes.</param>
+    private bool ShouldCompress(int messageSize)
+    {
+        if (_compressionOptions?.CompressionEncoding is null || _compressionRegistry is null)
+        {
+            return false;
+        }
+
+        // The threshold says when compressing is worthwhile, but a message that will not fit has to be
+        // compressed regardless, which matters when the threshold has been set above the destination's limit.
+        return messageSize > MaximumMessageSize ||
+               messageSize >= _compressionOptions.GetThresholdFor(MaximumMessageSize);
     }
 
     private static void InjectTraceContext(Dictionary<string, MessageAttributeValue> attributes)
@@ -104,94 +176,5 @@ internal sealed class OutboundMessageConverter : IOutboundMessageConverter
         {
             requestMessageAttributes.Add(attribute.Key, attribute.Value);
         }
-    }
-
-    /// <summary>
-    /// Compresses a message if it meets the specified compression criteria.
-    /// </summary>
-    /// <param name="message">The original message to potentially compress.</param>
-    /// <param name="metadata">Metadata associated with the message.</param>
-    /// <returns>A tuple containing the compressed message (or null if not compressed) and the content encoding used (or null if not compressed).</returns>
-    internal (string compressedMessage, string contentEncoding) CompressMessageBody(string message, PublishMetadata metadata)
-    {
-        string contentEncoding = null;
-        string compressedMessage = null;
-
-        if (_compressionOptions?.CompressionEncoding is { } compressionEncoding && _compressionRegistry is not null)
-        {
-            var messageSize = CalculateTotalMessageSize(message, metadata);
-            if (messageSize >= _compressionOptions.MessageLengthThreshold)
-            {
-                var compression = _compressionRegistry.GetCompression(compressionEncoding);
-                if (compression is null)
-                {
-                    throw new InvalidOperationException($"No compression algorithm registered for encoding '{compressionEncoding}'.");
-                }
-
-                // For queue messages that aren't raw, we need to extract the inner message before compression
-                if (_destinationType == PublishDestinationType.Queue && !_isRawMessage)
-                {
-                    var jsonNode = JsonNode.Parse(message);
-                    if (jsonNode is JsonObject jsonObject && jsonObject.TryGetPropertyValue("Message", out var messageNode))
-                    {
-                        message = messageNode?.GetValue<string>();
-                    }
-                }
-
-                compressedMessage = compression.Compress(message);
-                contentEncoding = compressionEncoding;
-            }
-        }
-
-        return (compressedMessage, contentEncoding);
-    }
-
-    /// <summary>
-    /// Calculates the total size of a message, including its metadata.
-    /// </summary>
-    /// <param name="message">The message content.</param>
-    /// <param name="metadata">Metadata associated with the message.</param>
-    /// <returns>The total size of the message in bytes.</returns>
-    private int CalculateTotalMessageSize(string message, PublishMetadata metadata)
-    {
-        int messageSize = 0;
-
-        // For queue messages that aren't raw, we need to account for the wrapper structure
-        if (_destinationType == PublishDestinationType.Queue && !_isRawMessage)
-        {
-            // Calculate size of the wrapper object with escaped message
-            var wrappedMessage = new JsonObject
-            {
-                ["Message"] = message,
-                ["Subject"] = _subject
-            }.ToJsonString();
-
-            messageSize = Encoding.UTF8.GetByteCount(wrappedMessage);
-        }
-        else
-        {
-            // For non-queue or raw messages, just calculate the direct message size
-            messageSize = Encoding.UTF8.GetByteCount(message);
-        }
-
-        if (metadata?.MessageAttributes != null)
-        {
-            foreach (var attribute in metadata.MessageAttributes)
-            {
-                messageSize += Encoding.UTF8.GetByteCount(attribute.Key);
-                messageSize += Encoding.UTF8.GetByteCount(attribute.Value.DataType);
-                if (attribute.Value.StringValue is not null)
-                {
-                    messageSize += Encoding.UTF8.GetByteCount(attribute.Value.StringValue);
-                }
-
-                if (attribute.Value.BinaryValue is not null)
-                {
-                    messageSize += attribute.Value.BinaryValue.Count;
-                }
-            }
-        }
-
-        return messageSize;
     }
 }

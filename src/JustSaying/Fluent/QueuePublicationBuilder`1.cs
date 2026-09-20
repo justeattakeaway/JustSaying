@@ -121,6 +121,7 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
         };
         ConfigureWrites?.Invoke(writeConfiguration);
         writeConfiguration.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
+        writeConfiguration.ValidateMaximumMessageSize();
 
         var regionEndpoint = RegionEndpoint.GetBySystemName(region);
         var sqsClient = proxy.GetAwsClientFactory().GetSqsClient(regionEndpoint);
@@ -132,7 +133,7 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
 
         var eventPublisher = new SqsMessagePublisher(
             sqsClient,
-            new OutboundMessageConverter(PublishDestinationType.Queue, bus.MessageBodySerializerFactory.GetSerializer<T>(), compressionRegistry, compressionOptions, subject, writeConfiguration.IsRawMessage),
+            new OutboundMessageConverter(PublishDestinationType.Queue, bus.MessageBodySerializerFactory.GetSerializer<T>(), compressionRegistry, compressionOptions, subject, writeConfiguration.IsRawMessage, writeConfiguration.EffectiveMaximumMessageSize),
             loggerFactory)
         {
             MessageResponseLogger = config.MessageResponseLogger,

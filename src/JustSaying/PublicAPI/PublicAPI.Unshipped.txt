@@ -25,8 +25,6 @@ const JustSaying.Messaging.Compression.ContentEncodings.GzipBase64 = "gzip,base6
 JustSaying.AwsTools.MessageHandling.PublishCompressionOptions
 JustSaying.AwsTools.MessageHandling.PublishCompressionOptions.CompressionEncoding.get -> string
 JustSaying.AwsTools.MessageHandling.PublishCompressionOptions.CompressionEncoding.set -> void
-JustSaying.AwsTools.MessageHandling.PublishCompressionOptions.MessageLengthThreshold.get -> int
-JustSaying.AwsTools.MessageHandling.PublishCompressionOptions.MessageLengthThreshold.set -> void
 JustSaying.AwsTools.MessageHandling.PublishCompressionOptions.PublishCompressionOptions() -> void
 JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.CompressionOptions.get -> JustSaying.AwsTools.MessageHandling.PublishCompressionOptions
 JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.CompressionOptions.set -> void
@@ -227,3 +225,32 @@ static JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerial
 *REMOVED*JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializationFactory.SystemTextJsonSerializationFactory() -> void
 *REMOVED*override JustSaying.AwsTools.QueueCreation.RedrivePolicy.ToString() -> string
 *REMOVED*static JustSaying.AwsTools.QueueCreation.RedrivePolicy.ConvertFromString(string policy) -> JustSaying.AwsTools.QueueCreation.RedrivePolicy
+*REMOVED*JustSaying.AwsTools.MessageHandling.PublishCompressionOptions.MessageLengthThreshold.get -> int
+JustSaying.AwsTools.MessageHandling.PublishCompressionOptions.MessageLengthThreshold.get -> int?
+JustSaying.AwsTools.MessageHandling.PublishCompressionOptions.MessageLengthThreshold.set -> void
+const JustSaying.AwsTools.JustSayingConstants.AttributeMaximumMessageSize = "MaximumMessageSize" -> string
+static JustSaying.AwsTools.JustSayingConstants.MaximumSqsBatchSize.get -> int
+static JustSaying.AwsTools.JustSayingConstants.DefaultSnsMaximumMessageSize.get -> int
+static JustSaying.AwsTools.JustSayingConstants.MaximumSnsMessageSize.get -> int
+static JustSaying.AwsTools.JustSayingConstants.MinimumSnsMessageSize.get -> int
+static JustSaying.AwsTools.JustSayingConstants.DefaultSqsMaximumMessageSize.get -> int
+static JustSaying.AwsTools.JustSayingConstants.DefaultCompressionHeadroom.get -> int
+JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.MaximumMessageSize.get -> int?
+JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.MaximumMessageSize.set -> void
+JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.Validate() -> void
+JustSaying.AwsTools.MessageHandling.SnsTopicByName.ApplyMaximumMessageSizeAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+JustSaying.Fluent.TopicAddressPublicationBuilder<T>.WithMaximumMessageSize(int maximumMessageSize) -> JustSaying.Fluent.TopicAddressPublicationBuilder<T>
+JustSaying.AwsTools.MessageHandling.MessageTooLargeException
+JustSaying.AwsTools.MessageHandling.MessageTooLargeException.MessageTooLargeException() -> void
+JustSaying.AwsTools.MessageHandling.MessageTooLargeException.MessageTooLargeException(string message) -> void
+JustSaying.AwsTools.MessageHandling.MessageTooLargeException.MessageTooLargeException(string message, System.Exception inner) -> void
+JustSaying.AwsTools.MessageHandling.MessageTooLargeException.MessageSize.get -> int
+JustSaying.AwsTools.MessageHandling.MessageTooLargeException.MessageSize.set -> void
+JustSaying.AwsTools.MessageHandling.MessageTooLargeException.MaximumMessageSize.get -> int
+JustSaying.AwsTools.MessageHandling.MessageTooLargeException.MaximumMessageSize.set -> void
+static JustSaying.AwsTools.JustSayingConstants.MaximumSqsMessageSize.get -> int
+static JustSaying.AwsTools.JustSayingConstants.MinimumSqsMessageSize.get -> int
+JustSaying.AwsTools.QueueCreation.SqsWriteConfiguration.MaximumMessageSize.get -> int?
+JustSaying.AwsTools.QueueCreation.SqsWriteConfiguration.MaximumMessageSize.set -> void
+override JustSaying.AwsTools.QueueCreation.SqsWriteConfiguration.OnValidating() -> void
+JustSaying.Fluent.QueueAddressPublicationBuilder<T>.WithMaximumMessageSize(int maximumMessageSize) -> JustSaying.Fluent.QueueAddressPublicationBuilder<T>
