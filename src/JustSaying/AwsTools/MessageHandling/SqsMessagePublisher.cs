@@ -173,6 +173,9 @@ internal sealed class SqsMessagePublisher(
         Activity.Current?.SetTag("messaging.system", "aws_sqs");
         Activity.Current?.SetTag("messaging.destination.name", QueueUrl?.AbsoluteUri);
 
+        // Every message is converted and packed before anything is sent, so that a message which
+        // cannot be published (one that is too large, say) fails the call before any of it has gone out.
+        var batches = new List<(List<SendMessageBatchRequestEntry> Entries, List<Message> Messages)>();
         var entries = new List<SendMessageBatchRequestEntry>(maxCount);
         var batched = new List<Message>(maxCount);
         int batchBytes = 0;
@@ -183,7 +186,7 @@ internal sealed class SqsMessagePublisher(
 
             if (entries.Count > 0 && (entries.Count >= maxCount || batchBytes + entrySize > maxBytes))
             {
-                await SendBatchAsync(entries, batched, cancellationToken).ConfigureAwait(false);
+                batches.Add((entries, batched));
                 entries = new List<SendMessageBatchRequestEntry>(maxCount);
                 batched = new List<Message>(maxCount);
                 batchBytes = 0;
@@ -196,7 +199,12 @@ internal sealed class SqsMessagePublisher(
 
         if (entries.Count > 0)
         {
-            await SendBatchAsync(entries, batched, cancellationToken).ConfigureAwait(false);
+            batches.Add((entries, batched));
+        }
+
+        foreach (var batch in batches)
+        {
+            await SendBatchAsync(batch.Entries, batch.Messages, cancellationToken).ConfigureAwait(false);
         }
     }
 
