@@ -32,6 +32,17 @@ public class MessageTooLargeException : PublishException
 #if !NET8_0_OR_GREATER
     protected MessageTooLargeException(SerializationInfo info, StreamingContext context) : base(info, context)
     {
+        MessageSize = info.GetInt32(nameof(MessageSize));
+        MaximumMessageSize = info.GetInt32(nameof(MaximumMessageSize));
+    }
+
+    /// <inheritdoc />
+    public override void GetObjectData(SerializationInfo info, StreamingContext context)
+    {
+        base.GetObjectData(info, context);
+
+        info.AddValue(nameof(MessageSize), MessageSize);
+        info.AddValue(nameof(MaximumMessageSize), MaximumMessageSize);
     }
 #endif
 
