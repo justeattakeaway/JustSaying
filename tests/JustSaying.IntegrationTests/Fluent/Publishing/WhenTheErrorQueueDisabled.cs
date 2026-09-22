@@ -1,6 +1,7 @@
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
+using JustSaying.Fluent;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
@@ -24,9 +25,7 @@ public class WhenTheErrorQueueDisabled : IntegrationTestBase
             .ConfigureJustSaying(
                 (builder) => builder.Publications(
                     (options) => options.WithQueue<SimpleMessage>(
-                        (queue) => queue.WithWriteConfiguration(
-                            (config) => config.WithQueueName(UniqueName)
-                                .WithNoErrorQueue()))))
+                        QueueDestination.Named(UniqueName, (queue) => queue.WithNoErrorQueue()))))
             .AddSingleton(handler)
             .BuildServiceProvider();
 
