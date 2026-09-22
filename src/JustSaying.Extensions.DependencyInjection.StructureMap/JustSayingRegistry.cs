@@ -38,7 +38,7 @@ internal sealed class JustSayingRegistry : Registry
         For<IPublishBatchConfiguration>().Use<MessagingConfig>(context => context.GetInstance<MessagingConfig>()).Singleton();
         For<IMessageMonitor>().Use<NullOpMessageMonitor>().Singleton();
         For<IMessageMetadataProvider>().Use(context => context.GetInstance<IMessagingConfig>().MessageMetadataProvider);
-        For<IMessageBodySerializationFactory>().Use<NewtonsoftSerializationFactory>(() => new NewtonsoftSerializationFactory(null)).Singleton();
+        For<IMessageBodySerializationFactory>().Use<SystemTextJsonSerializationFactory>(() => new SystemTextJsonSerializationFactory(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions)).Singleton();
         For<IMessageSubjectProvider>().Use<GenericMessageSubjectProvider>().Singleton();
         For<IVerifyAmazonQueues>().Use<AmazonQueueCreator>().Singleton();
 
