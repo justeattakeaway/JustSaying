@@ -106,7 +106,7 @@ app.MapPost("api/multi-orders",
             })
             .ToList();
 
-        await publisher.PublishAsync(message);
+        await publisher.PublishBatchAsync(message);
 
         app.Logger.LogInformation("Order {OrderIds} placed", message.Select(x => x.OrderId));
     });

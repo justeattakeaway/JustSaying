@@ -74,7 +74,7 @@ public class WhenAMessageIsPublishedToAQueue : IntegrationTestBase
                 await publisher.StartAsync(cancellationToken);
 
                 // Act
-                await publisher.PublishAsync(messages, new PublishBatchMetadata
+                await publisher.PublishBatchAsync(messages, new PublishBatchMetadata
                 {
                     BatchSize = maxBatchSize
                 }, cancellationToken);
@@ -133,7 +133,7 @@ public class WhenAMessageIsPublishedToAQueue : IntegrationTestBase
                 await publisher.StartAsync(cancellationToken);
 
                 // Act
-                await publisher.PublishAsync(messages, new PublishBatchMetadata
+                await publisher.PublishBatchAsync(messages, new PublishBatchMetadata
                 {
                     BatchSize = maxBatchSize
                 }, cancellationToken);

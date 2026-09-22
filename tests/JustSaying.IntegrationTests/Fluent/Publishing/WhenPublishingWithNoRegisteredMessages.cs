@@ -25,7 +25,7 @@ public class WhenPublishingWithNoRegisteredMessages : IntegrationTestBase
         await batchPublisher.StartAsync(CancellationToken.None);
 
         // Act and Assert
-        exception = await Should.ThrowAsync<InvalidOperationException>(() => batchPublisher.PublishAsync([new SimpleMessage()], CancellationToken.None));
+        exception = await Should.ThrowAsync<InvalidOperationException>(() => batchPublisher.PublishBatchAsync([new SimpleMessage()], CancellationToken.None));
         exception.Message.ShouldBe("Error publishing message batch, no publishers registered. Has the bus been started?");
     }
 }

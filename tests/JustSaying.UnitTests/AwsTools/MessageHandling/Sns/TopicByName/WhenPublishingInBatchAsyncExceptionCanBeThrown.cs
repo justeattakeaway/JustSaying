@@ -40,7 +40,7 @@ public class WhenPublishingInBatchAsyncExceptionCanBeThrown : WhenPublishingTest
     [Test]
     public async Task ExceptionIsThrown()
     {
-        await Should.ThrowAsync<PublishBatchException>(() => SystemUnderTest.PublishAsync(new List<Message> {new SimpleMessage() }));
+        await Should.ThrowAsync<PublishBatchException>(() => SystemUnderTest.PublishBatchAsync(new List<Message> {new SimpleMessage() }));
     }
 
     [Test]
@@ -48,7 +48,7 @@ public class WhenPublishingInBatchAsyncExceptionCanBeThrown : WhenPublishingTest
     {
         try
         {
-            await SystemUnderTest.PublishAsync(new List<Message>{ new SimpleMessage()});
+            await SystemUnderTest.PublishBatchAsync(new List<Message>{ new SimpleMessage()});
         }
         catch (PublishBatchException ex)
         {

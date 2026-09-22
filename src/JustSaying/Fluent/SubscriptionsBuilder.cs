@@ -31,7 +31,7 @@ public sealed class SubscriptionsBuilder
     /// <summary>
     /// Gets the configured subscription builders.
     /// </summary>
-    private List<ISubscriptionBuilder<Message>> Subscriptions { get; } = [];
+    private List<ISubscriptionBuilder<object>> Subscriptions { get; } = [];
 
     private Dictionary<string, SubscriptionGroupConfigBuilder> SubscriptionGroupSettings { get; } = new();
 
@@ -59,8 +59,7 @@ public sealed class SubscriptionsBuilder
     /// <returns>
     /// The current <see cref="SubscriptionsBuilder"/>.
     /// </returns>
-    public SubscriptionsBuilder ForQueue<T>()
-        where T : Message
+    public SubscriptionsBuilder ForQueue<T>() where T : class
     {
         return ForQueue<T>((p) => p.WithDefaultQueue());
     }
@@ -76,8 +75,7 @@ public sealed class SubscriptionsBuilder
     /// <exception cref="ArgumentNullException">
     /// <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
-    public SubscriptionsBuilder ForQueue<T>(Action<QueueSubscriptionBuilder<T>> configure)
-        where T : Message
+    public SubscriptionsBuilder ForQueue<T>(Action<QueueSubscriptionBuilder<T>> configure) where T : class
     {
         if (configure == null) throw new ArgumentNullException(nameof(configure));
 
@@ -97,8 +95,7 @@ public sealed class SubscriptionsBuilder
     /// <param name="configure">An optional delegate to configure a queue subscription.</param>
     /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
     /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
-    public SubscriptionsBuilder ForQueueArn<T>(string queueArn, Action<QueueAddressSubscriptionBuilder<T>> configure = null)
-        where T : Message
+    public SubscriptionsBuilder ForQueueArn<T>(string queueArn, Action<QueueAddressSubscriptionBuilder<T>> configure = null) where T : class
     {
         if (queueArn == null) throw new ArgumentNullException(nameof(queueArn));
 
@@ -120,8 +117,7 @@ public sealed class SubscriptionsBuilder
     /// <param name="configure">An optional delegate to configure a queue subscription.</param>
     /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
     /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
-    public SubscriptionsBuilder ForQueueUrl<T>(string queueUrl, string regionName = null, Action<QueueAddressSubscriptionBuilder<T>> configure = null)
-        where T : Message
+    public SubscriptionsBuilder ForQueueUrl<T>(string queueUrl, string regionName = null, Action<QueueAddressSubscriptionBuilder<T>> configure = null) where T : class
     {
         if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
 
@@ -143,8 +139,7 @@ public sealed class SubscriptionsBuilder
     /// <param name="configure">An optional delegate to configure a queue subscription.</param>
     /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
     /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
-    public SubscriptionsBuilder ForQueueUri<T>(Uri queueUrl, string regionName = null, Action<QueueAddressSubscriptionBuilder<T>> configure = null)
-        where T : Message
+    public SubscriptionsBuilder ForQueueUri<T>(Uri queueUrl, string regionName = null, Action<QueueAddressSubscriptionBuilder<T>> configure = null) where T : class
     {
         if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
 
@@ -165,8 +160,7 @@ public sealed class SubscriptionsBuilder
     /// <returns>
     /// The current <see cref="SubscriptionsBuilder"/>.
     /// </returns>
-    public SubscriptionsBuilder ForTopic<T>()
-        where T : Message
+    public SubscriptionsBuilder ForTopic<T>() where T : class
     {
         return ForTopic<T>((p) => p.IntoDefaultTopic());
     }
@@ -182,8 +176,7 @@ public sealed class SubscriptionsBuilder
     /// <exception cref="ArgumentNullException">
     /// <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
-    public SubscriptionsBuilder ForTopic<T>(Action<TopicSubscriptionBuilder<T>> configure)
-        where T : Message
+    public SubscriptionsBuilder ForTopic<T>(Action<TopicSubscriptionBuilder<T>> configure) where T : class
     {
         if (configure == null) throw new ArgumentNullException(nameof(configure));
 
@@ -208,8 +201,7 @@ public sealed class SubscriptionsBuilder
     /// <exception cref="ArgumentNullException">
     /// <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
-    public SubscriptionsBuilder ForTopic<T>(string topicNameOverride, Action<TopicSubscriptionBuilder<T>> configure)
-        where T : Message
+    public SubscriptionsBuilder ForTopic<T>(string topicNameOverride, Action<TopicSubscriptionBuilder<T>> configure) where T : class
     {
         if (configure == null) throw new ArgumentNullException(nameof(configure));
         if (topicNameOverride == null) throw new ArgumentNullException(nameof(topicNameOverride));
@@ -246,7 +238,7 @@ public sealed class SubscriptionsBuilder
         Defaults.Validate();
         bus.SetGroupSettings(Defaults, SubscriptionGroupSettings);
 
-        foreach (ISubscriptionBuilder<Message> builder in Subscriptions)
+        foreach (ISubscriptionBuilder<object> builder in Subscriptions)
         {
             builder.Configure(bus, resolver, serviceResolver, creator, awsClientFactoryProxy, loggerFactory);
         }
