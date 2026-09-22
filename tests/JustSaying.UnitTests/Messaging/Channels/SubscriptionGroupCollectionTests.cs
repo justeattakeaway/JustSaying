@@ -1,3 +1,4 @@
+using JustSaying.AwsTools;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
@@ -120,7 +121,8 @@ public class SubscriptionGroupCollectionTests
             new MessageCompressionRegistry(),
             new PublishCompressionOptions(),
             "TestJustSayingMessage",
-            false);
+            false,
+            JustSayingConstants.DefaultSqsMaximumMessageSize);
 
         List<Message> messages = [new TestMessage { Body = (await messageConverter.ConvertToOutboundMessageAsync(message, null)).Body }];
 
