@@ -1,6 +1,7 @@
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
+using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageHandling;
@@ -36,6 +37,7 @@ internal sealed class JustSayingRegistry : Registry
         For<IMessagingConfig>().Use(context => context.GetInstance<MessagingConfig>()).Singleton();
         For<IPublishBatchConfiguration>().Use<MessagingConfig>(context => context.GetInstance<MessagingConfig>()).Singleton();
         For<IMessageMonitor>().Use<NullOpMessageMonitor>().Singleton();
+        For<IMessageMetadataProvider>().Use(context => context.GetInstance<IMessagingConfig>().MessageMetadataProvider);
         For<IMessageBodySerializationFactory>().Use<NewtonsoftSerializationFactory>(() => new NewtonsoftSerializationFactory(null)).Singleton();
         For<IMessageSubjectProvider>().Use<GenericMessageSubjectProvider>().Singleton();
         For<IVerifyAmazonQueues>().Use<AmazonQueueCreator>().Singleton();
