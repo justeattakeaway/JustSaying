@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>AsyncAPI document generation for JustSaying.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IsShipping>true</IsShipping>
+    <PackageTags>aws,sns,sqs,asyncapi</PackageTags>
+    <TargetFrameworks>net8.0</TargetFrameworks>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\JustSaying\JustSaying.csproj" />
+    <ProjectReference Include="..\JustSaying.CloudEvents\JustSaying.CloudEvents.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="ByteBard.AsyncAPI.NET" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="System.Text.Json" />
+  </ItemGroup>
+</Project>

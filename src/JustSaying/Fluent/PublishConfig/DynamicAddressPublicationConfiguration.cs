@@ -1,5 +1,4 @@
 using JustSaying.Messaging;
-using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent;
@@ -13,7 +12,7 @@ internal sealed class DynamicAddressPublicationConfiguration(
 
     public static DynamicAddressPublicationConfiguration Build<T>(
         string topicArnTemplate,
-        Func<string, Message, string> topicNameCustomizer,
+        Func<string, object, string> topicNameCustomizer,
         Func<string, StaticAddressPublicationConfiguration> staticConfigBuilder,
         ILoggerFactory loggerFactory)
     {
