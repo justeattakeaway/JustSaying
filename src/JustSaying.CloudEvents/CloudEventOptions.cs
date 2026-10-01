@@ -6,6 +6,7 @@ namespace JustSaying.CloudEvents;
 public sealed class CloudEventOptions
 {
     private readonly Dictionary<Type, string> _typeNames = new();
+    private string _dataContentType = "application/json";
 
     /// <summary>
     /// Gets or sets the CloudEvents <c>source</c> — a URI-reference identifying the producer of the
@@ -15,9 +16,17 @@ public sealed class CloudEventOptions
 
     /// <summary>
     /// Gets or sets the CloudEvents <c>datacontenttype</c> describing the <c>data</c> payload.
-    /// Defaults to <c>application/json</c>.
+    /// Defaults to <c>application/json</c>. The <c>data</c> is always written as JSON, so this must be a
+    /// JSON media type: <c>*/json</c> or one with a <c>+json</c> suffix.
     /// </summary>
-    public string DataContentType { get; set; } = "application/json";
+    /// <exception cref="ArgumentException">The value is not a JSON media type.</exception>
+    public string DataContentType
+    {
+        get => _dataContentType;
+        set => _dataContentType = JsonMediaType.IsJson(value)
+            ? value
+            : throw new ArgumentException($"The CloudEvents datacontenttype must be a JSON media type (such as application/json), but was '{value}'.", nameof(value));
+    }
 
     /// <summary>
     /// Maps a message type to its CloudEvents <c>type</c> attribute. The CloudEvents specification

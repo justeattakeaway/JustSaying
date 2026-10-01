@@ -160,7 +160,7 @@ public class WhenPublishingACloudEvent : IntegrationTestBase
             root.TryGetProperty("Message", out _).ShouldBeFalse("the CloudEvent should not be double-wrapped");
             root.GetProperty("specversion").GetString().ShouldBe("1.0");
             root.GetProperty("type").GetString().ShouldBe(OrderPlacedType);
-            root.GetProperty("source").GetString().ShouldBe("https://orders.example.com/");
+            root.GetProperty("source").GetString().ShouldBe("https://orders.example.com");
             root.GetProperty("datacontenttype").GetString().ShouldBe("application/json");
             root.GetProperty("id").GetString().ShouldNotBeNullOrEmpty();
             root.TryGetProperty("time", out _).ShouldBeTrue();
