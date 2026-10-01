@@ -143,4 +143,23 @@ public class WhenUsingQueueAddressSubscriptionBuilder : IntegrationTestBase
         // Assert
         exception.Message.ShouldBe($"SQS queue '{missingQueueName}' with URL '{missingQueueUri}' does not exist.");
     }
+
+    [Test]
+    public void WithDefaultQueueThrowsForAQueueAddressedByUrl()
+    {
+        // Arrange
+        var queueUrl = $"https://sqs.{RegionName}.amazonaws.com/123456789012/{UniqueName}";
+
+        var serviceProvider = GivenJustSaying()
+            .ConfigureJustSaying(builder =>
+                builder.Subscriptions(c => c.ForQueueUrl<SimpleMessage>(queueUrl, configure: queue => queue.WithDefaultQueue())))
+            .AddJustSayingHandlers(new[] { new InspectableHandler<SimpleMessage>() })
+            .BuildServiceProvider();
+
+        // Act
+        var exception = Should.Throw<InvalidOperationException>(() => serviceProvider.GetRequiredService<IMessagingBus>());
+
+        // Assert
+        exception.Message.ShouldBe("A queue addressed by URL or ARN cannot be named by the naming convention; remove the WithDefaultQueue call.");
+    }
 }

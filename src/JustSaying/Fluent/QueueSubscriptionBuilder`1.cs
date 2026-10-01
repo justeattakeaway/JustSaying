@@ -163,6 +163,12 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
 
         if (_destination.IsAddress)
         {
+            if (QueueName is { Length: 0 })
+            {
+                throw new InvalidOperationException(
+                    $"A queue addressed by URL or ARN cannot be named by the naming convention; remove the {nameof(WithDefaultQueue)} call.");
+            }
+
             if (QueueName is not null)
             {
                 throw new InvalidOperationException(

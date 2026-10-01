@@ -257,7 +257,8 @@ This restructures the v8 fluent surface:
 
 - **Removed:** `WithWriteConfiguration(...)`, `WithReadConfiguration(...)`, `WithTag(...)` on the
   registration builders, the `SnsWriteConfigurationBuilder`/`SqsWriteConfigurationBuilder`/
-  `SqsReadConfigurationBuilder` wrappers, and the `TopicAddressPublicationBuilder`/
+  `SqsReadConfigurationBuilder` wrappers and their `SqsConfigurationBuilder<TConfiguration, TBuilder>`
+  base class, `QueueAddressConfiguration`, and the `TopicAddressPublicationBuilder`/
   `QueueAddressPublicationBuilder`/`QueueAddressSubscriptionBuilder` classes.
 - **Where each knob went:** queue/topic creation settings (retention, visibility timeout,
   delivery delay, error-queue settings, encryption, tags) → `TopicDestination.Named`/`QueueDestination.Named`/

@@ -285,6 +285,14 @@ JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.WithDiscriminator(JustSaying
 *REMOVED*JustSaying.Fluent.SqsWriteConfigurationBuilder
 *REMOVED*JustSaying.Fluent.SqsWriteConfigurationBuilder.SqsWriteConfigurationBuilder() -> void
 *REMOVED*JustSaying.Fluent.SqsWriteConfigurationBuilder.WithQueueName(string name) -> JustSaying.Fluent.SqsWriteConfigurationBuilder
+*REMOVED*JustSaying.Fluent.SqsConfigurationBuilder<TConfiguration, TBuilder>
+*REMOVED*JustSaying.Fluent.SqsConfigurationBuilder<TConfiguration, TBuilder>.WithEncryption(JustSaying.AwsTools.QueueCreation.ServerSideEncryption encryption) -> TBuilder
+*REMOVED*JustSaying.Fluent.SqsConfigurationBuilder<TConfiguration, TBuilder>.WithEncryption(string masterKeyId) -> TBuilder
+*REMOVED*JustSaying.Fluent.SqsConfigurationBuilder<TConfiguration, TBuilder>.WithErrorQueue() -> TBuilder
+*REMOVED*JustSaying.Fluent.SqsConfigurationBuilder<TConfiguration, TBuilder>.WithErrorQueueOptOut(bool value) -> TBuilder
+*REMOVED*JustSaying.Fluent.SqsConfigurationBuilder<TConfiguration, TBuilder>.WithMessageRetention(System.TimeSpan value) -> TBuilder
+*REMOVED*JustSaying.Fluent.SqsConfigurationBuilder<TConfiguration, TBuilder>.WithNoErrorQueue() -> TBuilder
+*REMOVED*JustSaying.Fluent.SqsConfigurationBuilder<TConfiguration, TBuilder>.WithVisibilityTimeout(System.TimeSpan value) -> TBuilder
 *REMOVED*JustSaying.Fluent.SubscriptionsBuilder.ForQueueArn<T>(string queueArn, System.Action<JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>> configure = null) -> JustSaying.Fluent.SubscriptionsBuilder
 *REMOVED*JustSaying.Fluent.SubscriptionsBuilder.ForQueueUri<T>(System.Uri queueUrl, string regionName = null, System.Action<JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>> configure = null) -> JustSaying.Fluent.SubscriptionsBuilder
 *REMOVED*JustSaying.Fluent.SubscriptionsBuilder.ForQueueUrl<T>(string queueUrl, string regionName = null, System.Action<JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>> configure = null) -> JustSaying.Fluent.SubscriptionsBuilder
