@@ -41,6 +41,22 @@ public class WhenAQueueIsEncrypted : IntegrationTestBase
         (await GetKmsMasterKeyIdAsync(client, $"{UniqueName}_error")).ShouldBe(MasterKeyId);
     }
 
+    [Test]
+    public async Task Then_The_Encryption_Is_Not_Removed_By_A_Destination_Without_Encryption()
+    {
+        // Arrange
+        await StartSubscriberAsync(QueueDestination.Named(UniqueName, q => q.WithEncryption(MasterKeyId)));
+
+        // Act
+        await StartSubscriberAsync(QueueDestination.Named(UniqueName));
+
+        // Assert
+        var client = CreateClientFactory().GetSqsClient(Region);
+
+        (await GetKmsMasterKeyIdAsync(client, UniqueName)).ShouldBe(MasterKeyId);
+        (await GetKmsMasterKeyIdAsync(client, $"{UniqueName}_error")).ShouldBe(MasterKeyId);
+    }
+
     private async Task StartSubscriberAsync(QueueDestination destination)
     {
         var serviceProvider = GivenJustSaying()

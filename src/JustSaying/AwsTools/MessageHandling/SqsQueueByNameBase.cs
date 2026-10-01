@@ -207,11 +207,6 @@ public abstract class SqsQueueByNameBase : ISqsQueue
                 attributes.Add(JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId, queueConfig.ServerSideEncryption.KmsDataKeyReusePeriod.AsSecondsString());
             }
 
-            if (queueConfig.ServerSideEncryption == null)
-            {
-                attributes.Add(JustSayingConstants.AttributeEncryptionKeyId, string.Empty);
-            }
-
             var request = new SetQueueAttributesRequest
             {
                 QueueUrl = Uri.AbsoluteUri,
@@ -225,7 +220,11 @@ public abstract class SqsQueueByNameBase : ISqsQueue
                 MessageRetentionPeriod = queueConfig.MessageRetention;
                 _visibilityTimeout = queueConfig.VisibilityTimeout;
                 DeliveryDelay = queueConfig.DeliveryDelay;
-                ServerSideEncryption = queueConfig.ServerSideEncryption;
+
+                if (queueConfig.ServerSideEncryption != null)
+                {
+                    ServerSideEncryption = queueConfig.ServerSideEncryption;
+                }
             }
         }
     }
@@ -240,6 +239,13 @@ public abstract class SqsQueueByNameBase : ISqsQueue
 
     private protected bool QueueNeedsUpdatingBecauseOfEncryption(SqsBasicConfiguration queueConfig)
     {
+        // Encryption is only ever added or changed, never removed implicitly: a configuration with no
+        // encryption leaves an existing queue's encryption as it is.
+        if (queueConfig.ServerSideEncryption == null)
+        {
+            return false;
+        }
+
         if (ServerSideEncryption == queueConfig.ServerSideEncryption)
         {
             return false;

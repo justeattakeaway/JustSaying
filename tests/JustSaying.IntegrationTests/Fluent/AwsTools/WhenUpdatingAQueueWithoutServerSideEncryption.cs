@@ -9,11 +9,10 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools;
 
-public class WhenRemovingServerSideEncryption : IntegrationTestBase
+public class WhenUpdatingAQueueWithoutServerSideEncryption : IntegrationTestBase
 {
-    [NotSimulatorSkip]
     [Test]
-    public async Task Can_Remove_Encryption()
+    public async Task The_Existing_Encryption_Is_Kept()
     {
         // Arrange
         ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
@@ -29,13 +28,15 @@ public class WhenRemovingServerSideEncryption : IntegrationTestBase
             loggerFactory);
 
         await queue.CreateAsync(
-            new SqsBasicConfiguration { ServerSideEncryption = new ServerSideEncryption() });
+            new SqsBasicConfiguration { ServerSideEncryption = new ServerSideEncryption { KmsMasterKeyId = JustSayingConstants.DefaultSqsAttributeEncryptionKeyId } });
 
         // Act
         await queue.UpdateQueueAttributeAsync(
-            new SqsBasicConfiguration { ServerSideEncryption = null }, CancellationToken.None);
+            new SqsBasicConfiguration { ServerSideEncryption = null, VisibilityTimeout = TimeSpan.FromSeconds(60) }, CancellationToken.None);
 
         // Assert
-        queue.ServerSideEncryption.ShouldBeNull();
+        await queue.ExistsAsync(CancellationToken.None);
+        queue.ServerSideEncryption.ShouldNotBeNull();
+        queue.ServerSideEncryption.KmsMasterKeyId.ShouldBe(JustSayingConstants.DefaultSqsAttributeEncryptionKeyId);
     }
 }

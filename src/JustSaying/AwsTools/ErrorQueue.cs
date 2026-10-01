@@ -67,7 +67,7 @@ public class ErrorQueue(
 
     protected override bool QueueNeedsUpdating(SqsBasicConfiguration queueConfig)
         => MessageRetentionPeriod != queueConfig.ErrorQueueRetentionPeriod
-           || (queueConfig.ServerSideEncryption != null && QueueNeedsUpdatingBecauseOfEncryption(queueConfig));
+           || QueueNeedsUpdatingBecauseOfEncryption(queueConfig);
 
     // The error queue holds the same messages as its source queue, so it is encrypted the same way.
     private static void AddEncryptionAttributes(Dictionary<string, string> attributes, SqsBasicConfiguration queueConfig)

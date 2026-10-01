@@ -304,6 +304,25 @@ On every start, an owned queue that already exists is updated:
   visibility timeout or adds an error queue it opted out of. (v8 only created a publication's queue
   and never updated it.)
 
+Some things are never undone implicitly, by either kind of registration:
+
+- **Encryption is never removed.** A destination without `WithEncryption` leaves an existing
+  queue's (or topic's) KMS settings as they are; one with `WithEncryption` adds or changes them. v8
+  *removed* the encryption from a subscription's queue whose configuration didn't mention it, so
+  deleting a v8 `WithReadConfiguration(c => c.WithEncryption(...))` call would silently decrypt the
+  queue. To decrypt a queue on purpose, change it outside JustSaying.
+- **Tags are only added.** A tag removed from the destination stays on the queue or topic.
+- **`WithNoErrorQueue()` doesn't remove an existing error queue.** It stops JustSaying creating one;
+  an existing `RedrivePolicy` and `_error` queue are left in place.
+
+And one thing is always overwritten (v8 parity): when a topic subscription subscribes its queue to
+the topic, it rewrites the queue's access `Policy` with a statement allowing that topic to send to
+it, replacing any statements added outside JustSaying.
+
+A publication and a subscription in the same app that declare *different* settings for the same
+queue each apply their own on startup, so the last one to start wins. Declare the settings once and
+share the `QueueDestination` value between them.
+
 The CloudEvents registrations take the same values, so they never need per-address variants:
 
 ```csharp
