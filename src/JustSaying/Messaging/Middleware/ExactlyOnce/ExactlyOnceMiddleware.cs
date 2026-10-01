@@ -1,3 +1,4 @@
+using JustSaying.Extensions;
 using JustSaying.Messaging.MessageHandling;
 using Microsoft.Extensions.Logging;
 
@@ -6,7 +7,10 @@ namespace JustSaying.Messaging.Middleware;
 
 public sealed class ExactlyOnceMiddleware<T>(IMessageLockAsync messageLock, TimeSpan timeout, string handlerName, Func<T, string> deduplicationKeySelector, ILogger logger) : MiddlewareBase<HandleMessageContext, bool>
 {
-    private readonly string _lockSuffixKeyForHandler = $"{typeof(T).FullName.ToLowerInvariant()}-{handlerName}";
+    // The readable name, not FullName: a generic type's FullName embeds its type arguments' assembly
+    // versions, which would change the lock key (and so break deduplication) on every deploy. A
+    // non-generic type's readable name is its FullName, so its keys are unchanged.
+    private readonly string _lockSuffixKeyForHandler = $"{typeof(T).ToReadableFullName().ToLowerInvariant()}-{handlerName}";
     private readonly Func<T, string> _deduplicationKeySelector = deduplicationKeySelector ?? throw new ArgumentNullException(nameof(deduplicationKeySelector));
 
     protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
@@ -32,7 +36,7 @@ public sealed class ExactlyOnceMiddleware<T>(IMessageLockAsync messageLock, Time
             // so decline the message and leave it for redrive rather than handling it without a lock.
             logger.LogError(
                 "The deduplication key selector for message type '{MessageType}' returned a null or empty key for message with Id '{MessageId}'; returning message to queue.",
-                typeof(T).FullName,
+                typeof(T).ToReadableFullName(),
                 context.RawMessage?.MessageId);
             return false;
         }

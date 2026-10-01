@@ -211,6 +211,8 @@ If a non-`Message` type is used without a `deduplicationKeySelector`, `UseExactl
 
 `UseExactlyOnce<TMessage>` on a subscription whose message type isn't a `TMessage` now throws when the bus is built, rather than failing for every message.
 
+The lock key for a **generic** message type now uses its C# spelling (`myapp.envelope<myapp.orderplaced>`) instead of the CLR name, which embedded the type arguments' assembly versions and so changed — silently disabling deduplication — on every deploy. Keys for non-generic types are unchanged.
+
 ## One publication per message type
 
 Registering two publications for the same message type (for example `WithTopic<Order>()` twice, or a

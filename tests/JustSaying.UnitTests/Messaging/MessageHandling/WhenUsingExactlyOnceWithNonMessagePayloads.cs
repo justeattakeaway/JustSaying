@@ -19,6 +19,13 @@ public class WhenUsingExactlyOnceWithNonMessagePayloads
         public string OrderRef { get; set; }
     }
 
+    private sealed class Envelope<T>
+    {
+        public string Id { get; set; }
+
+        public T Data { get; set; }
+    }
+
     [Test]
     public void WhenTypeDoesNotDeriveFromMessageAndNoKeySelectorIsProvided_ThenRegistrationThrows()
     {
@@ -67,6 +74,43 @@ public class WhenUsingExactlyOnceWithNonMessagePayloads
         result.ShouldBeTrue();
         handler.ReceivedMessages.ShouldContain(x => x.OrderRef == "order-123");
         messageLock.MessageLockRequests.ShouldContain(r => r.key.StartsWith("order-123-", StringComparison.Ordinal));
+
+        // A non-generic type's key is unchanged from v8, so in-flight locks survive the upgrade.
+        messageLock.MessageLockRequests.ShouldContain(
+            r => r.key == $"order-123-{typeof(PocoOrder).FullName.ToLowerInvariant()}-poco-lock");
+    }
+
+    [Test]
+    public async Task WhenThePayloadIsGeneric_ThenTheLockKeyDoesNotDependOnAssemblyVersions()
+    {
+        var messageLock = new FakeMessageLock();
+
+        var resolver = new InMemoryServiceResolver(sc => sc
+            .AddLogging(l => l.AddTextWriter(OutputHelper))
+            .AddSingleton<IMessageLockAsync>(messageLock));
+
+        var middleware = new HandlerMiddlewareBuilder(resolver, resolver)
+            .UseExactlyOnce<Envelope<PocoOrder>>("poco-lock", deduplicationKeySelector: m => m.Id)
+            .UseHandler(ctx => new InspectableHandler<Envelope<PocoOrder>>())
+            .Build();
+
+        var context = new HandleMessageContext(
+            "test-queue",
+            new Message(),
+            new Envelope<PocoOrder> { Id = "event-1", Data = new PocoOrder { OrderRef = "order-123" } },
+            typeof(Envelope<PocoOrder>),
+            new FakeVisibilityUpdater(),
+            new FakeMessageDeleter(),
+            new Uri("http://test-queue"),
+            new MessageAttributes());
+
+        await middleware.RunAsync(context, null, CancellationToken.None);
+
+        // A generic type's FullName embeds "Version=..." for its type arguments, which would change the
+        // key on every deploy; the key uses the readable C# spelling instead.
+        var envelopeName = typeof(Envelope<>).FullName.Split('`')[0];
+        var expectedKey = $"event-1-{envelopeName}<{typeof(PocoOrder).FullName}>-poco-lock".ToLowerInvariant();
+        messageLock.MessageLockRequests.ShouldContain(r => r.key == expectedKey);
     }
 
     [Test]
