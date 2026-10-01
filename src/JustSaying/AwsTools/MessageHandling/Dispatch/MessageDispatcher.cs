@@ -133,6 +133,13 @@ internal sealed class MessageDispatcher : IMessageDispatcher
 
             var (message, attributes) = await messageContext.MessageConverter.ConvertToInboundMessageAsync(messageContext.Message, cancellationToken);
 
+            if (message is null)
+            {
+                // A body of "null" (or a CloudEvent with "data": null) deserializes to nothing to
+                // dispatch, so treat it as a deserialization failure and leave it for redrive.
+                throw new InvalidOperationException("The message body was deserialized to null.");
+            }
+
             return (true, message, attributes);
         }
         catch (MessageFormatNotSupportedException ex)
