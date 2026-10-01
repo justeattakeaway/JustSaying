@@ -207,6 +207,43 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
         return this;
     }
 
+    /// <summary>
+    /// Copies this builder's publish-time configuration onto another publication's builder, projecting
+    /// every message-typed callback through <paramref name="project"/>. Internal extensibility seam used
+    /// by wrapper publications (such as CloudEvents, which registers a <c>T</c> and a
+    /// <c>CloudEvent&lt;T&gt;</c> publication from one configure callback). The serializer, subject and
+    /// topic name resolvers are not copied: they are the wrapper's own.
+    /// </summary>
+    internal void MirrorTo<TOther>(TopicPublicationBuilder<TOther> target, Func<TOther, T> project)
+        where TOther : class
+    {
+        target.TopicName = TopicName;
+        target.Subject = Subject;
+        target.SubjectSet = SubjectSet;
+        target.CompressionOptions = CompressionOptions;
+        target.MiddlewareConfiguration = MiddlewareConfiguration;
+
+        if (ExceptionHandler is { } exceptionHandler)
+        {
+            target.ExceptionHandler = (ex, message) => exceptionHandler(ex, project(message));
+        }
+
+        if (ExceptionBatchHandler is { } exceptionBatchHandler)
+        {
+            target.ExceptionBatchHandler = (ex, messages) => exceptionBatchHandler(ex, messages.Select(project).ToList());
+        }
+
+        if (TopicNameCustomizer is { } topicNameCustomizer)
+        {
+            target.TopicNameCustomizer = message => topicNameCustomizer(project(message));
+        }
+
+        if (TopicAddressCustomizer is { } topicAddressCustomizer)
+        {
+            target.TopicAddressCustomizer = (arn, message) => topicAddressCustomizer(arn, project(message));
+        }
+    }
+
     /// <inheritdoc />
     void IPublicationBuilder<T>.Configure(
         JustSayingBus bus,

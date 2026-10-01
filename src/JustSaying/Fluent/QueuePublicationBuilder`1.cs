@@ -154,6 +154,24 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
         return this;
     }
 
+    /// <summary>
+    /// Copies this builder's publish-time configuration onto another publication's builder. Internal
+    /// extensibility seam used by wrapper publications (such as CloudEvents, which registers a <c>T</c>
+    /// and a <c>CloudEvent&lt;T&gt;</c> publication from one configure callback). The serializer,
+    /// subject and queue name resolvers are not copied: they are the wrapper's own.
+    /// </summary>
+    internal void MirrorTo<TOther>(QueuePublicationBuilder<TOther> target)
+        where TOther : class
+    {
+        target.QueueName = QueueName;
+        target.Subject = Subject;
+        target.SubjectSet = SubjectSet;
+        target.CompressionOptions = CompressionOptions;
+        target._isRawMessage = _isRawMessage;
+        target._shouldCheckQueueExistence = _shouldCheckQueueExistence;
+        target.MiddlewareConfiguration = MiddlewareConfiguration;
+    }
+
     /// <inheritdoc />
     void IPublicationBuilder<T>.Configure(
         JustSayingBus bus,
