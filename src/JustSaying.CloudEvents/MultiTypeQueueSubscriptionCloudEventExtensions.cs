@@ -13,7 +13,8 @@ public static class MultiTypeQueueSubscriptionCloudEventExtensions
     /// <see cref="CloudEvent{T}"/> envelope (metadata and extension attributes) rather than just the
     /// <c>data</c> payload. Register a handler for <c>CloudEvent&lt;T&gt;</c>; a
     /// <see cref="CloudEventTypeDiscriminator"/> is added to the queue's discriminator chain
-    /// automatically (once), so the inbound message is routed by its CloudEvents <c>type</c>. Other
+    /// automatically (once, and always ahead of the SNS <c>Subject</c> whatever the registration
+    /// order), so the inbound message is routed by its CloudEvents <c>type</c>. Other
     /// message types on the same queue are unaffected — they keep their own serializers, so native
     /// JustSaying messages and CloudEvents can share a queue.
     /// </summary>
@@ -51,7 +52,8 @@ public static class MultiTypeQueueSubscriptionCloudEventExtensions
     /// is handled as its bare <c>data</c> payload — the envelope is stripped before dispatch, so the
     /// handler is a plain <c>IHandlerAsync&lt;T&gt;</c> with no CloudEvents in its contract. The
     /// CloudEvents <c>type</c> stated here does double duty: it routes the inbound message (a
-    /// <see cref="CloudEventTypeDiscriminator"/> is added to the chain automatically, once) and selects
+    /// <see cref="CloudEventTypeDiscriminator"/> is added to the chain automatically, once, ahead of the
+    /// SNS <c>Subject</c>) and selects
     /// this registration's serializer — no entry in the <see cref="CloudEventOptions"/> type map is
     /// needed. Use <c>HandlingCloudEvent&lt;T&gt;</c> instead when the handler wants the envelope.
     /// </summary>

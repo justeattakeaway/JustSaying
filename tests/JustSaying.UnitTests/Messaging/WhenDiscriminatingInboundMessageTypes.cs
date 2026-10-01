@@ -94,6 +94,50 @@ public class WhenDiscriminatingInboundMessageTypes
     }
 
     [Test]
+    public async Task AMessageRecognisedByAnEarlierDiscriminatorDoesNotFallThroughToTheSubject()
+    {
+        // The first discriminator recognises the message as a type the queue doesn't handle; the SNS
+        // Subject happens to name a registered type, but must not be used to read the message as it.
+        var options = SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions;
+        var resolver = new DiscriminatingInboundMessageSerializerResolver(
+            [new FixedTypeDiscriminator("com.example.unknown"), new SubjectMessageTypeDiscriminator()],
+            new Dictionary<string, IMessageBodySerializer>(StringComparer.Ordinal)
+            {
+                ["OrderPlaced"] = new SystemTextJsonMessageBodySerializer<OrderPlaced>(options).Erase(),
+            });
+        var converter = new InboundMessageConverter(resolver, new MessageCompressionRegistry(), isRawMessage: false);
+
+        await Should.ThrowAsync<MessageFormatNotSupportedException>(
+            async () => await converter.ConvertToInboundMessageAsync(SnsMessage("OrderPlaced", "{}")));
+    }
+
+    [Test]
+    public async Task AMessageNotRecognisedByAnEarlierDiscriminatorFallsThroughToTheSubject()
+    {
+        var options = SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions;
+        var resolver = new DiscriminatingInboundMessageSerializerResolver(
+            [new FixedTypeDiscriminator(null), new SubjectMessageTypeDiscriminator()],
+            new Dictionary<string, IMessageBodySerializer>(StringComparer.Ordinal)
+            {
+                ["OrderPlaced"] = new SystemTextJsonMessageBodySerializer<OrderPlaced>(options).Erase(),
+            });
+        var converter = new InboundMessageConverter(resolver, new MessageCompressionRegistry(), isRawMessage: false);
+
+        var placed = await converter.ConvertToInboundMessageAsync(SnsMessage("OrderPlaced", """{"OrderId":"order-1"}"""));
+
+        placed.Message.ShouldBeOfType<OrderPlaced>().OrderId.ShouldBe("order-1");
+    }
+
+    private sealed class FixedTypeDiscriminator(string typeName) : IMessageTypeDiscriminator
+    {
+        public bool TryGetMessageTypeName(MessageDiscriminationContext context, out string result)
+        {
+            result = typeName;
+            return typeName is not null;
+        }
+    }
+
+    [Test]
     public void SubjectDiscriminatorReadsTheSubject()
     {
         var discriminator = new SubjectMessageTypeDiscriminator();

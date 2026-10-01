@@ -16,11 +16,22 @@ namespace JustSaying.Fluent;
 /// so each message is deserialized and dispatched to the handler for its own type. This class cannot
 /// be inherited.
 /// </summary>
+/// <remarks>
+/// The discriminator chain has a fixed order, independent of the order types and discriminators are
+/// registered in: first the discriminators added with <see cref="WithDiscriminator"/> (in the order
+/// added), then those added by serializer packages (such as the CloudEvents <c>type</c>
+/// discriminator, which validates the body's shape), and the SNS <c>Subject</c> last. The first
+/// discriminator to recognise a message decides its type; if that type isn't registered on the queue,
+/// the message can't be routed, rather than falling through to a weaker signal. The Subject goes last
+/// because JustSaying stamps it on every publication, CloudEvents ones included.
+/// </remarks>
 public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<object>
 {
     private readonly QueueDestination _destination;
     private readonly List<IMessageTypeRegistration> _registrations = [];
     private readonly List<IMessageTypeDiscriminator> _discriminators = [];
+    private readonly List<IMessageTypeDiscriminator> _packageDiscriminators = [];
+    private bool _routesBySubject;
     private string _subscriptionGroupName;
     private bool _rawMessageDelivery;
 
@@ -47,7 +58,7 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
             // With no explicit wire name, this type is routed by its logical name — the SNS Subject.
             // Make sure the Subject discriminator is in the chain even when another registration has
             // added its own (for example CloudEvents), so native and enveloped types can share a queue.
-            EnsureDiscriminator(static () => new SubjectMessageTypeDiscriminator());
+            _routesBySubject = true;
         }
 
         _registrations.Add(new MessageTypeRegistration<TMessage>(typeName, middlewareConfiguration));
@@ -83,9 +94,10 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
     }
 
     /// <summary>
-    /// Adds a discriminator to the chain used to resolve an inbound message's type. Discriminators are
-    /// tried in the order added; the first to yield a registered type name wins. When none are added,
-    /// the SNS <c>Subject</c> is used.
+    /// Adds a discriminator to the chain used to resolve an inbound message's type. Discriminators
+    /// added here are tried first, in the order added — before any added by a serializer package (such
+    /// as CloudEvents) and before the SNS <c>Subject</c>, which is always tried last — and the first to
+    /// recognise a message decides its type. When none are added, the SNS <c>Subject</c> is used.
     /// </summary>
     /// <param name="discriminator">The discriminator to add.</param>
     /// <returns>The current <see cref="MultiTypeQueueSubscriptionBuilder"/>.</returns>
@@ -98,7 +110,8 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
     /// <summary>
     /// Adds a discriminator of type <typeparamref name="TDiscriminator"/> to the chain unless one is
     /// already present, so a registration helper can guarantee the discriminator it needs is configured
-    /// without duplicating it. Internal extensibility seam used by serializer packages (such as
+    /// without duplicating it. It is tried after any added with <see cref="WithDiscriminator"/> and
+    /// before the SNS <c>Subject</c>. Internal extensibility seam used by serializer packages (such as
     /// JustSaying.CloudEvents, whose <c>HandlingCloudEvent&lt;T&gt;</c> ensures a
     /// <c>CloudEventTypeDiscriminator</c>).
     /// </summary>
@@ -107,16 +120,34 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
     {
         if (factory is null) throw new ArgumentNullException(nameof(factory));
 
-        foreach (var existing in _discriminators)
+        if (_discriminators.OfType<TDiscriminator>().Any() || _packageDiscriminators.OfType<TDiscriminator>().Any())
         {
-            if (existing is TDiscriminator)
-            {
-                return this;
-            }
+            return this;
         }
 
-        _discriminators.Add(factory());
+        _packageDiscriminators.Add(factory());
         return this;
+    }
+
+    // The order is fixed rather than following registration order, so adding one type can't change
+    // how another type's messages are read: the user's own discriminators, then those a serializer
+    // package needs (which check the body's shape), then the SNS Subject. The Subject is stamped on
+    // every JustSaying publication (a CloudEvents publication carries the payload's type name), so it
+    // is only consulted once nothing more specific has recognised the message.
+    private IMessageTypeDiscriminator[] BuildDiscriminatorChain()
+    {
+        var chain = _discriminators
+            .Concat(_packageDiscriminators)
+            .Where(discriminator => discriminator is not SubjectMessageTypeDiscriminator)
+            .ToList();
+
+        var subject = _discriminators.OfType<SubjectMessageTypeDiscriminator>().FirstOrDefault();
+        if (subject is not null || _routesBySubject || chain.Count == 0)
+        {
+            chain.Add(subject ?? new SubjectMessageTypeDiscriminator());
+        }
+
+        return [.. chain];
     }
 
     /// <summary>
@@ -193,18 +224,16 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
             namesByRegistration[registration] = typeName;
         }
 
-        var discriminators = _discriminators.Count > 0
-            ? _discriminators.ToArray()
-            : [new SubjectMessageTypeDiscriminator()];
+        var discriminators = BuildDiscriminatorChain();
 
-        // Raw delivery strips the SNS envelope, and with it the Subject, so a queue routed only by Subject
-        // could never resolve a message's type: every message would end up in the error queue.
-        if (_rawMessageDelivery && discriminators.All(discriminator => discriminator is SubjectMessageTypeDiscriminator))
+        // Raw delivery strips the SNS envelope, and with it the Subject, so a type routed by Subject could
+        // never be resolved: every message of that type would end up in the error queue.
+        if (_rawMessageDelivery && (_routesBySubject || discriminators.All(discriminator => discriminator is SubjectMessageTypeDiscriminator)))
         {
             throw new InvalidOperationException(
                 $"The multi-type queue subscription for '{_destination.Name ?? _destination.Address?.QueueUrl?.ToString()}' uses raw message delivery but routes messages by the SNS Subject, " +
-                "which raw messages don't carry. Turn off raw message delivery, or add a discriminator that reads the type from the message body " +
-                $"or attributes with {nameof(WithDiscriminator)}(...).");
+                $"which raw messages don't carry. Turn off raw message delivery, or give every type registered with {nameof(Handling)}<T>() an explicit type name " +
+                $"read from the message body or attributes by a discriminator added with {nameof(WithDiscriminator)}(...).");
         }
 
         ISqsQueue sqsQueue;

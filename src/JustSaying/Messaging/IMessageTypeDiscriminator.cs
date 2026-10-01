@@ -17,6 +17,10 @@ public interface IMessageTypeDiscriminator
     /// </summary>
     /// <param name="context">The inbound message information.</param>
     /// <param name="typeName">When this method returns, the logical type name, or <see langword="null"/>.</param>
-    /// <returns><see langword="true"/> if a type name could be determined; otherwise <see langword="false"/>.</returns>
+    /// <returns>
+    /// <see langword="true"/> if a type name could be determined; otherwise <see langword="false"/>.
+    /// Return <see langword="false"/> for a message this discriminator doesn't recognise, so the next
+    /// discriminator in the chain can try: the first to return a name decides the message's type.
+    /// </returns>
     bool TryGetMessageTypeName(MessageDiscriminationContext context, out string typeName);
 }

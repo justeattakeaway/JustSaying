@@ -45,11 +45,17 @@ internal sealed class DiscriminatingInboundMessageSerializerResolver : IInboundM
 
         foreach (var discriminator in _discriminators)
         {
-            if (discriminator.TryGetMessageTypeName(context, out var typeName)
-                && !string.IsNullOrEmpty(typeName)
-                && _serializersByName.TryGetValue(typeName, out var serializer))
+            if (discriminator.TryGetMessageTypeName(context, out var typeName) && !string.IsNullOrEmpty(typeName))
             {
-                return serializer;
+                // The first discriminator to recognise the message decides its type. Falling through to
+                // a later one when that type isn't registered would let a weaker signal (such as the SNS
+                // Subject on a CloudEvent of an unknown `type`) deserialize the message as the wrong type.
+                if (_serializersByName.TryGetValue(typeName, out var serializer))
+                {
+                    return serializer;
+                }
+
+                break;
             }
         }
 
