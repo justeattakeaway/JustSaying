@@ -18,7 +18,9 @@ public static class ExactlyOnceHandlerMiddlewareBuilderExtensions
     /// An optional selector that returns a stable, per-message key used to deduplicate handling. When
     /// <see langword="null"/>, messages deriving from <see cref="Message"/> use
     /// <see cref="Message.UniqueKey"/>. A selector is <em>required</em> for message types that do not
-    /// derive from <see cref="Message"/>, otherwise this method throws.
+    /// derive from <see cref="Message"/>, otherwise this method throws. If the selector returns a
+    /// <see langword="null"/>, empty or whitespace key for a message, that message is not handled: an
+    /// error is logged and it is left on the queue for its redrive policy.
     /// </param>
     /// <typeparam name="TMessage">The type of the message that should be locked.</typeparam>
     /// <returns>The current <see cref="HandlerMiddlewareBuilder"/>.</returns>

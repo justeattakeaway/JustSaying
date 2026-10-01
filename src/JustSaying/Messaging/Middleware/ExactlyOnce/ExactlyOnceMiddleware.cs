@@ -14,14 +14,27 @@ public sealed class ExactlyOnceMiddleware<T>(IMessageLockAsync messageLock, Time
         if (context == null) throw new ArgumentNullException(nameof(context));
         if (func == null) throw new ArgumentNullException(nameof(func));
 
-        string deduplicationKey = _deduplicationKeySelector((T)context.Message);
+        if (context.Message is not T message)
+        {
+            logger.LogError(
+                "Exactly-once handling for message type '{ExpectedMessageType}' received message with Id '{MessageId}' of type '{MessageType}'; returning message to queue.",
+                typeof(T).FullName,
+                context.RawMessage?.MessageId,
+                context.Message?.GetType().FullName);
+            return false;
+        }
+
+        string deduplicationKey = _deduplicationKeySelector(message);
 
         if (string.IsNullOrWhiteSpace(deduplicationKey))
         {
-            throw new InvalidOperationException(
-                $"The deduplication key selector for message type '{typeof(T).FullName}' returned a null or empty key. " +
-                "Exactly-once handling requires a stable, non-empty key per message, otherwise unrelated messages " +
-                "would share a lock and be silently deduplicated.");
+            // An empty key would make unrelated messages share one lock and be silently deduplicated,
+            // so decline the message and leave it for redrive rather than handling it without a lock.
+            logger.LogError(
+                "The deduplication key selector for message type '{MessageType}' returned a null or empty key for message with Id '{MessageId}'; returning message to queue.",
+                typeof(T).FullName,
+                context.RawMessage?.MessageId);
+            return false;
         }
 
         string lockKey = $"{deduplicationKey}-{_lockSuffixKeyForHandler}";

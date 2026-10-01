@@ -73,7 +73,7 @@ pipeline.UseExactlyOnce<OrderPlaced>("orders-handler",
     deduplicationKeySelector: m => m.OrderRef);
 ```
 
-If a non-`Message` type is used without a `deduplicationKeySelector`, `UseExactlyOnce` throws at registration (startup) rather than degrading silently at runtime. A selector that returns null or whitespace for a given message also throws when that message is handled, rather than collapsing unrelated messages onto a shared lock key.
+If a non-`Message` type is used without a `deduplicationKeySelector`, `UseExactlyOnce` throws at registration (startup) rather than degrading silently at runtime. A selector that returns null or whitespace for a given message doesn't collapse unrelated messages onto a shared lock key: that message is not handled, an error is logged, and it stays on the queue for its redrive policy.
 
 ## New extensibility seams
 

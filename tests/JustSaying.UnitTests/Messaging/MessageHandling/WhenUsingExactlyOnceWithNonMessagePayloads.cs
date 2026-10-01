@@ -6,6 +6,7 @@ using JustSaying.UnitTests.Messaging.Channels.Fakes;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Testing;
 
 namespace JustSaying.UnitTests.Messaging.MessageHandling;
 
@@ -69,23 +70,29 @@ public class WhenUsingExactlyOnceWithNonMessagePayloads
     }
 
     [Test]
-    public async Task WhenTheKeySelectorReturnsAnEmptyKey_ThenHandlingThrows()
+    [Arguments(null)]
+    [Arguments("")]
+    [Arguments("  ")]
+    public async Task WhenTheKeySelectorReturnsAnEmptyKey_ThenTheMessageIsLeftOnTheQueue(string orderRef)
     {
         var messageLock = new FakeMessageLock();
+        var logs = new FakeLogCollector();
 
         var resolver = new InMemoryServiceResolver(sc => sc
-            .AddLogging(l => l.AddTextWriter(OutputHelper))
+            .AddLogging(l => l.AddTextWriter(OutputHelper).AddProvider(new FakeLoggerProvider(logs)))
             .AddSingleton<IMessageLockAsync>(messageLock));
+
+        var handler = new InspectableHandler<PocoOrder>();
 
         var middleware = new HandlerMiddlewareBuilder(resolver, resolver)
             .UseExactlyOnce<PocoOrder>("poco-lock", deduplicationKeySelector: m => m.OrderRef)
-            .UseHandler(ctx => new InspectableHandler<PocoOrder>())
+            .UseHandler(ctx => handler)
             .Build();
 
         var context = new HandleMessageContext(
             "test-queue",
-            new Message(),
-            new PocoOrder { OrderRef = "  " },
+            new Message { MessageId = "sqs-message-1" },
+            new PocoOrder { OrderRef = orderRef },
             typeof(PocoOrder),
             new FakeVisibilityUpdater(),
             new FakeMessageDeleter(),
@@ -93,11 +100,48 @@ public class WhenUsingExactlyOnceWithNonMessagePayloads
             new MessageAttributes());
 
         // An empty key would make every such payload share one lock, silently deduplicating
-        // unrelated messages.
-        var exception = await Should.ThrowAsync<InvalidOperationException>(
-            () => middleware.RunAsync(context, null, CancellationToken.None));
+        // unrelated messages, so the message is declined rather than handled.
+        var result = await middleware.RunAsync(context, null, CancellationToken.None);
 
-        exception.Message.ShouldContain(nameof(PocoOrder));
+        result.ShouldBeFalse();
+        handler.ReceivedMessages.ShouldBeEmpty();
         messageLock.MessageLockRequests.ShouldBeEmpty();
+
+        var error = logs.GetSnapshot().Where(r => r.Level == LogLevel.Error).ShouldHaveSingleItem();
+        error.Message.ShouldContain(typeof(PocoOrder).FullName);
+        error.Message.ShouldContain("sqs-message-1");
+    }
+
+    [Test]
+    public async Task WhenTheMessageIsNotOfTheConfiguredType_ThenTheMessageIsLeftOnTheQueue()
+    {
+        var messageLock = new FakeMessageLock();
+        var logs = new FakeLogCollector();
+
+        var resolver = new InMemoryServiceResolver(sc => sc
+            .AddLogging(l => l.AddTextWriter(OutputHelper).AddProvider(new FakeLoggerProvider(logs)))
+            .AddSingleton<IMessageLockAsync>(messageLock));
+
+        var middleware = new HandlerMiddlewareBuilder(resolver, resolver)
+            .UseExactlyOnce<PocoOrder>("poco-lock", deduplicationKeySelector: m => m.OrderRef)
+            .Build();
+
+        var context = new HandleMessageContext(
+            "test-queue",
+            new Message { MessageId = "sqs-message-1" },
+            new SimpleMessage(),
+            typeof(SimpleMessage),
+            new FakeVisibilityUpdater(),
+            new FakeMessageDeleter(),
+            new Uri("http://test-queue"),
+            new MessageAttributes());
+
+        var result = await middleware.RunAsync(context, null, CancellationToken.None);
+
+        result.ShouldBeFalse();
+        messageLock.MessageLockRequests.ShouldBeEmpty();
+
+        var error = logs.GetSnapshot().Where(r => r.Level == LogLevel.Error).ShouldHaveSingleItem();
+        error.Message.ShouldContain(typeof(SimpleMessage).FullName);
     }
 }
