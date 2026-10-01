@@ -32,6 +32,62 @@ public class WhenAddingCloudEventsToTheServiceCollection
         await Assert.That(doc.RootElement.GetProperty("type").GetString()).IsEqualTo("com.justeattakeaway.orders.orderplaced");
     }
 
+    private static readonly JsonSerializerOptions CamelCase = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
+    private static async Task<JsonElement> SerializeDataAsync(IServiceCollection services)
+    {
+        await using var provider = services.BuildServiceProvider();
+        var serializer = provider.GetRequiredService<CloudEventSerializationFactory>()
+            .GetEnvelopeSerializer<OrderPlaced>("com.example.orders.order.placed", new Uri("/orders", UriKind.Relative));
+
+        using var document = JsonDocument.Parse(serializer.Serialize(new CloudEvent<OrderPlaced>(new OrderPlaced { OrderId = "1" })));
+        return document.RootElement.GetProperty("data").Clone();
+    }
+
+    [Test]
+    [Arguments(true)]
+    [Arguments(false)]
+    public async Task TheDataUsesTheAppsSerializationFactoryByDefault(bool useAsDefault)
+    {
+        // The app's options (here camelCase; for Native AOT, a source-generated context) are registered
+        // once and cover the CloudEvents data too - including when CloudEvents then replaces the
+        // app-wide factory.
+        var services = new ServiceCollection();
+        services.AddSingleton<IMessagingConfig>(new MessagingConfig());
+        services.AddSingleton<IMessageBodySerializationFactory>(new SystemTextJsonSerializationFactory(CamelCase));
+        services.AddJustSayingCloudEvents(options => options.UseAsDefault = useAsDefault);
+
+        var data = await SerializeDataAsync(services);
+
+        await Assert.That(data.TryGetProperty("orderId", out _)).IsTrue();
+    }
+
+    [Test]
+    public async Task TheDataUsesSystemTextJsonDefaultsWhenTheAppRegistersNoFactory()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<IMessagingConfig>(new MessagingConfig());
+        services.AddJustSayingCloudEvents(options => options.UseAsDefault = true);
+
+        var data = await SerializeDataAsync(services);
+
+        await Assert.That(data.TryGetProperty("OrderId", out _)).IsTrue();
+    }
+
+    [Test]
+    public async Task AnExplicitDataSerializationFactoryWins()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<IMessagingConfig>(new MessagingConfig());
+        services.AddSingleton<IMessageBodySerializationFactory>(
+            new SystemTextJsonSerializationFactory(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions));
+        services.AddJustSayingCloudEvents(options => options.DataSerializationFactory = new SystemTextJsonSerializationFactory(CamelCase));
+
+        var data = await SerializeDataAsync(services);
+
+        await Assert.That(data.TryGetProperty("orderId", out _)).IsTrue();
+    }
+
     [Test]
     public async Task ItDoesNotReplaceTheAppWideSerializationFactory()
     {
@@ -59,9 +115,11 @@ public class WhenAddingCloudEventsToTheServiceCollection
         // must win whether it runs before or after it.
         void AddDefaultFactory() => services.TryAddSingleton<IMessageBodySerializationFactory>(
             new SystemTextJsonSerializationFactory(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions));
-        void AddCloudEvents() => services.AddJustSayingCloudEvents(
-            options => options.Source = new Uri("https://orders.example.com/"),
-            useAsDefault: true);
+        void AddCloudEvents() => services.AddJustSayingCloudEvents(options =>
+        {
+            options.Source = new Uri("https://orders.example.com/");
+            options.UseAsDefault = true;
+        });
 
         if (cloudEventsFirst)
         {

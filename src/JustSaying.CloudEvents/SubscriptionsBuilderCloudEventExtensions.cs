@@ -72,7 +72,7 @@ public static class SubscriptionsBuilderCloudEventExtensions
 
         return subscriptions.ForTopic<T>(builder =>
         {
-            builder.SerializerOverride = resolver => resolver.ResolveCloudEventSerializationFactory().GetDataSerializer<T>(type);
+            builder.SerializerOverride = resolver => resolver.ResolveCloudEventSerializationFactory().GetDataOnlySerializer<T>(type);
 
             configure?.Invoke(builder);
         });

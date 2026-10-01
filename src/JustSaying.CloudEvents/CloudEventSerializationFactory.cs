@@ -15,12 +15,7 @@ public sealed class CloudEventSerializationFactory : IMessageBodySerializationFa
     private readonly IMessageMetadataProvider _bareMessageMetadataProvider;
     private readonly CloudEventOptions _options;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="CloudEventSerializationFactory"/> class.
-    /// </summary>
-    /// <param name="dataSerializerFactory">The factory whose serializers handle the <c>data</c> payload.</param>
-    /// <param name="metadataProvider">Provides the CloudEvents <c>id</c> and <c>time</c> from messages.</param>
-    /// <param name="options">The CloudEvents options (source, content type and per-type <c>type</c> mappings).</param>
+    // Built by AddJustSayingCloudEvents, which supplies the data factory and metadata provider.
     internal CloudEventSerializationFactory(
         IMessageBodySerializationFactory dataSerializerFactory,
         IMessageMetadataProvider metadataProvider,
@@ -73,7 +68,7 @@ public sealed class CloudEventSerializationFactory : IMessageBodySerializationFa
     /// <see cref="CloudEventOptions.Source"/>. One of the two must be set.
     /// </param>
     /// <exception cref="InvalidOperationException">Neither <paramref name="source"/> nor <see cref="CloudEventOptions.Source"/> is set.</exception>
-    public IMessageBodySerializer<T> GetSerializer<T>(string type, Uri source = null) where T : class
+    internal IMessageBodySerializer<T> GetSerializer<T>(string type, Uri source = null) where T : class
     {
         if (string.IsNullOrEmpty(type)) throw new ArgumentException("Parameter cannot be null or empty.", nameof(type));
 
@@ -101,7 +96,7 @@ public sealed class CloudEventSerializationFactory : IMessageBodySerializationFa
     /// the type configured via <see cref="CloudEventOptions.MapType{TMessage}"/> (which may
     /// itself be absent — the value is only needed to publish, not to consume).
     /// </param>
-    public IMessageBodySerializer<T> GetDataSerializer<T>(string type = null) where T : class
+    public IMessageBodySerializer<T> GetDataOnlySerializer<T>(string type = null) where T : class
     {
         type ??= TryGetCloudEventType<T>();
         var dataSerializer = _dataSerializerFactory.GetSerializer<T>();
@@ -137,7 +132,7 @@ public sealed class CloudEventSerializationFactory : IMessageBodySerializationFa
     /// Used as the fallback routing key for a subscription that did not state the <c>type</c> itself.
     /// </summary>
     /// <typeparam name="T">The message type.</typeparam>
-    public string GetCloudEventType<T>() where T : class
+    internal string GetCloudEventType<T>() where T : class
         => TryGetCloudEventType<T>()
            ?? throw new InvalidOperationException(
                $"No CloudEvents 'type' is configured for message type '{typeof(T).FullName}'. " +

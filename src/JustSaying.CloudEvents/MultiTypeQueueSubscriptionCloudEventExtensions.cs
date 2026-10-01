@@ -78,7 +78,7 @@ public static class MultiTypeQueueSubscriptionCloudEventExtensions
 
         return builder.Handling<T>(
             typeName,
-            serializerFactory: resolver => resolver.ResolveCloudEventSerializationFactory().GetDataSerializer<T>(typeName),
+            serializerFactory: resolver => resolver.ResolveCloudEventSerializationFactory().GetDataOnlySerializer<T>(typeName),
             typeNameResolver: resolver => resolver.ResolveCloudEventSerializationFactory().GetCloudEventType<T>(),
             middlewareConfiguration: middlewareConfiguration);
     }

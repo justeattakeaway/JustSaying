@@ -31,8 +31,8 @@ public class WhenPublishingACloudEvent : IntegrationTestBase
         {
             options.Source = new Uri("https://orders.example.com");
             options.MapType<OrderPlaced>(OrderPlacedType);
-        },
-        useAsDefault: true);
+            options.UseAsDefault = true;
+        });
 
         return services;
     }

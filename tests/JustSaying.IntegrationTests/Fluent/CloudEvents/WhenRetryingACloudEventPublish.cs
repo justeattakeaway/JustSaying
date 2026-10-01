@@ -27,7 +27,7 @@ public class WhenRetryingACloudEventPublish
     public async Task Then_A_Bare_Payload_Keeps_Its_Id_And_Time_Across_Attempts()
     {
         var factory = CreateFactory();
-        var publisher = new FailFirstAttemptPublisher(factory.GetSerializer<OrderPlaced>(OrderPlacedType));
+        var publisher = new FailFirstAttemptPublisher(factory.GetDataOnlySerializer<OrderPlaced>(OrderPlacedType));
         using var bus = CreateBus(publisher);
 
         await bus.PublishAsync(new OrderPlaced { OrderId = "order-1" }, CancellationToken.None);
@@ -51,7 +51,7 @@ public class WhenRetryingACloudEventPublish
     public async Task Then_A_Batch_Keeps_Each_Messages_Id_Across_Attempts()
     {
         var factory = CreateFactory();
-        var publisher = new FailFirstAttemptPublisher(factory.GetSerializer<OrderPlaced>(OrderPlacedType));
+        var publisher = new FailFirstAttemptPublisher(factory.GetDataOnlySerializer<OrderPlaced>(OrderPlacedType));
         using var bus = CreateBus(publisher);
 
         await bus.PublishBatchAsync([new OrderPlaced { OrderId = "order-1" }, new OrderPlaced { OrderId = "order-2" }], null, CancellationToken.None);
@@ -65,7 +65,7 @@ public class WhenRetryingACloudEventPublish
     [Test]
     public async Task Then_Separate_Payloads_Get_Separate_Ids()
     {
-        var serializer = CreateFactory().GetSerializer<OrderPlaced>(OrderPlacedType);
+        var serializer = CreateFactory().GetDataOnlySerializer<OrderPlaced>(OrderPlacedType);
 
         Id(serializer.Serialize(new OrderPlaced { OrderId = "order-1" }))
             .ShouldNotBe(Id(serializer.Serialize(new OrderPlaced { OrderId = "order-1" })));

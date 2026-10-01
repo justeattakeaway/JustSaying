@@ -22,13 +22,10 @@ public sealed class CloudEventEnvelopeBodySerializer<T> : IMessageBodySerializer
     private readonly string _type;
     private readonly string _dataContentType;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="CloudEventEnvelopeBodySerializer{T}"/> class.
-    /// <paramref name="source"/> and <paramref name="type"/> are written only when serializing
-    /// (publishing); they may be <see langword="null"/> for a consume-only serializer, which reads them
-    /// from the inbound envelope instead.
-    /// </summary>
-    public CloudEventEnvelopeBodySerializer(
+    // Built by CloudEventSerializationFactory.GetEnvelopeSerializer. source and type are written only
+    // when serializing (publishing); they may be null for a consume-only serializer, which reads them
+    // from the inbound envelope instead.
+    internal CloudEventEnvelopeBodySerializer(
         IMessageBodySerializer<T> dataSerializer,
         IMessageMetadataProvider metadataProvider,
         Uri source = null,

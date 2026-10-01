@@ -129,8 +129,8 @@ public class WhenAQueueCarriesMultipleMessageTypes : IntegrationTestBase
             options.Source = new Uri("https://orders.example.com");
             options.MapType<OrderPlaced>(placedType);
             options.MapType<OrderCancelled>(cancelledType);
-        },
-        useAsDefault: true);
+            options.UseAsDefault = true;
+        });
 
         await WhenAsync(
             services,

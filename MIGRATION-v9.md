@@ -315,9 +315,11 @@ services.AddJustSayingCloudEvents(options =>
 {
     options.Source = new Uri("https://orders.example.com");
     options.MapType<OrderPlaced>("com.example.order-placed");
-},
-useAsDefault: true);
+    options.UseAsDefault = true;
+});
 ```
+
+The `data` payload is serialized with the app's own `IMessageBodySerializationFactory` (whatever `AddJustSaying` uses for its other messages), so a source-generated `JsonSerializerContext` registered once for Native AOT covers CloudEvents data too, and the data's JSON matches the rest of the app. Set `CloudEventOptions.DataSerializationFactory` to use a different one.
 
 Single-type subscriptions can also override their serializer per registration via `WithMessageBodySerializer(IMessageBodySerializer<T>)`, now available on the `ForTopic<T>`/`ForQueue<T>` builders as well as `ForQueueUrl<T>`/`ForQueueArn<T>`.
 
