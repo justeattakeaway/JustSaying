@@ -41,7 +41,6 @@ public static class AsyncApiServiceCollectionExtensions
         services.TryAddSingleton((serviceProvider) => new AsyncApiDocumentGenerator(
             serviceProvider.GetRequiredService<IMessagingMetadataRegistry>(),
             serviceProvider.GetRequiredService<AsyncApiOptions>(),
-            serviceProvider.GetService<JustSaying.Messaging.MessageSerialization.IMessageBodySerializationFactory>(),
             serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger<AsyncApiDocumentGenerator>>())
         {
             ApplicationName = serviceProvider.GetService<IHostEnvironment>()?.ApplicationName,

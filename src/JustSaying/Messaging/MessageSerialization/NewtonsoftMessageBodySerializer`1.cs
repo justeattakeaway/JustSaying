@@ -9,7 +9,7 @@ namespace JustSaying.Messaging.MessageSerialization;
 /// Provides serialization and deserialization functionality for messages of type <typeparamref name="T"/> using Newtonsoft.Json.
 /// </summary>
 /// <typeparam name="T">The type of message to be serialized or deserialized.</typeparam>
-public sealed class NewtonsoftMessageBodySerializer<T> : IMessageBodySerializer<T> where T : class
+public sealed class NewtonsoftMessageBodySerializer<T> : IMessageBodySerializer<T>, IMessageBodyFormat where T : class
 {
 #if NET8_0_OR_GREATER
     private const string NewtonsoftRequiresUnreferencedCodeMessage = "Newtonsoft.Json relies on reflection over types that may be removed when trimming.";
@@ -17,6 +17,9 @@ public sealed class NewtonsoftMessageBodySerializer<T> : IMessageBodySerializer<
 #endif
 
     private readonly JsonSerializerSettings _settings;
+
+    /// <inheritdoc />
+    public string ContentType => "application/json";
 
     /// <summary>
     /// Initializes a new instance of the <see cref="NewtonsoftMessageBodySerializer{T}"/> class with default JSON serializer settings.

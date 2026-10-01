@@ -7,7 +7,7 @@ namespace JustSaying.Messaging.MessageSerialization;
 /// the <see cref="JsonSerializerOptions"/> it serializes with so that tooling (such as AsyncAPI document
 /// generation) can derive the payload's JSON schema from the same options that shape the wire.
 /// </summary>
-public interface ISystemTextJsonMessageBodySerializer
+public interface ISystemTextJsonMessageBodySerializer : IMessageBodyFormat
 {
     /// <summary>
     /// Gets the <see cref="JsonSerializerOptions"/> message bodies are serialized with.

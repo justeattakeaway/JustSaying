@@ -36,7 +36,10 @@ public sealed class CloudEventEnvelopeBodySerializer<T> : IMessageBodySerializer
     public System.Type DataType => typeof(T);
 
     /// <inheritdoc />
-    public object DataSerializer => _dataSerializer;
+    public string ContentType => "application/cloudevents+json";
+
+    /// <inheritdoc />
+    public IMessageBodyFormat DataFormat => _dataSerializer as IMessageBodyFormat;
 
     // Built by CloudEventSerializationFactory.GetEnvelopeSerializer. source and type are written only
     // when serializing (publishing); they may be null for a consume-only serializer, which reads them

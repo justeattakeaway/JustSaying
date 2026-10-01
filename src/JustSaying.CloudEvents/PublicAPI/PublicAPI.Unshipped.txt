@@ -53,17 +53,19 @@ JustSaying.CloudEvents.CloudEventOptions.UseAsDefault.set -> void
 static Microsoft.Extensions.DependencyInjection.CloudEventsServiceCollectionExtensions.AddJustSayingCloudEvents(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, System.Action<JustSaying.CloudEvents.CloudEventOptions> configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection
 JustSaying.CloudEvents.ICloudEventMessageBodySerializer
 JustSaying.CloudEvents.ICloudEventMessageBodySerializer.DataContentType.get -> string
-JustSaying.CloudEvents.ICloudEventMessageBodySerializer.DataSerializer.get -> object
+JustSaying.CloudEvents.ICloudEventMessageBodySerializer.DataFormat.get -> JustSaying.Messaging.MessageSerialization.IMessageBodyFormat
 JustSaying.CloudEvents.ICloudEventMessageBodySerializer.DataType.get -> System.Type
 JustSaying.CloudEvents.ICloudEventMessageBodySerializer.Source.get -> System.Uri
 JustSaying.CloudEvents.ICloudEventMessageBodySerializer.Type.get -> string
 JustSaying.CloudEvents.CloudEventMessageBodySerializer<TMessage>.DataContentType.get -> string
-JustSaying.CloudEvents.CloudEventMessageBodySerializer<TMessage>.DataSerializer.get -> object
+JustSaying.CloudEvents.CloudEventMessageBodySerializer<TMessage>.ContentType.get -> string
+JustSaying.CloudEvents.CloudEventMessageBodySerializer<TMessage>.DataFormat.get -> JustSaying.Messaging.MessageSerialization.IMessageBodyFormat
 JustSaying.CloudEvents.CloudEventMessageBodySerializer<TMessage>.DataType.get -> System.Type
 JustSaying.CloudEvents.CloudEventMessageBodySerializer<TMessage>.Source.get -> System.Uri
 JustSaying.CloudEvents.CloudEventMessageBodySerializer<TMessage>.Type.get -> string
 JustSaying.CloudEvents.CloudEventEnvelopeBodySerializer<T>.DataContentType.get -> string
-JustSaying.CloudEvents.CloudEventEnvelopeBodySerializer<T>.DataSerializer.get -> object
+JustSaying.CloudEvents.CloudEventEnvelopeBodySerializer<T>.ContentType.get -> string
+JustSaying.CloudEvents.CloudEventEnvelopeBodySerializer<T>.DataFormat.get -> JustSaying.Messaging.MessageSerialization.IMessageBodyFormat
 JustSaying.CloudEvents.CloudEventEnvelopeBodySerializer<T>.DataType.get -> System.Type
 JustSaying.CloudEvents.CloudEventEnvelopeBodySerializer<T>.Source.get -> System.Uri
 JustSaying.CloudEvents.CloudEventEnvelopeBodySerializer<T>.Type.get -> string

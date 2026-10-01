@@ -18,7 +18,7 @@ public sealed class PublicationMetadata
     /// <exception cref="ArgumentNullException">
     /// <paramref name="messages"/> is <see langword="null"/>.
     /// </exception>
-    public PublicationMetadata(
+    internal PublicationMetadata(
         MessagingDestinationKind destinationKind,
         string destinationName,
         bool isDynamic,

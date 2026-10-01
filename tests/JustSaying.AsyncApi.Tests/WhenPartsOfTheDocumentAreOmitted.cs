@@ -101,23 +101,77 @@ public class WhenPartsOfTheDocumentAreOmitted
     [Test]
     public async Task ANonSystemTextJsonSerializerLogsAWarning()
     {
+#pragma warning disable IL2026, IL3050
+        var serializer = new NewtonsoftMessageBodySerializer<OrderPlaced>();
+#pragma warning restore IL2026, IL3050
         var registry = new MessagingMetadataRegistry();
         registry.SetRegion("eu-west-1");
         registry.AddPublication(new PublicationMetadata(
             MessagingDestinationKind.SnsTopic,
             "order-placed",
             isDynamic: false,
-            [new MessageTypeMetadata(typeof(OrderPlaced), nameof(OrderPlaced))]));
+            [new MessageTypeMetadata(typeof(OrderPlaced), nameof(OrderPlaced), serializer)]));
 
         var logger = new CapturingLogger();
-#pragma warning disable IL2026, IL3050
-        var serializationFactory = new NewtonsoftSerializationFactory();
-#pragma warning restore IL2026, IL3050
-        var generator = new AsyncApiDocumentGenerator(registry, new AsyncApiOptions(), serializationFactory, logger: logger);
+        var generator = new AsyncApiDocumentGenerator(registry, new AsyncApiOptions(), logger);
 
-        generator.Generate();
+        var document = generator.Generate();
 
-        await Assert.That(logger.Warnings).Contains((warning) => warning.Contains("documented without payload schemas"));
+        await Assert.That(logger.Warnings).Contains((warning) => warning.Contains("NewtonsoftMessageBodySerializer<OrderPlaced>") && warning.Contains("documented without payload schemas"));
+        await Assert.That(logger.EventIds).Contains(105);
+        await Assert.That(document.Channels["order-placed"].Messages[nameof(OrderPlaced)].ContentType).IsEqualTo("application/json");
+    }
+
+    private sealed class OpaqueSerializer : IMessageBodySerializer<OrderPlaced>
+    {
+        public string Serialize(OrderPlaced message) => message.OrderId;
+
+        public OrderPlaced Deserialize(string message) => new() { OrderId = message };
+    }
+
+    [Test]
+    public async Task ASerializerThatDoesNotDescribeItsFormatLogsAWarning()
+    {
+        var registry = new MessagingMetadataRegistry();
+        registry.SetRegion("eu-west-1");
+        registry.AddPublication(new PublicationMetadata(
+            MessagingDestinationKind.SnsTopic,
+            "order-placed",
+            isDynamic: false,
+            [new MessageTypeMetadata(typeof(OrderPlaced), nameof(OrderPlaced), new OpaqueSerializer())]));
+
+        var logger = new CapturingLogger();
+        var generator = new AsyncApiDocumentGenerator(registry, new AsyncApiOptions(), logger);
+
+        var document = generator.Generate();
+
+        await Assert.That(logger.Warnings).Contains((warning) => warning.Contains(nameof(IMessageBodyFormat)));
         await Assert.That(logger.EventIds).Contains(106);
+        await Assert.That(document.Channels["order-placed"].Messages[nameof(OrderPlaced)].Payload).IsNull();
+    }
+
+    private sealed class XmlSerializer : IMessageBodySerializer<OrderPlaced>, IMessageBodyFormat
+    {
+        public string ContentType => "application/xml";
+
+        public string Serialize(OrderPlaced message) => $"<OrderPlaced>{message.OrderId}</OrderPlaced>";
+
+        public OrderPlaced Deserialize(string message) => new();
+    }
+
+    [Test]
+    public async Task ASerializerThatDescribesItsFormatIsDocumentedWithItsContentType()
+    {
+        var registry = new MessagingMetadataRegistry();
+        registry.SetRegion("eu-west-1");
+        registry.AddPublication(new PublicationMetadata(
+            MessagingDestinationKind.SnsTopic,
+            "order-placed",
+            isDynamic: false,
+            [new MessageTypeMetadata(typeof(OrderPlaced), nameof(OrderPlaced), new XmlSerializer())]));
+
+        var document = new AsyncApiDocumentGenerator(registry, new AsyncApiOptions()).Generate();
+
+        await Assert.That(document.Channels["order-placed"].Messages[nameof(OrderPlaced)].ContentType).IsEqualTo("application/xml");
     }
 }

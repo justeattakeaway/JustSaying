@@ -19,6 +19,9 @@ public sealed class SystemTextJsonMessageBodySerializer<T> : IMessageBodySeriali
     /// <inheritdoc />
     public JsonSerializerOptions SerializerOptions => _options;
 
+    /// <inheritdoc />
+    public string ContentType => "application/json";
+
     /// <summary>
     /// Initializes a new instance of the <see cref="SystemTextJsonMessageBodySerializer{T}"/> class with default JSON serializer options.
     /// </summary>

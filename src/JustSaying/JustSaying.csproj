@@ -7,6 +7,7 @@
     <ProjectReference Include="..\JustSaying.Models\JustSaying.Models.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="JustSaying.AsyncApi.Tests" Key="$(JustSayingKey)" />
     <InternalsVisibleTo Include="JustSaying.IntegrationTests" Key="$(JustSayingKey)" />
     <InternalsVisibleTo Include="JustSaying.UnitTests" Key="$(JustSayingKey)" />
     <InternalsVisibleTo Include="JustSaying.CloudEvents" Key="$(JustSayingKey)" />

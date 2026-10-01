@@ -260,7 +260,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
 
         bus.AddMessageMiddleware<T>(queueName, handlerMiddleware);
 
-        var metadataRegistry = serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>();
+        var metadataRegistry = serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>() as MessagingMetadataRegistry;
         if (metadataRegistry != null)
         {
             if (queueRegion is null)

@@ -15,13 +15,10 @@ namespace JustSaying.AsyncApi;
 /// </summary>
 public sealed class AsyncApiDocumentGenerator
 {
-    private const string CloudEventsContentType = "application/cloudevents+json";
-
     private const string JsonContentType = "application/json";
 
     private readonly IMessagingMetadataRegistry _registry;
     private readonly AsyncApiOptions _options;
-    private readonly IMessageBodySerializationFactory _serializationFactory;
     private readonly ILogger<AsyncApiDocumentGenerator> _logger;
     private readonly object _syncRoot = new();
 
@@ -29,9 +26,8 @@ public sealed class AsyncApiDocumentGenerator
     // schema options and non-System.Text.Json warnings are computed once per serializer.
     private readonly Dictionary<MessageTypeMetadata, MessageDescription> _descriptions = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<JsonSerializerOptions, JsonSerializerOptions> _schemaOptions = new(ReferenceEqualityComparer.Instance);
-    private readonly HashSet<Type> _undescribableSerializers = [];
-    private JsonSerializerOptions _fallbackSchemaOptions;
-    private bool _fallbackSchemaOptionsResolved;
+    private readonly HashSet<Type> _undescribableFormats = [];
+    private bool _unknownFormatReported;
 
     // The component schemas of recursive payload types, keyed by type and the options that shape it.
     private readonly Dictionary<(Type Type, JsonSerializerOptions Options), string> _componentKeys = [];
@@ -51,8 +47,8 @@ public sealed class AsyncApiDocumentGenerator
     private static readonly EventId DynamicPublicationOmitted = new(102, nameof(DynamicPublicationOmitted));
     private static readonly EventId PayloadSchemaUnavailable = new(103, nameof(PayloadSchemaUnavailable));
     private static readonly EventId NoTypeInfoResolver = new(104, nameof(NoTypeInfoResolver));
-    private static readonly EventId SerializerNotDescribable = new(105, nameof(SerializerNotDescribable));
-    private static readonly EventId SerializationFactoryNotDescribable = new(106, nameof(SerializationFactoryNotDescribable));
+    private static readonly EventId FormatNotDescribable = new(105, nameof(FormatNotDescribable));
+    private static readonly EventId FormatUnknown = new(106, nameof(FormatUnknown));
     private static readonly EventId DuplicateMessageName = new(107, nameof(DuplicateMessageName));
 
     static AsyncApiDocumentGenerator()
@@ -71,11 +67,6 @@ public sealed class AsyncApiDocumentGenerator
     /// </summary>
     /// <param name="registry">The registry of captured publications and subscriptions.</param>
     /// <param name="options">The options configuring the generated document.</param>
-    /// <param name="serializationFactory">
-    /// The app-wide message body serialization factory, used to discover the payload wire contract of a
-    /// registration whose own serializer was not captured. Each captured registration is described from
-    /// the serializer it actually uses (see <see cref="MessageTypeMetadata.Serializer"/>).
-    /// </param>
     /// <param name="logger">The logger used to surface why parts of the document are omitted.</param>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="registry"/> or <paramref name="options"/> is <see langword="null"/>.
@@ -83,12 +74,10 @@ public sealed class AsyncApiDocumentGenerator
     public AsyncApiDocumentGenerator(
         IMessagingMetadataRegistry registry,
         AsyncApiOptions options,
-        IMessageBodySerializationFactory serializationFactory = null,
         ILogger<AsyncApiDocumentGenerator> logger = null)
     {
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
         _options = options ?? throw new ArgumentNullException(nameof(options));
-        _serializationFactory = serializationFactory;
         _logger = logger;
     }
 
@@ -545,10 +534,10 @@ public sealed class AsyncApiDocumentGenerator
             return description;
         }
 
-        var body = DescribeBody(metadata.MessageType, metadata.Serializer);
+        var body = DescribeBody(metadata.MessageType, metadata.BodyFormat);
 
         // A CloudEvent is identified by its `type`; anything else by its registered logical name.
-        string wireName = (metadata.Serializer as ICloudEventMessageBodySerializer)?.Type
+        string wireName = (metadata.BodyFormat as ICloudEventMessageBodySerializer)?.Type
             ?? metadata.WireName
             ?? metadata.MessageType.Name;
 
@@ -557,26 +546,22 @@ public sealed class AsyncApiDocumentGenerator
         return description;
     }
 
-    private (Type PayloadType, string ContentType, AsyncApiJsonSchema Payload) DescribeBody(Type messageType, object serializer)
+    private (Type PayloadType, string ContentType, AsyncApiJsonSchema Payload) DescribeBody(Type messageType, IMessageBodyFormat format)
     {
-        switch (serializer)
+        switch (format)
         {
             case ICloudEventMessageBodySerializer cloudEvent:
                 // The wire format is the CloudEvents structured-mode envelope with the payload under
                 // "data"; documenting the bare payload schema would hand consumers the wrong shape.
                 // Whether the handler sees the envelope or just the data is the same on the wire.
-                var data = DescribeBody(cloudEvent.DataType, cloudEvent.DataSerializer);
-                return (cloudEvent.DataType, CloudEventsContentType, CreateCloudEventEnvelopeSchema(cloudEvent, data.Payload));
+                var data = DescribeBody(cloudEvent.DataType, cloudEvent.DataFormat);
+                return (cloudEvent.DataType, cloudEvent.ContentType, CreateCloudEventEnvelopeSchema(cloudEvent, data.Payload));
 
             case ISystemTextJsonMessageBodySerializer systemTextJson:
-                return (messageType, JsonContentType, ExportPayloadSchema(messageType, SchemaOptions(systemTextJson.SerializerOptions)));
-
-            case null:
-                // The registration's serializer was not captured; fall back to the app-wide factory.
-                return (messageType, JsonContentType, ExportPayloadSchema(messageType, FallbackSchemaOptions()));
+                return (messageType, systemTextJson.ContentType ?? JsonContentType, ExportPayloadSchema(messageType, SchemaOptions(systemTextJson.SerializerOptions)));
 
             default:
-                return (messageType, JsonContentType, ExportPayloadSchema(messageType, UndescribableSerializerSchemaOptions(serializer)));
+                return (messageType, format?.ContentType ?? JsonContentType, ExportPayloadSchema(messageType, UndescribableFormatSchemaOptions(format)));
         }
     }
 
@@ -696,57 +681,33 @@ public sealed class AsyncApiDocumentGenerator
     /// than documenting a schema that may not match the wire format, its messages are documented
     /// without payload schemas unless <see cref="AsyncApiOptions.SerializerOptions"/> is supplied.
     /// </summary>
-    private JsonSerializerOptions UndescribableSerializerSchemaOptions(object serializer)
+    private JsonSerializerOptions UndescribableFormatSchemaOptions(IMessageBodyFormat format)
     {
         if (_options.SerializerOptions != null)
         {
             return SchemaOptions(_options.SerializerOptions);
         }
 
-        if (_undescribableSerializers.Add(serializer.GetType()))
+        if (format == null)
+        {
+            if (!_unknownFormatReported)
+            {
+                _unknownFormatReported = true;
+                Warn(
+                    FormatUnknown,
+                    $"A message body serializer does not describe its format (it does not implement {nameof(IMessageBodyFormat)}), so its messages are documented as JSON without payload schemas. " +
+                    "Implement ISystemTextJsonMessageBodySerializer on a System.Text.Json-based serializer, or set AsyncApiOptions.SerializerOptions to options matching the wire format, to document payload schemas.");
+            }
+        }
+        else if (_undescribableFormats.Add(format.GetType()))
         {
             Warn(
-                SerializerNotDescribable,
-                $"The message body serializer ({FriendlyTypeName(serializer.GetType())}) is not System.Text.Json-based, so the wire contract cannot be derived and its messages are documented without payload schemas. " +
+                FormatNotDescribable,
+                $"The message body serializer ({FriendlyTypeName(format.GetType())}) is not System.Text.Json-based, so the wire contract cannot be derived and its messages are documented without payload schemas. " +
                 "Set AsyncApiOptions.SerializerOptions to options matching the wire format to document payload schemas.");
         }
 
         return null;
-    }
-
-    /// <summary>
-    /// The options to export schemas with for a registration whose serializer was not captured,
-    /// derived from the app-wide serialization factory.
-    /// </summary>
-    private JsonSerializerOptions FallbackSchemaOptions()
-    {
-        if (_fallbackSchemaOptionsResolved)
-        {
-            return _fallbackSchemaOptions;
-        }
-
-        _fallbackSchemaOptionsResolved = true;
-
-        if (_options.SerializerOptions != null)
-        {
-            return _fallbackSchemaOptions = SchemaOptions(_options.SerializerOptions);
-        }
-
-        switch (_serializationFactory)
-        {
-            case SystemTextJsonSerializationFactory systemTextJsonFactory:
-                return _fallbackSchemaOptions = SchemaOptions(systemTextJsonFactory.SerializerOptions);
-
-            case null:
-                return _fallbackSchemaOptions = SchemaOptions(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions);
-
-            default:
-                Warn(
-                    SerializationFactoryNotDescribable,
-                    $"The message body serialization factory ({_serializationFactory.GetType()}) is not System.Text.Json-based, so the wire contract cannot be derived and messages are documented without payload schemas. " +
-                    "Set AsyncApiOptions.SerializerOptions to options matching the wire format to document payload schemas.");
-                return null;
-        }
     }
 
     private void Warn(EventId eventId, string message)

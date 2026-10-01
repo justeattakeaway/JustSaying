@@ -1,10 +1,15 @@
 namespace JustSaying.Messaging.Metadata;
 
 /// <summary>
-/// The default <see cref="IMessagingMetadataRegistry"/>. Thread-safe, and deduplicates
-/// entries because publication configuration can run for both the publisher and the
-/// batch publisher.
+/// The <see cref="IMessagingMetadataRegistry"/> the fluent builders populate. Thread-safe, and
+/// deduplicates entries because publication configuration can run for both the publisher and
+/// the batch publisher.
 /// </summary>
+/// <remarks>
+/// Register an instance with the service resolver (as <see cref="IMessagingMetadataRegistry"/>) to
+/// have the bus's publications and subscriptions captured as it is built; AsyncAPI support does
+/// this. Only JustSaying adds entries.
+/// </remarks>
 public sealed class MessagingMetadataRegistry : IMessagingMetadataRegistry
 {
     private readonly object _syncRoot = new();
@@ -39,8 +44,11 @@ public sealed class MessagingMetadataRegistry : IMessagingMetadataRegistry
         }
     }
 
-    /// <inheritdoc />
-    public void SetRegion(string region)
+    /// <summary>
+    /// Records the AWS region the bus is configured for.
+    /// </summary>
+    /// <param name="region">The AWS region system name.</param>
+    internal void SetRegion(string region)
     {
         lock (_syncRoot)
         {
@@ -48,8 +56,11 @@ public sealed class MessagingMetadataRegistry : IMessagingMetadataRegistry
         }
     }
 
-    /// <inheritdoc />
-    public void AddPublication(PublicationMetadata publication)
+    /// <summary>
+    /// Records a publication.
+    /// </summary>
+    /// <param name="publication">The publication metadata to record.</param>
+    internal void AddPublication(PublicationMetadata publication)
     {
         if (publication == null) throw new ArgumentNullException(nameof(publication));
 
@@ -62,8 +73,11 @@ public sealed class MessagingMetadataRegistry : IMessagingMetadataRegistry
         }
     }
 
-    /// <inheritdoc />
-    public void AddSubscription(SubscriptionMetadata subscription)
+    /// <summary>
+    /// Records a subscription.
+    /// </summary>
+    /// <param name="subscription">The subscription metadata to record.</param>
+    internal void AddSubscription(SubscriptionMetadata subscription)
     {
         if (subscription == null) throw new ArgumentNullException(nameof(subscription));
 

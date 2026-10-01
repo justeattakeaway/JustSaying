@@ -569,3 +569,7 @@ s.ForQueue("orders", q => q
 ```
 
 A queue is recognised however it's given: by name, or by a URL or ARN of a queue with that name in the same region (a URL that doesn't say its region, such as a local emulator's, is taken to be in the bus region). Subscribing one queue to several topics with the *same* message type is still allowed; registering the same subscription twice (for example `ForTopic<A>()` twice) now fails, as it could handle each message twice.
+
+## Describing a custom serializer's format
+
+A custom `IMessageBodySerializer<T>` can also describe the format it writes to tooling such as AsyncAPI generation (`JustSaying.AsyncApi`) by implementing **`IMessageBodyFormat`** (its content type), or **`ISystemTextJsonMessageBodySerializer`** when it serializes with System.Text.Json, so that payload schemas can be derived from its options. A serializer that wraps another can implement the same interface and forward it. Serializers that implement neither are documented without a payload schema.

@@ -32,8 +32,8 @@ public sealed class AsyncApiOptions
 
     /// <summary>
     /// Gets or sets the <see cref="JsonSerializerOptions"/> used to generate message payload
-    /// schemas. When <see langword="null"/>, the options are discovered from the configured
-    /// message body serialization factory, falling back to the serializer defaults.
+    /// schemas. When <see langword="null"/>, each message's schema is generated from the options
+    /// of the System.Text.Json serializer its registration uses.
     /// </summary>
     public JsonSerializerOptions SerializerOptions { get; set; }
 

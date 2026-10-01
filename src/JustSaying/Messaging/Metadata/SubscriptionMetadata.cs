@@ -18,7 +18,7 @@ public sealed class SubscriptionMetadata
     /// <exception cref="ArgumentNullException">
     /// <paramref name="queueName"/> or <paramref name="messages"/> is <see langword="null"/>.
     /// </exception>
-    public SubscriptionMetadata(
+    internal SubscriptionMetadata(
         string queueName,
         string topicName,
         string subscriptionGroupName,

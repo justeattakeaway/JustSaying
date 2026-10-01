@@ -365,7 +365,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
         bus.AddMessagePublisher<T>(config.Publisher);
         bus.AddMessageBatchPublisher<T>(config.BatchPublisher);
 
-        var metadataRegistry = _serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>();
+        var metadataRegistry = _serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>() as MessagingMetadataRegistry;
         if (metadataRegistry != null)
         {
             var wireName = SubjectSet
@@ -433,7 +433,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
         bus.AddMessagePublisher<T>(publisherConfig.Publisher);
         bus.AddMessageBatchPublisher<T>(publisherConfig.BatchPublisher);
 
-        var metadataRegistry = _serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>();
+        var metadataRegistry = _serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>() as MessagingMetadataRegistry;
         if (metadataRegistry != null)
         {
             // The topic's region comes from its ARN and may differ from the bus's configured

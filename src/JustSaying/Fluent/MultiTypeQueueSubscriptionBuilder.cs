@@ -486,7 +486,7 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
             SqsQueue = sqsQueue,
         });
 
-        var metadataRegistry = serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>();
+        var metadataRegistry = serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>() as MessagingMetadataRegistry;
         if (metadataRegistry != null)
         {
             if (queueRegion is null)

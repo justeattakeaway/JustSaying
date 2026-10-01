@@ -208,7 +208,7 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
                 typeof(T));
         }
 
-        var metadataRegistry = serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>();
+        var metadataRegistry = serviceResolver.ResolveOptionalService<IMessagingMetadataRegistry>() as MessagingMetadataRegistry;
 
         if (_destination.IsAddress)
         {
@@ -237,7 +237,7 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
         string subject,
         IMessageBodySerializer<T> serializer,
         bool isRawMessage,
-        IMessagingMetadataRegistry metadataRegistry)
+        MessagingMetadataRegistry metadataRegistry)
     {
         if (_shouldCheckQueueExistence)
         {
@@ -344,7 +344,7 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
         string subject,
         IMessageBodySerializer<T> serializer,
         bool isRawMessage,
-        IMessagingMetadataRegistry metadataRegistry)
+        MessagingMetadataRegistry metadataRegistry)
     {
         if (QueueName is not null)
         {

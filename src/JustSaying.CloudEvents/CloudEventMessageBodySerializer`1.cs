@@ -35,7 +35,10 @@ public sealed class CloudEventMessageBodySerializer<TMessage> : IMessageBodySeri
     public System.Type DataType => typeof(TMessage);
 
     /// <inheritdoc />
-    public object DataSerializer => _dataSerializer;
+    public string ContentType => "application/cloudevents+json";
+
+    /// <inheritdoc />
+    public IMessageBodyFormat DataFormat => _dataSerializer as IMessageBodyFormat;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CloudEventMessageBodySerializer{TMessage}"/> class.

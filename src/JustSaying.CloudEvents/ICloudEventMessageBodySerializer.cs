@@ -1,3 +1,5 @@
+using JustSaying.Messaging.MessageSerialization;
+
 namespace JustSaying.CloudEvents;
 
 /// <summary>
@@ -5,7 +7,11 @@ namespace JustSaying.CloudEvents;
 /// so that tooling (such as AsyncAPI document generation) can document a registration's wire format
 /// from the serializer it actually uses rather than from application-wide configuration.
 /// </summary>
-public interface ICloudEventMessageBodySerializer
+/// <remarks>
+/// The <see cref="IMessageBodyFormat.ContentType"/> of the envelope is
+/// <c>application/cloudevents+json</c>; <see cref="DataContentType"/> is that of its <c>data</c>.
+/// </remarks>
+public interface ICloudEventMessageBodySerializer : IMessageBodyFormat
 {
     /// <summary>
     /// Gets the CloudEvents <c>type</c> written to the envelope, or <see langword="null"/> when the
@@ -30,8 +36,8 @@ public interface ICloudEventMessageBodySerializer
     Type DataType { get; }
 
     /// <summary>
-    /// Gets the serializer — an <c>IMessageBodySerializer&lt;T&gt;</c> for <see cref="DataType"/> —
-    /// that produces the envelope's <c>data</c> member.
+    /// Gets the format of the envelope's <c>data</c> member, as described by the serializer that
+    /// produces it, or <see langword="null"/> when that serializer does not describe its format.
     /// </summary>
-    object DataSerializer { get; }
+    IMessageBodyFormat DataFormat { get; }
 }
