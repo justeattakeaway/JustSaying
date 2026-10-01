@@ -103,6 +103,20 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
         var config = bus.Config;
         var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
 
+        var discriminators = _discriminators.Count > 0
+            ? _discriminators.ToArray()
+            : [new SubjectMessageTypeDiscriminator()];
+
+        // Raw delivery strips the SNS envelope, and with it the Subject, so a queue routed only by Subject
+        // could never resolve a message's type: every message would end up in the error queue.
+        if (subscriptionConfig.RawMessageDelivery && discriminators.All(discriminator => discriminator is SubjectMessageTypeDiscriminator))
+        {
+            throw new InvalidOperationException(
+                $"The multi-type queue subscription for '{subscriptionConfig.QueueName}' uses raw message delivery but routes messages by the SNS Subject, " +
+                "which raw messages don't carry. Turn off raw message delivery, or add a discriminator that reads the type from the message body " +
+                $"or attributes with {nameof(WithDiscriminator)}(...).");
+        }
+
         // The discriminator value is what routes an inbound message to a serializer, so a blank or
         // duplicated one is a misconfiguration that would otherwise silently deserialize messages as the
         // wrong type. Resolve the names up front, before any queue is created.
@@ -141,9 +155,6 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
             registration.RegisterHandler(bus, handlerResolver, serviceResolver, subscriptionConfig.QueueName);
         }
 
-        var discriminators = _discriminators.Count > 0
-            ? _discriminators.ToArray()
-            : [new SubjectMessageTypeDiscriminator()];
         var serializerResolver = new DiscriminatingInboundMessageSerializerResolver(discriminators, serializersByName);
 
         bus.AddQueue(subscriptionConfig.SubscriptionGroupName, new SqsSource

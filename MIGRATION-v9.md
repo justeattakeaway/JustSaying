@@ -252,3 +252,5 @@ s.ForQueue("orders", q => q
 ```
 
 A message that no registered type matches (for example a type the producer ships before this consumer handles it, or a mistyped subject) is **not deleted**. It is logged at Error, naming the message id, the queue, what each discriminator found (e.g. `subject 'OrderRefunded'`) and the registered type names, and left on the queue, so the redrive policy moves it to the error queue once its retries are used up. Redrive it from there when a consumer can handle it.
+
+Raw message delivery strips the SNS envelope, and with it the `Subject`. A multi-type subscription that uses raw delivery and routes only by `Subject` (the default) can never route a message, so it now fails when the bus is built; add a discriminator that reads the type from the body or attributes (such as `CloudEventTypeDiscriminator`) or turn raw delivery off.

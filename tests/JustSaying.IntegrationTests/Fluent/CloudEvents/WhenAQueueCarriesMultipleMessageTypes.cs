@@ -222,6 +222,50 @@ public class WhenAQueueCarriesMultipleMessageTypes : IntegrationTestBase
     }
 
     [Test]
+    public async Task Then_Raw_Delivery_With_Subject_Routing_Fails_Fast()
+    {
+        // Arrange - raw messages carry no Subject, so this queue could never route a single message.
+        var services = GivenJustSaying()
+            .ConfigureJustSaying(builder => builder
+                .Subscriptions(s => s.ForQueue(UniqueName, q => q
+                    .WithReadConfiguration(c => c.RawMessageDelivery = true)
+                    .Handling<OrderPlaced>())))
+            .AddSingleton(Substitute.For<IHandlerAsync<OrderPlaced>>());
+
+        var serviceProvider = services.BuildServiceProvider();
+
+        // Act
+        var exception = Should.Throw<InvalidOperationException>(
+            () => serviceProvider.GetRequiredService<IMessagingBus>());
+
+        // Assert
+        exception.Message.ShouldContain(UniqueName);
+        exception.Message.ShouldContain("raw message delivery");
+
+        await Task.CompletedTask;
+    }
+
+    [Test]
+    public async Task Then_Raw_Delivery_With_A_Body_Discriminator_Is_Allowed()
+    {
+        // Arrange - the CloudEvents type is in the body, so raw delivery can still be routed.
+        var services = GivenJustSaying()
+            .ConfigureJustSaying(builder => builder
+                .Subscriptions(s => s.ForQueue(UniqueName, q => q
+                    .WithReadConfiguration(c => c.RawMessageDelivery = true)
+                    .WithDiscriminator(new CloudEventTypeDiscriminator())
+                    .Handling<OrderPlaced>("com.example.orders.order.placed"))))
+            .AddSingleton(Substitute.For<IHandlerAsync<OrderPlaced>>());
+
+        var serviceProvider = services.BuildServiceProvider();
+
+        // Act and Assert
+        serviceProvider.GetRequiredService<IMessagingBus>().ShouldNotBeNull();
+
+        await Task.CompletedTask;
+    }
+
+    [Test]
     public async Task Then_A_Blank_Type_Name_Fails_Fast()
     {
         // Arrange
