@@ -1,7 +1,12 @@
 <Project>
   <PropertyGroup>
     <_JustSayingAsyncApiToolPath>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\tools\net8.0\JustSaying.AsyncApi.GetDocument.dll'))</_JustSayingAsyncApiToolPath>
-    <_JustSayingAsyncApiFileListPath>$(IntermediateOutputPath)JustSayingAsyncApi.cache</_JustSayingAsyncApiFileListPath>
+    <!--
+      The tool runs with the application's output directory as its working directory, so every
+      path handed to it is made absolute here; a relative documents directory is relative to the
+      project, like any other path in a project file.
+    -->
+    <_JustSayingAsyncApiDocumentsDirectory>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(JustSayingAsyncApiDocumentsDirectory)'))</_JustSayingAsyncApiDocumentsDirectory>
   </PropertyGroup>
 
   <!--
@@ -15,7 +20,45 @@
     for example when JustSayingAsyncApiGenerateDocumentsOnBuild is 'false'.
   -->
   <Target Name="GenerateJustSayingAsyncApiDocuments"
-          Inputs="$(TargetPath);$(ProjectDepsFilePath);$(ProjectRuntimeConfigFilePath)"
+          DependsOnTargets="_PrepareJustSayingAsyncApiDocuments;_GenerateJustSayingAsyncApiDocuments" />
+
+  <Target Name="_PrepareJustSayingAsyncApiDocuments">
+    <PropertyGroup>
+      <!-- Absolute, because the tool resolves relative paths against its working directory, not the project. -->
+      <_JustSayingAsyncApiFileListPath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'JustSayingAsyncApi.cache'))</_JustSayingAsyncApiFileListPath>
+    </PropertyGroup>
+
+    <!--
+      The documents generated last time are outputs too: deleting one must bring it back. Their
+      timestamps are deliberately not compared (the tool leaves an unchanged document untouched),
+      so a missing document is detected here and forces generation by removing the file list.
+    -->
+    <ReadLinesFromFile File="$(_JustSayingAsyncApiFileListPath)" Condition=" Exists('$(_JustSayingAsyncApiFileListPath)') ">
+      <Output TaskParameter="Lines" ItemName="_JustSayingAsyncApiPreviousDocument" />
+    </ReadLinesFromFile>
+    <ItemGroup>
+      <_JustSayingAsyncApiMissingDocument Include="@(_JustSayingAsyncApiPreviousDocument)" Condition=" !Exists('%(Identity)') " />
+    </ItemGroup>
+    <Delete Files="$(_JustSayingAsyncApiFileListPath)" Condition=" '@(_JustSayingAsyncApiMissingDocument)' != '' " />
+
+    <ItemGroup>
+      <!--
+        Everything the generated document can depend on: the application and every assembly it
+        loads (a referenced project's implementation assembly is a copy-local path; its reference
+        assembly does not change when only a string literal does), the configuration the host
+        reads as it is built, the tool, and the project files that configure generation.
+      -->
+      <_JustSayingAsyncApiInput Include="$(TargetPath);$(ProjectDepsFilePath);$(ProjectRuntimeConfigFilePath);$(_JustSayingAsyncApiToolPath)" />
+      <_JustSayingAsyncApiInput Include="@(ReferencePath);@(ReferenceCopyLocalPaths)" />
+      <_JustSayingAsyncApiInput Include="$(MSBuildProjectDirectory)/appsettings*.json" />
+      <_JustSayingAsyncApiInput Include="$(MSBuildAllProjects)" />
+
+      <FileWrites Include="$(_JustSayingAsyncApiFileListPath)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_GenerateJustSayingAsyncApiDocuments"
+          Inputs="@(_JustSayingAsyncApiInput)"
           Outputs="$(_JustSayingAsyncApiFileListPath)">
     <Error Condition=" !Exists('$(_JustSayingAsyncApiToolPath)') "
            Text="The JustSaying AsyncAPI generation tool was not found at '$(_JustSayingAsyncApiToolPath)'. The JustSaying.AsyncApi.BuildTools package may be corrupt; try restoring again." />
@@ -25,7 +68,7 @@
     <PropertyGroup>
       <_JustSayingAsyncApiCommand>dotnet exec --depsfile "$(ProjectDepsFilePath)" --runtimeconfig "$(ProjectRuntimeConfigFilePath)"</_JustSayingAsyncApiCommand>
       <_JustSayingAsyncApiCommand Condition=" '$(NuGetPackageRoot)' != '' ">$(_JustSayingAsyncApiCommand) --additionalprobingpath "$(NuGetPackageRoot.TrimEnd('\').TrimEnd('/'))"</_JustSayingAsyncApiCommand>
-      <_JustSayingAsyncApiCommand>$(_JustSayingAsyncApiCommand) "$(_JustSayingAsyncApiToolPath)" --assembly "$(TargetPath)" --output "$(JustSayingAsyncApiDocumentsDirectory)" --file-list "$(_JustSayingAsyncApiFileListPath)"</_JustSayingAsyncApiCommand>
+      <_JustSayingAsyncApiCommand>$(_JustSayingAsyncApiCommand) "$(_JustSayingAsyncApiToolPath)" --assembly "$(TargetPath)" --output "$(_JustSayingAsyncApiDocumentsDirectory.TrimEnd('\').TrimEnd('/'))" --file-list "$(_JustSayingAsyncApiFileListPath)"</_JustSayingAsyncApiCommand>
       <_JustSayingAsyncApiCommand Condition=" '$(JustSayingAsyncApiDocumentFileName)' != '' ">$(_JustSayingAsyncApiCommand) --file-name "$(JustSayingAsyncApiDocumentFileName)"</_JustSayingAsyncApiCommand>
       <_JustSayingAsyncApiCommand Condition=" '$(JustSayingAsyncApiEntryPointTimeoutSeconds)' != '' ">$(_JustSayingAsyncApiCommand) --entry-point-timeout "$(JustSayingAsyncApiEntryPointTimeoutSeconds)"</_JustSayingAsyncApiCommand>
     </PropertyGroup>
@@ -43,10 +86,6 @@
     </Exec>
     <Error Condition=" '$(_JustSayingAsyncApiExitCode)' != '0' "
            Text="AsyncAPI document generation for '$(MSBuildProjectName)' failed with exit code $(_JustSayingAsyncApiExitCode). Set JustSayingAsyncApiGenerateDocumentsOnBuild to 'false' to disable build-time generation." />
-
-    <ItemGroup>
-      <FileWrites Include="$(_JustSayingAsyncApiFileListPath)" />
-    </ItemGroup>
   </Target>
 
   <!--

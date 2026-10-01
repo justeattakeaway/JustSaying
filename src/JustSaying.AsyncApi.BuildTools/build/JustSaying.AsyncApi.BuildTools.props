@@ -2,7 +2,7 @@
   <PropertyGroup>
     <!-- Set to 'false' to reference the package without generating documents on every build. -->
     <JustSayingAsyncApiGenerateDocumentsOnBuild Condition=" '$(JustSayingAsyncApiGenerateDocumentsOnBuild)' == '' ">true</JustSayingAsyncApiGenerateDocumentsOnBuild>
-    <!-- The directory the generated documents are written to. -->
+    <!-- The directory the generated documents are written to. A relative path is relative to the project directory. -->
     <JustSayingAsyncApiDocumentsDirectory Condition=" '$(JustSayingAsyncApiDocumentsDirectory)' == '' ">$(MSBuildProjectDirectory)</JustSayingAsyncApiDocumentsDirectory>
     <!--
       The file name (without extension) of the generated document. When several projects share a

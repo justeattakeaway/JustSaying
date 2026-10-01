@@ -26,6 +26,9 @@
     <!-- Projects under tests/ and src/ have different artifacts roots (each tree has its own Directory.Build.props). -->
     <AssemblyMetadata Include="TestAppDirectory" Value="$([MSBuild]::NormalizeDirectory('$(ArtifactsPath)', 'bin', 'JustSaying.AsyncApi.Tests.App', '$(Configuration.ToLowerInvariant())'))" />
     <AssemblyMetadata Include="GetDocumentToolPath" Value="$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '..', '..', 'artifacts', 'bin', 'JustSaying.AsyncApi.BuildTools', '$(Configuration.ToLowerInvariant())', 'JustSaying.AsyncApi.GetDocument.dll'))" />
+    <!-- The package's MSBuild files, imported by the consumer projects that the targets tests build, and the SDK they build with. -->
+    <AssemblyMetadata Include="BuildToolsMSBuildDirectory" Value="$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '..', '..', 'src', 'JustSaying.AsyncApi.BuildTools', 'build'))" />
+    <AssemblyMetadata Include="GlobalJsonPath" Value="$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '..', '..', 'global.json'))" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
