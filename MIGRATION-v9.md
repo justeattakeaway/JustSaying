@@ -187,6 +187,8 @@ var options = new JsonSerializerOptions(SystemTextJsonMessageBodySerializer.Defa
 services.AddSingleton<IMessageBodySerializationFactory>(new SystemTextJsonSerializationFactory(options));
 ```
 
+When reflection-based serialization is off, a message type that's missing from the context (or no context at all, as with the default registration) fails when the bus is built, with an `InvalidOperationException` naming the type, rather than at the first publish or receive.
+
 **`UseStringEnumConverter = true` is required** for wire compatibility. The default writes enums as strings using a converter that needs dynamic code, so under Native AOT it isn't there. Without the setting, an AOT service writes enums as numbers and **can't read the strings** that JIT and v8-style producers send: those messages fail to deserialize and end up in the error queue. JustSaying doesn't check this for you.
 
 To reproduce AOT serializer behaviour without publishing natively, set `<PublishAot>true</PublishAot>` in the project. That turns off reflection-based serialization and dynamic code in `dotnet run` and `dotnet test` too. Building with `-p:JsonSerializerIsReflectionEnabledByDefault=false` turns off only reflection: it shows a type missing from the context, but enums still go out as strings because dynamic code is still available.

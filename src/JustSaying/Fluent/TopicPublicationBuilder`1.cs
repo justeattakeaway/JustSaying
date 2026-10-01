@@ -198,6 +198,10 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
                 loggerFactory,
                 bus);
 
+        // A dynamic topic only builds its publisher on first publish, so create a serializer now so that
+        // one that can't handle T fails at bus build, as it does for a static topic.
+        _ = bus.MessageBodySerializerFactory.GetSerializer<T>();
+
         ITopicPublisher config = TopicNameCustomizer != null
             ? DynamicPublicationConfiguration.Build<T>(message => TopicNameCustomizer((T)message), BuildConfiguration, loggerFactory)
             : BuildConfiguration(TopicName);

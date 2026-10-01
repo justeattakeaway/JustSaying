@@ -106,6 +106,58 @@ public sealed class AotRoundTripTests
         await Assert.That(order).IsEqualTo(new OrderPlaced("order-2", OrderStatus.New));
     }
 
+    [Test]
+    public async Task A_Message_Type_Missing_From_The_Context_Fails_At_Bus_Build()
+    {
+        var options = new JsonSerializerOptions(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions)
+        {
+            TypeInfoResolver = TestMessageOnlySerializerContext.Default,
+        };
+
+        await using var provider = BuildServiceProvider(new InMemoryAwsBus(), new SystemTextJsonSerializationFactory(options));
+
+        var exception = Assert.Throws<InvalidOperationException>(() => provider.GetRequiredService<IMessagePublisher>());
+
+        await Assert.That(exception.Message).Contains(typeof(OrderPlaced).FullName!);
+        await Assert.That(exception.Message).Contains(nameof(SystemTextJsonSerializationFactory));
+    }
+
+    [Test]
+    public async Task A_Dynamic_Topic_For_A_Type_Missing_From_The_Context_Fails_At_Bus_Build()
+    {
+        var options = new JsonSerializerOptions(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions)
+        {
+            TypeInfoResolver = TestMessageOnlySerializerContext.Default,
+        };
+
+        var bus = new InMemoryAwsBus();
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.TryAddSingleton<IMessageBodySerializationFactory>(new SystemTextJsonSerializationFactory(options));
+        services.AddJustSaying(config =>
+        {
+            config.Messaging(x => x.WithRegion("eu-west-1"))
+                  .Client(x => x.WithClientFactory(() => new InMemoryAwsClientFactory(bus)));
+            config.Publications(x => x.WithTopic<OrderPlaced>(topic => topic.WithTopicName(order => $"orders-{order.Status}")));
+        });
+
+        await using var provider = services.BuildServiceProvider();
+
+        var exception = Assert.Throws<InvalidOperationException>(() => provider.GetRequiredService<IMessagePublisher>());
+
+        await Assert.That(exception.Message).Contains(typeof(OrderPlaced).FullName!);
+    }
+
+    [Test]
+    public async Task The_Default_Serializer_Without_A_Context_Fails_At_Bus_Build()
+    {
+        await using var provider = BuildServiceProvider(new InMemoryAwsBus(), serializationFactory: null);
+
+        var exception = Assert.Throws<InvalidOperationException>(() => provider.GetRequiredService<IMessagingBus>());
+
+        await Assert.That(exception.Message).Contains("JsonSerializerContext");
+    }
+
     private static SystemTextJsonSerializationFactory CreateSerializationFactory()
     {
         // Copy JustSaying's defaults so the source-generated path reads and writes like the JIT default.
@@ -127,7 +179,10 @@ public sealed class AotRoundTripTests
         // The default System.Text.Json factory uses reflection-based options (no source-gen
         // resolver) and can't serialize anything under Native AOT. Register a source-generated
         // factory first so it wins the TryAdd in AddJustSaying.
-        services.TryAddSingleton(serializationFactory);
+        if (serializationFactory is not null)
+        {
+            services.TryAddSingleton(serializationFactory);
+        }
 
         services.AddJustSaying(config =>
         {
@@ -223,3 +278,6 @@ public sealed class InMemoryAwsClientFactory(InMemoryAwsBus bus) : IAwsClientFac
 [JsonSerializable(typeof(TestMessage))]
 [JsonSerializable(typeof(OrderPlaced))]
 public sealed partial class AotTestSerializerContext : JsonSerializerContext;
+
+[JsonSerializable(typeof(TestMessage))]
+public sealed partial class TestMessageOnlySerializerContext : JsonSerializerContext;
