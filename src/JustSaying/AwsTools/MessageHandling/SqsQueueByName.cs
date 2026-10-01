@@ -31,6 +31,7 @@ public class SqsQueueByName(
                     await ErrorQueue.CreateAsync(new SqsBasicConfiguration
                         {
                             ErrorQueueRetentionPeriod = queueConfig.ErrorQueueRetentionPeriod,
+                            ServerSideEncryption = queueConfig.ServerSideEncryption,
                             ErrorQueueOptOut = true
                         },
                         cancellationToken: cancellationToken).ConfigureAwait(false);
@@ -117,6 +118,7 @@ public class SqsQueueByName(
             var errorQueueConfig = new SqsBasicConfiguration
             {
                 ErrorQueueRetentionPeriod = queueConfig.ErrorQueueRetentionPeriod,
+                ServerSideEncryption = queueConfig.ServerSideEncryption,
                 ErrorQueueOptOut = true
             };
 

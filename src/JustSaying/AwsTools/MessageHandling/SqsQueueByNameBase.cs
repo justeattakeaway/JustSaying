@@ -46,7 +46,7 @@ public abstract class SqsQueueByNameBase : ISqsQueue
     internal RedrivePolicy RedrivePolicy { get; set; }
     public string RegionSystemName => _region.SystemName;
     internal TimeSpan DeliveryDelay { get; private set; }
-    internal ServerSideEncryption ServerSideEncryption { get; private set; }
+    internal ServerSideEncryption ServerSideEncryption { get; private protected set; }
     internal string Policy { get; private set; }
     protected ILogger Logger { get; }
 
@@ -238,7 +238,7 @@ public abstract class SqsQueueByNameBase : ISqsQueue
                || QueueNeedsUpdatingBecauseOfEncryption(queueConfig);
     }
 
-    private bool QueueNeedsUpdatingBecauseOfEncryption(SqsBasicConfiguration queueConfig)
+    private protected bool QueueNeedsUpdatingBecauseOfEncryption(SqsBasicConfiguration queueConfig)
     {
         if (ServerSideEncryption == queueConfig.ServerSideEncryption)
         {

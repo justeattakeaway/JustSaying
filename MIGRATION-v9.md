@@ -276,7 +276,9 @@ This restructures the v8 fluent surface:
 ### What JustSaying does to an owned queue on startup
 
 A `QueueDestination` gives the same queue whether a publication or a subscription creates it: the
-same attributes, the same `_error` queue and redrive policy, and the same tags on both queues. The
+same attributes, the same `_error` queue and redrive policy, and the same tags on both queues.
+`WithEncryption` now covers the `_error` queue too, which is created with (and updated to) the main
+queue's KMS settings; v8 left the error queue unencrypted. The
 creation settings are validated when the bus is built, for publications as well as subscriptions
 (v8 never validated a publication's queue settings).
 
