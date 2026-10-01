@@ -155,6 +155,8 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
 
     public void AddMessagePublisher<T>(IMessagePublisher messagePublisher) where T : class
     {
+        EnsurePublishable<T>();
+
         if (Config.PublishFailureReAttempts == 0)
         {
             _log.LogWarning(
@@ -170,6 +172,8 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
 
     public void AddMessageBatchPublisher<T>(IMessageBatchPublisher messageBatchPublisher) where T : class
     {
+        EnsurePublishable<T>();
+
         if (PublishBatchConfiguration.PublishFailureReAttempts == 0)
         {
             _log.LogWarning("You have not set a re-attempt value for batch publish failures. If the publish location is not available you may lose messages.");
@@ -179,6 +183,18 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         if (messageBatchPublisher is IMessagePublisher messagePublisher)
         {
             _publishersByType[typeof(T)] = messagePublisher;
+        }
+    }
+
+    private static void EnsurePublishable<T>()
+    {
+        // Publishing routes each message by its runtime type, which is never an interface or an
+        // abstract class, so a publication registered for one could never be used.
+        if (typeof(T).IsInterface || typeof(T).IsAbstract)
+        {
+            throw new InvalidOperationException(
+                $"Cannot register a publication for message type '{typeof(T).FullName}' because it is {(typeof(T).IsInterface ? "an interface" : "abstract")}. " +
+                "Messages are published to the publication registered for their concrete runtime type, so register a publication for each concrete message type instead.");
         }
     }
 

@@ -60,6 +60,10 @@ Rename batch calls accordingly. Single-message `PublishAsync` is unchanged.
 
 Because of that, `T` is always the concrete published type in JustSaying's own path. If you construct a serializer for a base type yourself, note that the two built-in implementations differ: `SystemTextJsonMessageBodySerializer<T>` serializes the declared type `T` and omits derived-only members, while `NewtonsoftMessageBodySerializer<T>` builds its contract from the runtime type and includes them.
 
+### Publications for interfaces and abstract types are rejected
+
+Because publishing routes by runtime type, a publication registered for an interface or an abstract class (for example `WithTopic<IOrderEvent>()`) could never be used: in v8 every publish then failed with "no publishers registered". v9 throws when the publisher is built instead. Register a publication for each concrete message type. Subscriptions to interfaces and abstract types are unchanged.
+
 ## Exactly-once handling requires a stable key for non-`Message` payloads
 
 `UseExactlyOnce<TMessage>` previously deduplicated on `Message.UniqueKey()`, falling back to a fresh GUID per receive for anything else — which silently turned exactly-once into a no-op. v9 fails fast instead:
