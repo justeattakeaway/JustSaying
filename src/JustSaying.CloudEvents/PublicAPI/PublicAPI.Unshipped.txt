@@ -15,7 +15,7 @@ JustSaying.CloudEvents.CloudEventSerializationFactory.GetSerializer<T>(string ty
 JustSaying.CloudEvents.CloudEventSerializationFactory.GetCloudEventType<T>() -> string
 JustSaying.CloudEvents.CloudEventSerializationFactory.GetDataSerializer<T>(string type = null) -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<T>
 JustSaying.CloudEvents.CloudEvent<T>
-JustSaying.CloudEvents.CloudEvent<T>.CloudEvent(T data, string id = null, System.Uri source = null, string type = null, System.DateTimeOffset? time = null, string subject = null, System.Collections.Generic.IReadOnlyDictionary<string, string> extensions = null) -> void
+JustSaying.CloudEvents.CloudEvent<T>.CloudEvent(T data, string id = null, System.Uri source = null, string type = null, System.DateTimeOffset? time = null, string subject = null, System.Collections.Generic.IReadOnlyDictionary<string, string> extensions = null, string dataContentType = null, System.Uri dataSchema = null) -> void
 JustSaying.CloudEvents.CloudEvent<T>.Data.get -> T
 JustSaying.CloudEvents.CloudEvent<T>.Id.get -> string
 JustSaying.CloudEvents.CloudEvent<T>.Source.get -> System.Uri
@@ -23,6 +23,8 @@ JustSaying.CloudEvents.CloudEvent<T>.Type.get -> string
 JustSaying.CloudEvents.CloudEvent<T>.Time.get -> System.DateTimeOffset?
 JustSaying.CloudEvents.CloudEvent<T>.Subject.get -> string
 JustSaying.CloudEvents.CloudEvent<T>.Extensions.get -> System.Collections.Generic.IReadOnlyDictionary<string, string>
+JustSaying.CloudEvents.CloudEvent<T>.DataContentType.get -> string
+JustSaying.CloudEvents.CloudEvent<T>.DataSchema.get -> System.Uri
 JustSaying.CloudEvents.CloudEventEnvelopeBodySerializer<T>
 JustSaying.CloudEvents.CloudEventEnvelopeBodySerializer<T>.CloudEventEnvelopeBodySerializer(JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<T> dataSerializer, JustSaying.Messaging.IMessageMetadataProvider metadataProvider, System.Uri source = null, string type = null, string dataContentType = "application/json") -> void
 JustSaying.CloudEvents.CloudEventEnvelopeBodySerializer<T>.Deserialize(string message) -> JustSaying.CloudEvents.CloudEvent<T>
