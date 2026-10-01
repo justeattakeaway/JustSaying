@@ -47,6 +47,29 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
     private IMessageBodySerializer<T> MessageBodySerializer { get; set; }
 
     /// <summary>
+    /// An optional serializer for this subscription built from the bus's <see cref="IServiceResolver"/>,
+    /// used when none is set with <see cref="WithMessageBodySerializer"/>. Internal extensibility seam
+    /// for serializer packages (such as JustSaying.CloudEvents, which exposes it via
+    /// <c>ForCloudEventTopic&lt;T&gt;</c>).
+    /// </summary>
+    internal Func<IServiceResolver, IMessageBodySerializer<T>> SerializerOverride { get; set; }
+
+    /// <summary>
+    /// An optional resolver for the topic name, applied when no explicit name is set — instead of the
+    /// naming convention keyed on <typeparamref name="T"/>. Internal extensibility seam used by wrapper
+    /// subscriptions (such as CloudEvents envelopes) so the topic is named after the payload type rather
+    /// than the wrapper type, matching the publication.
+    /// </summary>
+    internal Func<ITopicNamingConvention, string> TopicNameResolver { get; set; }
+
+    /// <summary>
+    /// An optional resolver for the queue name, applied when no explicit name is set — instead of the
+    /// naming convention keyed on <typeparamref name="T"/>. Internal extensibility seam used by wrapper
+    /// subscriptions (such as CloudEvents envelopes) so the queue is named after the payload type.
+    /// </summary>
+    internal Func<IQueueNamingConvention, string> QueueNameResolver { get; set; }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="TopicSubscriptionBuilder{T}"/> class.
     /// </summary>
     internal TopicSubscriptionBuilder()
@@ -246,6 +269,16 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
         var config = bus.Config;
         var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
 
+        if (string.IsNullOrEmpty(subscriptionConfig.TopicName) && TopicNameResolver is not null)
+        {
+            subscriptionConfig.TopicName = TopicNameResolver(config.TopicNamingConvention);
+        }
+
+        if (string.IsNullOrEmpty(subscriptionConfig.QueueName) && QueueNameResolver is not null)
+        {
+            subscriptionConfig.QueueName = QueueNameResolver(config.QueueNamingConvention);
+        }
+
         subscriptionConfig.ApplyTopicNamingConvention<T>(config.TopicNamingConvention);
         subscriptionConfig.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
         subscriptionConfig.SubscriptionGroupName = SubscriptionGroupName ?? subscriptionConfig.QueueName;
@@ -259,7 +292,9 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
 
         bus.AddStartupTask(queueWithStartup.StartupTask);
         var compressionRegistry = bus.CompressionRegistry;
-        var serializer = MessageBodySerializer ?? bus.MessageBodySerializerFactory.GetSerializer<T>();
+        var serializer = MessageBodySerializer
+            ?? SerializerOverride?.Invoke(serviceResolver)
+            ?? bus.MessageBodySerializerFactory.GetSerializer<T>();
 
         var sqsSource = new SqsSource
         {

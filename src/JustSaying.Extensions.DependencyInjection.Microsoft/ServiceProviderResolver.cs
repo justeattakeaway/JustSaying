@@ -79,10 +79,10 @@ internal sealed class ServiceProviderResolver : IServiceResolver, IHandlerResolv
         return handler;
     }
 
-    // A CloudEvents registration decides the handler's message type: HandlingCloudEvent<T> delivers the
-    // CloudEvent<T> envelope, HandlingCloudEventData<T> the bare T. Name the alternative when the
-    // envelope handler is missing, since the two are easy to mix up. Matched by name, as the core
-    // package doesn't reference JustSaying.CloudEvents.
+    // A CloudEvents registration decides the handler's message type: HandlingCloudEvent<T> and
+    // ForCloudEventTopic<T> deliver the CloudEvent<T> envelope, the ...Data variants the bare T. Name
+    // the alternative when the envelope handler is missing, since the two are easy to mix up. Matched
+    // by name, as this package doesn't reference JustSaying.CloudEvents.
     private static string GetRegistrationHint(Type messageType)
     {
         if (!messageType.IsGenericType
@@ -92,8 +92,8 @@ internal sealed class ServiceProviderResolver : IServiceResolver, IHandlerResolv
         }
 
         var data = messageType.GetGenericArguments()[0].ToReadableName();
-        return $" HandlingCloudEvent<{data}> delivers the envelope and so needs an IHandlerAsync<{messageType.ToReadableName()}>; " +
-               $"to handle just the data with an IHandlerAsync<{data}>, register HandlingCloudEventData<{data}> instead.";
+        return $" HandlingCloudEvent<{data}> and ForCloudEventTopic<{data}> deliver the envelope and so need an IHandlerAsync<{messageType.ToReadableName()}>; " +
+               $"to handle just the data with an IHandlerAsync<{data}>, register HandlingCloudEventData<{data}> or ForCloudEventTopicData<{data}> instead.";
     }
 
     /// <inheritdoc />
