@@ -66,9 +66,10 @@ internal sealed class InboundMessageConverter : IInboundMessageConverter
         {
             throw new UnroutableMessageException(
                 $"The message is a CloudEvent (type '{cloudEventType}'), but the subscription reads it with a serializer that doesn't understand " +
-                "CloudEvents, so it would be read as a message with default values. To consume CloudEvents, serialize this message type with the " +
-                "JustSaying.CloudEvents serializer (AddJustSayingCloudEvents with WithCloudEventType<T>(type)), or pass one to the subscription's " +
-                $"WithMessageBodySerializer(...). A custom serializer that reads CloudEvents should implement {nameof(ISelfDescribingMessageBodySerializer)}.");
+                "CloudEvents, so it would be read as a message with default values. To consume CloudEvents, subscribe with the JustSaying.CloudEvents " +
+                "package: ForCloudEventTopicData<T>(type) or ForCloudEventTopic<T>(type) for a topic, HandlingCloudEventData<T>(type) or " +
+                "HandlingCloudEvent<T>(type) on a ForQueue(...) subscription, or pass a CloudEvents serializer to WithMessageBodySerializer(...). " +
+                $"A custom serializer that reads CloudEvents should implement {nameof(ISelfDescribingMessageBodySerializer)}.");
         }
 
         var result = serializer.Deserialize(body);

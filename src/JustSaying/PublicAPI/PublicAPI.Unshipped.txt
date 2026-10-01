@@ -370,7 +370,6 @@ static JustSaying.Fluent.TopicDestination.Named(string name) -> JustSaying.Fluen
 static JustSaying.Fluent.TopicDestination.Named(string name, System.Action<JustSaying.Fluent.TopicInfrastructure> configure) -> JustSaying.Fluent.TopicDestination
 JustSaying.Fluent.QueueInfrastructure.WithEncryption(string kmsMasterKeyId) -> JustSaying.Fluent.QueueInfrastructure
 JustSaying.Fluent.TopicInfrastructure.WithEncryption(string kmsMasterKeyId) -> JustSaying.Fluent.TopicInfrastructure
-JustSaying.Messaging.Middleware.Logging.LoggingMiddleware.LoggingMiddleware(Microsoft.Extensions.Logging.ILoggerFactory loggerFactory, JustSaying.Messaging.IMessageMetadataProvider metadataProvider) -> void
 *REMOVED*JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.HandleException.get -> System.Func<System.Exception, JustSaying.Models.Message, bool>
 *REMOVED*JustSaying.Fluent.MessagingConfigurationBuilder.WithMessageResponseLogger(System.Action<JustSaying.AwsTools.MessageHandling.MessageBatchResponse, System.Collections.Generic.IReadOnlyCollection<JustSaying.Models.Message>> logger) -> JustSaying.Fluent.MessagingConfigurationBuilder
 *REMOVED*JustSaying.Fluent.MessagingConfigurationBuilder.WithMessageResponseLogger(System.Action<JustSaying.AwsTools.MessageHandling.MessageResponse, JustSaying.Models.Message> logger) -> JustSaying.Fluent.MessagingConfigurationBuilder

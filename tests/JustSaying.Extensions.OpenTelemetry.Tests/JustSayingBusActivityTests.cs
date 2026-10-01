@@ -69,7 +69,6 @@ public class JustSayingBusActivityTests
             .Build();
 
         var config = Substitute.For<IMessagingConfig>();
-        config.MessageMetadataProvider.Returns(new MessagingConfig().MessageMetadataProvider);
 
         var publisher = Substitute.For<IMessagePublisher>();
         var monitor = Substitute.For<IMessageMonitor>();

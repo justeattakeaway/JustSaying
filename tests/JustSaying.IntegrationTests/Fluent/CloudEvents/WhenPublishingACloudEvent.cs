@@ -1,7 +1,9 @@
 using System.Text.Json;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.CloudEvents;
+using JustSaying.Fluent;
 using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageHandling;
 using Microsoft.Extensions.DependencyInjection;
@@ -171,8 +173,8 @@ public class WhenPublishingACloudEvent : IntegrationTestBase
         // Arrange
         var services = GivenJustSaying()
             .ConfigureJustSaying(builder => builder
-                .Publications(p => p.WithTopic<OrderPlaced>(t => t.WithWriteConfiguration(
-                    w => w.CompressionOptions = new() { CompressionEncoding = ContentEncodings.GzipBase64 }))));
+                .Publications(p => p.WithTopic<OrderPlaced>(t => t.WithCompression(
+                    new PublishCompressionOptions { CompressionEncoding = ContentEncodings.GzipBase64 }))));
 
         GivenCloudEvents(services);
 
@@ -223,13 +225,10 @@ public class WhenPublishingACloudEvent : IntegrationTestBase
 
         var services = GivenJustSaying()
             .ConfigureJustSaying(builder => builder
-                .Subscriptions(s => s.ForQueue<OrderPlaced>(sub => sub
-                    .WithQueueName(UniqueName)
-                    .WithReadConfiguration(c =>
-                    {
-                        c.VisibilityTimeout = TimeSpan.FromSeconds(1);
-                        c.RetryCountBeforeSendingToErrorQueue = 1;
-                    }))))
+                .Subscriptions(s => s.ForQueue<OrderPlaced>(
+                    QueueDestination.Named(UniqueName, c => c
+                        .WithVisibilityTimeout(TimeSpan.FromSeconds(1))
+                        .WithRetriesBeforeErrorQueue(1)))))
             .AddSingleton(handler);
 
         const string cloudEvent =

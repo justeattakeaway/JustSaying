@@ -104,7 +104,7 @@ public class WhenPublishingMixedFormats : IntegrationTestBase
                 var bare = FindByParcelId(notifications, "parcel-3");
                 bare.CloudEvent.GetProperty("specversion").GetString().ShouldBe("1.0");
                 bare.CloudEvent.GetProperty("type").GetString().ShouldBe(ParcelShippedType);
-                bare.CloudEvent.GetProperty("source").GetString().ShouldBe(ParcelSource.ToString());
+                bare.CloudEvent.GetProperty("source").GetString().ShouldBe(ParcelSource.OriginalString);
 
                 var wrapped = FindByParcelId(notifications, "parcel-4");
                 wrapped.CloudEvent.GetProperty("type").GetString().ShouldBe(ParcelShippedType);

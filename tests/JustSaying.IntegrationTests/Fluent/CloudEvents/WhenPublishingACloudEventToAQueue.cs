@@ -59,7 +59,7 @@ public class WhenPublishingACloudEventToAQueue : IntegrationTestBase
             bare.TryGetProperty("Message", out _).ShouldBeFalse("the CloudEvent should not be double-wrapped");
             bare.GetProperty("specversion").GetString().ShouldBe("1.0");
             bare.GetProperty("type").GetString().ShouldBe(OrderPlacedType);
-            bare.GetProperty("source").GetString().ShouldBe(RegistrationSource.ToString());
+            bare.GetProperty("source").GetString().ShouldBe(RegistrationSource.OriginalString);
             bare.GetProperty("id").GetString().ShouldNotBeNullOrEmpty();
             bare.TryGetProperty("subject", out _).ShouldBeFalse();
 

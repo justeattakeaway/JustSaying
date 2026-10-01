@@ -267,13 +267,11 @@ public class WhenAQueueCarriesMultipleMessageTypes : IntegrationTestBase
                     p.WithQueue<OrderPlaced>(o => o.WithQueueName(UniqueName));
                     p.WithQueue<OrderCancelled>(o => o.WithQueueName(UniqueName));
                 })
-                .Subscriptions(s => s.ForQueue(UniqueName, q => q
-                    .WithReadConfiguration(c =>
-                    {
-                        c.VisibilityTimeout = TimeSpan.FromSeconds(1);
-                        c.RetryCountBeforeSendingToErrorQueue = 1;
-                    })
-                    .Handling<OrderPlaced>())))
+                .Subscriptions(s => s.ForQueue(
+                    QueueDestination.Named(UniqueName, c => c
+                        .WithVisibilityTimeout(TimeSpan.FromSeconds(1))
+                        .WithRetriesBeforeErrorQueue(1)),
+                    q => q.Handling<OrderPlaced>())))
             .AddSingleton(placedHandler);
 
         await WhenAsync(
@@ -313,7 +311,7 @@ public class WhenAQueueCarriesMultipleMessageTypes : IntegrationTestBase
         var services = GivenJustSaying()
             .ConfigureJustSaying(builder => builder
                 .Subscriptions(s => s.ForQueue(UniqueName, q => q
-                    .WithReadConfiguration(c => c.RawMessageDelivery = true)
+                    .WithRawMessageDelivery()
                     .Handling<OrderPlaced>())))
             .AddSingleton(Substitute.For<IHandlerAsync<OrderPlaced>>());
 
@@ -337,7 +335,7 @@ public class WhenAQueueCarriesMultipleMessageTypes : IntegrationTestBase
         var services = GivenJustSaying()
             .ConfigureJustSaying(builder => builder
                 .Subscriptions(s => s.ForQueue(UniqueName, q => q
-                    .WithReadConfiguration(c => c.RawMessageDelivery = true)
+                    .WithRawMessageDelivery()
                     .WithDiscriminator(new CloudEventTypeDiscriminator())
                     .Handling<OrderPlaced>("com.example.orders.order.placed"))))
             .AddSingleton(Substitute.For<IHandlerAsync<OrderPlaced>>());

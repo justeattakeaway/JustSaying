@@ -76,7 +76,7 @@ public class WhenPublishingCloudEventsToExistingInfrastructure : IntegrationTest
             var bare = ParseByOrderId(bodies, "bare-1");
             bare.GetProperty("specversion").GetString().ShouldBe("1.0");
             bare.GetProperty("type").GetString().ShouldBe(OrderPlacedType);
-            bare.GetProperty("source").GetString().ShouldBe(RegistrationSource.ToString());
+            bare.GetProperty("source").GetString().ShouldBe(RegistrationSource.OriginalString);
 
             var wrapped = ParseByOrderId(bodies, "wrapped-2");
             wrapped.GetProperty("type").GetString().ShouldBe(OrderPlacedType);
@@ -118,7 +118,7 @@ public class WhenPublishingCloudEventsToExistingInfrastructure : IntegrationTest
             var bare = ParseByOrderId(bodies, "bare-1");
             bare.TryGetProperty("Message", out _).ShouldBeFalse("the CloudEvent should not be double-wrapped");
             bare.GetProperty("type").GetString().ShouldBe(OrderPlacedType);
-            bare.GetProperty("source").GetString().ShouldBe(RegistrationSource.ToString());
+            bare.GetProperty("source").GetString().ShouldBe(RegistrationSource.OriginalString);
 
             var wrapped = ParseByOrderId(bodies, "wrapped-2");
             wrapped.GetProperty("subject").GetString().ShouldBe("orders/2");

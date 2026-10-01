@@ -107,7 +107,7 @@ public class WhenDiscriminatingInboundMessageTypes
             });
         var converter = new InboundMessageConverter(resolver, new MessageCompressionRegistry(), isRawMessage: false);
 
-        await Should.ThrowAsync<MessageFormatNotSupportedException>(
+        await Should.ThrowAsync<UnroutableMessageException>(
             async () => await converter.ConvertToInboundMessageAsync(SnsMessage("OrderPlaced", "{}")));
     }
 
