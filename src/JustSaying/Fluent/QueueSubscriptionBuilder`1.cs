@@ -182,6 +182,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
         subscriptionConfig.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
         subscriptionConfig.SubscriptionGroupName ??= subscriptionConfig.QueueName;
         subscriptionConfig.Validate();
+        bus.AddSubscribedQueue(subscriptionConfig.QueueName, [typeof(T)], isMultiType: false);
 
         var queue = creator.EnsureQueueExists(region, subscriptionConfig);
         bus.AddStartupTask(queue.StartupTask);

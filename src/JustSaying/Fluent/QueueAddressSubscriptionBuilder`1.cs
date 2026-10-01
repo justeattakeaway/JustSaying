@@ -103,6 +103,7 @@ public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
 
         attachedQueueConfig.SubscriptionGroupName ??= queue.QueueName;
         attachedQueueConfig.Validate();
+        bus.AddSubscribedQueue(queue.Uri.AbsoluteUri, [typeof(T)], isMultiType: false);
 
         if (ShouldCheckQueueExistence)
         {

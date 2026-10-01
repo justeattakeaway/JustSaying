@@ -145,6 +145,8 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
             namesByRegistration[registration] = typeName;
         }
 
+        bus.AddSubscribedQueue(subscriptionConfig.QueueName, typesByName.Values, isMultiType: true);
+
         var queue = creator.EnsureQueueExists(region, subscriptionConfig);
         bus.AddStartupTask(queue.StartupTask);
 
