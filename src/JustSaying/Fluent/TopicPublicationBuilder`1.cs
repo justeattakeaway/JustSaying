@@ -289,6 +289,16 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
                 $"The topic is named both by the {nameof(TopicDestination)} destination ('{_destination.Name}') and {nameof(WithTopicName)} ('{TopicName}'); name it once.");
         }
 
+        if (TopicNameCustomizer is not null && (TopicName ?? _destination.Name) is { } staticName)
+        {
+            var namedBy = TopicName is not null
+                ? $"{nameof(WithTopicName)} ('{staticName}')"
+                : $"the {nameof(TopicDestination)} destination ('{staticName}')";
+
+            throw new InvalidOperationException(
+                $"The topic is named both by {namedBy} and a {nameof(WithTopicName)} function that names it per message; name it once.");
+        }
+
         var region = bus.Config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(bus.Config.Region)} property.");
 
         // Created now, not on first publish, so that a serializer that can't handle T fails at bus build

@@ -163,10 +163,19 @@ public sealed class SubscriptionsBuilder
     /// <param name="configure">A delegate used to register the message types the queue carries.</param>
     /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="destination"/> or <paramref name="configure"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="destination"/> is named by convention.</exception>
     public SubscriptionsBuilder ForQueue(QueueDestination destination, Action<MultiTypeQueueSubscriptionBuilder> configure)
     {
         if (destination == null) throw new ArgumentNullException(nameof(destination));
         if (configure == null) throw new ArgumentNullException(nameof(configure));
+
+        if (!destination.IsAddress && destination.Name is null)
+        {
+            // The naming convention names a queue after its one message type, which a multi-type queue doesn't have.
+            throw new ArgumentException(
+                $"A multi-type queue needs an explicit name or address: use {nameof(QueueDestination)}.{nameof(QueueDestination.Named)}(...) or a URL or ARN, not {nameof(QueueDestination.ByConvention)}().",
+                nameof(destination));
+        }
 
         var builder = new MultiTypeQueueSubscriptionBuilder(destination);
 
