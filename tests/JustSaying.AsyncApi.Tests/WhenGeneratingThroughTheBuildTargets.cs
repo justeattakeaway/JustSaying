@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 
 namespace JustSaying.AsyncApi.Tests;
 
@@ -83,11 +84,33 @@ public class WhenGeneratingThroughTheBuildTargets
     {
         using var project = ConsumerProject.Create();
 
-        var result = await project.RunAsync("publish");
+        var result = await project.RunAsync("publish", []);
 
         await AssertSucceeded(result);
         await Assert.That(result.Output).DoesNotContain($"Target \"{GenerationTarget}\"");
         await Assert.That(File.Exists(project.DocumentPath)).IsFalse();
+    }
+
+    [Test]
+    public async Task TheToolRunsOnTheDotNetHostRunningTheBuild()
+    {
+        using var project = ConsumerProject.Create();
+
+        // The build is started by absolute path, with no dotnet on the PATH at all.
+        var result = await project.RunAsync("build", [], removeDotNetFromPath: true);
+
+        await AssertSucceeded(result);
+        await Assert.That(File.Exists(project.DocumentPath)).IsTrue();
+    }
+
+    [Test]
+    public async Task TheWebSdkDoesNotPublishTheDocumentUnlessAskedTo()
+    {
+        using var project = ConsumerProject.Create("Microsoft.NET.Sdk.Web");
+        await File.WriteAllTextAsync(project.DocumentPath, "{}");
+
+        await Assert.That(await project.GetDocumentCopyToPublishDirectoryAsync()).IsEqualTo("Never");
+        await Assert.That(await project.GetDocumentCopyToPublishDirectoryAsync("-p:JustSayingAsyncApiCopyDocumentsToPublishDirectory=true")).IsEqualTo("PreserveNewest");
     }
 
     private static async Task AssertSucceeded(BuildResult result)
@@ -148,7 +171,7 @@ public class WhenGeneratingThroughTheBuildTargets
 
         public string DocumentPath => Path.Combine(Directory, "asyncapi.json");
 
-        public static ConsumerProject Create()
+        public static ConsumerProject Create(string sdk = "Microsoft.NET.Sdk")
         {
             var directory = Path.Combine(Path.GetTempPath(), "justsaying-asyncapi-consumer-" + Guid.NewGuid().ToString("N"));
             System.IO.Directory.CreateDirectory(directory);
@@ -161,7 +184,7 @@ public class WhenGeneratingThroughTheBuildTargets
             var projectFile =
                 $"""
                 <Project>
-                  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+                  <Import Project="Sdk.props" Sdk="{sdk}" />
                   <Import Project="{Path.Combine(buildToolsDirectory, "JustSaying.AsyncApi.BuildTools.props")}" />
                   <PropertyGroup>
                     <OutputType>Exe</OutputType>
@@ -174,7 +197,7 @@ public class WhenGeneratingThroughTheBuildTargets
                     <Reference Include="{appDirectory}JustSaying*.dll;{appDirectory}AWSSDK*.dll;{appDirectory}ByteBard*.dll;{appDirectory}Microsoft.Extensions.*.dll;{appDirectory}System.*.dll"
                                Exclude="{appDirectory}JustSaying.AsyncApi.Tests.App.dll" />
                   </ItemGroup>
-                  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+                  <Import Project="Sdk.targets" Sdk="{sdk}" />
                   <Import Project="{Path.Combine(buildToolsDirectory, "JustSaying.AsyncApi.BuildTools.targets")}" />
                 </Project>
                 """;
@@ -191,11 +214,22 @@ public class WhenGeneratingThroughTheBuildTargets
         public Task<BuildResult> BuildAsync(params string[] extraArguments)
             => RunAsync("build", extraArguments);
 
-        public async Task<BuildResult> RunAsync(string command, params string[] extraArguments)
+        public async Task<string> GetDocumentCopyToPublishDirectoryAsync(params string[] extraArguments)
+        {
+            var result = await RunAsync("msbuild", ["-getItem:Content", .. extraArguments]);
+            await AssertSucceeded(result);
+
+            using var items = JsonDocument.Parse(result.Output.Substring(result.Output.IndexOf('{', StringComparison.Ordinal)));
+            return items.RootElement.GetProperty("Items").GetProperty("Content").EnumerateArray()
+                .Single((item) => item.GetProperty("Identity").GetString() == "asyncapi.json")
+                .GetProperty("CopyToPublishDirectory").GetString();
+        }
+
+        public async Task<BuildResult> RunAsync(string command, string[] extraArguments, bool removeDotNetFromPath = false)
         {
             var startInfo = new ProcessStartInfo()
             {
-                FileName = Environment.GetEnvironmentVariable("DOTNET_HOST_PATH") ?? "dotnet",
+                FileName = DotNetHostPath(),
                 WorkingDirectory = Directory,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -224,6 +258,15 @@ public class WhenGeneratingThroughTheBuildTargets
                 startInfo.Environment.Remove(name);
             }
 
+            if (removeDotNetFromPath)
+            {
+                startInfo.Environment["PATH"] = string.Join(
+                    Path.PathSeparator,
+                    (Environment.GetEnvironmentVariable("PATH") ?? string.Empty)
+                        .Split(Path.PathSeparator)
+                        .Where((directory) => !File.Exists(Path.Combine(directory, "dotnet")) && !File.Exists(Path.Combine(directory, "dotnet.exe"))));
+            }
+
             startInfo.Environment["MSBUILDDISABLENODEREUSE"] = "1";
             startInfo.Environment["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
 
@@ -243,6 +286,19 @@ public class WhenGeneratingThroughTheBuildTargets
             }
 
             return new BuildResult(process.ExitCode, await standardOutput + await standardError);
+        }
+
+        private static string DotNetHostPath()
+        {
+            if (Environment.GetEnvironmentVariable("DOTNET_HOST_PATH") is { Length: > 0 } hostPath)
+            {
+                return hostPath;
+            }
+
+            return (Environment.GetEnvironmentVariable("PATH") ?? string.Empty)
+                .Split(Path.PathSeparator)
+                .SelectMany((directory) => new[] { Path.Combine(directory, "dotnet"), Path.Combine(directory, "dotnet.exe") })
+                .FirstOrDefault(File.Exists) ?? "dotnet";
         }
 
         public void Dispose()

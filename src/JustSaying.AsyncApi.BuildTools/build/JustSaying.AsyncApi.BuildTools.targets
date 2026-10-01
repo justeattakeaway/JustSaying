@@ -10,6 +10,16 @@
   </PropertyGroup>
 
   <!--
+    The generated documents describe the application's contract; they are not part of what it
+    deploys. The Web SDK includes every *.json file in the project as publish content, so the
+    default document (written next to the project file) would otherwise ship with the app.
+  -->
+  <ItemGroup Condition=" '$(JustSayingAsyncApiCopyDocumentsToPublishDirectory)' != 'true' ">
+    <Content Update="$(_JustSayingAsyncApiDocumentsDirectory)$(JustSayingAsyncApiDocumentFileName).json;$(_JustSayingAsyncApiDocumentsDirectory)$(JustSayingAsyncApiDocumentFileName)_*.json"
+             CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
+  <!--
     Generates the application's AsyncAPI document(s), analogous to
     Microsoft.Extensions.ApiDescription.Server's build-time OpenAPI generation. The tool runs
     with the application's deps.json and runtimeconfig.json so the application's assemblies
@@ -78,7 +88,10 @@
            Text="Build-time AsyncAPI generation requires a dependencies file ($(ProjectDepsFilePath)). Do not set GenerateDependencyFile to 'false', or set JustSayingAsyncApiGenerateDocumentsOnBuild to 'false' to disable generation." />
 
     <PropertyGroup>
-      <_JustSayingAsyncApiCommand>dotnet exec --depsfile "$(ProjectDepsFilePath)" --runtimeconfig "$(ProjectRuntimeConfigFilePath)"</_JustSayingAsyncApiCommand>
+      <!-- The SDK sets DOTNET_HOST_PATH to the dotnet executable running the build; 'dotnet' on the PATH may be another installation, or missing. -->
+      <_JustSayingAsyncApiDotNetHost>dotnet</_JustSayingAsyncApiDotNetHost>
+      <_JustSayingAsyncApiDotNetHost Condition=" '$(DOTNET_HOST_PATH)' != '' ">"$(DOTNET_HOST_PATH)"</_JustSayingAsyncApiDotNetHost>
+      <_JustSayingAsyncApiCommand>$(_JustSayingAsyncApiDotNetHost) exec --depsfile "$(ProjectDepsFilePath)" --runtimeconfig "$(ProjectRuntimeConfigFilePath)"</_JustSayingAsyncApiCommand>
       <_JustSayingAsyncApiCommand Condition=" '$(NuGetPackageRoot)' != '' ">$(_JustSayingAsyncApiCommand) --additionalprobingpath "$(NuGetPackageRoot.TrimEnd('\').TrimEnd('/'))"</_JustSayingAsyncApiCommand>
       <_JustSayingAsyncApiCommand>$(_JustSayingAsyncApiCommand) "$(_JustSayingAsyncApiToolPath)" --assembly "$(TargetPath)" --output "$(_JustSayingAsyncApiDocumentsDirectory.TrimEnd('\').TrimEnd('/'))" --file-list "$(_JustSayingAsyncApiFileListPath)"</_JustSayingAsyncApiCommand>
       <_JustSayingAsyncApiCommand Condition=" '$(JustSayingAsyncApiDocumentFileName)' != '' ">$(_JustSayingAsyncApiCommand) --file-name "$(JustSayingAsyncApiDocumentFileName)"</_JustSayingAsyncApiCommand>

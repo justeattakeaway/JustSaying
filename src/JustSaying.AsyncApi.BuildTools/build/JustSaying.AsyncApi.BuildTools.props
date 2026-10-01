@@ -22,5 +22,10 @@
       generating: the entry assembly is 'JustSaying.AsyncApi.GetDocument' during generation.
     -->
     <JustSayingAsyncApiEntryPointTimeoutSeconds Condition=" '$(JustSayingAsyncApiEntryPointTimeoutSeconds)' == '' ">60</JustSayingAsyncApiEntryPointTimeoutSeconds>
+    <!--
+      Set to 'true' to publish the generated documents with the application. By default they are
+      kept out of the publish output, where the Web SDK would otherwise include them as content.
+    -->
+    <JustSayingAsyncApiCopyDocumentsToPublishDirectory Condition=" '$(JustSayingAsyncApiCopyDocumentsToPublishDirectory)' == '' ">false</JustSayingAsyncApiCopyDocumentsToPublishDirectory>
   </PropertyGroup>
 </Project>
