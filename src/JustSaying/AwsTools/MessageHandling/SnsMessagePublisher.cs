@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Amazon.Runtime;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
+using JustSaying.Extensions;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.Monitoring;
@@ -77,7 +78,7 @@ internal sealed class SnsMessagePublisher(
             _logger.LogInformation(
                 "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
                 MessageIdentity.GetId(message, _metadataProvider),
-                message.GetType().FullName,
+                message.GetType().ToReadableFullName(),
                 "Topic",
                 request.TopicArn);
         }
@@ -214,7 +215,7 @@ internal sealed class SnsMessagePublisher(
                         _logger.LogInformation(
                             "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
                             MessageIdentity.GetBatchEntryMessageLogId(chunk, entry.Id, _metadataProvider),
-                            message?.GetType().FullName,
+                            message?.GetType().ToReadableFullName(),
                             "Topic",
                             request.TopicArn);
                     }

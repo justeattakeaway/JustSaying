@@ -24,6 +24,31 @@ public class WhenHandlingACloudEventEnvelope : IntegrationTestBase
     }
 
     [Test]
+    public void Then_A_Missing_Envelope_Handler_Is_Reported_Readably_With_The_Data_Alternative()
+    {
+        // Arrange - HandlingCloudEvent<T> needs an IHandlerAsync<CloudEvent<T>>, but only a handler for
+        // the bare payload is registered (the HandlingCloudEventData<T> shape).
+        var services = GivenJustSaying()
+            .ConfigureJustSaying(builder => builder
+                .Subscriptions(s => s.ForQueue(UniqueName, q => q.HandlingCloudEvent<OrderPlaced>(OrderPlacedType))))
+            .AddSingleton(Substitute.For<IHandlerAsync<OrderPlaced>>());
+
+        services.AddJustSayingCloudEvents();
+
+        var serviceProvider = services.BuildServiceProvider();
+
+        // Act
+        var exception = Should.Throw<InvalidOperationException>(() => serviceProvider.GetRequiredService<IMessagingBus>());
+
+        // Assert - the C# spelling of the type, not CloudEvent`1[[..., Version=...]], plus the alternative.
+        exception.Message.ShouldStartWith(
+            $"No handler for message type JustSaying.CloudEvents.CloudEvent<{typeof(OrderPlaced).FullName}> is registered.");
+        exception.Message.ShouldContain("IHandlerAsync<CloudEvent<OrderPlaced>>");
+        exception.Message.ShouldContain("HandlingCloudEventData<OrderPlaced>");
+        exception.Message.ShouldNotContain("Version=");
+    }
+
+    [Test]
     public async Task Then_The_Handler_Receives_The_Envelope_Metadata_And_Extensions()
     {
         // Arrange

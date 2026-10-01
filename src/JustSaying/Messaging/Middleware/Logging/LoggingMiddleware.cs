@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using JustSaying.Extensions;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Middleware.Logging;
@@ -49,7 +50,7 @@ public sealed class LoggingMiddleware(ILoggerFactory loggerFactory) : Middleware
                     MessageTemplate,
                     "Succeeded",
                     MessageIdentity.GetId(context.Message, MetadataProvider),
-                    context.MessageType.FullName,
+                    context.MessageType.ToReadableFullName(),
                     watch.ElapsedMilliseconds);
             }
             else
@@ -59,7 +60,7 @@ public sealed class LoggingMiddleware(ILoggerFactory loggerFactory) : Middleware
                     MessageTemplate,
                     "Failed",
                     MessageIdentity.GetId(context.Message, MetadataProvider),
-                    context.MessageType.FullName,
+                    context.MessageType.ToReadableFullName(),
                     watch.ElapsedMilliseconds);
             }
         }

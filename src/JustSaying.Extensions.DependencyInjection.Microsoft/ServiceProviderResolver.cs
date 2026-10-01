@@ -1,3 +1,4 @@
+using JustSaying.Extensions;
 using JustSaying.Fluent;
 using JustSaying.Messaging.MessageHandling;
 using Microsoft.Extensions.DependencyInjection;
@@ -40,7 +41,7 @@ internal sealed class ServiceProviderResolver : IServiceResolver, IHandlerResolv
         {
             Logger.LogDebug(
                 "Resolving handler for message type {MessageType} for queue {QueueName}.",
-                typeof(T).FullName,
+                typeof(T).ToReadableFullName(),
                 context.QueueName);
         }
 
@@ -48,7 +49,8 @@ internal sealed class ServiceProviderResolver : IServiceResolver, IHandlerResolv
 
         if (handlers.Length == 0)
         {
-            throw new InvalidOperationException($"No handler for message type {typeof(T).FullName} is registered.");
+            throw new InvalidOperationException(
+                $"No handler for message type {typeof(T).ToReadableFullName()} is registered.{GetRegistrationHint(typeof(T))}");
         }
         else if (handlers.Length > 1)
         {
@@ -56,12 +58,12 @@ internal sealed class ServiceProviderResolver : IServiceResolver, IHandlerResolv
             {
                 Logger.LogDebug(
                     "Resolved handler types for message type {MessageType} for queue {QueueName}: {ResolvedHandlerTypes}",
-                    typeof(T).FullName,
+                    typeof(T).ToReadableFullName(),
                     context.QueueName,
-                    string.Join(", ", handlers.Select((p) => p.GetType().FullName)));
+                    string.Join(", ", handlers.Select((p) => p.GetType().ToReadableFullName())));
             }
 
-            throw new NotSupportedException($"{handlers.Length} handlers for message type {typeof(T).FullName} are registered. Only one handler is supported per message type.");
+            throw new NotSupportedException($"{handlers.Length} handlers for message type {typeof(T).ToReadableFullName()} are registered. Only one handler is supported per message type.");
         }
 
         var handler = handlers[0];
@@ -75,6 +77,23 @@ internal sealed class ServiceProviderResolver : IServiceResolver, IHandlerResolv
         }
 
         return handler;
+    }
+
+    // A CloudEvents registration decides the handler's message type: HandlingCloudEvent<T> delivers the
+    // CloudEvent<T> envelope, HandlingCloudEventData<T> the bare T. Name the alternative when the
+    // envelope handler is missing, since the two are easy to mix up. Matched by name, as the core
+    // package doesn't reference JustSaying.CloudEvents.
+    private static string GetRegistrationHint(Type messageType)
+    {
+        if (!messageType.IsGenericType
+            || messageType.GetGenericTypeDefinition().FullName != "JustSaying.CloudEvents.CloudEvent`1")
+        {
+            return string.Empty;
+        }
+
+        var data = messageType.GetGenericArguments()[0].ToReadableName();
+        return $" HandlingCloudEvent<{data}> delivers the envelope and so needs an IHandlerAsync<{messageType.ToReadableName()}>; " +
+               $"to handle just the data with an IHandlerAsync<{data}>, register HandlingCloudEventData<{data}> instead.";
     }
 
     /// <inheritdoc />

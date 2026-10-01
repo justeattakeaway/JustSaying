@@ -436,7 +436,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         if (isFirstAttempt)
         {
             activity = JustSayingDiagnostics.ActivitySource.StartActivity(
-                $"{messageType.Name} publish",
+                $"{messageType.ToReadableName()} publish",
                 ActivityKind.Producer);
 
             if (activity is not null)
@@ -444,7 +444,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
                 activity.SetTag("messaging.operation.name", "publish");
                 activity.SetTag("messaging.operation.type", "send");
                 activity.SetTag("messaging.message.id", MessageIdentity.GetId(message, MessageMetadataProvider));
-                activity.SetTag("messaging.message.type", messageType.FullName);
+                activity.SetTag("messaging.message.type", messageType.ToReadableFullName());
             }
 
             publishWatch = Stopwatch.StartNew();
@@ -642,14 +642,14 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         if (isFirstAttempt)
         {
             activity = JustSayingDiagnostics.ActivitySource.StartActivity(
-                $"{messageType.Name} publish",
+                $"{messageType.ToReadableName()} publish",
                 ActivityKind.Producer);
 
             if (activity is not null)
             {
                 activity.SetTag("messaging.operation.name", "publish");
                 activity.SetTag("messaging.operation.type", "send");
-                activity.SetTag("messaging.message.type", messageType.FullName);
+                activity.SetTag("messaging.message.type", messageType.ToReadableFullName());
                 activity.SetTag("messaging.batch.message_count", messages.Count);
             }
 

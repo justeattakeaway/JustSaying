@@ -52,6 +52,45 @@ public class JustSayingBusActivityTests
         activity.GetTagItem("messaging.message.type").ShouldBe(typeof(SimpleMessage).FullName);
     }
 
+    public sealed class Envelope<T>
+    {
+        public T Data { get; set; }
+    }
+
+    [Test]
+    public async Task PublishAsync_Names_A_Generic_Message_Type_Readably()
+    {
+        // Arrange
+        var exportedActivities = new List<Activity>();
+
+        using var tracerProvider = Sdk.CreateTracerProviderBuilder()
+            .AddJustSayingInstrumentation()
+            .AddInMemoryExporter(exportedActivities)
+            .Build();
+
+        var config = Substitute.For<IMessagingConfig>();
+        config.MessageMetadataProvider.Returns(new MessagingConfig().MessageMetadataProvider);
+
+        var publisher = Substitute.For<IMessagePublisher>();
+        var monitor = Substitute.For<IMessageMonitor>();
+        var serializationFactory = Substitute.For<IMessageBodySerializationFactory>();
+
+        using var bus = new JustSayingBus(config, serializationFactory,
+            NullLoggerFactory.Instance, monitor);
+        bus.AddMessagePublisher<Envelope<SimpleMessage>>(publisher);
+
+        // Act
+        await bus.PublishAsync(new Envelope<SimpleMessage> { Data = new SimpleMessage() }, CancellationToken.None);
+        tracerProvider.ForceFlush();
+
+        // Assert - not the CLR's Envelope`1, nor a type name carrying assembly versions.
+        var activity = exportedActivities.FirstOrDefault(a => a.OperationName.Contains("publish"));
+        activity.ShouldNotBeNull();
+        activity.OperationName.ShouldBe("Envelope<SimpleMessage> publish");
+        activity.GetTagItem("messaging.message.type").ShouldBe(
+            $"{typeof(JustSayingBusActivityTests).FullName}+Envelope<{typeof(SimpleMessage).FullName}>");
+    }
+
     [Test]
     public async Task PublishAsync_Records_Error_On_Activity_When_Publish_Fails()
     {

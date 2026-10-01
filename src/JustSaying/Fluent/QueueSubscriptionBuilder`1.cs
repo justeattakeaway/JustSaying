@@ -1,6 +1,7 @@
 using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Extensions;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageSerialization;
@@ -242,7 +243,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
 
         var resolutionContext = new HandlerResolutionContext(queueName);
         var proposedHandler = handlerResolver.ResolveHandler<T>(resolutionContext) ?? throw new HandlerNotRegisteredWithContainerException(
-                $"There is no handler for '{typeof(T)}' messages.");
+                $"There is no handler for '{typeof(T).ToReadableFullName()}' messages.");
         var middlewareBuilder = new HandlerMiddlewareBuilder(handlerResolver, serviceResolver, typeof(T), bus.MessageMetadataProvider);
         var handlerMiddleware = middlewareBuilder
             .Configure(MiddlewareConfiguration ?? (b => b.UseDefaults<T>(proposedHandler.GetType())))

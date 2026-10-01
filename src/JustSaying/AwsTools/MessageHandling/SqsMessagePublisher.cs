@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Amazon.Runtime;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using JustSaying.Extensions;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.Monitoring;
@@ -70,7 +71,7 @@ internal sealed class SqsMessagePublisher(
             _logger.LogInformation(
                 "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
                 MessageIdentity.GetId(message, _metadataProvider),
-                message.GetType().FullName,
+                message.GetType().ToReadableFullName(),
                 "Queue",
                 request.QueueUrl);
         }
@@ -210,7 +211,7 @@ internal sealed class SqsMessagePublisher(
                         _logger.LogInformation(
                             "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
                             MessageIdentity.GetBatchEntryMessageLogId(chunk, entry.Id, _metadataProvider),
-                            message?.GetType().FullName,
+                            message?.GetType().ToReadableFullName(),
                             "Queue",
                             request.QueueUrl);
                     }

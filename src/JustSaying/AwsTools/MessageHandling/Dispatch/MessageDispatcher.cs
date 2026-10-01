@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using JustSaying.Messaging;
+using JustSaying.Extensions;
 using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
@@ -51,7 +52,7 @@ internal sealed class MessageDispatcher : IMessageDispatcher
         {
             _logger.LogError(
                 "Failed to dispatch. Middleware for message of type '{MessageTypeName}' not found in middleware map.",
-                typedMessage.GetType().FullName);
+                typedMessage.GetType().ToReadableFullName());
             return;
         }
 
@@ -119,7 +120,7 @@ internal sealed class MessageDispatcher : IMessageDispatcher
             activity.SetTag("messaging.operation.name", "process");
             activity.SetTag("messaging.operation.type", "process");
             activity.SetTag("messaging.message.id", messageContext.Message.MessageId);
-            activity.SetTag("messaging.message.type", messageType.FullName);
+            activity.SetTag("messaging.message.type", messageType.ToReadableFullName());
         }
 
         return activity;

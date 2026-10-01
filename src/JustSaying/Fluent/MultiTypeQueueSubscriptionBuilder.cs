@@ -1,6 +1,7 @@
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Extensions;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageSerialization;
@@ -208,14 +209,14 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
             if (string.IsNullOrWhiteSpace(typeName))
             {
                 throw new InvalidOperationException(
-                    $"The message type '{registration.MessageType.FullName}' registered on the multi-type queue subscription for '{_destination.Name ?? _destination.Address?.QueueUrl?.ToString()}' " +
+                    $"The message type '{registration.MessageType.ToReadableFullName()}' registered on the multi-type queue subscription for '{_destination.Name ?? _destination.Address?.QueueUrl?.ToString()}' " +
                     $"resolved to a null or empty type name. Pass an explicit name to {nameof(Handling)}<T>(typeName).");
             }
 
             if (typesByName.TryGetValue(typeName, out var existingType))
             {
                 throw new InvalidOperationException(
-                    $"The message types '{existingType.FullName}' and '{registration.MessageType.FullName}' registered on the multi-type queue subscription for " +
+                    $"The message types '{existingType.ToReadableFullName()}' and '{registration.MessageType.ToReadableFullName()}' registered on the multi-type queue subscription for " +
                     $"'{_destination.Name ?? _destination.Address?.QueueUrl?.ToString()}' both resolve to the type name '{typeName}'. Each type on a queue must have a distinct name; " +
                     $"pass an explicit name to {nameof(Handling)}<T>(typeName).");
             }
@@ -332,7 +333,7 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
         {
             var resolutionContext = new HandlerResolutionContext(queueName);
             var proposedHandler = handlerResolver.ResolveHandler<TMessage>(resolutionContext)
-                ?? throw new HandlerNotRegisteredWithContainerException($"There is no handler for '{typeof(TMessage)}' messages.");
+                ?? throw new HandlerNotRegisteredWithContainerException($"There is no handler for '{typeof(TMessage).ToReadableFullName()}' messages.");
 
             var middleware = new HandlerMiddlewareBuilder(handlerResolver, serviceResolver, typeof(TMessage), bus.MessageMetadataProvider)
                 .Configure(middlewareConfiguration ?? (b => b.UseDefaults<TMessage>(proposedHandler.GetType())))
