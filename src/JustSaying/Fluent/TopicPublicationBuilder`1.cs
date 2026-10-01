@@ -303,8 +303,10 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
 
         var region = bus.Config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(bus.Config.Region)} property.");
 
-        // Created now, not on first publish, so that a serializer that can't handle T fails at bus build
-        // even for a dynamic topic, which only builds its publisher when a message is first published.
+        // Resolved once here, not on first publish, so that a serializer that can't handle T fails at bus
+        // build even for a dynamic topic (which only builds its publisher when a message is first
+        // published), and so the same instance both serializes messages and describes the publication's
+        // wire format in the metadata registry.
         var serializer = SerializerOverride is null
             ? bus.MessageBodySerializerFactory.GetSerializer<T>()
             : SerializerOverride(_serviceResolver);
@@ -326,12 +328,6 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
         CompressionEncodingValidator.ValidateEncoding(bus.CompressionRegistry, writeConfiguration.CompressionOptions);
 
         var client = proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region));
-
-        // Resolved once here (rather than inside each built configuration) so the same instance both
-        // serializes messages and describes the publication's wire format in the metadata registry.
-        var serializer = SerializerOverride is null
-            ? bus.MessageBodySerializerFactory.GetSerializer<T>()
-            : SerializerOverride(_serviceResolver);
 
         Func<Exception, object, bool> exceptionHandler =
             ExceptionHandler is null ? null : (ex, message) => ExceptionHandler(ex, (T)message);

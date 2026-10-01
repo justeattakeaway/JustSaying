@@ -57,8 +57,8 @@ public class WhenGeneratingWithCloudEventsAndMultiTypeQueues
                 options.MapType<OrderPlaced>(OrderPlacedType);
                 options.MapType<OrderCancelled>(OrderCancelledType);
                 options.MapType<OrderReady>("com.example.orders.ready");
-            },
-            useAsDefault: useAsDefault);
+                options.UseAsDefault = useAsDefault;
+            });
         services.AddJustSaying((config) =>
         {
             config.Messaging((x) => x.WithRegion("eu-west-1"));
