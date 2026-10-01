@@ -20,6 +20,22 @@ public sealed class HandlerMiddlewareBuilder(IHandlerResolver handlerResolver, I
     private Action<HandlerMiddlewareBuilder> _configure;
     internal IServiceResolver ServiceResolver { get; } = serviceResolver;
 
+    /// <summary>
+    /// Creates a builder for the handling pipeline of a subscription to <paramref name="messageType"/>.
+    /// <see cref="Build"/> then requires the pipeline to invoke a handler, and middleware that is typed
+    /// on the message can check that it matches.
+    /// </summary>
+    internal HandlerMiddlewareBuilder(IHandlerResolver handlerResolver, IServiceResolver serviceResolver, Type messageType)
+        : this(handlerResolver, serviceResolver)
+    {
+        MessageType = messageType;
+    }
+
+    /// <summary>
+    /// Gets the type of message the pipeline handles, when it is built for a subscription.
+    /// </summary>
+    internal Type MessageType { get; }
+
     private readonly List<Func<HandleMessageMiddleware>> _middlewares = [];
     private HandleMessageMiddleware _handlerMiddleware;
 
@@ -120,6 +136,10 @@ Please check the documentation for your container for more details.");
     ///
     /// </summary>
     /// <returns>A callable <see cref="HandleMessageMiddleware"/></returns>
+    /// <exception cref="InvalidOperationException">
+    /// The pipeline is for a subscription and never invokes a handler, for example because a middleware
+    /// configuration replaced the defaults without calling <c>UseDefaults</c> or <c>UseHandler</c>.
+    /// </exception>
     public HandleMessageMiddleware Build()
     {
         _configure?.Invoke(this);
@@ -139,6 +159,20 @@ Please check the documentation for your container for more details.");
             middlewares.Insert(0, _handlerMiddleware);
         }
 
+        if (MessageType != null && !middlewares.Any(IsHandlerInvocation))
+        {
+            throw new InvalidOperationException(
+                $"The middleware pipeline for message type '{MessageType.FullName}' never invokes a handler, so its messages would never be handled. " +
+                $"A middleware configuration replaces the default pipeline, so it must add the handler: call UseDefaults<{MessageType.Name}>(handlerType) " +
+                $"(or UseHandler<{MessageType.Name}>()) in the configuration, after any middleware that should wrap the defaults.");
+        }
+
         return MiddlewareBuilder.BuildAsync(middlewares.ToArray());
+    }
+
+    private static bool IsHandlerInvocation(HandleMessageMiddleware middleware)
+    {
+        var type = middleware.GetType();
+        return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(HandlerInvocationMiddleware<>);
     }
 }

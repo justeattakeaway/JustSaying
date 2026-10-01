@@ -75,6 +75,18 @@ pipeline.UseExactlyOnce<OrderPlaced>("orders-handler",
 
 If a non-`Message` type is used without a `deduplicationKeySelector`, `UseExactlyOnce` throws at registration (startup) rather than degrading silently at runtime. A selector that returns null or whitespace for a given message doesn't collapse unrelated messages onto a shared lock key: that message is not handled, an error is logged, and it stays on the queue for its redrive policy.
 
+`UseExactlyOnce<TMessage>` on a subscription whose message type isn't a `TMessage` now throws when the bus is built, rather than failing for every message.
+
+## A subscription's middleware configuration must add the handler
+
+`WithMiddlewareConfiguration` replaces the default pipeline, so it has to add the handler itself with `UseDefaults<T>(handlerType)` or `UseHandler`. In v8 a configuration that didn't (for example one that only called `UseExactlyOnce`) built a pipeline that never ran the handler, and nothing was logged. v9 throws when the bus is built, naming the message type:
+
+```csharp
+c.WithMiddlewareConfiguration(m =>
+    m.UseExactlyOnce<OrderAccepted>("orders-handler")
+     .UseDefaults<OrderAccepted>(typeof(OrderAcceptedHandler)));
+```
+
 ## New extensibility seams
 
 Available on `IMessagingConfig`:

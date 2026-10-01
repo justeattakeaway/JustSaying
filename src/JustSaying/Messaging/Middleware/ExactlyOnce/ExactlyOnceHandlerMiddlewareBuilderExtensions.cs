@@ -27,7 +27,8 @@ public static class ExactlyOnceHandlerMiddlewareBuilderExtensions
     /// <exception cref="InvalidOperationException">
     /// <typeparamref name="TMessage"/> does not derive from <see cref="Message"/> and no
     /// <paramref name="deduplicationKeySelector"/> was provided, so no stable deduplication key is
-    /// available.
+    /// available; or the pipeline belongs to a subscription whose message type is not a
+    /// <typeparamref name="TMessage"/>.
     /// </exception>
     public static HandlerMiddlewareBuilder UseExactlyOnce<TMessage>(
         this HandlerMiddlewareBuilder builder,
@@ -37,6 +38,13 @@ public static class ExactlyOnceHandlerMiddlewareBuilderExtensions
     {
         if (builder == null) throw new ArgumentNullException(nameof(builder));
         if (string.IsNullOrEmpty(lockKey)) throw new ArgumentException("Parameter cannot be null or empty.", nameof(lockKey));
+
+        if (builder.MessageType is { } messageType && !typeof(TMessage).IsAssignableFrom(messageType))
+        {
+            throw new InvalidOperationException(
+                $"UseExactlyOnce<{typeof(TMessage).Name}> was configured on the pipeline for message type '{messageType.FullName}', " +
+                $"so it could never read a deduplication key from its messages. Use UseExactlyOnce<{messageType.Name}>(\"{lockKey}\", ...) instead.");
+        }
 
         Func<TMessage, string> keySelector = deduplicationKeySelector ?? CreateDefaultKeySelector<TMessage>(lockKey);
 
