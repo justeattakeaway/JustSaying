@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Sample.Restaurant.Models;
@@ -19,10 +18,10 @@ var configuration = builder.Configuration;
 // Wire JustSaying for AOT-ready serialization: register a source-generated System.Text.Json
 // factory before AddJustSaying so it wins the default registration, and plug the same context
 // into ASP.NET's minimal-API JSON pipeline. (See tests/JustSaying.AotTest for a full publish ->
-// subscribe -> handle round trip running as a native-AOT binary.)
-var serializerOptions = new JsonSerializerOptions
+// subscribe -> handle round trip running as a native-AOT binary.) Copying JustSaying's defaults keeps
+// the same wire format and lenient reads as the reflection-based default.
+var serializerOptions = new JsonSerializerOptions(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions)
 {
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     TypeInfoResolver = ApplicationJsonContext.Default,
 };
 builder.Services.TryAddSingleton<IMessageBodySerializationFactory>(_ => new SystemTextJsonSerializationFactory(serializerOptions));

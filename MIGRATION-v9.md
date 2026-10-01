@@ -75,21 +75,57 @@ Rename batch calls accordingly. Single-message `PublishAsync` call sites are unc
 
 ### The default serializer is now System.Text.Json
 
-The default message body serializer changes from **Newtonsoft.Json** to **System.Text.Json** (the source-generator-friendly path that enables Native AOT). This affects the default wire format — review for behavioural differences (for example, STJ is stricter about types and handles some constructs differently).
+The default message body serializer changes from **Newtonsoft.Json** to **System.Text.Json** (STJ), which can run under Native AOT. The defaults (`SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions`) bind like v8 where STJ allows it: property names are read case-insensitively, public fields are included, get-only collections are populated, and non-ASCII and HTML-sensitive characters aren't escaped. The rest of this section is what still differs.
 
-To keep using Newtonsoft.Json, register the factory yourself. `AddJustSaying` registers the System.Text.Json factory with `TryAddSingleton`, so **register yours before the `AddJustSaying` call** and it wins:
+If you customise the options, start from a copy of the defaults so you keep that behaviour:
+
+```csharp
+var options = new JsonSerializerOptions(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions)
+{
+    // your changes
+};
+
+services.AddSingleton<IMessageBodySerializationFactory>(new SystemTextJsonSerializationFactory(options));
+```
+
+#### What changes on the wire
+
+Released v8 used Newtonsoft.Json's out-of-the-box settings. By default v9 writes:
+
+- **Enums as strings** (`"Status":"Paid"`) where v8 wrote numbers (`"Status":1`). This applies to the STJ default and to the v9 Newtonsoft opt-in (`new NewtonsoftSerializationFactory()`). Both still read numbers, and v8 reads the strings, so services interoperate. But **SNS filter policies that match an enum's number in the message body stop matching**. Update them before a v9 producer goes live.
+- **No `null` properties.** v8 wrote `"Note":null`; v9 leaves the property out (both serializers). Consumers end up with the same value, but a body filter policy that matches `null` changes.
+- Whole-number `double` values as `1` rather than `1.0` (STJ only).
+
+For byte-for-byte the v8 wire format, see [Keeping Newtonsoft.Json](#keeping-newtonsoftjson).
+
+#### System.Text.Json vs Newtonsoft.Json checklist
+
+Check each message type for these. None of them fail at startup, and most lose data silently:
+
+- **Newtonsoft attributes are ignored.** A `[Newtonsoft.Json.JsonProperty("customer_id")]` name is lost in both directions: the property is written as `CustomerId`, and `customer_id` from other services isn't read. `[Newtonsoft.Json.JsonConverter]` is ignored too. Use the `System.Text.Json.Serialization` equivalents (`[JsonPropertyName]`, `[JsonConverter]`, `[JsonIgnore]`).
+- **A `[Newtonsoft.Json.JsonIgnore]` property is now published.** If you used it to keep data off the wire (a card number, a token, internal notes), switch to `System.Text.Json.Serialization.JsonIgnore` *before* moving to STJ, or that data goes to every subscriber.
+- **A property typed as a base class is written as the declared type.** A `Shape Shape` property holding a `Circle` is written with `Shape`'s members only, so `Radius` is dropped. Newtonsoft wrote the runtime type. Use STJ polymorphism (`[JsonDerivedType]`) or a concrete property type. The message itself is unaffected, because JustSaying serializes each message by its runtime type.
+- **`object` and `Dictionary<string, object>` values are read as `JsonElement`**, not `long`, `string` or `JObject`, so casts like `(long)extra["retries"]` throw.
+- **Reads are strict about types.** STJ throws a `JsonException` (the message goes to redrive and then the error queue) where Newtonsoft converted: quoted numbers (`"Quantity":"5"`), numbers into `string` properties, `"true"` into `bool`, `"NaN"` and `"Infinity"` for `double`, comments and trailing commas. Set `NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals` on a copy of the defaults if you need the numeric cases.
+- **Publishing `double.NaN` or infinity throws** (`ArgumentException`), where v8 wrote `"NaN"`.
+- **Get-only collections are only populated on types with a parameterless constructor.** On a type bound through its constructor (a positional record, for example), give the collection a constructor parameter or a setter.
+
+#### Keeping Newtonsoft.Json
+
+To keep using Newtonsoft.Json, register the factory yourself. `AddJustSaying` registers the System.Text.Json factory with `TryAddSingleton`, so yours wins if you register it with `AddSingleton` (before or after `AddJustSaying`), or with `TryAddSingleton` before it:
 
 ```csharp
 using JustSaying.Messaging.MessageSerialization;
+using Newtonsoft.Json;
 
-// Must come before AddJustSaying — the default is registered with TryAddSingleton.
+// Exactly v8's wire format: enums as numbers, nulls written.
 services.AddSingleton<IMessageBodySerializationFactory>(
-    new NewtonsoftSerializationFactory());
+    new NewtonsoftSerializationFactory(new JsonSerializerSettings()));
 
 services.AddJustSaying(builder => builder.Messaging(c => c.WithRegion("eu-west-1")));
 ```
 
-Pass `JsonSerializerSettings` to the constructor if you were customising them:
+`new NewtonsoftSerializationFactory()` with no settings uses v9's defaults instead (enums as strings, nulls left out). If you passed your own `JsonSerializerSettings` in v8, pass the same ones and the wire format doesn't change:
 
 ```csharp
 services.AddSingleton<IMessageBodySerializationFactory>(
@@ -112,6 +148,14 @@ var container = new Container(registry =>
 ```
 
 Newtonsoft.Json remains fully supported as an opt-in. It is not Native-AOT-compatible, so `NewtonsoftSerializationFactory` is annotated with `[RequiresUnreferencedCode]` / `[RequiresDynamicCode]` and will produce trim/AOT warnings in a project that opts into those analysers.
+
+#### Rolling upgrade of a mixed v8/v9 fleet
+
+v8 and v9 services share topics and queues without problems as long as they agree on the body format. To get from v8 to STJ without a flag day:
+
+1. Upgrade every service to v9 with `new NewtonsoftSerializationFactory(new JsonSerializerSettings())`, or the settings you used in v8. The wire stays byte-identical, so v8 and v9 services can deploy in any order.
+2. Once no v8 service is left, prepare the message types using the checklist above. Add the System.Text.Json attributes alongside the Newtonsoft ones (each library ignores the other's) and keep both until every service is on STJ. Change SNS filter policies that match enum numbers or `null` in the body to also match the new values.
+3. Switch consumers to STJ by removing the Newtonsoft registration, then switch producers. STJ reads what the Newtonsoft settings write (apart from the strict cases in the checklist), so nothing sends the new format until everything can read it.
 
 ### Serialization interface is generic
 
