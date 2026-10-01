@@ -17,6 +17,9 @@
     <TargetFrameworks>net8.0</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="JustSaying.AsyncApi.Tests" Key="$(JustSayingKey)" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\JustSaying\JustSaying.csproj" />
     <ProjectReference Include="..\JustSaying.CloudEvents\JustSaying.CloudEvents.csproj" />
   </ItemGroup>

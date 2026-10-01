@@ -1,3 +1,7 @@
+using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using ByteBard.AsyncAPI;
 using ByteBard.AsyncAPI.Models;
 using JustSaying.Messaging;
@@ -51,9 +55,38 @@ internal sealed class AsyncApiDocumentProvider(IServiceProvider serviceProvider)
         }
 
         var generator = serviceProvider.GetRequiredService<AsyncApiDocumentGenerator>();
-        var document = generator.Generate();
+        string json = generator.Generate().SerializeAsJson(AsyncApiVersion.AsyncApi3_0);
 
-        await writer.WriteAsync(document.SerializeAsJson(AsyncApiVersion.AsyncApi3_0).AsMemory(), cancellationToken).ConfigureAwait(false);
+        if (serviceProvider.GetRequiredService<AsyncApiOptions>().PostProcess is { } postProcess)
+        {
+            json = PostProcess(json, postProcess);
+        }
+
+        await writer.WriteAsync(json.AsMemory(), cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Applies <see cref="AsyncApiOptions.PostProcess"/> to the serialized document and writes it back
+    /// in the same layout the document is generated in (two-space indentation, <c>\n</c> line endings,
+    /// non-ASCII characters unescaped), so that the output stays stable across machines.
+    /// </summary>
+    private static string PostProcess(string json, Action<JsonObject> postProcess)
+    {
+        var document = JsonNode.Parse(json)!.AsObject();
+        postProcess(document);
+
+        using var stream = new MemoryStream();
+        using (var jsonWriter = new Utf8JsonWriter(stream, new JsonWriterOptions()
+        {
+            Indented = true,
+            NewLine = "\n",
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        }))
+        {
+            document.WriteTo(jsonWriter);
+        }
+
+        return Encoding.UTF8.GetString(stream.ToArray());
     }
 
     private static bool IsMissingHandler(Exception exception)

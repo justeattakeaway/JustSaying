@@ -13,7 +13,7 @@ namespace JustSaying.AsyncApi;
 /// Generates an AsyncAPI 3.1 document from the publications and subscriptions captured in an
 /// <see cref="IMessagingMetadataRegistry"/>.
 /// </summary>
-public sealed class AsyncApiDocumentGenerator
+internal sealed class AsyncApiDocumentGenerator
 {
     private const string JsonContentType = "application/json";
 
@@ -107,18 +107,20 @@ public sealed class AsyncApiDocumentGenerator
         var document = new AsyncApiDocument()
         {
             Id = _options.Id,
-            Info = new AsyncApiInfo()
-            {
-                Title = _options.Title ?? ApplicationName ?? Assembly.GetEntryAssembly()?.GetName().Name ?? "JustSaying application",
-                Version = _options.Version,
-                Description = _options.Description,
-            },
+            Info = CreateInfo(),
             DefaultContentType = JsonContentType,
         };
 
         string primaryRegion = PrimaryRegion();
 
-        AddServers(document, primaryRegion);
+        if (_options.Servers.Count > 0)
+        {
+            AddConfiguredServers(document);
+        }
+        else
+        {
+            AddServers(document, primaryRegion);
+        }
 
         if (_registry.Publications.Count == 0 && _registry.Subscriptions.Count == 0)
         {
@@ -227,8 +229,6 @@ public sealed class AsyncApiDocumentGenerator
             }
         }
 
-        _options.PostProcess?.Invoke(document);
-
         return document;
     }
 
@@ -284,6 +284,67 @@ public sealed class AsyncApiDocumentGenerator
                 Description = $"Amazon SQS in {region}.",
             };
         }
+    }
+
+    /// <summary>
+    /// Adds the servers configured in <see cref="AsyncApiOptions.Servers"/>, which replace the
+    /// generated per-region servers.
+    /// </summary>
+    private void AddConfiguredServers(AsyncApiDocument document)
+    {
+        foreach (var (name, server) in _options.Servers)
+        {
+            if (string.IsNullOrEmpty(name) || name.Any((c) => !(char.IsAsciiLetterOrDigit(c) || c == '_' || c == '-')))
+            {
+                throw new InvalidOperationException($"The AsyncAPI server name '{name}' is invalid. Server names must contain only letters, digits, '_' and '-'.");
+            }
+
+            if (server == null || string.IsNullOrEmpty(server.Host) || string.IsNullOrEmpty(server.Protocol))
+            {
+                throw new InvalidOperationException($"The AsyncAPI server '{name}' must have a {nameof(AsyncApiServerOptions.Host)} and a {nameof(AsyncApiServerOptions.Protocol)}.");
+            }
+
+            document.Servers[name] = new AsyncApiServer()
+            {
+                Host = server.Host,
+                Protocol = server.Protocol,
+                Description = server.Description,
+            };
+        }
+    }
+
+    private AsyncApiInfo CreateInfo()
+    {
+        var info = new AsyncApiInfo()
+        {
+            Title = _options.Title ?? ApplicationName ?? Assembly.GetEntryAssembly()?.GetName().Name ?? "JustSaying application",
+            Version = _options.Version,
+            Description = _options.Description,
+            TermsOfService = _options.TermsOfService,
+        };
+
+        if (_options.Contact is { } contact)
+        {
+            info.Contact = new AsyncApiContact() { Name = contact.Name, Url = contact.Url, Email = contact.Email };
+        }
+
+        if (_options.License is { Name: not null } license)
+        {
+            info.License = new AsyncApiLicense() { Name = license.Name, Url = license.Url };
+        }
+
+        foreach (var tag in _options.Tags.Where((t) => t?.Name != null))
+        {
+            info.Tags ??= [];
+            info.Tags.Add(new AsyncApiTag() { Name = tag.Name, Description = tag.Description });
+        }
+
+        if (_options.ExternalDocs is { Url: not null } externalDocs)
+        {
+            info.ExternalDocs = new AsyncApiExternalDocumentation() { Url = externalDocs.Url, Description = externalDocs.Description };
+        }
+
+        return info;
     }
 
     private static string ServerKey(string protocol, string region, string primaryRegion)
@@ -346,9 +407,17 @@ public sealed class AsyncApiDocumentGenerator
                 Description = description,
             };
 
-            if (region != null)
+            string protocol = kind == MessagingDestinationKind.SnsTopic ? "sns" : "sqs";
+            if (_options.Servers.Count > 0)
             {
-                string serverKey = ServerKey(kind == MessagingDestinationKind.SnsTopic ? "sns" : "sqs", region, primaryRegion);
+                foreach (var server in _options.Servers.Where((s) => string.Equals(s.Value.Protocol, protocol, StringComparison.OrdinalIgnoreCase)))
+                {
+                    channel.Servers.Add(new AsyncApiServerReference($"#/servers/{server.Key}"));
+                }
+            }
+            else if (region != null)
+            {
+                string serverKey = ServerKey(protocol, region, primaryRegion);
                 if (document.Servers.ContainsKey(serverKey))
                 {
                     channel.Servers.Add(new AsyncApiServerReference($"#/servers/{serverKey}"));
