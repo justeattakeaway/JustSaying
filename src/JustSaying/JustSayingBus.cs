@@ -257,6 +257,8 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         PublishMetadata metadata,
         CancellationToken cancellationToken) where TMessage : class
     {
+        if (message == null) throw new ArgumentNullException(nameof(message));
+
         EnsureStarted();
 
         var messageType = message.GetType();
@@ -434,12 +436,19 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
     /// <inheritdoc/>
     public async Task PublishBatchAsync<TMessage>(IEnumerable<TMessage> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken) where TMessage : class
     {
+        if (messages == null) throw new ArgumentNullException(nameof(messages));
+
         EnsureStarted();
 
         var messageList = messages.ToList();
         if (messageList.Count == 0)
         {
             return;
+        }
+
+        if (messageList.Contains(null))
+        {
+            throw new ArgumentException("The batch cannot contain a null message.", nameof(messages));
         }
 
         // Route by each message's runtime type, so a single batch may contain more than one message
