@@ -534,12 +534,10 @@ public sealed class AsyncApiDocumentGenerator
 
         try
         {
-            var schemaNode = serializerOptions.GetJsonSchemaAsNode(messageType, new JsonSchemaExporterOptions
-            {
-                TreatNullObliviousAsNonNullable = true,
-            });
+            var mapper = new JsonSchemaNodeMapper(serializerOptions);
+            var schemaNode = serializerOptions.GetJsonSchemaAsNode(messageType, mapper.ExporterOptions);
 
-            return JsonSchemaNodeMapper.Map(schemaNode);
+            return mapper.Map(schemaNode);
         }
         catch (NotSupportedException exception)
         {
