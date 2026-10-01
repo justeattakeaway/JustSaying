@@ -706,7 +706,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
                         attemptCount,
                         PublishBatchConfiguration.PublishFailureReAttempts);
 
-                    var delayForAttempt = TimeSpan.FromMilliseconds(Config.PublishFailureBackoff.TotalMilliseconds * attemptCount);
+                    var delayForAttempt = TimeSpan.FromMilliseconds(PublishBatchConfiguration.PublishFailureBackoff.TotalMilliseconds * attemptCount);
                     await Task.Delay(delayForAttempt, cancellationToken).ConfigureAwait(false);
 
                     await PublishAsync(publisher, messages, metadata, attemptCount, messageType, cancellationToken).ConfigureAwait(false);

@@ -395,16 +395,26 @@ public sealed class MessagingConfigurationBuilder
     /// </returns>
     public IPublishBatchConfiguration BuildPublishBatchConfiguration()
     {
-        var config = BusBuilder.ServiceResolver.ResolveService<IPublishBatchConfiguration>();
-
-        if (PublishFailureBackoffForBatch.HasValue)
+        // The resolved configuration can be the same instance as the IMessagingConfig (it is under
+        // Microsoft DI), so start from a copy of it rather than overwrite the single-message settings
+        // with the batch ones.
+        var resolved = BusBuilder.ServiceResolver.ResolveService<IPublishBatchConfiguration>();
+        var config = new PublishBatchConfiguration
         {
-            config.PublishFailureBackoff = PublishFailureBackoffForBatch.Value;
+            PublishFailureReAttempts = resolved.PublishFailureReAttempts,
+            PublishFailureBackoff = resolved.PublishFailureBackoff,
+            MessageBatchResponseLogger = resolved.MessageBatchResponseLogger,
+        };
+
+        // A batch falls back to the single-message settings when it has none of its own.
+        if ((PublishFailureBackoffForBatch ?? PublishFailureBackoff) is { } backoff)
+        {
+            config.PublishFailureBackoff = backoff;
         }
 
-        if (PublishFailureReAttemptsForBatch.HasValue)
+        if ((PublishFailureReAttemptsForBatch ?? PublishFailureReAttempts) is { } reattempts)
         {
-            config.PublishFailureReAttempts = PublishFailureReAttemptsForBatch.Value;
+            config.PublishFailureReAttempts = reattempts;
         }
 
         if (MessageBatchResponseLogger != null)
