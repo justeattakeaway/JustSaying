@@ -208,12 +208,13 @@ internal sealed class SnsMessagePublisher(
                         "Topic",
                         request.TopicArn);
 
-                    foreach (var message in response.Successful)
+                    foreach (var entry in response.Successful)
                     {
+                        var message = MessageIdentity.GetBatchEntryMessage(chunk, entry.Id);
                         _logger.LogInformation(
                             "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
-                            message.Id,
-                            message.GetType().FullName,
+                            MessageIdentity.GetBatchEntryMessageId(chunk, entry.Id, _metadataProvider),
+                            message?.GetType().FullName,
                             "Topic",
                             request.TopicArn);
                     }
@@ -227,15 +228,15 @@ internal sealed class SnsMessagePublisher(
                         "Topic",
                         request.TopicArn);
 
-                    foreach (var message in response.Failed)
+                    foreach (var entry in response.Failed)
                     {
                         _logger.LogError(
                             "Failed to publish message {MessageId} to {DestinationType} '{MessageDestination}' with error code: {ErrorCode} is error on BatchAPI: {IsBatchAPIError}.",
-                            message.Id,
+                            MessageIdentity.GetBatchEntryMessageId(chunk, entry.Id, _metadataProvider),
                             "Topic",
                             request.TopicArn,
-                            message.Code,
-                            message.SenderFault);
+                            entry.Code,
+                            entry.SenderFault);
                     }
                 }
             }
@@ -245,7 +246,7 @@ internal sealed class SnsMessagePublisher(
                 var responseData = new MessageBatchResponse
                 {
                     SuccessfulMessageIds = response?.Successful?.Select(x => x.MessageId).ToArray(),
-                    FailedMessageIds = response?.Failed?.Select(x => x.Id).ToArray(),
+                    FailedMessageIds = response?.Failed?.Select(x => MessageIdentity.GetBatchEntryMessageId(chunk, x.Id, _metadataProvider)).ToArray(),
                     ResponseMetadata = response?.ResponseMetadata,
                     HttpStatusCode = response?.HttpStatusCode,
                 };
@@ -262,13 +263,13 @@ internal sealed class SnsMessagePublisher(
     {
         var entries = new List<PublishBatchRequestEntry>(messages.Length);
 
-        foreach (var message in messages)
+        for (int i = 0; i < messages.Length; i++)
         {
-            var (messageToSend, attributes, subject) = await _messageConverter.ConvertToOutboundMessageAsync(message, metadata);
+            var (messageToSend, attributes, subject) = await _messageConverter.ConvertToOutboundMessageAsync(messages[i], metadata);
 
             PublishBatchRequestEntry request = new()
             {
-                Id = MessageIdentity.GetBatchEntryId(message, _metadataProvider),
+                Id = MessageIdentity.GetBatchEntryId(i),
                 Subject = subject,
                 Message = messageToSend,
             };

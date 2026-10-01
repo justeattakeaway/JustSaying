@@ -204,12 +204,13 @@ internal sealed class SqsMessagePublisher(
                         "Queue",
                         request.QueueUrl);
 
-                    foreach (var message in response.Successful)
+                    foreach (var entry in response.Successful)
                     {
+                        var message = MessageIdentity.GetBatchEntryMessage(chunk, entry.Id);
                         _logger.LogInformation(
                             "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
-                            message.Id,
-                            message.GetType().FullName,
+                            MessageIdentity.GetBatchEntryMessageId(chunk, entry.Id, _metadataProvider),
+                            message?.GetType().FullName,
                             "Queue",
                             request.QueueUrl);
                     }
@@ -223,15 +224,15 @@ internal sealed class SqsMessagePublisher(
                         "Queue",
                         request.QueueUrl);
 
-                    foreach (var message in response.Failed)
+                    foreach (var entry in response.Failed)
                     {
                         _logger.LogError(
                             "Failed to publish message {MessageId} to {DestinationType} '{MessageDestination}' with error code: {ErrorCode} is error on BatchAPI: {IsBatchAPIError}.",
-                            message.Id,
+                            MessageIdentity.GetBatchEntryMessageId(chunk, entry.Id, _metadataProvider),
                             "Queue",
                             request.QueueUrl,
-                            message.Code,
-                            message.SenderFault);
+                            entry.Code,
+                            entry.SenderFault);
                     }
                 }
             }
@@ -241,7 +242,7 @@ internal sealed class SqsMessagePublisher(
                 var responseData = new MessageBatchResponse
                 {
                     SuccessfulMessageIds = response?.Successful?.Select(x => x.MessageId).ToArray(),
-                    FailedMessageIds = response?.Failed?.Select(x => x.Id).ToArray(),
+                    FailedMessageIds = response?.Failed?.Select(x => MessageIdentity.GetBatchEntryMessageId(chunk, x.Id, _metadataProvider)).ToArray(),
                     ResponseMetadata = response?.ResponseMetadata,
                     HttpStatusCode = response?.HttpStatusCode,
                 };
@@ -256,13 +257,13 @@ internal sealed class SqsMessagePublisher(
         var entries = new List<SendMessageBatchRequestEntry>(messages.Length);
         int? delaySeconds = metadata?.Delay is { } delay ? (int)delay.TotalSeconds : null;
 
-        foreach (var message in messages)
+        for (int i = 0; i < messages.Length; i++)
         {
-            var (messageBody, attributes, _) = await messageConverter.ConvertToOutboundMessageAsync(message, metadata);
+            var (messageBody, attributes, _) = await messageConverter.ConvertToOutboundMessageAsync(messages[i], metadata);
 
             var entry = new SendMessageBatchRequestEntry
             {
-                Id = MessageIdentity.GetBatchEntryId(message, _metadataProvider),
+                Id = MessageIdentity.GetBatchEntryId(i),
                 MessageBody = messageBody
             };
 

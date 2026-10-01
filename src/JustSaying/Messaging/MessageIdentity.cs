@@ -1,3 +1,4 @@
+using System.Globalization;
 using JustSaying.Models;
 
 namespace JustSaying.Messaging;
@@ -27,17 +28,29 @@ internal static class MessageIdentity
         => (metadataProvider ?? DefaultMessageMetadataProvider.Instance).GetId(message);
 
     /// <summary>
-    /// Gets an identifier for a message suitable for use as a batch request entry identifier, which
-    /// only needs to be unique <em>within a single batch request</em>. Falls back to a fresh
-    /// <see cref="Guid"/> for payloads that do not expose a stable key.
-    /// <para>
-    /// This is deliberately <em>not</em> suitable for deduplication: the fallback is not stable
-    /// across publishes. Features that need a stable key (such as exactly-once handling) must obtain
-    /// it explicitly rather than calling this method.
-    /// </para>
+    /// Gets the batch request entry identifier for the message at <paramref name="index"/> in a batch
+    /// request. SNS and SQS only require entry ids to match <c>[A-Za-z0-9_-]{1,80}</c> and be unique
+    /// within the request, so the position is used rather than anything derived from the message,
+    /// such as a deduplication key, which may repeat or contain other characters.
     /// </summary>
-    public static string GetBatchEntryId(object message, IMessageMetadataProvider metadataProvider)
-        => (metadataProvider ?? DefaultMessageMetadataProvider.Instance).TryGetDeduplicationKey(message, out string key)
-            ? key
-            : Guid.NewGuid().ToString();
+    public static string GetBatchEntryId(int index)
+        => index.ToString(CultureInfo.InvariantCulture);
+
+    /// <summary>
+    /// Gets the message a batch result entry refers to, from the entry id created by
+    /// <see cref="GetBatchEntryId(int)"/>, or <see langword="null"/> if the id isn't one of ours.
+    /// </summary>
+    public static object GetBatchEntryMessage(IReadOnlyList<object> messages, string entryId)
+        => int.TryParse(entryId, NumberStyles.None, CultureInfo.InvariantCulture, out int index) && index < messages.Count
+            ? messages[index]
+            : null;
+
+    /// <summary>
+    /// Gets the identifier to report for a batch result entry: the message's own id when it has one,
+    /// otherwise the entry id (its position in <paramref name="messages"/>).
+    /// </summary>
+    public static string GetBatchEntryMessageId(IReadOnlyList<object> messages, string entryId, IMessageMetadataProvider metadataProvider)
+        => GetBatchEntryMessage(messages, entryId) is { } message
+            ? GetId(message, metadataProvider) ?? entryId
+            : entryId;
 }
