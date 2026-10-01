@@ -19,6 +19,11 @@ public static class AsyncApiServiceCollectionExtensions
     /// <param name="services">The service collection to add AsyncAPI support to.</param>
     /// <param name="configure">An optional delegate used to configure the <see cref="AsyncApiOptions"/>.</param>
     /// <returns>The same <see cref="IServiceCollection"/>, for chaining.</returns>
+    /// <remarks>
+    /// Documents are written with ByteBard.AsyncAPI.NET, which is not annotated for trimming or
+    /// Native AOT, so this package is not marked trim- or AOT-compatible: publishing a trimmed or
+    /// Native AOT application that references it produces trim/AOT warnings (IL2104, IL3053).
+    /// </remarks>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="services"/> is <see langword="null"/>.
     /// </exception>
