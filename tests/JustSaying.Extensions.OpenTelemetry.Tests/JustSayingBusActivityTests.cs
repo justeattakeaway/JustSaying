@@ -27,9 +27,6 @@ public class JustSayingBusActivityTests
             .Build();
 
         var config = Substitute.For<IMessagingConfig>();
-        // A substituted config auto-substitutes the metadata provider, whose GetId would return "";
-        // the bus reads the message id through it, so give it the real default.
-        config.MessageMetadataProvider.Returns(new MessagingConfig().MessageMetadataProvider);
 
         var publisher = Substitute.For<IMessagePublisher>();
         var monitor = Substitute.For<IMessageMonitor>();

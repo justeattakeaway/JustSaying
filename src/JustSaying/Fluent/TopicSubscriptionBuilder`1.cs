@@ -221,7 +221,7 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
 
         var resolutionContext = new HandlerResolutionContext(subscriptionConfig.QueueName);
         var proposedHandler = handlerResolver.ResolveHandler<T>(resolutionContext) ?? throw new HandlerNotRegisteredWithContainerException($"There is no handler for '{typeof(T)}' messages.");
-        var middlewareBuilder = new HandlerMiddlewareBuilder(handlerResolver, serviceResolver, typeof(T));
+        var middlewareBuilder = new HandlerMiddlewareBuilder(handlerResolver, serviceResolver, typeof(T), bus.MessageMetadataProvider);
         var handlerMiddleware = middlewareBuilder
             .Configure(MiddlewareConfiguration ?? (builder => builder.UseDefaults<T>(proposedHandler.GetType())) )
             .Build();

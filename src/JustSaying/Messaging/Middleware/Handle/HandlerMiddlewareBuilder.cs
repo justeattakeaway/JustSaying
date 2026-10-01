@@ -1,5 +1,7 @@
 using JustSaying.Fluent;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.Middleware.Logging;
 using JustSaying.Models;
 using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;
 
@@ -23,13 +25,22 @@ public sealed class HandlerMiddlewareBuilder(IHandlerResolver handlerResolver, I
     /// <summary>
     /// Creates a builder for the handling pipeline of a subscription to <paramref name="messageType"/>.
     /// <see cref="Build"/> then requires the pipeline to invoke a handler, and middleware that is typed
-    /// on the message can check that it matches.
+    /// on the message can check that it matches. <paramref name="messageMetadataProvider"/> is the bus's
+    /// provider, given to the <see cref="LoggingMiddleware"/> so handle logs read the same message
+    /// identity as publish logs.
     /// </summary>
-    internal HandlerMiddlewareBuilder(IHandlerResolver handlerResolver, IServiceResolver serviceResolver, Type messageType)
+    internal HandlerMiddlewareBuilder(
+        IHandlerResolver handlerResolver,
+        IServiceResolver serviceResolver,
+        Type messageType,
+        IMessageMetadataProvider messageMetadataProvider)
         : this(handlerResolver, serviceResolver)
     {
         MessageType = messageType;
+        _messageMetadataProvider = messageMetadataProvider;
     }
+
+    private readonly IMessageMetadataProvider _messageMetadataProvider;
 
     /// <summary>
     /// Gets the type of message the pipeline handles, when it is built for a subscription.
@@ -157,6 +168,14 @@ Please check the documentation for your container for more details.");
             // Handler middleware needs to be last in the chain, so we keep an explicit reference to
             // it and add it here
             middlewares.Insert(0, _handlerMiddleware);
+        }
+
+        if (_messageMetadataProvider != null)
+        {
+            foreach (var loggingMiddleware in middlewares.OfType<LoggingMiddleware>())
+            {
+                loggingMiddleware.MetadataProvider = _messageMetadataProvider;
+            }
         }
 
         if (MessageType != null && !middlewares.Any(IsHandlerInvocation))

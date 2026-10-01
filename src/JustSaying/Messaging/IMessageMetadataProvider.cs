@@ -11,7 +11,7 @@ namespace JustSaying.Messaging;
 /// intrinsically carries.
 /// </para>
 /// </summary>
-public interface IMessageMetadataProvider
+internal interface IMessageMetadataProvider
 {
     /// <summary>
     /// Gets a stable identifier for the message (the CloudEvents <c>id</c>), or <see langword="null"/>

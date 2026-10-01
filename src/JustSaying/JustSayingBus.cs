@@ -46,6 +46,14 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
     internal MessageCompressionRegistry CompressionRegistry { get; }
     internal IMessageBodySerializationFactory MessageBodySerializerFactory { get; set; }
 
+    /// <summary>
+    /// Gets the provider that reads message identity for every publish and handle log, publish
+    /// activity and batch publish of this bus: the configured one when the config is a
+    /// <see cref="MessagingConfig"/>, otherwise the default.
+    /// </summary>
+    internal IMessageMetadataProvider MessageMetadataProvider
+        => (Config as MessagingConfig)?.MessageMetadataProvider ?? DefaultMessageMetadataProvider.Instance;
+
     public Task Completion { get; private set; }
 
     internal JustSayingBus(
@@ -337,7 +345,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
             {
                 activity.SetTag("messaging.operation.name", "publish");
                 activity.SetTag("messaging.operation.type", "send");
-                activity.SetTag("messaging.message.id", MessageIdentity.GetId(message, Config.MessageMetadataProvider));
+                activity.SetTag("messaging.message.id", MessageIdentity.GetId(message, MessageMetadataProvider));
                 activity.SetTag("messaging.message.type", messageType.FullName);
             }
 

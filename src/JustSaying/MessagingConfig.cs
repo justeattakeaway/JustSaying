@@ -45,9 +45,10 @@ public class MessagingConfig : IMessagingConfig, IPublishBatchConfiguration
 
     /// <summary>
     /// Gets or sets the provider used to read intrinsic metadata (id, timestamp, deduplication key)
-    /// from message payloads. Defaults to a provider that reads <see cref="Message"/> metadata.
+    /// from message payloads. Defaults to a provider that reads <see cref="Message"/> metadata. This is
+    /// the single provider used by publish and handle logs, telemetry and batch publishing.
     /// </summary>
-    public IMessageMetadataProvider MessageMetadataProvider
+    internal IMessageMetadataProvider MessageMetadataProvider
     {
         get => _messageMetadataProvider ??= DefaultMessageMetadataProvider.Instance;
         set => _messageMetadataProvider = value;

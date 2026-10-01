@@ -10,26 +10,17 @@ namespace JustSaying.Messaging.Middleware.Logging;
 /// Constructs a <see cref="LoggingMiddleware"/>.
 /// </remarks>
 /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> to write logs to.</param>
-/// <param name="metadataProvider">
-/// The <see cref="IMessageMetadataProvider"/> used to read the logged message identity. When
-/// <see langword="null"/>, the default provider is used.
-/// </param>
-public sealed class LoggingMiddleware(ILoggerFactory loggerFactory, IMessageMetadataProvider metadataProvider) : MiddlewareBase<HandleMessageContext, bool>
+public sealed class LoggingMiddleware(ILoggerFactory loggerFactory) : MiddlewareBase<HandleMessageContext, bool>
 {
     private readonly ILogger<LoggingMiddleware> _logger =
         loggerFactory?.CreateLogger<LoggingMiddleware>()
         ?? throw new ArgumentNullException(nameof(loggerFactory));
 
-    private readonly IMessageMetadataProvider _metadataProvider = metadataProvider ?? DefaultMessageMetadataProvider.Instance;
-
     /// <summary>
-    /// Constructs a <see cref="LoggingMiddleware"/> that uses the default
-    /// <see cref="IMessageMetadataProvider"/>.
+    /// Gets or sets the provider used to read the logged message identity. A subscription's pipeline
+    /// sets this to the bus's provider when it is built.
     /// </summary>
-    /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> to write logs to.</param>
-    public LoggingMiddleware(ILoggerFactory loggerFactory) : this(loggerFactory, null)
-    {
-    }
+    internal IMessageMetadataProvider MetadataProvider { get; set; } = DefaultMessageMetadataProvider.Instance;
 
     protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
     {
@@ -57,7 +48,7 @@ public sealed class LoggingMiddleware(ILoggerFactory loggerFactory, IMessageMeta
                     context.HandledException,
                     MessageTemplate,
                     "Succeeded",
-                    MessageIdentity.GetId(context.Message, _metadataProvider),
+                    MessageIdentity.GetId(context.Message, MetadataProvider),
                     context.MessageType.FullName,
                     watch.ElapsedMilliseconds);
             }
@@ -67,7 +58,7 @@ public sealed class LoggingMiddleware(ILoggerFactory loggerFactory, IMessageMeta
                     context.HandledException,
                     MessageTemplate,
                     "Failed",
-                    MessageIdentity.GetId(context.Message, _metadataProvider),
+                    MessageIdentity.GetId(context.Message, MetadataProvider),
                     context.MessageType.FullName,
                     watch.ElapsedMilliseconds);
             }

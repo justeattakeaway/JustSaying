@@ -12,9 +12,9 @@ namespace JustSaying.Messaging;
 /// does not derive from <see cref="Message"/>.
 /// </para>
 /// <para>
-/// Identity is read through the configured <see cref="IMessageMetadataProvider"/>
-/// (<see cref="IMessagingConfig.MessageMetadataProvider"/>), so a custom provider takes effect
-/// everywhere a message identity is surfaced.
+/// Identity is read through the bus's <see cref="IMessageMetadataProvider"/>
+/// (<see cref="JustSayingBus.MessageMetadataProvider"/>), so the same provider is used everywhere a
+/// message identity is surfaced.
 /// </para>
 /// </summary>
 internal static class MessageIdentity

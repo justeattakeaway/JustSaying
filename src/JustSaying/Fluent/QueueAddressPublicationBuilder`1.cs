@@ -124,7 +124,7 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T> w
             sqsClient,
             new OutboundMessageConverter(PublishDestinationType.Queue, bus.MessageBodySerializerFactory.GetSerializer<T>().Erase(), new MessageCompressionRegistry([new GzipMessageBodyCompression()]), compressionOptions, subject, _isRawMessage),
             loggerFactory,
-            bus.Config.MessageMetadataProvider)
+            bus.MessageMetadataProvider)
         {
             MessageResponseLogger = config.MessageResponseLogger
         };

@@ -132,7 +132,6 @@ public static class IServiceCollectionExtensions
         services.TryAddSingleton<IPublishConfiguration>((p) => p.GetRequiredService<MessagingConfig>());
         services.TryAddSingleton<IPublishBatchConfiguration>((p) => p.GetRequiredService<MessagingConfig>());
         services.TryAddSingleton<IMessageMonitor, NullOpMessageMonitor>();
-        services.TryAddTransient<IMessageMetadataProvider>((p) => p.GetRequiredService<IMessagingConfig>().MessageMetadataProvider);
 
         services.TryAddTransient<LoggingMiddleware>();
         services.TryAddTransient<SqsPostProcessorMiddleware>();

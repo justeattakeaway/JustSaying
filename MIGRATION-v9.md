@@ -92,6 +92,7 @@ c.WithMiddlewareConfiguration(m =>
 Available on `IMessagingConfig`:
 
 - **`IMessageTypeRegistry`** — bidirectional map between a message type and its logical wire name (the SNS `Subject` today). `GetLogicalName` preserves existing subject behaviour; `TryResolveType` enables future type-based inbound routing. The native `Subject` remains the unqualified type name.
-- **`IMessageMetadataProvider`** — reads the intrinsic id / timestamp / deduplication key a payload carries (mapping onto the CloudEvents `id`/`time`). Defaults to reading `Message` metadata. A custom provider feeds the message id on publish activities, publisher logs, the handling log middleware, and batch request entry ids.
 
-Both have sensible defaults and require no action unless you are customising naming or metadata.
+It has a sensible default and requires no action unless you are customising naming.
+
+A message that doesn't derive from `Message` has no id JustSaying can read, so publish and handle logs show its id as `(null)` and the publish activity has no `messaging.message.id` tag.
