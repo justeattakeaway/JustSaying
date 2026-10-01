@@ -293,27 +293,35 @@ services.AddJustSayingCloudEvents();
 p.WithTopic<OrderPlaced>();                                       // legacy (Message-derived)
 p.WithTopic<PaymentTaken>();                                      // plain JSON POCO
 p.WithCloudEventTopic<ParcelShipped>("com.example.parcel-shipped",
-    source: new Uri("https://orders.example.com"));               // CloudEvents
+    source: new Uri("/parcels", UriKind.Relative));               // CloudEvents
 
 // point-to-point queue publications have a matching registration; the CloudEvents
 // serializer is self-describing, so the envelope goes to the queue verbatim
 // (no { "Subject", "Message" } wrapper)
 p.WithCloudEventQueue<OrderCancelled>("com.example.order-cancelled",
-    source: new Uri("https://orders.example.com"));
+    source: new Uri("/orders", UriKind.Relative));
 
-// subscriptions — one queue can mix native and CloudEvents messages
+// topic subscriptions — the topic and queue are named after T, like WithCloudEventTopic<T>
+s.ForCloudEventTopic<ParcelShipped>("com.example.parcel-shipped");      // handler receives CloudEvent<T>
+s.ForCloudEventTopicData<RefundIssued>("com.example.refund-issued");    // handler receives bare T
+
+// queue subscriptions — one queue can mix native and CloudEvents messages
 s.ForQueue("orders", q => q
     .Handling<LegacyOrderPlaced>()                                // native, routed by Subject
     .HandlingCloudEvent<ParcelShipped>("com.example.parcel-shipped")   // handler receives CloudEvent<T>
     .HandlingCloudEventData<OrderCancelled>("com.example.order-cancelled")); // handler receives bare T
 ```
 
+Use a **relative** `source` (`/parcels`) unless every consumer accepts an absolute URI: AWS.Messaging, for one, rejects an absolute `source`. The value is written exactly as given.
+
+`WithCloudEventTopic<T>`/`WithCloudEventQueue<T>` accept both a bare `T` (the envelope's `id`, `time` and `source` are defaulted) and a `CloudEvent<T>` (to set `source`, `subject`, `dataschema` and extension attributes per message). Their optional `configure` callback is the usual `TopicPublicationBuilder<T>`/`QueuePublicationBuilder<T>`, applied to both shapes (an exception handler or topic-name customizer receives the payload, `CloudEvent<T>.Data`). A minted `id`/`time` is fixed per message instance, so publish retries don't change it.
+
 For an all-CloudEvents application, opt the CloudEvents serializer in as the app-wide default — then plain `WithTopic<T>`/`ForQueue<T>` registrations speak CloudEvents too, and every published type must have a `type` mapped in `CloudEventOptions` (an unmapped type fails at startup):
 
 ```csharp
 services.AddJustSayingCloudEvents(options =>
 {
-    options.Source = new Uri("https://orders.example.com");
+    options.Source = new Uri("/orders", UriKind.Relative);
     options.MapType<OrderPlaced>("com.example.order-placed");
     options.UseAsDefault = true;
 });
@@ -322,6 +330,38 @@ services.AddJustSayingCloudEvents(options =>
 The `data` payload is serialized with the app's own `IMessageBodySerializationFactory` (whatever `AddJustSaying` uses for its other messages), so a source-generated `JsonSerializerContext` registered once for Native AOT covers CloudEvents data too, and the data's JSON matches the rest of the app. Set `CloudEventOptions.DataSerializationFactory` to use a different one.
 
 Single-type subscriptions can also override their serializer per registration via `WithMessageBodySerializer(IMessageBodySerializer<T>)`, now available on the `ForTopic<T>`/`ForQueue<T>` builders as well as `ForQueueUrl<T>`/`ForQueueArn<T>`.
+
+### What is supported
+
+- **Structured mode only.** The whole event is the message body (`application/cloudevents+json`); binary mode (attributes as SNS/SQS message attributes) is neither written nor read.
+- **No batch format.** A JSON array of events (`application/cloudevents-batch+json`) is not supported; publish and consume one event per message.
+- **Third-party consumers of a topic** should subscribe with SNS `RawMessageDelivery` enabled, so they receive the CloudEvent itself rather than the SNS notification wrapping it. JustSaying subscribers read either.
+- **Data.** JSON `data` is read inline, and JSON sent as `data_base64` is decoded and read the same way. Other media types, an event with both members, and a data-less event (`data` absent or `null`) fail handling — they are retried and then dead-lettered, never handed to a handler with no payload.
+- **Validation on read.** An event must have `specversion` `1.0` and non-empty `id`, `source` and `type`; `time`, when present, must be RFC 3339 with an offset. An invalid event fails handling (retried, then dead-lettered) rather than reaching a handler half-populated.
+- **Extensions** must be named with lowercase letters and digits only (`tenantid`, not `TenantId` or `tenant-id`); `CloudEvent<T>` rejects anything else. An inbound integer or boolean extension is kept as its JSON text (`"42"`, `"true"`).
+
+### Exactly-once on the CloudEvents id
+
+`CloudEvent<T>` isn't a `Message`, so `UseExactlyOnce` needs a key selector. Key it on the event `id`, which a producer keeps across its own retries:
+
+```csharp
+s.ForCloudEventTopic<ParcelShipped>("com.example.parcel-shipped", t => t
+    .WithMiddlewareConfiguration(m => m
+        .UseExactlyOnce<CloudEvent<ParcelShipped>>("parcel-handler", deduplicationKeySelector: e => e.Id)
+        .UseDefaults<CloudEvent<ParcelShipped>>(typeof(ParcelShippedHandler))));
+```
+
+### Moving a type from native JustSaying to CloudEvents
+
+A consumer can accept both shapes of a type on one queue while its producer moves from `WithTopic<T>` to `WithCloudEventTopic<T>`:
+
+```csharp
+s.ForQueue("parcels", q => q
+    .Handling<ParcelShipped>()                                          // the native publications
+    .HandlingCloudEventData<ParcelShipped>("com.example.parcel-shipped")); // the CloudEvents ones
+```
+
+Both reach the same `IHandlerAsync<ParcelShipped>`. Registration order doesn't matter: on a multi-type queue the discriminators run in a fixed order — any added with `WithDiscriminator`, then the CloudEvents `type`, and the SNS `Subject` last — and the first to recognise a message decides its type. A CloudEvents publication also carries the payload's type name as its SNS `Subject`, but a CloudEvent is always routed by its `type`; one whose `type` isn't registered on the queue is unroutable rather than read as the native type.
 
 
 ## A subscription's middleware configuration must add the handler
