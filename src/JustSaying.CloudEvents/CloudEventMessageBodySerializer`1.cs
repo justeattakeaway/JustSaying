@@ -33,7 +33,7 @@ public sealed class CloudEventMessageBodySerializer<TMessage> : IMessageBodySeri
     /// <param name="dataContentType">
     /// The CloudEvents <c>datacontenttype</c>, which must be a JSON media type. Defaults to <c>application/json</c>.
     /// </param>
-    public CloudEventMessageBodySerializer(
+    internal CloudEventMessageBodySerializer(
         IMessageBodySerializer<TMessage> dataSerializer,
         IMessageMetadataProvider metadataProvider,
         Uri source,

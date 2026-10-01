@@ -1,6 +1,7 @@
 using System.Text.Json;
 using JustSaying;
 using JustSaying.CloudEvents;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -41,7 +42,9 @@ public static class CloudEventsServiceCollectionExtensions
             var dataSerializerFactory = new SystemTextJsonSerializationFactory(
                 dataSerializerOptions ?? SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions);
 
-            return new CloudEventSerializationFactory(dataSerializerFactory, config.MessageMetadataProvider, options);
+            var metadataProvider = (config as MessagingConfig)?.MessageMetadataProvider ?? DefaultMessageMetadataProvider.Instance;
+
+            return new CloudEventSerializationFactory(dataSerializerFactory, metadataProvider, options);
         });
 
         return services;

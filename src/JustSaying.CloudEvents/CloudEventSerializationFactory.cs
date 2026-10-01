@@ -20,7 +20,7 @@ public sealed class CloudEventSerializationFactory : IMessageBodySerializationFa
     /// <param name="dataSerializerFactory">The factory whose serializers handle the <c>data</c> payload.</param>
     /// <param name="metadataProvider">Provides the CloudEvents <c>id</c> and <c>time</c> from messages.</param>
     /// <param name="options">The CloudEvents options (source, content type and per-type <c>type</c> mappings).</param>
-    public CloudEventSerializationFactory(
+    internal CloudEventSerializationFactory(
         IMessageBodySerializationFactory dataSerializerFactory,
         IMessageMetadataProvider metadataProvider,
         CloudEventOptions options)

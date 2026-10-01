@@ -1,5 +1,4 @@
 JustSaying.CloudEvents.CloudEventMessageBodySerializer<TMessage>
-JustSaying.CloudEvents.CloudEventMessageBodySerializer<TMessage>.CloudEventMessageBodySerializer(JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<TMessage> dataSerializer, JustSaying.Messaging.IMessageMetadataProvider metadataProvider, System.Uri source, string type, string dataContentType = "application/json") -> void
 JustSaying.CloudEvents.CloudEventMessageBodySerializer<TMessage>.Deserialize(string message) -> TMessage
 JustSaying.CloudEvents.CloudEventMessageBodySerializer<TMessage>.Serialize(TMessage message) -> string
 JustSaying.CloudEvents.CloudEventOptions
@@ -10,7 +9,6 @@ JustSaying.CloudEvents.CloudEventOptions.Source.get -> System.Uri
 JustSaying.CloudEvents.CloudEventOptions.Source.set -> void
 JustSaying.CloudEvents.CloudEventOptions.WithCloudEventType<TMessage>(string type) -> JustSaying.CloudEvents.CloudEventOptions
 JustSaying.CloudEvents.CloudEventSerializationFactory
-JustSaying.CloudEvents.CloudEventSerializationFactory.CloudEventSerializationFactory(JustSaying.Messaging.MessageSerialization.IMessageBodySerializationFactory dataSerializerFactory, JustSaying.Messaging.IMessageMetadataProvider metadataProvider, JustSaying.CloudEvents.CloudEventOptions options) -> void
 JustSaying.CloudEvents.CloudEventSerializationFactory.GetSerializer<TMessage>() -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<TMessage>
 JustSaying.CloudEvents.CloudEventTypeDiscriminator
 JustSaying.CloudEvents.CloudEventTypeDiscriminator.CloudEventTypeDiscriminator() -> void

@@ -198,7 +198,7 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
             var proposedHandler = handlerResolver.ResolveHandler<TMessage>(resolutionContext)
                 ?? throw new HandlerNotRegisteredWithContainerException($"There is no handler for '{typeof(TMessage)}' messages.");
 
-            var middleware = new HandlerMiddlewareBuilder(handlerResolver, serviceResolver)
+            var middleware = new HandlerMiddlewareBuilder(handlerResolver, serviceResolver, typeof(TMessage), bus.MessageMetadataProvider)
                 .Configure(middlewareConfiguration ?? (b => b.UseDefaults<TMessage>(proposedHandler.GetType())))
                 .Build();
 

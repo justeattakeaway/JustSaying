@@ -7,6 +7,9 @@
     <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="JustSaying.CloudEvents.Tests" Key="$(JustSayingKey)" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\JustSaying\JustSaying.csproj" />
   </ItemGroup>
   <!--
