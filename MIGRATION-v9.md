@@ -40,6 +40,25 @@ public void Handled(object message)
 
 Explicitly typed lambdas need the same treatment — `(Exception ex, Message m) => ...` becomes `(Exception ex, object m) => ...`. Lambdas written with inferred parameters (`(ex, m) => ...`) continue to compile unchanged.
 
+### Middleware and serialization contexts carry the message as `object`
+
+For the same reason, these members are now typed as `object` instead of `Message`. Custom middleware that reads `context.Message.Id`, and code that constructs these types (for example in tests), needs updating:
+
+| Type | Changed members |
+| --- | --- |
+| `HandleMessageContext` | `Message` property and the constructor's `message` parameter |
+| `PublishContext` | `Message` and `Messages` properties, and both constructors |
+| `InboundMessage` | `Message` property, the constructor and `Deconstruct` |
+
+In handle middleware, `context.MessageAs<OrderPlaced>()` returns the message typed, or `null` if it's another type. Elsewhere, pattern match as above.
+
+### Other public API changes
+
+- `IMessagePublisher.PublishAsync` and `IMessageBatchPublisher.PublishBatchAsync` are now generic methods (`PublishAsync<TMessage>(TMessage message, ...) where TMessage : class`). Single-message call sites compile unchanged, and NSubstitute assertions such as `Received().PublishAsync(Arg.Any<Message>(), ...)` still match, but hand-written implementations (for example fake publishers in test suites) must implement the generic signatures.
+- `IMessagingConfig` has a new member, `MessageTypeRegistry`, so your own implementations of the interface must add it. `MessagingConfig` already has it.
+- The `ExactlyOnceMiddleware<T>` constructor has a new `deduplicationKeySelector` parameter (`Func<T, string>`) before `logger`. Prefer `UseExactlyOnce<T>` to constructing it directly.
+- Batch publish middleware runs once per message type in the batch. In v8 a batch ran the middleware once, chosen by the type of the first message, with every message in the context. v9 groups a batch by each message's runtime type and runs each group through the middleware registered for that type, with only that group's messages in `PublishContext.Messages`. The groups run concurrently and share the `PublishBatchMetadata` you passed in, so middleware that writes to the metadata for one group affects the others.
+
 ### Batch publishing is renamed to `PublishBatchAsync`
 
 **Your v8 batch calls still compile, then fail at runtime.** A `List<T>` is itself a `class`, so `PublishAsync(messages)` now binds to the single-message `PublishAsync<TMessage>` and treats the whole list as one message. No publisher is registered for `List<T>`, so the call throws an `InvalidOperationException` that tells you to call `PublishBatchAsync`. The compiler won't find these call sites for you: search your code for `PublishAsync` calls that pass a collection. Batch publishing has its own method name:
@@ -52,7 +71,7 @@ await publisher.PublishAsync(messages, metadata, cancellationToken);
 await publisher.PublishBatchAsync(messages, metadata, cancellationToken);
 ```
 
-Rename batch calls accordingly. Single-message `PublishAsync` is unchanged.
+Rename batch calls accordingly. Single-message `PublishAsync` call sites are unchanged.
 
 ### Serialization interface is generic
 
@@ -66,7 +85,7 @@ Because publishing routes by runtime type, a publication registered for an inter
 
 ## Exactly-once handling requires a stable key for non-`Message` payloads
 
-`UseExactlyOnce<TMessage>` previously deduplicated on `Message.UniqueKey()`, falling back to a fresh GUID per receive for anything else — which silently turned exactly-once into a no-op. v9 fails fast instead:
+In v8 every message derived from `Message`, so `UseExactlyOnce<TMessage>` always deduplicated on `Message.UniqueKey()`. A message that doesn't derive from `Message` has no such key, so v9 asks you for one:
 
 ```csharp
 // Message-derived types: unchanged, uses Message.UniqueKey()
