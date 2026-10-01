@@ -20,8 +20,9 @@ Widening the constraint means the *framework's* callbacks can no longer promise 
 | `IMessageBackoffStrategy.GetBackoffDuration` | `(Message message, int approximateReceiveCount, Exception lastException = null)` | `(object message, int approximateReceiveCount, Exception lastException = null)` |
 | `IPublishConfiguration.MessageResponseLogger` (and `MessagingConfigurationBuilder.WithMessageResponseLogger`) | `Action<MessageResponse, Message>` | `Action<MessageResponse, object>` |
 | `IPublishBatchConfiguration.MessageBatchResponseLogger` (and `MessagingConfigurationBuilder.WithMessageResponseLogger`) | `Action<MessageBatchResponse, IReadOnlyCollection<Message>>` | `Action<MessageBatchResponse, IReadOnlyCollection<object>>` |
-| `SnsWriteConfiguration.HandleException` / `SnsWriteConfigurationBuilder.WithErrorHandler` | `Func<Exception, Message, bool>` | `Func<Exception, object, bool>` |
-| `TopicAddressPublicationBuilder<T>.WithExceptionHandler` / `WithTopicAddress` | `Message`-typed delegates | `T`-typed delegates |
+| `SnsWriteConfiguration.HandleException` | `Func<Exception, Message, bool>` | `Func<Exception, object, bool>` |
+| `SnsWriteConfigurationBuilder.WithErrorHandler` (removed; see [Destinations are values](#destinations-are-values-topicdestination-and-queuedestination)) | `Func<Exception, Message, bool>` | `TopicPublicationBuilder<T>.WithExceptionHandler`: `Func<Exception, T, bool>` |
+| `TopicAddressPublicationBuilder<T>.WithExceptionHandler` / `WithTopicAddress` (the class is removed; `WithTopicArn<T>`'s lambda now gets a `TopicPublicationBuilder<T>`) | `Message`-typed delegates | `T`-typed delegates |
 | `TopicPublicationBuilder<T>.WithTopicName` | `Func<Message, string>` | `Func<T, string>` |
 
 The per-publication builders are now typed on their own `T` rather than `object`, so those delegates get *more* specific: a `Func<Exception, OrderPlaced, bool>` no longer needs a cast.
@@ -38,7 +39,7 @@ public void Handled(object message)
 }
 ```
 
-Explicitly typed lambdas need the same treatment — `(Exception ex, Message m) => ...` becomes `(Exception ex, object m) => ...`. Lambdas written with inferred parameters (`(ex, m) => ...`) continue to compile unchanged.
+Explicitly typed lambdas need the same treatment — `(Exception ex, Message m) => ...` becomes `(Exception ex, object m) => ...`. Lambdas written with inferred parameters (`(ex, m) => ...`) continue to compile unchanged, except where an overload makes them ambiguous: `WithExceptionHandler` takes either a single-message or a batch handler, so `(ex, m) => ...` fails with CS0121 (as it did in v8) and needs its parameter types, `(Exception ex, OrderPlaced m) => ...`.
 
 ### Middleware and serialization contexts carry the message as `object`
 
@@ -266,13 +267,93 @@ This restructures the v8 fluent surface:
   `WithCompression`, `WithRawMessages`, `WithExceptionHandler`); subscription settings on
   `ForTopic` → the builder (`WithRawMessageDelivery`, `WithFilterPolicy`,
   `WithTopicSourceAccount`); read-time settings → the builder (`WithSubscriptionGroup`,
-  `WithRawMessageDelivery`).
+  `WithRawMessageDelivery`). The full mapping is in the table below.
 - **Kept:** `WithTopicArn<T>`, `WithQueueArn/Url/Uri<T>`, `ForQueueArn/Url/Uri<T>` remain, now
   delegating to the unified methods; their configure lambdas are retyped to the merged builders,
-  which carry every member the old address builders had — most v8 call sites recompile unchanged.
+  which carry every member the old address builders had (with `T`-typed delegates, and
+  `WithReadConfiguration` on the subscription side replaced by `WithSubscriptionGroup` and
+  `WithRawMessageDelivery`).
 - **Now works everywhere:** publish exception handlers apply to created topics too (previously
   the fluent create path silently dropped them), and compression consistently falls back to the
   bus-wide default options in every mode.
+
+The CloudEvents registrations take the same values, so they never need per-address variants:
+
+```csharp
+p.WithCloudEventTopic<ParcelShipped>(TopicDestination.FromArn(topicArn),
+    "com.example.parcel-shipped", source);
+p.WithCloudEventQueue<OrderCancelled>(QueueDestination.FromUrl(queueUrl),
+    "com.example.order-cancelled", source);
+```
+
+### Porting v8 configuration, setting by setting
+
+In v8, queue and topic creation settings were configured on the registration builders through
+`WithWriteConfiguration`, `WithReadConfiguration` and `WithTag`. Those are gone, so every v8 call
+site that used one of them, or an explicitly `Message`-typed delegate, needs a source change. Call
+sites that only name a queue or topic, address an existing one by ARN or URL, or set a subject,
+compression or middleware, mostly compile unchanged. (A review of 27 representative v8 call sites
+found 11 that no longer compile.) Each setting moves as follows, where `t` is the configuration
+of a `TopicDestination` and `q` of a `QueueDestination` (`Named(name, x => ...)` or
+`ByConvention(x => ...)`), and `c` is the registration builder.
+
+**Topic publications** (`WithTopic<T>(c => ...)`):
+
+| v8 | v9 |
+| --- | --- |
+| `c.WithTag(key, value)` (tags the topic) | `t.WithTag(key, value)` |
+| `c.WithWriteConfiguration(w => w.Encryption = sse)` | `t.WithEncryption(sse)` (or `t.WithEncryption(kmsMasterKeyId)`) |
+| `w.Subject = subject` | `c.WithSubject(subject)` |
+| `w.CompressionOptions = options` | `c.WithCompression(options)` |
+| `w.HandleException = handler`, `SnsWriteConfigurationBuilder.WithErrorHandler(handler)` | `c.WithExceptionHandler(handler)`, now typed `Func<Exception, T, bool>` |
+| `w.IsRawMessage = true` | Removed: it never changed what was published to a topic. Raw delivery is a subscription setting, `ForTopic<T>(c => c.WithRawMessageDelivery())`. |
+| `c.WithTopicName(name)` | Unchanged, or `WithTopic<T>(TopicDestination.Named(name))` |
+| `c.WithTopicName(Func<Message, string>)` | `c.WithTopicName(Func<T, string>)` |
+| `WithTopicArn<T>(arn, c => ...)` with a `TopicAddressPublicationBuilder<T>` | Unchanged, but `c` is a `TopicPublicationBuilder<T>` with `T`-typed delegates; or `WithTopic<T>(TopicDestination.FromArn(arn), c => ...)` |
+
+**Queue publications** (`WithQueue<T>(c => c.WithWriteConfiguration(w => ...))`), and the queue
+settings of **subscriptions** (`ForQueue<T>(c => c.WithReadConfiguration(r => ...))` and
+`ForTopic<T>(c => c.WithReadConfiguration(r => ...))`). Pass the destination as
+`WithQueue<T>(destination, c => ...)`, `ForQueue<T>(destination, c => ...)` or
+`ForTopic<T>(c => c.WithQueue(destination))`:
+
+| v8 (`w`/`r` is the `SqsWriteConfiguration`/`SqsReadConfiguration`, or the builder method) | v9 |
+| --- | --- |
+| `QueueName`, `WithQueueName(name)` | `QueueDestination.Named(name)`, or `c.WithQueueName(name)` |
+| `MessageRetention`, `WithMessageRetention(value)` | `q.WithMessageRetention(value)` |
+| `VisibilityTimeout`, `WithVisibilityTimeout(value)` | `q.WithVisibilityTimeout(value)` |
+| `DeliveryDelay` | `q.WithDeliveryDelay(value)` |
+| `RetryCountBeforeSendingToErrorQueue` | `q.WithRetriesBeforeErrorQueue(value)` |
+| `ErrorQueueRetentionPeriod` | `q.WithErrorQueueRetention(value)` |
+| `ErrorQueueOptOut = true`, `WithNoErrorQueue()`, `WithErrorQueueOptOut(true)` | `q.WithNoErrorQueue()` |
+| `ErrorQueueOptOut = false`, `WithErrorQueue()`, `WithErrorQueueOptOut(false)` | Nothing: an error queue is the default |
+| `ServerSideEncryption`, `WithEncryption(...)` | `q.WithEncryption(...)` |
+| `w.IsRawMessage = true` (queue publication) | `c.WithRawMessages()` |
+| `w.CompressionOptions` (queue publication) | `c.WithCompression(options)` |
+| `c.WithTag(key, value)` on `ForQueue<T>` **and on `ForTopic<T>`**, `r.Tags` | `q.WithTag(key, value)`. On `ForTopic` the v8 tag went on the subscription's *queue* (and its error queue), never on the topic, and it still does. |
+
+**Subscription settings** (`ForQueue<T>`, `ForTopic<T>`):
+
+| v8 | v9 |
+| --- | --- |
+| `r.SubscriptionGroupName`, `WithSubscriptionGroup(name)` | `c.WithSubscriptionGroup(name)` |
+| `r.TopicSourceAccount`, `WithTopicSourceAccount(id)` | `c.WithTopicSourceAccount(id)` |
+| `r.FilterPolicy` | `c.WithFilterPolicy(json)` |
+| `r.RawMessageDelivery = true` | `c.WithRawMessageDelivery()` |
+| `r.TopicName` | `c.WithTopicName(name)`, or `ForTopic<T>(TopicDestination.Named(name), c => ...)` |
+| `r.PublishEndpoint` | Removed: it is always the topic name. |
+| `ForQueueUrl/Arn/Uri<T>(..., c => c.WithReadConfiguration(r => ...))` with a `QueueAddressConfiguration`: `r.SubscriptionGroupName`, `r.RawMessageDelivery` | `c.WithSubscriptionGroup(name)`, `c.WithRawMessageDelivery()` |
+
+`ForTopic<T>` subscribes to a topic by name (in another account with `WithTopicSourceAccount`); it
+doesn't accept `TopicDestination.FromArn`.
+
+> **Port every `WithReadConfiguration` setting; don't delete the call.** A subscription converges
+> its queue on every start to the settings its destination declares, and to the *defaults* for the
+> rest (see below). Deleting a v8 `WithReadConfiguration(...)` call instead of porting it resets
+> the live queue on the next deploy: the visibility timeout goes back to 30 seconds, retention to 4
+> days, delivery delay to 0 and the retries before the error queue to 5, and a queue that opted out
+> of an error queue gets a new `_error` queue and a redrive policy. (Encryption and tags are the
+> exception: they are never removed.)
 
 ### What JustSaying does to an owned queue on startup
 
@@ -328,15 +409,6 @@ it, replacing any statements added outside JustSaying.
 A publication and a subscription in the same app that declare *different* settings for the same
 queue each apply their own on startup, so the last one to start wins. Declare the settings once and
 share the `QueueDestination` value between them.
-
-The CloudEvents registrations take the same values, so they never need per-address variants:
-
-```csharp
-p.WithCloudEventTopic<ParcelShipped>(TopicDestination.FromArn(topicArn),
-    "com.example.parcel-shipped", source);
-p.WithCloudEventQueue<OrderCancelled>(QueueDestination.FromUrl(queueUrl),
-    "com.example.order-cancelled", source);
-```
 
 ## CloudEvents (new package: `JustSaying.CloudEvents`)
 
