@@ -167,6 +167,32 @@ In v8 a publication for an abstract class or interface (for example `WithTopic<W
 
 The message is serialized as the registered type. With a `[JsonPolymorphic]` base type and the System.Text.Json serializer, the body carries the type discriminator, so a base-type consumer can deserialize it. Without polymorphism configured, `SystemTextJsonMessageBodySerializer<T>` writes only the members of `T`, while `NewtonsoftMessageBodySerializer<T>` writes the runtime type's members but no discriminator.
 
+### Native AOT setup
+
+JustSaying's own code is trim- and AOT-safe, but the default STJ registration uses reflection, which isn't available under Native AOT. Register a source-generated `JsonSerializerContext` through `SystemTextJsonSerializationFactory`:
+
+```csharp
+// Every message type you publish or handle, plus the runtime types of any object-typed values.
+[JsonSourceGenerationOptions(UseStringEnumConverter = true)]
+[JsonSerializable(typeof(OrderPlaced))]
+[JsonSerializable(typeof(OrderShipped))]
+public sealed partial class MessagesJsonContext : JsonSerializerContext;
+
+// Copy JustSaying's defaults so the AOT build reads and writes like the reflection-based default.
+var options = new JsonSerializerOptions(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions)
+{
+    TypeInfoResolver = MessagesJsonContext.Default,
+};
+
+services.AddSingleton<IMessageBodySerializationFactory>(new SystemTextJsonSerializationFactory(options));
+```
+
+**`UseStringEnumConverter = true` is required** for wire compatibility. The default writes enums as strings using a converter that needs dynamic code, so under Native AOT it isn't there. Without the setting, an AOT service writes enums as numbers and **can't read the strings** that JIT and v8-style producers send: those messages fail to deserialize and end up in the error queue. JustSaying doesn't check this for you.
+
+To reproduce AOT serializer behaviour without publishing natively, set `<PublishAot>true</PublishAot>` in the project. That turns off reflection-based serialization and dynamic code in `dotnet run` and `dotnet test` too. Building with `-p:JsonSerializerIsReflectionEnabledByDefault=false` turns off only reflection: it shows a type missing from the context, but enums still go out as strings because dynamic code is still available.
+
+Newtonsoft.Json isn't supported under Native AOT.
+
 ## Exactly-once handling requires a stable key for non-`Message` payloads
 
 In v8 every message derived from `Message`, so `UseExactlyOnce<TMessage>` always deduplicated on `Message.UniqueKey()`. A message that doesn't derive from `Message` has no such key, so v9 asks you for one:

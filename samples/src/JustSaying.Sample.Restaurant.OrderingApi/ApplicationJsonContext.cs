@@ -4,6 +4,9 @@ using JustSaying.Sample.Restaurant.OrderingApi.Models;
 
 namespace JustSaying.Sample.Restaurant.OrderingApi;
 
+// JustSaying writes enums as strings; its default converter for that needs dynamic code, so a
+// source-generated context has to opt in to keep the same wire format under Native AOT.
+[JsonSourceGenerationOptions(UseStringEnumConverter = true)]
 [JsonSerializable(typeof(CustomerOrderModel))]
 [JsonSerializable(typeof(IReadOnlyCollection<CustomerOrderModel>))]
 [JsonSerializable(typeof(OrderPlacedEvent))]

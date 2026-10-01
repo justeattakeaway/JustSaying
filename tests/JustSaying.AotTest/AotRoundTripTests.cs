@@ -22,71 +22,172 @@ namespace JustSaying.AotTest;
 /// System.Text.Json serialization paths all survive Native AOT without needing any
 /// external AWS services.
 /// </summary>
+/// <remarks>
+/// <c>PublishAot=true</c> also disables reflection-based System.Text.Json in the project's
+/// runtimeconfig, so <c>dotnet test</c> on this project reproduces the AOT serializer behaviour
+/// under JIT.
+/// </remarks>
 public sealed class AotRoundTripTests
 {
     [Test]
     [Timeout(30_000)]
     public async Task Published_Message_Is_Received_Under_Native_Aot(CancellationToken cancellationToken)
     {
-        var bus = new InMemoryAwsBus();
-        var signal = new MessageReceivedSignal();
+        await using var provider = BuildServiceProvider(new InMemoryAwsBus(), CreateSerializationFactory());
 
-        var serializerOptions = new JsonSerializerOptions
+        var (publisher, _) = await StartAsync(provider, cancellationToken);
+
+        await publisher.PublishAsync(new TestMessage { Content = "hello-aot" }, cancellationToken);
+
+        var received = await provider.GetRequiredService<MessageReceivedSignal<TestMessage>>().Received.Task.WaitAsync(cancellationToken);
+
+        await Assert.That(received.Content).IsEqualTo("hello-aot");
+    }
+
+    [Test]
+    [Timeout(30_000)]
+    public async Task Published_Record_Not_Deriving_From_Message_Is_Received_Under_Native_Aot(CancellationToken cancellationToken)
+    {
+        await using var provider = BuildServiceProvider(new InMemoryAwsBus(), CreateSerializationFactory());
+
+        var (publisher, _) = await StartAsync(provider, cancellationToken);
+
+        await publisher.PublishAsync(new OrderPlaced("order-1", OrderStatus.Paid), cancellationToken);
+
+        var received = await provider.GetRequiredService<MessageReceivedSignal<OrderPlaced>>().Received.Task.WaitAsync(cancellationToken);
+
+        await Assert.That(received).IsEqualTo(new OrderPlaced("order-1", OrderStatus.Paid));
+    }
+
+    [Test]
+    public async Task Enums_Are_Written_As_Strings_Like_Under_Jit()
+    {
+        // Under JIT the default options write enums as strings; a source-generated context must opt in
+        // with UseStringEnumConverter so that JIT and AOT services agree on the wire.
+        var serializer = CreateSerializationFactory().GetSerializer<OrderPlaced>();
+
+        var json = serializer.Serialize(new OrderPlaced("order-1", OrderStatus.Paid));
+
+        await Assert.That(json).Contains("\"Status\":\"Paid\"");
+        await Assert.That(serializer.Deserialize(json).Status).IsEqualTo(OrderStatus.Paid);
+
+        // Numbers, as written by v8's Newtonsoft default, are still read.
+        await Assert.That(serializer.Deserialize("""{"OrderId":"order-1","Status":1}""").Status).IsEqualTo(OrderStatus.Paid);
+    }
+
+    [Test]
+    public async Task Copying_The_Default_Options_Keeps_Their_Leniency()
+    {
+        var serializer = CreateSerializationFactory().GetSerializer<TestMessage>();
+
+        var message = serializer.Deserialize("""{"content":"camelCase","tags":["a","b"]}""");
+
+        await Assert.That(message.Content).IsEqualTo("camelCase");
+        await Assert.That(string.Join(",", message.Tags)).IsEqualTo("a,b");
+        await Assert.That(serializer.Serialize(new TestMessage { Content = "日本語 & <b>" })).Contains("\"Content\":\"日本語 & <b>\"");
+    }
+
+    [Test]
+    [Timeout(30_000)]
+    public async Task Heterogeneous_Batch_Is_Received_Under_Native_Aot(CancellationToken cancellationToken)
+    {
+        await using var provider = BuildServiceProvider(new InMemoryAwsBus(), CreateSerializationFactory());
+
+        var (_, batchPublisher) = await StartAsync(provider, cancellationToken);
+
+        await batchPublisher.PublishBatchAsync<object>(
+            [new TestMessage { Content = "batched" }, new OrderPlaced("order-2", OrderStatus.New)],
+            cancellationToken);
+
+        var message = await provider.GetRequiredService<MessageReceivedSignal<TestMessage>>().Received.Task.WaitAsync(cancellationToken);
+        var order = await provider.GetRequiredService<MessageReceivedSignal<OrderPlaced>>().Received.Task.WaitAsync(cancellationToken);
+
+        await Assert.That(message.Content).IsEqualTo("batched");
+        await Assert.That(order).IsEqualTo(new OrderPlaced("order-2", OrderStatus.New));
+    }
+
+    private static SystemTextJsonSerializationFactory CreateSerializationFactory()
+    {
+        // Copy JustSaying's defaults so the source-generated path reads and writes like the JIT default.
+        var options = new JsonSerializerOptions(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions)
         {
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             TypeInfoResolver = AotTestSerializerContext.Default,
         };
 
+        return new SystemTextJsonSerializationFactory(options);
+    }
+
+    private static ServiceProvider BuildServiceProvider(InMemoryAwsBus bus, IMessageBodySerializationFactory serializationFactory)
+    {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddSingleton(signal);
+        services.AddSingleton<MessageReceivedSignal<TestMessage>>();
+        services.AddSingleton<MessageReceivedSignal<OrderPlaced>>();
 
         // The default System.Text.Json factory uses reflection-based options (no source-gen
-        // resolver) and throws under Native AOT. Register a source-generated factory first so it
-        // wins the TryAdd in AddJustSaying.
-        services.TryAddSingleton<IMessageBodySerializationFactory>(
-            _ => new SystemTextJsonSerializationFactory(serializerOptions));
+        // resolver) and can't serialize anything under Native AOT. Register a source-generated
+        // factory first so it wins the TryAdd in AddJustSaying.
+        services.TryAddSingleton(serializationFactory);
 
-        ConfigureJustSaying(services, bus);
+        services.AddJustSaying(config =>
+        {
+            config.Messaging(x => x.WithRegion("eu-west-1"))
+                  .Client(x => x.WithClientFactory(() => new InMemoryAwsClientFactory(bus)));
+            config.Publications(x =>
+            {
+                x.WithTopic<TestMessage>();
+                x.WithTopic<OrderPlaced>();
+            });
+            config.Subscriptions(x =>
+            {
+                x.ForTopic<TestMessage>(sub => sub.WithQueueName("aot-test-queue"));
+                x.ForTopic<OrderPlaced>(sub => sub.WithQueueName("aot-test-orders"));
+            });
+        });
 
-        await using var provider = services.BuildServiceProvider();
+        services.AddJustSayingHandler<TestMessage, SignallingHandler<TestMessage>>();
+        services.AddJustSayingHandler<OrderPlaced, SignallingHandler<OrderPlaced>>();
 
+        return services.BuildServiceProvider();
+    }
+
+    private static async Task<(IMessagePublisher Publisher, IMessageBatchPublisher BatchPublisher)> StartAsync(
+        ServiceProvider provider,
+        CancellationToken cancellationToken)
+    {
         var publisher = provider.GetRequiredService<IMessagePublisher>();
+        var batchPublisher = provider.GetRequiredService<IMessageBatchPublisher>();
         var listener = provider.GetRequiredService<IMessagingBus>();
 
         await listener.StartAsync(cancellationToken);
         await publisher.StartAsync(cancellationToken);
 
-        await publisher.PublishAsync(new TestMessage { Content = "hello-aot" }, cancellationToken);
-
-        var received = await signal.Received.Task.WaitAsync(cancellationToken);
-
-        await Assert.That(received.Content).IsEqualTo("hello-aot");
-    }
-
-    private static void ConfigureJustSaying(IServiceCollection services, InMemoryAwsBus bus)
-    {
-        services.AddJustSaying(config =>
-        {
-            config.Messaging(x => x.WithRegion("eu-west-1"))
-                  .Client(x => x.WithClientFactory(() => new InMemoryAwsClientFactory(bus)));
-            config.Publications(x => x.WithTopic<TestMessage>());
-            config.Subscriptions(x => x.ForTopic<TestMessage>(
-                sub => sub.WithQueueName("aot-test-queue")));
-        });
-
-        services.AddJustSayingHandler<TestMessage, TestMessageHandler>();
+        return (publisher, batchPublisher);
     }
 }
 
 public sealed class TestMessage : Message
 {
     public string Content { get; set; }
+
+    public List<string> Tags { get; } = [];
 }
 
-public sealed class TestMessageHandler(MessageReceivedSignal signal) : IHandlerAsync<TestMessage>
+public enum OrderStatus
 {
-    public Task<bool> Handle(TestMessage message)
+    New,
+    Paid,
+}
+
+/// <summary>
+/// A message that doesn't derive from <see cref="Message"/>.
+/// </summary>
+public sealed record OrderPlaced(string OrderId, OrderStatus Status);
+
+public sealed class SignallingHandler<T>(MessageReceivedSignal<T> signal) : IHandlerAsync<T>
+    where T : class
+{
+    public Task<bool> Handle(T message)
     {
         signal.Received.TrySetResult(message);
         return Task.FromResult(true);
@@ -97,9 +198,9 @@ public sealed class TestMessageHandler(MessageReceivedSignal signal) : IHandlerA
 /// Shared signal used to surface the handled message back to the test without
 /// needing to reach into the DI-constructed handler instance.
 /// </summary>
-public sealed class MessageReceivedSignal
+public sealed class MessageReceivedSignal<T>
 {
-    public TaskCompletionSource<TestMessage> Received { get; } =
+    public TaskCompletionSource<T> Received { get; } =
         new(TaskCreationOptions.RunContinuationsAsynchronously);
 }
 
@@ -114,5 +215,11 @@ public sealed class InMemoryAwsClientFactory(InMemoryAwsBus bus) : IAwsClientFac
     public IAmazonSQS GetSqsClient(RegionEndpoint region) => bus.CreateSqsClient();
 }
 
+// JustSaying's JIT default writes enums as strings, but its JsonStringEnumConverter needs dynamic
+// code, so it isn't added under Native AOT. Without UseStringEnumConverter a source-generated
+// context writes enums as numbers, and can't read the strings that JIT (and v8 Newtonsoft)
+// services send.
+[JsonSourceGenerationOptions(UseStringEnumConverter = true)]
 [JsonSerializable(typeof(TestMessage))]
+[JsonSerializable(typeof(OrderPlaced))]
 public sealed partial class AotTestSerializerContext : JsonSerializerContext;
