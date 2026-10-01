@@ -26,7 +26,18 @@
     <PropertyGroup>
       <!-- Absolute, because the tool resolves relative paths against its working directory, not the project. -->
       <_JustSayingAsyncApiFileListPath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'JustSayingAsyncApi.cache'))</_JustSayingAsyncApiFileListPath>
+
+      <!--
+        The tool runs the application, so it can only run where the application can: an output
+        built for another runtime identifier (for example linux-arm64 on an x64 build agent, or
+        linux-x64 on a Mac) cannot be loaded by the SDK's own runtime.
+      -->
+      <_JustSayingAsyncApiSkipReason Condition=" '$(RuntimeIdentifier)' != '' AND '$(NETCoreSdkRuntimeIdentifier)' != '' AND '$(RuntimeIdentifier)' != '$(NETCoreSdkRuntimeIdentifier)' ">the application is built for runtime '$(RuntimeIdentifier)', which cannot run on this machine ('$(NETCoreSdkRuntimeIdentifier)')</_JustSayingAsyncApiSkipReason>
     </PropertyGroup>
+
+    <Message Importance="high"
+             Condition=" '$(_JustSayingAsyncApiSkipReason)' != '' "
+             Text="Skipping AsyncAPI document generation for '$(MSBuildProjectName)': $(_JustSayingAsyncApiSkipReason). Build without a runtime identifier (or for '$(NETCoreSdkRuntimeIdentifier)') to generate the document, or set JustSayingAsyncApiGenerateDocumentsOnBuild to 'false' to stop generating it on build." />
 
     <!--
       The documents generated last time are outputs too: deleting one must bring it back. Their
@@ -58,6 +69,7 @@
   </Target>
 
   <Target Name="_GenerateJustSayingAsyncApiDocuments"
+          Condition=" '$(_JustSayingAsyncApiSkipReason)' == '' "
           Inputs="@(_JustSayingAsyncApiInput)"
           Outputs="$(_JustSayingAsyncApiFileListPath)">
     <Error Condition=" !Exists('$(_JustSayingAsyncApiToolPath)') "
@@ -94,6 +106,11 @@
     this hook only applies when the project builds a single target framework. Test projects are
     executables on modern test frameworks but are never JustSaying applications, so they are
     excluded.
+
+    'dotnet publish' builds first, but does not generate: the document is part of the source
+    tree that 'dotnet build' keeps up to date, not part of what is published, and publishing is
+    commonly for another runtime (a container or an arm64 host) where the application cannot be
+    run on the build machine.
   -->
   <Target Name="_GenerateJustSayingAsyncApiDocumentsAfterBuild"
           AfterTargets="Build"
@@ -101,6 +118,7 @@
           Condition=" '$(JustSayingAsyncApiGenerateDocumentsOnBuild)' == 'true' AND
                       '$(DesignTimeBuild)' != 'true' AND
                       '$(IsTestProject)' != 'true' AND
+                      '$(_IsPublishing)' != 'true' AND
                       '$(TargetFrameworks)' == '' AND
                       '$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND
                       $([MSBuild]::VersionGreaterThanOrEquals('$(TargetFrameworkVersion)', '8.0')) AND

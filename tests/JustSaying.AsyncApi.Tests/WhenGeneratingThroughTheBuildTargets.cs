@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace JustSaying.AsyncApi.Tests;
 
@@ -61,6 +62,32 @@ public class WhenGeneratingThroughTheBuildTargets
         await AssertSucceeded(result);
         await Assert.That(result.Output).Contains($"Building target \"{GenerationTarget}\"");
         await Assert.That(result.Output).DoesNotContain($"Skipping target \"{GenerationTarget}\"");
+    }
+
+    [Test]
+    public async Task BuildingForAnotherRuntimeSkipsGenerationWithAMessage()
+    {
+        using var project = ConsumerProject.Create();
+        var otherRuntime = RuntimeInformation.RuntimeIdentifier == "linux-x64" ? "linux-arm64" : "linux-x64";
+
+        var result = await project.BuildAsync("-r", otherRuntime);
+
+        await AssertSucceeded(result);
+        await Assert.That(result.Output).Contains("Skipping AsyncAPI document generation");
+        await Assert.That(result.Output).Contains("JustSayingAsyncApiGenerateDocumentsOnBuild");
+        await Assert.That(File.Exists(project.DocumentPath)).IsFalse();
+    }
+
+    [Test]
+    public async Task PublishingDoesNotGenerateTheDocument()
+    {
+        using var project = ConsumerProject.Create();
+
+        var result = await project.RunAsync("publish");
+
+        await AssertSucceeded(result);
+        await Assert.That(result.Output).DoesNotContain($"Target \"{GenerationTarget}\"");
+        await Assert.That(File.Exists(project.DocumentPath)).IsFalse();
     }
 
     private static async Task AssertSucceeded(BuildResult result)
@@ -161,7 +188,10 @@ public class WhenGeneratingThroughTheBuildTargets
             return new ConsumerProject(directory);
         }
 
-        public async Task<BuildResult> BuildAsync(params string[] extraArguments)
+        public Task<BuildResult> BuildAsync(params string[] extraArguments)
+            => RunAsync("build", extraArguments);
+
+        public async Task<BuildResult> RunAsync(string command, params string[] extraArguments)
         {
             var startInfo = new ProcessStartInfo()
             {
@@ -171,7 +201,7 @@ public class WhenGeneratingThroughTheBuildTargets
                 RedirectStandardError = true,
                 ArgumentList =
                 {
-                    "build",
+                    command,
                     "Consumer.csproj",
                     "-v:d",
                     "-nodeReuse:false",

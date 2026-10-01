@@ -1,6 +1,11 @@
 <Project>
   <PropertyGroup>
-    <!-- Set to 'false' to reference the package without generating documents on every build. -->
+    <!--
+      Set to 'false' to reference the package without generating documents on every build: for
+      example in a build that cannot run the application. Generation runs the application's entry
+      point up to the point it builds its host, so it is skipped automatically when building for
+      a runtime identifier the build machine cannot run, and during 'dotnet publish'.
+    -->
     <JustSayingAsyncApiGenerateDocumentsOnBuild Condition=" '$(JustSayingAsyncApiGenerateDocumentsOnBuild)' == '' ">true</JustSayingAsyncApiGenerateDocumentsOnBuild>
     <!-- The directory the generated documents are written to. A relative path is relative to the project directory. -->
     <JustSayingAsyncApiDocumentsDirectory Condition=" '$(JustSayingAsyncApiDocumentsDirectory)' == '' ">$(MSBuildProjectDirectory)</JustSayingAsyncApiDocumentsDirectory>

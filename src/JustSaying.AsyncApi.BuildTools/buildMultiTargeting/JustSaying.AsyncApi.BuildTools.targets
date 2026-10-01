@@ -39,5 +39,6 @@
           Condition=" '$(JustSayingAsyncApiGenerateDocumentsOnBuild)' == 'true' AND
                       '$(DesignTimeBuild)' != 'true' AND
                       '$(IsTestProject)' != 'true' AND
+                      '$(_IsPublishing)' != 'true' AND
                       '$(OutputType)' == 'Exe' " />
 </Project>
