@@ -356,9 +356,11 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
             queueAddress.QueueUrl,
             sqsClient,
             new OutboundMessageConverter(PublishDestinationType.Queue, serializer.Erase(), compressionRegistry, compressionOptions, subject, isRawMessage),
-            loggerFactory)
+            loggerFactory,
+            bus.Config.MessageMetadataProvider)
         {
-            MessageResponseLogger = bus.Config.MessageResponseLogger
+            MessageResponseLogger = bus.Config.MessageResponseLogger,
+            MessageBatchResponseLogger = bus.PublishBatchConfiguration?.MessageBatchResponseLogger
         };
 
         bus.AddMessagePublisher<T>(eventPublisher);
