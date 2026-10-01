@@ -87,10 +87,18 @@ public class SqsQueueByName(
         }
     }
 
-    public async Task EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(SqsReadConfiguration queueConfig, CancellationToken cancellationToken)
+    public Task EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(SqsReadConfiguration queueConfig, CancellationToken cancellationToken)
     {
         if (queueConfig == null) throw new ArgumentNullException(nameof(queueConfig));
 
+        return EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(queueConfig, queueConfig.Tags, cancellationToken);
+    }
+
+    internal async Task EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(
+        SqsBasicConfiguration queueConfig,
+        Dictionary<string, string> tags,
+        CancellationToken cancellationToken)
+    {
         var exists = await ExistsAsync(cancellationToken).ConfigureAwait(false);
         if (!exists)
         {
@@ -101,12 +109,12 @@ public class SqsQueueByName(
             await UpdateQueueAttributeAsync(queueConfig, cancellationToken).ConfigureAwait(false);
         }
 
-        await ApplyTagsAsync(this, queueConfig.Tags, cancellationToken).ConfigureAwait(false);
+        await ApplyTagsAsync(this, tags, cancellationToken).ConfigureAwait(false);
 
         //Create an error queue for existing queues if they don't already have one
         if (ErrorQueue != null && NeedErrorQueue(queueConfig))
         {
-            var errorQueueConfig = new SqsReadConfiguration(SubscriptionType.ToTopic)
+            var errorQueueConfig = new SqsBasicConfiguration
             {
                 ErrorQueueRetentionPeriod = queueConfig.ErrorQueueRetentionPeriod,
                 ErrorQueueOptOut = true
@@ -125,8 +133,44 @@ public class SqsQueueByName(
             await UpdateRedrivePolicyAsync(
                 new RedrivePolicy(queueConfig.RetryCountBeforeSendingToErrorQueue, ErrorQueue.Arn)).ConfigureAwait(false);
 
-            await ApplyTagsAsync(ErrorQueue, queueConfig.Tags, cancellationToken).ConfigureAwait(false);
+            await ApplyTagsAsync(ErrorQueue, tags, cancellationToken).ConfigureAwait(false);
         }
+    }
+
+    /// <summary>
+    /// Reads the settings of the queue as it exists now, or returns <see langword="null"/> when it
+    /// doesn't exist. A registration that declares only some of the queue's settings (a publication)
+    /// overlays its declared settings on these, so it converges what it declares and leaves the rest
+    /// alone, rather than resetting them to the defaults.
+    /// </summary>
+    internal async Task<SqsBasicConfiguration> GetCurrentConfigurationAsync(CancellationToken cancellationToken)
+    {
+        if (!await ExistsAsync(cancellationToken).ConfigureAwait(false))
+        {
+            return null;
+        }
+
+        var configuration = new SqsBasicConfiguration
+        {
+            QueueName = QueueName,
+            MessageRetention = MessageRetentionPeriod,
+            VisibilityTimeout = VisibilityTimeout,
+            DeliveryDelay = DeliveryDelay,
+            ServerSideEncryption = ServerSideEncryption,
+            ErrorQueueOptOut = RedrivePolicy is null,
+        };
+
+        if (RedrivePolicy is not null)
+        {
+            configuration.RetryCountBeforeSendingToErrorQueue = RedrivePolicy.MaximumReceives;
+
+            if (await ErrorQueue.ExistsAsync(cancellationToken).ConfigureAwait(false))
+            {
+                configuration.ErrorQueueRetentionPeriod = ErrorQueue.MessageRetentionPeriod;
+            }
+        }
+
+        return configuration;
     }
 
     private async Task ApplyTagsAsync(ISqsQueue queue, Dictionary<string, string> tags, CancellationToken cancellationToken)

@@ -42,6 +42,7 @@ public abstract class SqsQueueByNameBase : ISqsQueue
     protected IAmazonSQS Client { get; }
     public string QueueName { get; }
     internal TimeSpan MessageRetentionPeriod { get; set; }
+    internal TimeSpan VisibilityTimeout => _visibilityTimeout;
     internal RedrivePolicy RedrivePolicy { get; set; }
     public string RegionSystemName => _region.SystemName;
     internal TimeSpan DeliveryDelay { get; private set; }

@@ -63,6 +63,22 @@ public class SqsBasicConfiguration
     }
 
     /// <summary>
+    /// Validates the configuration, naming the registration it belongs to in any error.
+    /// </summary>
+    /// <param name="registration">A description of the registration, for example <c>queue subscription for 'Order' to queue 'orders'</c>.</param>
+    internal void Validate(string registration)
+    {
+        try
+        {
+            Validate();
+        }
+        catch (ConfigurationErrorsException ex)
+        {
+            throw new ConfigurationErrorsException($"{ex.Message} (in the {registration})", ex);
+        }
+    }
+
+    /// <summary>
     /// Allows a derived class to implement custom validation.
     /// </summary>
     protected virtual void OnValidating()

@@ -144,7 +144,8 @@ public sealed class QueueInfrastructure
 
     /// <summary>
     /// Applies the configured settings onto an <see cref="SqsBasicConfiguration"/>, leaving its
-    /// defaults in place for anything not configured here.
+    /// existing values (the defaults, or an existing queue's current settings) in place for anything not
+    /// configured here.
     /// </summary>
     internal void Apply(SqsBasicConfiguration configuration)
     {
@@ -154,6 +155,7 @@ public sealed class QueueInfrastructure
         if (RetriesBeforeErrorQueue is { } retries) configuration.RetryCountBeforeSendingToErrorQueue = retries;
         if (ErrorQueueRetention is { } errorRetention) configuration.ErrorQueueRetentionPeriod = errorRetention;
         if (ErrorQueueOptOut) configuration.ErrorQueueOptOut = true;
+        else if (RetriesBeforeErrorQueue is not null || ErrorQueueRetention is not null) configuration.ErrorQueueOptOut = false;
         if (Encryption is not null) configuration.ServerSideEncryption = Encryption;
     }
 }

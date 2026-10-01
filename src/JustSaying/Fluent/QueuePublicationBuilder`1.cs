@@ -262,6 +262,7 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
             writeConfiguration.QueueName = QueueNameResolver(config.QueueNamingConvention);
         }
         writeConfiguration.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
+        writeConfiguration.Validate($"queue publication for '{typeof(T)}' to queue '{writeConfiguration.QueueName}'");
 
         var regionEndpoint = RegionEndpoint.GetBySystemName(region);
         var sqsClient = proxy.GetAwsClientFactory().GetSqsClient(regionEndpoint);
@@ -289,15 +290,21 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
 
         async Task StartupTask(CancellationToken cancellationToken)
         {
-            if (!await sqsQueue.ExistsAsync(cancellationToken).ConfigureAwait(false))
+            // The queue is created and updated the same way as a subscription's, except that an existing
+            // queue only converges the settings the destination declares: a point-to-point queue is
+            // usually shared with a subscriber in another service, so the defaults are used to create
+            // it, never to reset settings that subscriber owns.
+            var queueConfig = await sqsQueue.GetCurrentConfigurationAsync(cancellationToken).ConfigureAwait(false);
+            if (queueConfig is null)
             {
-                await sqsQueue.CreateAsync(writeConfiguration, cancellationToken: cancellationToken).ConfigureAwait(false);
+                queueConfig = writeConfiguration;
+            }
+            else
+            {
+                _destination.Infrastructure?.Apply(queueConfig);
             }
 
-            if (tags is { Count: > 0 })
-            {
-                await sqsQueue.TagQueueAsync(sqsQueue.Uri.ToString(), tags, cancellationToken).ConfigureAwait(false);
-            }
+            await sqsQueue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(queueConfig, tags, cancellationToken).ConfigureAwait(false);
 
             eventPublisher.QueueUrl = sqsQueue.Uri;
         }

@@ -220,7 +220,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
             subscriptionConfig.ApplyTopicNamingConvention<T>(config.TopicNamingConvention);
             subscriptionConfig.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
             subscriptionConfig.SubscriptionGroupName = SubscriptionGroupName ?? subscriptionConfig.QueueName;
-            subscriptionConfig.Validate();
+            subscriptionConfig.Validate($"queue subscription for '{typeof(T)}' to queue '{subscriptionConfig.QueueName}'");
             bus.AddSubscribedQueue(subscriptionConfig.QueueName, [typeof(T)], isMultiType: false);
 
             var queue = creator.EnsureQueueExists(region, subscriptionConfig);

@@ -273,6 +273,23 @@ This restructures the v8 fluent surface:
   the fluent create path silently dropped them), and compression consistently falls back to the
   bus-wide default options in every mode.
 
+### What JustSaying does to an owned queue on startup
+
+A `QueueDestination` gives the same queue whether a publication or a subscription creates it: the
+same attributes, the same `_error` queue and redrive policy, and the same tags on both queues. The
+creation settings are validated when the bus is built, for publications as well as subscriptions
+(v8 never validated a publication's queue settings).
+
+On every start, an owned queue that already exists is updated:
+
+- **A subscription** converges the queue to its destination value: every setting it declares, and
+  the default for every setting it doesn't (v8 parity).
+- **A publication** converges only the settings its destination declares, and leaves the rest as
+  they are. A point-to-point queue is usually shared with a subscriber in another service, which owns
+  the rest, so `WithQueue<T>()` or `QueueDestination.Named(q)` never resets that subscriber's
+  visibility timeout or adds an error queue it opted out of. (v8 only created a publication's queue
+  and never updated it.)
+
 The CloudEvents registrations take the same values, so they never need per-address variants:
 
 ```csharp

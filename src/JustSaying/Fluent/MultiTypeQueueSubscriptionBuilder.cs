@@ -263,7 +263,7 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
             _destination.Infrastructure?.Apply(subscriptionConfig);
 
             subscriptionConfig.SubscriptionGroupName = _subscriptionGroupName ?? subscriptionConfig.QueueName;
-            subscriptionConfig.Validate();
+            subscriptionConfig.Validate($"multi-type queue subscription to queue '{subscriptionConfig.QueueName}'");
 
             var config = bus.Config;
             var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");

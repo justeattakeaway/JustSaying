@@ -283,7 +283,7 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
         subscriptionConfig.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
         subscriptionConfig.SubscriptionGroupName = SubscriptionGroupName ?? subscriptionConfig.QueueName;
         subscriptionConfig.PublishEndpoint = subscriptionConfig.TopicName;
-        subscriptionConfig.Validate();
+        subscriptionConfig.Validate($"topic subscription for '{typeof(T)}' to topic '{subscriptionConfig.TopicName}' with queue '{subscriptionConfig.QueueName}'");
         bus.AddSubscribedQueue(subscriptionConfig.QueueName, [typeof(T)], isMultiType: false);
 
         var queueWithStartup = creator.EnsureTopicExistsWithQueueSubscribed(
