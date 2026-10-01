@@ -141,7 +141,6 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
         var sqsClient = proxy.GetAwsClientFactory().GetSqsClient(regionEndpoint);
 
         var compressionRegistry = bus.CompressionRegistry;
-        var compressionOptions = writeConfiguration.CompressionOptions;
         var subject = bus.MessageTypeRegistry.GetLogicalName(typeof(T));
 
         var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
@@ -149,6 +148,9 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T 
         // metadata, so the {Message, Subject} queue envelope would just double-wrap it.
         var isSelfDescribing = serializer is ISelfDescribingMessageBodySerializer;
         var isRawMessage = _isRawMessage || writeConfiguration.IsRawMessage || isSelfDescribing;
+
+        // Queue publications by name have never taken the bus default compression.
+        var compressionOptions = PublicationCompression.Resolve<T>(writeConfiguration.CompressionOptions, busDefault: null, isSelfDescribing);
 
         if (isSelfDescribing && !_isRawMessage && !writeConfiguration.IsRawMessage)
         {

@@ -34,7 +34,8 @@ internal sealed class StaticPublicationConfiguration(
 
         readConfiguration.ApplyTopicNamingConvention<T>(bus.Config.TopicNamingConvention);
 
-        var compressionOptions = writeConfiguration.CompressionOptions ?? bus.Config.DefaultCompressionOptions;
+        // Already resolved against the bus default (which self-describing publications don't take).
+        var compressionOptions = writeConfiguration.CompressionOptions;
         var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
         var subject = writeConfiguration.SubjectSet ? writeConfiguration.Subject : bus.MessageTypeRegistry.GetLogicalName(typeof(T));
 

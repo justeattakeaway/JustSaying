@@ -1,6 +1,8 @@
 using System.Text.Json;
 using Amazon.SQS.Model;
+using JustSaying.AwsTools;
 using JustSaying.CloudEvents;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.DependencyInjection;
@@ -71,6 +73,147 @@ public class WhenPublishingACloudEvent : IntegrationTestBase
                 var handled = await completionSource.Task.WaitAsync(cancellationToken);
                 handled.OrderId.ShouldBe("order-42");
             });
+    }
+
+    [Test]
+    public async Task Then_The_Bus_Default_Compression_Is_Not_Applied()
+    {
+        // Arrange - compress everything by default; a CloudEvent must still go out as plain JSON, as its
+        // consumers needn't know anything about JustSaying's compression.
+        var sqs = CreateClientFactory().GetSqsClient(Region);
+        var queueUrl = (await sqs.CreateQueueAsync(UniqueName)).QueueUrl;
+
+        var services = GivenJustSaying()
+            .ConfigureJustSaying(builder => builder
+                .Publications(p => p.WithQueueUrl<OrderPlaced>(queueUrl)))
+            .AddSingleton(new MessagingConfig
+            {
+                DefaultCompressionOptions = new() { CompressionEncoding = ContentEncodings.GzipBase64, MessageLengthThreshold = 0 },
+            });
+
+        GivenCloudEvents(services);
+
+        var publisher = services.BuildServiceProvider().GetRequiredService<Messaging.IMessagePublisher>();
+
+        await RunActionWithTimeout(async cancellationToken =>
+        {
+            await publisher.StartAsync(cancellationToken);
+
+            // Act
+            await publisher.PublishAsync(new OrderPlaced { OrderId = "order-42" }, cancellationToken);
+
+            // Assert
+            var received = await sqs.ReceiveMessageAsync(
+                new ReceiveMessageRequest { QueueUrl = queueUrl, MaxNumberOfMessages = 1, WaitTimeSeconds = 1, MessageAttributeNames = ["All"] },
+                cancellationToken);
+
+            var message = received.Messages.ShouldHaveSingleItem();
+            (message.MessageAttributes ?? []).ShouldNotContainKey(MessageAttributeKeys.ContentEncoding);
+
+            using var document = JsonDocument.Parse(message.Body);
+            document.RootElement.GetProperty("type").GetString().ShouldBe(OrderPlacedType);
+        });
+    }
+
+    [Test]
+    public async Task Then_The_Bus_Default_Compression_Is_Not_Applied_To_A_Topic()
+    {
+        // Arrange
+        var services = GivenJustSaying()
+            .ConfigureJustSaying(builder => builder
+                .Publications(p => p.WithTopic<OrderPlaced>(t => t.WithTopicName(UniqueName))))
+            .AddSingleton(new MessagingConfig
+            {
+                DefaultCompressionOptions = new() { CompressionEncoding = ContentEncodings.GzipBase64, MessageLengthThreshold = 0 },
+            });
+
+        GivenCloudEvents(services);
+
+        var publisher = services.BuildServiceProvider().GetRequiredService<Messaging.IMessagePublisher>();
+
+        await RunActionWithTimeout(async cancellationToken =>
+        {
+            await publisher.StartAsync(cancellationToken);
+
+            // Subscribe a queue to the topic with raw delivery, as a non-JustSaying consumer would.
+            var clientFactory = CreateClientFactory();
+            var sqs = clientFactory.GetSqsClient(Region);
+            var sns = clientFactory.GetSnsClient(Region);
+            var queueUrl = (await sqs.CreateQueueAsync(UniqueName, cancellationToken)).QueueUrl;
+            var queueArn = (await sqs.GetQueueAttributesAsync(queueUrl, ["QueueArn"], cancellationToken)).QueueARN;
+            var topicArn = (await sns.CreateTopicAsync(UniqueName, cancellationToken)).TopicArn;
+            await sns.SubscribeAsync(
+                new Amazon.SimpleNotificationService.Model.SubscribeRequest
+                {
+                    TopicArn = topicArn,
+                    Protocol = "sqs",
+                    Endpoint = queueArn,
+                    Attributes = new() { ["RawMessageDelivery"] = "true" },
+                },
+                cancellationToken);
+
+            // Act
+            await publisher.PublishAsync(new OrderPlaced { OrderId = "order-42" }, cancellationToken);
+
+            // Assert
+            var received = await sqs.ReceiveMessageAsync(
+                new ReceiveMessageRequest { QueueUrl = queueUrl, MaxNumberOfMessages = 1, WaitTimeSeconds = 1, MessageAttributeNames = ["All"] },
+                cancellationToken);
+
+            var message = received.Messages.ShouldHaveSingleItem();
+            (message.MessageAttributes ?? []).ShouldNotContainKey(MessageAttributeKeys.ContentEncoding);
+
+            using var document = JsonDocument.Parse(message.Body);
+            document.RootElement.GetProperty("type").GetString().ShouldBe(OrderPlacedType);
+        });
+    }
+
+    [Test]
+    public async Task Then_Explicit_Compression_On_A_Topic_Fails_At_Build()
+    {
+        // Arrange
+        var services = GivenJustSaying()
+            .ConfigureJustSaying(builder => builder
+                .Publications(p => p.WithTopic<OrderPlaced>(t => t.WithWriteConfiguration(
+                    w => w.CompressionOptions = new() { CompressionEncoding = ContentEncodings.GzipBase64 }))));
+
+        GivenCloudEvents(services);
+
+        var serviceProvider = services.BuildServiceProvider();
+
+        // Act
+        var exception = Should.Throw<InvalidOperationException>(
+            () => serviceProvider.GetRequiredService<Messaging.IMessagePublisher>());
+
+        // Assert
+        exception.Message.ShouldContain("self-describing");
+
+        await Task.CompletedTask;
+    }
+
+    [Test]
+    public async Task Then_Explicit_Compression_Fails_At_Build()
+    {
+        // Arrange
+        var services = GivenJustSaying()
+            .ConfigureJustSaying(builder => builder
+                .Publications(p => p.WithQueueUrl<OrderPlaced>(
+                    $"https://sqs.{RegionName}.amazonaws.com/000000000000/{UniqueName}",
+                    q => q.WithCompression(new() { CompressionEncoding = ContentEncodings.GzipBase64 }))));
+
+        GivenCloudEvents(services);
+
+        var serviceProvider = services.BuildServiceProvider();
+
+        // Act
+        var exception = Should.Throw<InvalidOperationException>(
+            () => serviceProvider.GetRequiredService<Messaging.IMessagePublisher>());
+
+        // Assert
+        exception.Message.ShouldContain(nameof(OrderPlaced));
+        exception.Message.ShouldContain("self-describing");
+
+        await Task.CompletedTask;
     }
 
     [Test]

@@ -1,6 +1,7 @@
 using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware;
 using Microsoft.Extensions.Logging;
 
@@ -185,7 +186,10 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T 
 
         var writeConfiguration = new SnsWriteConfiguration();
         ConfigureWrites?.Invoke(writeConfiguration);
-        writeConfiguration.CompressionOptions ??= bus.Config.DefaultCompressionOptions;
+        writeConfiguration.CompressionOptions = PublicationCompression.Resolve<T>(
+            writeConfiguration.CompressionOptions,
+            bus.Config.DefaultCompressionOptions,
+            isSelfDescribing: bus.MessageBodySerializerFactory.GetSerializer<T>() is ISelfDescribingMessageBodySerializer);
         CompressionEncodingValidator.ValidateEncoding(bus.CompressionRegistry, writeConfiguration.CompressionOptions);
 
         var client = proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region));

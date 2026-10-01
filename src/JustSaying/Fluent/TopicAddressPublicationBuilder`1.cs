@@ -131,8 +131,11 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T> w
         var arn = Arn.Parse(_topicAddress.TopicArn);
 
         var compressionRegistry = bus.CompressionRegistry;
-        var compressionOptions = _compressionOptions ?? bus.Config.DefaultCompressionOptions;
         var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
+        var compressionOptions = PublicationCompression.Resolve<T>(
+            _compressionOptions,
+            bus.Config.DefaultCompressionOptions,
+            isSelfDescribing: serializer is ISelfDescribingMessageBodySerializer);
         var subject = _subjectSet ? _subject : bus.MessageTypeRegistry.GetLogicalName(typeof(T));
 
         CompressionEncodingValidator.ValidateEncoding(bus.CompressionRegistry, compressionOptions);

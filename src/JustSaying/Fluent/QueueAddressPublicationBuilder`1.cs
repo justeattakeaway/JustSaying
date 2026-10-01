@@ -102,7 +102,6 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T> w
         logger.LogInformation("Adding SQS publisher for message type '{MessageType}'", typeof(T));
 
         var config = bus.Config;
-        var compressionOptions = _compressionOptions ?? bus.Config.DefaultCompressionOptions;
         var subject = _subjectSet ? _subject : bus.MessageTypeRegistry.GetLogicalName(typeof(T));
         var sqsClient = proxy.GetAwsClientFactory().GetSqsClient(RegionEndpoint.GetBySystemName(_queueAddress.RegionName));
 
@@ -124,6 +123,7 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T> w
         // metadata, so the {Message, Subject} queue envelope would just double-wrap it.
         var isSelfDescribing = serializer is ISelfDescribingMessageBodySerializer;
         var isRawMessage = _isRawMessage || isSelfDescribing;
+        var compressionOptions = PublicationCompression.Resolve<T>(_compressionOptions, bus.Config.DefaultCompressionOptions, isSelfDescribing);
 
         if (isSelfDescribing && !_isRawMessage)
         {
