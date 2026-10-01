@@ -1,3 +1,5 @@
+using JustSaying.AwsTools.QueueCreation;
+
 namespace JustSaying.Fluent;
 
 /// <summary>
@@ -57,10 +59,10 @@ public sealed class QueueDestination
     /// </summary>
     /// <param name="name">The name of the queue.</param>
     /// <returns>The <see cref="QueueDestination"/> destination.</returns>
-    /// <exception cref="ArgumentException"><paramref name="name"/> is <see langword="null"/> or empty.</exception>
+    /// <exception cref="ArgumentException"><paramref name="name"/> is not a valid queue name.</exception>
     public static QueueDestination Named(string name)
     {
-        if (string.IsNullOrEmpty(name)) throw new ArgumentException("Parameter cannot be null or empty.", nameof(name));
+        ValidateName(name, hasErrorQueue: true);
 
         return new QueueDestination { Name = name };
     }
@@ -71,15 +73,18 @@ public sealed class QueueDestination
     /// <param name="name">The name of the queue.</param>
     /// <param name="configure">A delegate to configure the queue's infrastructure.</param>
     /// <returns>The <see cref="QueueDestination"/> destination.</returns>
-    /// <exception cref="ArgumentException"><paramref name="name"/> is <see langword="null"/> or empty.</exception>
+    /// <exception cref="ArgumentException"><paramref name="name"/> is not a valid queue name.</exception>
     /// <exception cref="ArgumentNullException"><paramref name="configure"/> is <see langword="null"/>.</exception>
     public static QueueDestination Named(string name, Action<QueueInfrastructure> configure)
     {
-        if (string.IsNullOrEmpty(name)) throw new ArgumentException("Parameter cannot be null or empty.", nameof(name));
+        ValidateName(name, hasErrorQueue: false);
         if (configure == null) throw new ArgumentNullException(nameof(configure));
 
         var infrastructure = new QueueInfrastructure();
         configure(infrastructure);
+
+        // The error queue's name only counts towards the length limit once we know there is one.
+        ValidateName(name, hasErrorQueue: !infrastructure.ErrorQueueOptOut);
 
         return new QueueDestination { Name = name, Infrastructure = infrastructure };
     }
@@ -109,4 +114,12 @@ public sealed class QueueDestination
     /// <param name="queueArn">The queue ARN.</param>
     /// <returns>The <see cref="QueueDestination"/> destination.</returns>
     public static QueueDestination FromArn(string queueArn) => new() { Address = QueueAddress.FromArn(queueArn) };
+
+    private static void ValidateName(string name, bool hasErrorQueue)
+    {
+        if (ResourceNameValidator.GetQueueNameError(name, hasErrorQueue) is { } error)
+        {
+            throw new ArgumentException(error, nameof(name));
+        }
+    }
 }

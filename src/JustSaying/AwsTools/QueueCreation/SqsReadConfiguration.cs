@@ -39,6 +39,11 @@ public class SqsReadConfiguration : SqsBasicConfiguration
                     "Invalid configuration. Topic name must be provided.");
             }
 
+            if (ResourceNameValidator.GetTopicNameError(TopicName) is { } topicNameError)
+            {
+                throw new ConfigurationErrorsException($"Invalid configuration. {topicNameError}");
+            }
+
             if (PublishEndpoint == null)
             {
                 throw new ConfigurationErrorsException("You must provide a value for PublishEndpoint.");

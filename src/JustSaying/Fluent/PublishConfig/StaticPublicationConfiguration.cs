@@ -39,6 +39,11 @@ internal sealed class StaticPublicationConfiguration(
 
         readConfiguration.ApplyTopicNamingConvention<T>(bus.Config.TopicNamingConvention);
 
+        if (ResourceNameValidator.GetTopicNameError(readConfiguration.TopicName) is { } topicNameError)
+        {
+            throw new ConfigurationErrorsException($"Invalid configuration. {topicNameError} (in the topic publication for '{typeof(T)}')");
+        }
+
         // Already resolved against the bus default (which self-describing publications don't take).
         var compressionOptions = writeConfiguration.CompressionOptions;
         var serializer = (serializerFactory is null

@@ -280,6 +280,18 @@ same attributes, the same `_error` queue and redrive policy, and the same tags o
 creation settings are validated when the bus is built, for publications as well as subscriptions
 (v8 never validated a publication's queue settings).
 
+v9 also checks names and values that v8 passed through to AWS, so they fail when the destination
+value is created or the bus is built, naming the registration, instead of as an AWS error on startup:
+
+- Queue and topic names: only `A-Z a-z 0-9 - _`, at most 256 characters for a topic and 80 for a
+  queue *including* the `_error` suffix of its error queue (so at most 74 unless it opts out of an
+  error queue). A blank or whitespace name passed to `Named` throws instead of silently falling
+  back to the naming convention.
+- `.fifo` names throw "FIFO queues are not supported" / "FIFO topics are not supported". JustSaying
+  never set a `MessageGroupId`, so publishing to a FIFO queue or topic always failed.
+- The visibility timeout must be more than zero and at most 12 hours, and the retries before the
+  error queue between 1 and 1000 (unless the queue has no error queue).
+
 On every start, an owned queue that already exists is updated:
 
 - **A subscription** converges the queue to its destination value: every setting it declares, and

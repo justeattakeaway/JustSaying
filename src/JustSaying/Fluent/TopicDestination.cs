@@ -1,3 +1,5 @@
+using JustSaying.AwsTools.QueueCreation;
+
 namespace JustSaying.Fluent;
 
 /// <summary>
@@ -57,10 +59,10 @@ public sealed class TopicDestination
     /// </summary>
     /// <param name="name">The name of the topic.</param>
     /// <returns>The <see cref="TopicDestination"/> destination.</returns>
-    /// <exception cref="ArgumentException"><paramref name="name"/> is <see langword="null"/> or empty.</exception>
+    /// <exception cref="ArgumentException"><paramref name="name"/> is not a valid topic name.</exception>
     public static TopicDestination Named(string name)
     {
-        if (string.IsNullOrEmpty(name)) throw new ArgumentException("Parameter cannot be null or empty.", nameof(name));
+        if (ResourceNameValidator.GetTopicNameError(name) is { } error) throw new ArgumentException(error, nameof(name));
 
         return new TopicDestination { Name = name };
     }
@@ -71,11 +73,11 @@ public sealed class TopicDestination
     /// <param name="name">The name of the topic.</param>
     /// <param name="configure">A delegate to configure the topic's infrastructure.</param>
     /// <returns>The <see cref="TopicDestination"/> destination.</returns>
-    /// <exception cref="ArgumentException"><paramref name="name"/> is <see langword="null"/> or empty.</exception>
+    /// <exception cref="ArgumentException"><paramref name="name"/> is not a valid topic name.</exception>
     /// <exception cref="ArgumentNullException"><paramref name="configure"/> is <see langword="null"/>.</exception>
     public static TopicDestination Named(string name, Action<TopicInfrastructure> configure)
     {
-        if (string.IsNullOrEmpty(name)) throw new ArgumentException("Parameter cannot be null or empty.", nameof(name));
+        if (ResourceNameValidator.GetTopicNameError(name) is { } error) throw new ArgumentException(error, nameof(name));
         if (configure == null) throw new ArgumentNullException(nameof(configure));
 
         var infrastructure = new TopicInfrastructure();
