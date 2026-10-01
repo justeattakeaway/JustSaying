@@ -1,6 +1,7 @@
 using JustSaying.AsyncApi;
 using JustSaying.Messaging.Metadata;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -36,7 +37,10 @@ public static class AsyncApiServiceCollectionExtensions
             serviceProvider.GetRequiredService<IMessagingMetadataRegistry>(),
             serviceProvider.GetRequiredService<AsyncApiOptions>(),
             serviceProvider.GetService<JustSaying.Messaging.MessageSerialization.IMessageBodySerializationFactory>(),
-            serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger<AsyncApiDocumentGenerator>>()));
+            serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger<AsyncApiDocumentGenerator>>())
+        {
+            ApplicationName = serviceProvider.GetService<IHostEnvironment>()?.ApplicationName,
+        });
         services.TryAddSingleton<IAsyncApiDocumentProvider, AsyncApiDocumentProvider>();
 
         return services;

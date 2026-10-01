@@ -28,7 +28,13 @@ if (Environment.GetEnvironmentVariable("JUSTSAYING_TESTAPP_SKIP_HANDLER") != "1"
 
 if (Environment.GetEnvironmentVariable("JUSTSAYING_TESTAPP_SKIP_ASYNCAPI") != "1")
 {
-    builder.Services.AddJustSayingAsyncApi(options => options.Title = "Test App");
+    builder.Services.AddJustSayingAsyncApi(options =>
+    {
+        if (Environment.GetEnvironmentVariable("JUSTSAYING_TESTAPP_DEFAULT_TITLE") != "1")
+        {
+            options.Title = "Test App";
+        }
+    });
 }
 
 var host = builder.Build();

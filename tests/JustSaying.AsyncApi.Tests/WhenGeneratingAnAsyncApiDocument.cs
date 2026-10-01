@@ -4,6 +4,8 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using LocalSqsSnsMessaging;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 
 namespace JustSaying.AsyncApi.Tests;
 
@@ -69,6 +71,47 @@ public class WhenGeneratingAnAsyncApiDocument
         var servers = root.GetProperty("servers");
         await Assert.That(servers.GetProperty("sns").GetProperty("host").GetString()).IsEqualTo("sns.eu-west-1.amazonaws.com");
         await Assert.That(servers.GetProperty("sqs").GetProperty("protocol").GetString()).IsEqualTo("sqs");
+    }
+
+    [Test]
+    public async Task TheTitleDefaultsToTheHostsApplicationName()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton<IAwsClientFactory>(new LocalAwsClientFactory(new InMemoryAwsBus()));
+        services.AddSingleton<IHostEnvironment>(new TestHostEnvironment() { ApplicationName = "Orders.Api" });
+        services.AddJustSaying((config) => config.Messaging((x) => x.WithRegion("eu-west-1")));
+        services.AddJustSayingAsyncApi();
+
+        using var document = await GenerateAsync(services.BuildServiceProvider());
+
+        await Assert.That(document.RootElement.GetProperty("info").GetProperty("title").GetString()).IsEqualTo("Orders.Api");
+    }
+
+    [Test]
+    public async Task TheTitleDefaultsToTheEntryAssemblyWithoutAHost()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton<IAwsClientFactory>(new LocalAwsClientFactory(new InMemoryAwsBus()));
+        services.AddJustSaying((config) => config.Messaging((x) => x.WithRegion("eu-west-1")));
+        services.AddJustSayingAsyncApi();
+
+        using var document = await GenerateAsync(services.BuildServiceProvider());
+
+        await Assert.That(document.RootElement.GetProperty("info").GetProperty("title").GetString())
+            .IsEqualTo(System.Reflection.Assembly.GetEntryAssembly()!.GetName().Name);
+    }
+
+    private sealed class TestHostEnvironment : IHostEnvironment
+    {
+        public string EnvironmentName { get; set; } = "Production";
+
+        public string ApplicationName { get; set; }
+
+        public string ContentRootPath { get; set; } = AppContext.BaseDirectory;
+
+        public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
     }
 
     [Test]

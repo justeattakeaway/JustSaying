@@ -39,6 +39,21 @@ public class WhenGeneratingAtBuildTime
     }
 
     [Test]
+    public async Task TheDefaultTitleIsTheApplicationNotTheTool()
+    {
+        using var outputDirectory = new TemporaryDirectory();
+
+        var result = await RunTool(outputDirectory.Path, ("JUSTSAYING_TESTAPP_DEFAULT_TITLE", "1"));
+
+        await Assert.That(result.ExitCode).IsEqualTo(0);
+
+        // The entry assembly is the tool while a document is generated; the host's application
+        // name is the application's, as it is when the same document is generated at runtime.
+        using var document = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(outputDirectory.Path, "asyncapi.json")));
+        await Assert.That(document.RootElement.GetProperty("info").GetProperty("title").GetString()).IsEqualTo("JustSaying.AsyncApi.Tests.App");
+    }
+
+    [Test]
     public async Task AnUnchangedDocumentIsNotRewritten()
     {
         using var outputDirectory = new TemporaryDirectory();

@@ -71,6 +71,13 @@ public sealed class AsyncApiDocumentGenerator
     }
 
     /// <summary>
+    /// Gets the name of the application the document describes, used as the title when
+    /// <see cref="AsyncApiOptions.Title"/> is not set. This is the host's application name, which
+    /// is the application's own name at build time too, where the entry assembly is the generation tool.
+    /// </summary>
+    internal string ApplicationName { get; init; }
+
+    /// <summary>
     /// Generates the AsyncAPI document.
     /// </summary>
     /// <returns>The generated <see cref="AsyncApiDocument"/>.</returns>
@@ -91,7 +98,7 @@ public sealed class AsyncApiDocumentGenerator
             Id = _options.Id,
             Info = new AsyncApiInfo()
             {
-                Title = _options.Title ?? Assembly.GetEntryAssembly()?.GetName().Name ?? "JustSaying application",
+                Title = _options.Title ?? ApplicationName ?? Assembly.GetEntryAssembly()?.GetName().Name ?? "JustSaying application",
                 Version = _options.Version,
                 Description = _options.Description,
             },

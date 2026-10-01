@@ -14,7 +14,9 @@ public sealed class AsyncApiOptions
     public string Id { get; set; }
 
     /// <summary>
-    /// Gets or sets the title of the application. Defaults to the entry assembly name.
+    /// Gets or sets the title of the application. Defaults to the host's application name
+    /// (<c>IHostEnvironment.ApplicationName</c>, which is the application's assembly name unless the
+    /// host is configured otherwise), or the entry assembly name when no host environment is registered.
     /// </summary>
     public string Title { get; set; }
 
