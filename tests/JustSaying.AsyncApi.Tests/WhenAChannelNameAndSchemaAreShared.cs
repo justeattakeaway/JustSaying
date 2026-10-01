@@ -71,7 +71,7 @@ public class WhenAChannelNameAndSchemaAreShared
     }
 
     [Test]
-    public async Task ARecursiveMessageTypeIsInlinedRatherThanDropped()
+    public async Task ARecursiveMessageTypeIsReferencedRatherThanDropped()
     {
         var services = new ServiceCollection();
         services.AddLogging();
@@ -88,11 +88,12 @@ public class WhenAChannelNameAndSchemaAreShared
 
         var payload = root.GetProperty("channels").GetProperty("category").GetProperty("messages").EnumerateObject().First().Value.GetProperty("payload");
 
-        // The self-referential Parent is inlined one level deep instead of being dropped as an
-        // empty schema: the nested Parent still carries its own properties.
-        var parent = payload.GetProperty("properties").GetProperty("Parent");
-        await Assert.That(parent.TryGetProperty("properties", out var parentProperties)).IsTrue();
-        await Assert.That(parentProperties.GetProperty("Parent").TryGetProperty("properties", out var nestedProperties)).IsTrue();
-        await Assert.That(nestedProperties.TryGetProperty("Name", out _)).IsTrue();
+        // The self-referential Parent is a reference to the type's component schema rather than an
+        // empty schema, and the component carries the type's properties.
+        await Assert.That(payload.GetProperty("$ref").GetString()).IsEqualTo("#/components/schemas/Category");
+
+        var category = root.GetProperty("components").GetProperty("schemas").GetProperty("Category");
+        await Assert.That(category.GetProperty("properties").TryGetProperty("Name", out _)).IsTrue();
+        await Assert.That(category.GetProperty("properties").GetProperty("Parent").GetProperty("anyOf")[0].GetProperty("$ref").GetString()).IsEqualTo("#/components/schemas/Category");
     }
 }

@@ -12,6 +12,13 @@ namespace JustSaying.AsyncApi;
 /// object model. An instance maps the schema of one exported type: export with
 /// <see cref="ExporterOptions"/>, then <see cref="Map(JsonNode)"/> the result.
 /// </summary>
+/// <remarks>
+/// The exporter describes a recursive type with "$ref" JSON Pointers into the exported schema
+/// itself (for example "#/properties/Left"), which would not resolve once embedded in the wider
+/// AsyncAPI document. Inlining them instead grows exponentially with the number of
+/// self-references, so every type that takes part in a cycle is added to the document's
+/// component schemas once and referenced from there.
+/// </remarks>
 internal sealed class JsonSchemaNodeMapper
 {
     // Marks each exported schema node with the index of the type it describes in _types. Unknown
@@ -19,16 +26,24 @@ internal sealed class JsonSchemaNodeMapper
     private const string TypeKeyword = "$justSayingType";
 
     private readonly List<JsonTypeInfo> _types = [];
+    private readonly HashSet<Type> _recursiveTypes = [];
     private readonly JsonIgnoreCondition _ignoreCondition;
+    private readonly Func<Type, Func<AsyncApiJsonSchema>, string> _addComponent;
     private JsonNode _root;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="JsonSchemaNodeMapper"/> class.
     /// </summary>
     /// <param name="serializerOptions">The options the payload is serialized with, which decide what is written.</param>
-    public JsonSchemaNodeMapper(JsonSerializerOptions serializerOptions)
+    /// <param name="addComponent">
+    /// Adds the schema of a type to the document's component schemas, unless it is already there, and
+    /// returns the reference to it. The schema is created by the delegate passed, which may itself
+    /// reference the type being added.
+    /// </param>
+    public JsonSchemaNodeMapper(JsonSerializerOptions serializerOptions, Func<Type, Func<AsyncApiJsonSchema>, string> addComponent)
     {
         _ignoreCondition = serializerOptions.DefaultIgnoreCondition;
+        _addComponent = addComponent;
         ExporterOptions = new JsonSchemaExporterOptions()
         {
             TreatNullObliviousAsNonNullable = true,
@@ -44,6 +59,7 @@ internal sealed class JsonSchemaNodeMapper
     public AsyncApiJsonSchema Map(JsonNode root)
     {
         _root = root;
+        FindRecursiveTypes(root, "#", []);
         return Map(root, new HashSet<string>(StringComparer.Ordinal));
     }
 
@@ -60,7 +76,84 @@ internal sealed class JsonSchemaNodeMapper
         return node;
     }
 
+    /// <summary>
+    /// Finds the types that take part in a cycle: every object type on the path from a "$ref" up
+    /// to the schema it points back to. A "$ref" that points elsewhere (the exporter reuses an
+    /// earlier schema of a recursive type) marks the type it points to.
+    /// </summary>
+    private void FindRecursiveTypes(JsonNode node, string pointer, List<(string Pointer, JsonNode Node)> ancestors)
+    {
+        if (node is JsonArray array)
+        {
+            for (int i = 0; i < array.Count; i++)
+            {
+                FindRecursiveTypes(array[i], $"{pointer}/{i}", ancestors);
+            }
+
+            return;
+        }
+
+        if (node is not JsonObject obj)
+        {
+            return;
+        }
+
+        if (RefPointer(obj) is { } target)
+        {
+            int start = ancestors.FindIndex((a) => a.Pointer == target);
+            var cycle = start >= 0 ? ancestors.Skip(start).Select((a) => a.Node) : [ResolvePointer(target)];
+
+            foreach (var member in cycle)
+            {
+                if (TypeInfoOf(member) is { Kind: JsonTypeInfoKind.Object } typeInfo)
+                {
+                    _recursiveTypes.Add(typeInfo.Type);
+                }
+            }
+
+            return;
+        }
+
+        ancestors.Add((pointer, obj));
+        foreach (var property in obj)
+        {
+            // RFC 6901 escaping: "~" is "~0" and "/" is "~1".
+            FindRecursiveTypes(property.Value, $"{pointer}/{property.Key.Replace("~", "~0").Replace("/", "~1")}", ancestors);
+        }
+
+        ancestors.RemoveAt(ancestors.Count - 1);
+    }
+
     private AsyncApiJsonSchema Map(JsonNode node, HashSet<string> activeRefs)
+    {
+        if (node is JsonObject obj)
+        {
+            // A "$ref" is described by the schema it points to.
+            var schemaNode = RefPointer(obj) is { } pointer ? ResolvePointer(pointer) as JsonObject : obj;
+            if (TypeInfoOf(schemaNode) is { Kind: JsonTypeInfoKind.Object } typeInfo && _recursiveTypes.Contains(typeInfo.Type))
+            {
+                return Reference(typeInfo.Type, schemaNode, activeRefs);
+            }
+        }
+
+        return MapSchema(node, activeRefs, componentSchema: false);
+    }
+
+    /// <summary>
+    /// References the component schema of a recursive type, which is added from the first schema of
+    /// the type encountered. The component describes the type itself, so a nullable occurrence
+    /// references it and also allows null.
+    /// </summary>
+    private AsyncApiJsonSchema Reference(Type type, JsonObject schemaNode, HashSet<string> activeRefs)
+    {
+        var reference = new AsyncApiJsonSchemaReference(_addComponent(type, () => MapSchema(schemaNode, activeRefs, componentSchema: true)));
+
+        return schemaNode["type"] is JsonArray types && types.Any((t) => (string)t == "null")
+            ? new AsyncApiJsonSchema() { AnyOf = [reference, new AsyncApiJsonSchema() { Type = SchemaType.Null }] }
+            : reference;
+    }
+
+    private AsyncApiJsonSchema MapSchema(JsonNode node, HashSet<string> activeRefs, bool componentSchema)
     {
         var schema = new AsyncApiJsonSchema();
 
@@ -80,14 +173,11 @@ internal sealed class JsonSchemaNodeMapper
             return schema;
         }
 
-        // The schema exporter emits "$ref" as a JSON Pointer into the schema itself for recursive
-        // types (for example "#/properties/Left"). Those pointers are relative to the exported
-        // schema's root and would not resolve once embedded in the wider AsyncAPI document, so the
-        // referenced subschema is inlined instead. Cycles are broken by emitting an empty schema
-        // when a pointer refers back into a subschema that is already being expanded.
-        if (obj.TryGetPropertyValue("$ref", out var refNode)
-            && refNode is JsonValue refValue
-            && refValue.TryGetValue(out string pointer))
+        // A "$ref" that does not point at a recursive object type (for example one that points at a
+        // collection of them) is inlined; what it points to references the recursive type in turn.
+        // A cycle through no object type at all is broken by emitting an empty schema when a pointer
+        // refers back into a subschema that is already being expanded.
+        if (RefPointer(obj) is { } pointer)
         {
             if (!activeRefs.Add(pointer))
             {
@@ -111,6 +201,11 @@ internal sealed class JsonSchemaNodeMapper
             {
                 case "type":
                     schema.Type = MapType(property.Value);
+                    if (componentSchema && schema.Type != SchemaType.Null)
+                    {
+                        schema.Type &= ~SchemaType.Null;
+                    }
+
                     break;
                 case "title":
                     schema.Title = (string)property.Value;
@@ -227,7 +322,7 @@ internal sealed class JsonSchemaNodeMapper
             return false;
         }
 
-        if (obj["$ref"] is JsonValue refValue && refValue.TryGetValue(out string pointer))
+        if (RefPointer(obj) is { } pointer)
         {
             return ResolvePointer(pointer) is { } target && AllowsNull(target, depth + 1);
         }
@@ -248,8 +343,13 @@ internal sealed class JsonSchemaNodeMapper
         return !obj.ContainsKey("enum") && !obj.ContainsKey("const") && !obj.ContainsKey("oneOf") && !obj.ContainsKey("allOf");
     }
 
-    private Type TypeOf(JsonNode node)
-        => node is JsonObject obj && obj[TypeKeyword] is JsonValue index && index.TryGetValue(out int i) ? _types[i].Type : null;
+    private Type TypeOf(JsonNode node) => TypeInfoOf(node)?.Type;
+
+    private JsonTypeInfo TypeInfoOf(JsonNode node)
+        => node is JsonObject obj && obj[TypeKeyword] is JsonValue index && index.TryGetValue(out int i) ? _types[i] : null;
+
+    private static string RefPointer(JsonObject node)
+        => node["$ref"] is JsonValue refValue && refValue.TryGetValue(out string pointer) ? pointer : null;
 
     private JsonNode ResolvePointer(string pointer)
     {

@@ -33,6 +33,10 @@ public sealed class AsyncApiDocumentGenerator
     private JsonSerializerOptions _fallbackSchemaOptions;
     private bool _fallbackSchemaOptionsResolved;
 
+    // The component schemas of recursive payload types, keyed by type and the options that shape it.
+    private readonly Dictionary<(Type Type, JsonSerializerOptions Options), string> _componentKeys = [];
+    private readonly Dictionary<string, AsyncApiJsonSchema> _componentSchemas = new(StringComparer.Ordinal);
+
     static AsyncApiDocumentGenerator()
     {
         // ByteBard's writer materializes these enum arrays reflectively (Enum.GetValues, which
@@ -204,6 +208,15 @@ public sealed class AsyncApiDocumentGenerator
         if (contentTypes.Count == 1)
         {
             document.DefaultContentType = contentTypes[0];
+        }
+
+        if (_componentSchemas.Count > 0)
+        {
+            document.Components ??= new AsyncApiComponents();
+            foreach (var component in _componentSchemas.OrderBy((c) => c.Key, StringComparer.Ordinal))
+            {
+                document.Components.Schemas[component.Key] = component.Value;
+            }
         }
 
         _options.PostProcess?.Invoke(document);
@@ -534,7 +547,7 @@ public sealed class AsyncApiDocumentGenerator
 
         try
         {
-            var mapper = new JsonSchemaNodeMapper(serializerOptions);
+            var mapper = new JsonSchemaNodeMapper(serializerOptions, (type, createSchema) => AddComponentSchema(type, serializerOptions, createSchema));
             var schemaNode = serializerOptions.GetJsonSchemaAsNode(messageType, mapper.ExporterOptions);
 
             return mapper.Map(schemaNode);
@@ -717,6 +730,28 @@ public sealed class AsyncApiDocumentGenerator
         }
 
         return $"{name}<{string.Join(", ", type.GenericTypeArguments.Select(FriendlyTypeName))}>";
+    }
+
+    /// <summary>
+    /// Adds the schema of a recursive payload type to the document's component schemas, unless it
+    /// is already there, and returns the reference to it. The same type can be described differently
+    /// by different serializer options, so each pairing gets a component of its own; its key is the
+    /// type's name, made unique with a deterministic suffix.
+    /// </summary>
+    private string AddComponentSchema(Type type, JsonSerializerOptions serializerOptions, Func<AsyncApiJsonSchema> createSchema)
+    {
+        if (!_componentKeys.TryGetValue((type, serializerOptions), out var key))
+        {
+            key = AllocateKey([Sanitize(FriendlyTypeName(type))], (candidate) => !_componentSchemas.ContainsKey(candidate));
+
+            // The key is claimed before the schema is created, so that the type's references to
+            // itself resolve to it.
+            _componentKeys[(type, serializerOptions)] = key;
+            _componentSchemas[key] = null;
+            _componentSchemas[key] = createSchema();
+        }
+
+        return $"#/components/schemas/{key}";
     }
 
     private static string Sanitize(string value)
