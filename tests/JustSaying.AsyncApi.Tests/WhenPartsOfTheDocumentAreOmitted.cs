@@ -11,9 +11,16 @@ public class WhenPartsOfTheDocumentAreOmitted
         public string OrderId { get; set; }
     }
 
+    public sealed class OrderPlacedV2
+    {
+        public Guid OrderId { get; set; }
+    }
+
     private sealed class CapturingLogger : ILogger<AsyncApiDocumentGenerator>
     {
         public List<string> Warnings { get; } = [];
+
+        public List<int> EventIds { get; } = [];
 
         public IDisposable BeginScope<TState>(TState state) => null;
 
@@ -24,6 +31,7 @@ public class WhenPartsOfTheDocumentAreOmitted
             if (logLevel == LogLevel.Warning)
             {
                 Warnings.Add(formatter(state, exception));
+                EventIds.Add(eventId.Id);
             }
         }
     }
@@ -37,6 +45,7 @@ public class WhenPartsOfTheDocumentAreOmitted
         generator.Generate();
 
         await Assert.That(logger.Warnings).Contains((warning) => warning.Contains("no publications or subscriptions were captured"));
+        await Assert.That(logger.EventIds).Contains(101);
     }
 
     [Test]
@@ -57,6 +66,36 @@ public class WhenPartsOfTheDocumentAreOmitted
 
         await Assert.That(document.Channels).IsEmpty();
         await Assert.That(logger.Warnings).Contains((warning) => warning.Contains("dynamic destination") && warning.Contains(nameof(OrderPlaced)));
+        await Assert.That(logger.EventIds).Contains(102);
+    }
+
+    [Test]
+    public async Task TwoMessagesWithOneNameOnADestinationLogAWarningAndTheFirstIsDocumented()
+    {
+        var registry = new MessagingMetadataRegistry();
+        registry.SetRegion("eu-west-1");
+        registry.AddPublication(new PublicationMetadata(
+            MessagingDestinationKind.SnsTopic,
+            "orders",
+            isDynamic: false,
+            [new MessageTypeMetadata(typeof(OrderPlaced), nameof(OrderPlaced))]));
+        registry.AddPublication(new PublicationMetadata(
+            MessagingDestinationKind.SnsTopic,
+            "orders",
+            isDynamic: false,
+            [new MessageTypeMetadata(typeof(OrderPlacedV2), nameof(OrderPlaced))]));
+
+        var logger = new CapturingLogger();
+        var generator = new AsyncApiDocumentGenerator(registry, new AsyncApiOptions(), logger: logger);
+
+        var document = generator.Generate();
+
+        await Assert.That(logger.EventIds).Contains(107);
+        await Assert.That(logger.Warnings).Contains((warning) => warning.Contains(nameof(OrderPlacedV2)) && warning.Contains("'OrderPlaced'") && warning.Contains("orders"));
+
+        // The channel keeps the first registration, as the send operation does.
+        var message = document.Channels["orders"].Messages[nameof(OrderPlaced)];
+        await Assert.That(message.Title).IsEqualTo(nameof(OrderPlaced));
     }
 
     [Test]
@@ -79,5 +118,6 @@ public class WhenPartsOfTheDocumentAreOmitted
         generator.Generate();
 
         await Assert.That(logger.Warnings).Contains((warning) => warning.Contains("documented without payload schemas"));
+        await Assert.That(logger.EventIds).Contains(106);
     }
 }

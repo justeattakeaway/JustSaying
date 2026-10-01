@@ -37,6 +37,24 @@ public sealed class AsyncApiDocumentGenerator
     private readonly Dictionary<(Type Type, JsonSerializerOptions Options), string> _componentKeys = [];
     private readonly Dictionary<string, AsyncApiJsonSchema> _componentSchemas = new(StringComparer.Ordinal);
 
+    /// <summary>
+    /// The <see cref="AppContext"/> data name under which JustSaying.AsyncApi.GetDocument (the
+    /// build-time generation tool) registers an <see cref="Action{T1, T2}"/> that receives each
+    /// warning's code and message, to report them as build warnings. The tool references nothing
+    /// from this assembly, so the name is the contract.
+    /// </summary>
+    internal const string BuildWarningsDataName = "JustSaying.AsyncApi.GetDocument.ReportWarning";
+
+    // Each warning has a stable code (JSAA1xx; the tool's own errors are JSAA0xx), which is its log
+    // event id and, at build time, its MSBuild warning code, so that it can be suppressed by code.
+    private static readonly EventId EmptyDocument = new(101, nameof(EmptyDocument));
+    private static readonly EventId DynamicPublicationOmitted = new(102, nameof(DynamicPublicationOmitted));
+    private static readonly EventId PayloadSchemaUnavailable = new(103, nameof(PayloadSchemaUnavailable));
+    private static readonly EventId NoTypeInfoResolver = new(104, nameof(NoTypeInfoResolver));
+    private static readonly EventId SerializerNotDescribable = new(105, nameof(SerializerNotDescribable));
+    private static readonly EventId SerializationFactoryNotDescribable = new(106, nameof(SerializationFactoryNotDescribable));
+    private static readonly EventId DuplicateMessageName = new(107, nameof(DuplicateMessageName));
+
     static AsyncApiDocumentGenerator()
     {
         // ByteBard's writer materializes these enum arrays reflectively (Enum.GetValues, which
@@ -115,7 +133,8 @@ public sealed class AsyncApiDocumentGenerator
 
         if (_registry.Publications.Count == 0 && _registry.Subscriptions.Count == 0)
         {
-            _logger?.LogWarning(
+            Warn(
+                EmptyDocument,
                 "The generated AsyncAPI document is empty: no publications or subscriptions were captured. " +
                 "If the application does configure messaging, ensure AddJustSaying ran in the same service collection before the document was generated.");
         }
@@ -129,9 +148,9 @@ public sealed class AsyncApiDocumentGenerator
             if (publication.IsDynamic)
             {
                 // A dynamic destination has no static address; there is no channel to document.
-                _logger?.LogWarning(
-                    "Publication of {MessageTypes} uses a dynamic destination name computed per message, so it has no static address and is omitted from the AsyncAPI document.",
-                    Join(publication.Messages));
+                Warn(
+                    DynamicPublicationOmitted,
+                    $"Publication of {Join(publication.Messages)} uses a dynamic destination name computed per message, so it has no static address and is omitted from the AsyncAPI document.");
                 continue;
             }
 
@@ -296,6 +315,11 @@ public sealed class AsyncApiDocumentGenerator
         /// operation references point at the message the channel actually holds.
         /// </summary>
         public Dictionary<string, string> MessageKeys { get; } = new(StringComparer.Ordinal);
+
+        /// <summary>
+        /// Gets the registration each documented message wire name was described from.
+        /// </summary>
+        public Dictionary<string, MessageTypeMetadata> MessageSources { get; } = new(StringComparer.Ordinal);
     }
 
     private ChannelState AddChannel(
@@ -356,9 +380,19 @@ public sealed class AsyncApiDocumentGenerator
             {
                 messageKey = AllocateKey([Sanitize(wireName)], (key) => !state.Channel.Messages.ContainsKey(key));
                 state.MessageKeys[wireName] = messageKey;
+                state.MessageSources[wireName] = message;
+                state.Channel.Messages[messageKey] = CreateMessage(message);
             }
-
-            state.Channel.Messages[messageKey] = CreateMessage(message);
+            else if (state.MessageSources[wireName] is var documented && !Describe(documented).IsSameMessageAs(Describe(message)))
+            {
+                // A reader identifies a message by its name, so two different messages under one name
+                // on one destination can't be told apart. The first registered is documented, which
+                // keeps the channel consistent with the operations, and the conflict is reported.
+                Warn(
+                    DuplicateMessageName,
+                    $"{FriendlyTypeName(Describe(message).PayloadType)} and {FriendlyTypeName(Describe(documented).PayloadType)} are both identified as '{wireName}' on {address}, " +
+                    $"so consumers cannot tell them apart; only {FriendlyTypeName(Describe(documented).PayloadType)} is documented. Give each message on a destination a distinct name.");
+            }
         }
 
         return state;
@@ -487,7 +521,15 @@ public sealed class AsyncApiDocumentGenerator
     /// How a registration's message appears on the wire: the name it is identified by, the CLR
     /// type readers know it as, and the content type and schema of the body.
     /// </summary>
-    private sealed record MessageDescription(string WireName, Type PayloadType, string ContentType, AsyncApiJsonSchema Payload);
+    private sealed record MessageDescription(string WireName, Type PayloadType, string ContentType, AsyncApiJsonSchema Payload)
+    {
+        /// <summary>
+        /// Whether two registrations describe the same message, as a publication and a subscription
+        /// of one type on one queue do.
+        /// </summary>
+        public bool IsSameMessageAs(MessageDescription other)
+            => PayloadType == other.PayloadType && string.Equals(ContentType, other.ContentType, StringComparison.Ordinal);
+    }
 
     private string WireName(MessageTypeMetadata metadata) => Describe(metadata).WireName;
 
@@ -555,10 +597,9 @@ public sealed class AsyncApiDocumentGenerator
         catch (NotSupportedException exception)
         {
             // The serializer cannot describe this type; the message is documented without a payload schema.
-            _logger?.LogWarning(
-                "A payload schema for message type {MessageType} could not be derived ({Reason}); the message is documented without one.",
-                messageType,
-                exception.Message);
+            Warn(
+                PayloadSchemaUnavailable,
+                $"A payload schema for message type {FriendlyTypeName(messageType)} could not be derived ({exception.Message}); the message is documented without one.");
             return null;
         }
     }
@@ -628,7 +669,8 @@ public sealed class AsyncApiDocumentGenerator
             // to, so messages are documented without payload schemas.
             if (!JsonSerializer.IsReflectionEnabledByDefault)
             {
-                _logger?.LogWarning(
+                Warn(
+                    NoTypeInfoResolver,
                     "Reflection-based serialization is disabled and the serializer options have no TypeInfoResolver, so messages are documented without payload schemas. " +
                     "Use serializer options with a source-generated JsonSerializerContext to document payload schemas.");
                 schemaOptions = null;
@@ -663,10 +705,10 @@ public sealed class AsyncApiDocumentGenerator
 
         if (_undescribableSerializers.Add(serializer.GetType()))
         {
-            _logger?.LogWarning(
-                "The message body serializer ({Serializer}) is not System.Text.Json-based, so the wire contract cannot be derived and its messages are documented without payload schemas. " +
-                "Set AsyncApiOptions.SerializerOptions to options matching the wire format to document payload schemas.",
-                FriendlyTypeName(serializer.GetType()));
+            Warn(
+                SerializerNotDescribable,
+                $"The message body serializer ({FriendlyTypeName(serializer.GetType())}) is not System.Text.Json-based, so the wire contract cannot be derived and its messages are documented without payload schemas. " +
+                "Set AsyncApiOptions.SerializerOptions to options matching the wire format to document payload schemas.");
         }
 
         return null;
@@ -699,11 +741,21 @@ public sealed class AsyncApiDocumentGenerator
                 return _fallbackSchemaOptions = SchemaOptions(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions);
 
             default:
-                _logger?.LogWarning(
-                    "The message body serialization factory ({SerializationFactory}) is not System.Text.Json-based, so the wire contract cannot be derived and messages are documented without payload schemas. " +
-                    "Set AsyncApiOptions.SerializerOptions to options matching the wire format to document payload schemas.",
-                    _serializationFactory.GetType());
+                Warn(
+                    SerializationFactoryNotDescribable,
+                    $"The message body serialization factory ({_serializationFactory.GetType()}) is not System.Text.Json-based, so the wire contract cannot be derived and messages are documented without payload schemas. " +
+                    "Set AsyncApiOptions.SerializerOptions to options matching the wire format to document payload schemas.");
                 return null;
+        }
+    }
+
+    private void Warn(EventId eventId, string message)
+    {
+        _logger?.Log(LogLevel.Warning, eventId, message, null, static (state, _) => state);
+
+        if (AppContext.GetData(BuildWarningsDataName) is Action<string, string> reportBuildWarning)
+        {
+            reportBuildWarning($"JSAA{eventId.Id}", message);
         }
     }
 

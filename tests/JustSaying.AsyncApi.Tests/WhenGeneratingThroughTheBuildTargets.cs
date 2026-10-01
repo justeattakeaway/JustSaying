@@ -37,6 +37,22 @@ public class WhenGeneratingThroughTheBuildTargets
     }
 
     [Test]
+    public async Task GenerationWarningsAreBuildWarnings()
+    {
+        using var project = ConsumerProject.Create();
+
+        var result = await project.BuildAsync();
+
+        await AssertSucceeded(result);
+
+        // MSBuild logs a warning with the project it came from appended; the tool's own output is not.
+        var warnings = result.Output.Split('\n')
+            .Where((line) => line.Contains("JustSaying.AsyncApi.GetDocument : warning JSAA102: Publication of OrderShipped uses a dynamic destination name", StringComparison.Ordinal))
+            .ToList();
+        await Assert.That(warnings).Contains((line) => line.TrimEnd().EndsWith("Consumer.csproj]", StringComparison.Ordinal));
+    }
+
+    [Test]
     public async Task ADeletedDocumentIsGeneratedAgain()
     {
         using var project = ConsumerProject.Create();
@@ -144,7 +160,13 @@ public class WhenGeneratingThroughTheBuildTargets
             builder.Services.AddJustSaying(config =>
             {
                 config.Messaging(x => x.WithRegion("eu-west-1"));
-                config.Publications(x => x.WithTopic<OrderReady>());
+                config.Publications(x =>
+                {
+                    x.WithTopic<OrderReady>();
+
+                    // A destination computed per message can't be documented, which is a generation warning.
+                    x.WithTopic<OrderShipped>(t => t.WithTopicName(m => $"shipped-{m.OrderId % 4}"));
+                });
                 config.Subscriptions(x => x.ForTopic<OrderPlaced>());
             });
             builder.Services.AddJustSayingHandler<OrderPlaced, OrderPlacedHandler>();
@@ -155,6 +177,8 @@ public class WhenGeneratingThroughTheBuildTargets
             public record OrderPlaced(int OrderId);
 
             public record OrderReady(int OrderId);
+
+            public record OrderShipped(int OrderId);
 
             public class OrderPlacedHandler : IHandlerAsync<OrderPlaced>
             {

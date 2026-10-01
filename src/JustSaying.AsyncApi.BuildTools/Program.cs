@@ -20,6 +20,11 @@ internal static class Program
     private const string DefaultDocumentName = "asyncapi";
     private const string TimeoutPropertyName = "JustSayingAsyncApiEntryPointTimeoutSeconds";
 
+    // The AppContext data name under which the document generator looks for a sink for its warnings
+    // (see AsyncApiDocumentGenerator.BuildWarningsDataName). The tool references nothing from the
+    // application, so the name and the delegate's shape (code, message) are the contract.
+    private const string WarningSinkDataName = "JustSaying.AsyncApi.GetDocument.ReportWarning";
+
     private static readonly TimeSpan GenerationTimeout = TimeSpan.FromMinutes(2);
 
     public static int Main(string[] args)
@@ -72,6 +77,10 @@ internal static class Program
 
             waitTimeout = TimeSpan.FromSeconds(timeoutSeconds);
         }
+
+        // The generator's warnings (a publication left out, a payload without a schema) otherwise only
+        // reach the application's own logging, which the build shows at normal verbosity at best.
+        AppContext.SetData(WarningSinkDataName, new Action<string, string>(Warning));
 
         Assembly assembly;
         try
@@ -260,6 +269,12 @@ internal static class Program
                 buffer[i] = Array.IndexOf(invalid, name[i]) >= 0 ? '_' : name[i];
             }
         });
+    }
+
+    private static void Warning(string code, string message)
+    {
+        // The canonical MSBuild warning format, so that Exec surfaces the message as a build warning.
+        Console.Out.WriteLine($"JustSaying.AsyncApi.GetDocument : warning {code}: {message}");
     }
 
     private static int Error(int exitCode, string message)

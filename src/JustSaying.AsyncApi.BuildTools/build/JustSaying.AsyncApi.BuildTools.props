@@ -5,6 +5,11 @@
       example in a build that cannot run the application. Generation runs the application's entry
       point up to the point it builds its host, so it is skipped automatically when building for
       a runtime identifier the build machine cannot run, and during 'dotnet publish'.
+
+      Anything generation has to leave out of the document (for example a publication to a
+      destination computed per message) is reported as a build warning with a stable code,
+      JSAA101 to JSAA107. To keep one out of the warnings, add its code to
+      MSBuildWarningsAsMessages (or MSBuildWarningsNotAsErrors when warnings are errors).
     -->
     <JustSayingAsyncApiGenerateDocumentsOnBuild Condition=" '$(JustSayingAsyncApiGenerateDocumentsOnBuild)' == '' ">true</JustSayingAsyncApiGenerateDocumentsOnBuild>
     <!-- The directory the generated documents are written to. A relative path is relative to the project directory. -->
