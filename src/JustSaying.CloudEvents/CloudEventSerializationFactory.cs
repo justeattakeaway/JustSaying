@@ -12,6 +12,7 @@ public sealed class CloudEventSerializationFactory : IMessageBodySerializationFa
 {
     private readonly IMessageBodySerializationFactory _dataSerializerFactory;
     private readonly IMessageMetadataProvider _metadataProvider;
+    private readonly IMessageMetadataProvider _bareMessageMetadataProvider;
     private readonly CloudEventOptions _options;
 
     /// <summary>
@@ -27,6 +28,11 @@ public sealed class CloudEventSerializationFactory : IMessageBodySerializationFa
     {
         _dataSerializerFactory = dataSerializerFactory ?? throw new ArgumentNullException(nameof(dataSerializerFactory));
         _metadataProvider = metadataProvider ?? throw new ArgumentNullException(nameof(metadataProvider));
+
+        // A bare payload published as a CloudEvent gets an id and time minted once per message
+        // instance, so they don't change between the publish attempts of one PublishAsync call. (The
+        // CloudEvent<T> envelope serializer mints its own, per envelope instance.)
+        _bareMessageMetadataProvider = MintedEventIdentity.Fallback(_metadataProvider);
         _options = options ?? throw new ArgumentNullException(nameof(options));
 
         // Source and the type map are outbound-only concerns, so they are not required here — a
@@ -52,7 +58,7 @@ public sealed class CloudEventSerializationFactory : IMessageBodySerializationFa
                 $"A CloudEvents 'source' is required; set {nameof(CloudEventOptions)}.{nameof(CloudEventOptions.Source)}.");
 
         var dataSerializer = _dataSerializerFactory.GetSerializer<TMessage>();
-        return new CloudEventMessageBodySerializer<TMessage>(dataSerializer, _metadataProvider, source, type, _options.DataContentType);
+        return new CloudEventMessageBodySerializer<TMessage>(dataSerializer, _bareMessageMetadataProvider, source, type, _options.DataContentType);
     }
 
     /// <summary>
@@ -79,7 +85,7 @@ public sealed class CloudEventSerializationFactory : IMessageBodySerializationFa
                 $"or publish a CloudEvent<{typeof(T).Name}> with its Source set.");
 
         var dataSerializer = _dataSerializerFactory.GetSerializer<T>();
-        return new CloudEventMessageBodySerializer<T>(dataSerializer, _metadataProvider, resolvedSource, type, _options.DataContentType);
+        return new CloudEventMessageBodySerializer<T>(dataSerializer, _bareMessageMetadataProvider, resolvedSource, type, _options.DataContentType);
     }
 
     /// <summary>
@@ -99,7 +105,7 @@ public sealed class CloudEventSerializationFactory : IMessageBodySerializationFa
     {
         type ??= TryGetCloudEventType<T>();
         var dataSerializer = _dataSerializerFactory.GetSerializer<T>();
-        return new CloudEventMessageBodySerializer<T>(dataSerializer, _metadataProvider, _options.Source, type, _options.DataContentType);
+        return new CloudEventMessageBodySerializer<T>(dataSerializer, _bareMessageMetadataProvider, _options.Source, type, _options.DataContentType);
     }
 
     /// <summary>

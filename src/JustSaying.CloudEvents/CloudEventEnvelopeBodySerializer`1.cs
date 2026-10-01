@@ -72,13 +72,15 @@ public sealed class CloudEventEnvelopeBodySerializer<T> : IMessageBodySerializer
         {
             writer.WriteStartObject();
             writer.WriteString("specversion", CloudEventAttributes.SpecVersion);
-            writer.WriteString("id", string.IsNullOrEmpty(message.Id) ? _metadataProvider.GetId(message.Data) ?? Guid.NewGuid().ToString() : message.Id);
+            // An id and time minted here are kept for this CloudEvent<T> instance, so every publish
+            // attempt (the bus serializes again per retry) writes the same ones.
+            writer.WriteString("id", string.IsNullOrEmpty(message.Id) ? _metadataProvider.GetId(message.Data) ?? MintedEventIdentity.For(message).Id : message.Id);
 
             // OriginalString, not ToString(): ToString() normalizes the URI (lowercasing the host, adding
             // a trailing slash) and unescapes it (%20 becomes a space), so the value would change.
             writer.WriteString("source", source.OriginalString);
             writer.WriteString("type", type);
-            writer.WriteString("time", message.Time ?? _metadataProvider.GetTimestamp(message.Data) ?? DateTimeOffset.UtcNow);
+            writer.WriteString("time", message.Time ?? _metadataProvider.GetTimestamp(message.Data) ?? MintedEventIdentity.For(message).Time);
             writer.WriteString("datacontenttype", string.IsNullOrEmpty(message.DataContentType) ? _dataContentType : message.DataContentType);
 
             if (message.DataSchema is not null)
