@@ -401,7 +401,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         }
         catch (Exception ex)
         {
-            if (attemptCount >= Config.PublishFailureReAttempts)
+            if (attemptCount >= Config.PublishFailureReAttempts || !IsRetryablePublishFailure(ex, cancellationToken))
             {
                 _monitor.IssuePublishingMessage();
 
@@ -610,7 +610,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
                 }
                 catch (Exception ex)
                 {
-                    if (attemptCount >= PublishBatchConfiguration.PublishFailureReAttempts)
+                    if (attemptCount >= PublishBatchConfiguration.PublishFailureReAttempts || !IsRetryablePublishFailure(ex, cancellationToken))
                     {
                         _monitor.IssuePublishingMessage();
 
@@ -664,6 +664,21 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
                 activity?.Dispose();
             }
         }
+    }
+
+    private static bool IsRetryablePublishFailure(Exception exception, CancellationToken cancellationToken)
+    {
+        if (exception is OperationCanceledException && cancellationToken.IsCancellationRequested)
+        {
+            return false;
+        }
+
+        // A message that can't be serialized (an unsupported type, missing source-generated metadata, a cycle,
+        // NaN and similar) fails the same way every time, so retrying only delays the error.
+        return exception is not (System.Text.Json.JsonException
+            or Newtonsoft.Json.JsonException
+            or NotSupportedException
+            or ArgumentException);
     }
 
     private void EnsureStarted()

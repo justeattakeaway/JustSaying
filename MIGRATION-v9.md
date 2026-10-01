@@ -194,6 +194,15 @@ c.WithMiddlewareConfiguration(m =>
      .UseDefaults<OrderAccepted>(typeof(OrderAcceptedHandler)));
 ```
 
+## Publish re-attempts skip failures that can't succeed
+
+`PublishFailureReAttempts` used to retry every publish failure. v9 fails on the first attempt, with the original exception, when retrying can't help:
+
+- serialization failures (`System.Text.Json.JsonException`, `Newtonsoft.Json.JsonException`, `NotSupportedException` and `ArgumentException`, for example a type missing from a source-generated context or a `double.NaN`);
+- an `OperationCanceledException` after the caller's cancellation token was cancelled.
+
+AWS and network failures are retried as before. This applies to single and batch publishing.
+
 ## New extensibility seams
 
 Available on `IMessagingConfig`:
