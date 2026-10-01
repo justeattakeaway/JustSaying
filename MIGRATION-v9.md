@@ -231,15 +231,9 @@ c.WithMiddlewareConfiguration(m =>
 
 AWS and network failures are retried as before. This applies to single and batch publishing.
 
-## New extensibility seams
+## Message identity and naming
 
-Available on `IMessagingConfig`:
-
-- **`IMessageTypeRegistry`** — bidirectional map between a message type and its logical wire name (the SNS `Subject` today). `GetLogicalName` preserves existing subject behaviour; `TryResolveType` enables future type-based inbound routing. The native `Subject` remains the unqualified type name.
-
-It has a sensible default and requires no action unless you are customising naming.
-
-A message that doesn't derive from `Message` has no id JustSaying can read, so publish and handle logs show its id as `(null)` and the publish activity has no `messaging.message.id` tag.
+A message that doesn't derive from `Message` has no id JustSaying can read, so publish and handle logs show its id as `(null)` and the publish activity has no `messaging.message.id` tag. Message naming is unchanged: the SNS `Subject` is still the unqualified type name, customisable through `IMessageSubjectProvider` as in v8.
 
 ## Multi-type queues
 
