@@ -15,4 +15,7 @@ public sealed class SubjectMessageTypeDiscriminator : IMessageTypeDiscriminator
         typeName = context.Subject;
         return !string.IsNullOrEmpty(typeName);
     }
+
+    /// <inheritdoc />
+    public override string ToString() => "subject";
 }

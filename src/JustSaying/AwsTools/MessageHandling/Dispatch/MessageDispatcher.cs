@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
@@ -150,6 +151,19 @@ internal sealed class MessageDispatcher : IMessageDispatcher
                 messageContext.Message.Body);
 
             await messageContext.DeleteMessage(cancellationToken).ConfigureAwait(false);
+            _messagingMonitor.HandleError(ex, messageContext.Message);
+
+            return (false, null, null);
+        }
+        catch (UnroutableMessageException ex)
+        {
+            // Left on the queue (not deleted) so the redrive policy moves it to the error queue. The body
+            // isn't logged: the exception says what the discriminators found, and the body is on the queue.
+            _logger.LogError(ex,
+                "Could not route message with Id '{MessageId}' on queue '{QueueName}'; it has been left for the redrive policy to move to the error queue.",
+                messageContext.Message.MessageId,
+                messageContext.QueueName);
+
             _messagingMonitor.HandleError(ex, messageContext.Message);
 
             return (false, null, null);

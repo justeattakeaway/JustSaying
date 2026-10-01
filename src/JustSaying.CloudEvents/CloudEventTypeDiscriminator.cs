@@ -48,4 +48,7 @@ public sealed class CloudEventTypeDiscriminator : IMessageTypeDiscriminator
 
         return false;
     }
+
+    /// <inheritdoc />
+    public override string ToString() => "CloudEvents type";
 }

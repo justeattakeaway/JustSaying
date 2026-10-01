@@ -276,6 +276,7 @@ JustSaying.Messaging.MessageDiscriminationContext.Subject.get -> string
 JustSaying.Messaging.SubjectMessageTypeDiscriminator
 JustSaying.Messaging.SubjectMessageTypeDiscriminator.SubjectMessageTypeDiscriminator() -> void
 JustSaying.Messaging.SubjectMessageTypeDiscriminator.TryGetMessageTypeName(JustSaying.Messaging.MessageDiscriminationContext context, out string typeName) -> bool
+override JustSaying.Messaging.SubjectMessageTypeDiscriminator.ToString() -> string
 JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.Handling<TMessage>(string typeName = null, System.Action<JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder> middlewareConfiguration = null) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
 JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.WithDiscriminator(JustSaying.Messaging.IMessageTypeDiscriminator discriminator) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
 *REMOVED*JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.HandleException.get -> System.Func<System.Exception, JustSaying.Models.Message, bool>

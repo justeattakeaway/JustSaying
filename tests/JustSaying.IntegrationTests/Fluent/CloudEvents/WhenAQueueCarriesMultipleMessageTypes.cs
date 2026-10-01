@@ -137,6 +137,64 @@ public class WhenAQueueCarriesMultipleMessageTypes : IntegrationTestBase
     }
 
     [Test]
+    public async Task Then_A_Message_Of_An_Unregistered_Type_Is_Redriven_To_The_Error_Queue()
+    {
+        // Arrange - the producer ships OrderCancelled before this consumer handles it. The message must
+        // not be deleted: it goes to the error queue, where it can be redriven once the consumer catches up.
+        var placedHandled = new TaskCompletionSource<OrderPlaced>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var placedHandler = Substitute.For<IHandlerAsync<OrderPlaced>>();
+        placedHandler.Handle(Arg.Any<OrderPlaced>())
+            .Returns(true)
+            .AndDoes(call => placedHandled.TrySetResult(call.Arg<OrderPlaced>()));
+
+        var services = GivenJustSaying()
+            .ConfigureJustSaying(builder => builder
+                .Publications(p =>
+                {
+                    p.WithQueue<OrderPlaced>(o => o.WithQueueName(UniqueName));
+                    p.WithQueue<OrderCancelled>(o => o.WithQueueName(UniqueName));
+                })
+                .Subscriptions(s => s.ForQueue(UniqueName, q => q
+                    .WithReadConfiguration(c =>
+                    {
+                        c.VisibilityTimeout = TimeSpan.FromSeconds(1);
+                        c.RetryCountBeforeSendingToErrorQueue = 1;
+                    })
+                    .Handling<OrderPlaced>())))
+            .AddSingleton(placedHandler);
+
+        await WhenAsync(
+            services,
+            async (publisher, listener, cancellationToken) =>
+            {
+                await listener.StartAsync(cancellationToken);
+                await publisher.StartAsync(cancellationToken);
+
+                // Act
+                await publisher.PublishAsync(new OrderCancelled { Reason = "out-of-stock" }, cancellationToken);
+                await publisher.PublishAsync(new OrderPlaced { OrderId = "order-1" }, cancellationToken);
+
+                // Assert - the registered type is still handled, and the unregistered one is dead-lettered.
+                (await placedHandled.Task.WaitAsync(cancellationToken)).OrderId.ShouldBe("order-1");
+
+                var sqs = CreateClientFactory().GetSqsClient(Region);
+                var errorQueueUrl = (await sqs.GetQueueUrlAsync($"{UniqueName}_error", cancellationToken)).QueueUrl;
+
+                List<Amazon.SQS.Model.Message> deadLettered = [];
+                while (deadLettered.Count == 0)
+                {
+                    var received = await sqs.ReceiveMessageAsync(
+                        new Amazon.SQS.Model.ReceiveMessageRequest { QueueUrl = errorQueueUrl, WaitTimeSeconds = 1 },
+                        cancellationToken);
+                    deadLettered.AddRange(received.Messages ?? []);
+                }
+
+                deadLettered.ShouldHaveSingleItem().Body.ShouldContain("out-of-stock");
+            });
+    }
+
+    [Test]
     public async Task Then_Two_Types_Resolving_To_The_Same_Name_Fail_Fast()
     {
         // Arrange - the type name is what routes an inbound message to a serializer, so a duplicate

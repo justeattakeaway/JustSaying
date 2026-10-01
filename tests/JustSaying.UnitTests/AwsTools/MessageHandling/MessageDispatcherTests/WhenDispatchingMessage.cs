@@ -169,6 +169,35 @@ public class WhenDispatchingMessage
     }
 
     [InheritsTests]
+    public class AndTheMessageCannotBeRouted : WhenDispatchingMessage
+    {
+        protected override void Given()
+        {
+            base.Given();
+            _sqsMessage.MessageId = "unroutable-message-id";
+            _messageBodySerializer.Deserialize(Arg.Any<string>())
+                .Returns(_ => throw new UnroutableMessageException("No message type registered on this queue matches the message (subject 'Refunded')."));
+        }
+
+        [Test]
+        public void ShouldLeaveTheMessageForTheRedrivePolicy()
+        {
+            _queue.DeleteMessageRequests.ShouldBeEmpty();
+            _messageMonitor.HandledErrors.ShouldHaveSingleItem().exception.ShouldBeOfType<UnroutableMessageException>();
+        }
+
+        [Test]
+        public void ShouldLogAnErrorThatDoesNotIncludeTheBody()
+        {
+            var log = _fakeLogCollector.GetSnapshot().Where(le => le.Level == LogLevel.Error).ShouldHaveSingleItem();
+            log.Message.ShouldContain("unroutable-message-id");
+            log.Message.ShouldContain(_queue.QueueName);
+            log.Message.ShouldNotContain(_sqsMessage.Body);
+            log.Exception.ShouldBeOfType<UnroutableMessageException>().Message.ShouldContain("subject 'Refunded'");
+        }
+    }
+
+    [InheritsTests]
     public class AndMessageProcessingSucceeds : WhenDispatchingMessage
     {
         protected override void Given()

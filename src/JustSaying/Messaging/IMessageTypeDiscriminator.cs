@@ -5,6 +5,11 @@ namespace JustSaying.Messaging;
 /// example the SNS <c>Subject</c>, or a CloudEvents <c>type</c> attribute). Used by multi-type queue
 /// subscriptions to select the serializer for each message.
 /// </summary>
+/// <remarks>
+/// When no discriminator in the chain resolves a registered type, the error logged for the message names
+/// each discriminator by its <see cref="object.ToString"/> along with the value it found, so override
+/// <see cref="object.ToString"/> to give a custom discriminator a readable name (for example <c>subject</c>).
+/// </remarks>
 public interface IMessageTypeDiscriminator
 {
     /// <summary>

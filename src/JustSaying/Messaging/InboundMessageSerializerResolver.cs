@@ -1,6 +1,5 @@
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
-using JustSaying.Models;
 
 namespace JustSaying.Messaging;
 
@@ -54,8 +53,19 @@ internal sealed class DiscriminatingInboundMessageSerializerResolver : IInboundM
             }
         }
 
-        throw new MessageFormatNotSupportedException(
-            $"Could not resolve a registered message type for the inbound message (subject: '{subject ?? "<none>"}'). " +
-            "Ensure the message's subject or type matches a type registered on this multi-type queue subscription.");
+        // Not a format problem but a routing one (an unknown type, or a type the producer shipped before
+        // this consumer), so the message must not be deleted: the redrive policy moves it to the error queue.
+        throw new UnroutableMessageException(
+            $"No message type registered on this queue matches the message ({DescribeDiscriminatedNames(context)}). " +
+            $"Registered types: {string.Join(", ", _serializersByName.Keys.Select(name => $"'{name}'"))}.");
+    }
+
+    private string DescribeDiscriminatedNames(MessageDiscriminationContext context)
+    {
+        // Only runs for a message that failed to route, so asking each discriminator again is fine.
+        return string.Join(", ", _discriminators.Select(discriminator =>
+            discriminator.TryGetMessageTypeName(context, out var typeName) && !string.IsNullOrEmpty(typeName)
+                ? $"{discriminator} '{typeName}'"
+                : $"{discriminator}: none"));
     }
 }

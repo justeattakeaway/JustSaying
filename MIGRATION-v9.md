@@ -240,3 +240,15 @@ Available on `IMessagingConfig`:
 It has a sensible default and requires no action unless you are customising naming.
 
 A message that doesn't derive from `Message` has no id JustSaying can read, so publish and handle logs show its id as `(null)` and the publish activity has no `messaging.message.id` tag.
+
+## Multi-type queues
+
+A single queue can now carry more than one message type. Register every type the queue carries on one subscription, and each inbound message is dispatched to the handler for its own type, resolved from a discriminator on the wire (the SNS `Subject` by default):
+
+```csharp
+s.ForQueue("orders", q => q
+    .Handling<OrderPlaced>()
+    .Handling<OrderCancelled>());
+```
+
+A message that no registered type matches (for example a type the producer ships before this consumer handles it, or a mistyped subject) is **not deleted**. It is logged at Error, naming the message id, the queue, what each discriminator found (e.g. `subject 'OrderRefunded'`) and the registered type names, and left on the queue, so the redrive policy moves it to the error queue once its retries are used up. Redrive it from there when a consumer can handle it.

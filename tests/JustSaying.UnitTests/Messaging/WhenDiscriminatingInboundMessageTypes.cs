@@ -68,12 +68,29 @@ public class WhenDiscriminatingInboundMessageTypes
     }
 
     [Test]
-    public async Task AnUnrecognisedSubjectThrowsMessageFormatNotSupported()
+    public async Task AnUnrecognisedSubjectIsUnroutableAndTheErrorSaysWhatWasFound()
     {
         var converter = CreateMultiTypeConverter();
 
-        await Should.ThrowAsync<MessageFormatNotSupportedException>(
-            async () => await converter.ConvertToInboundMessageAsync(SnsMessage("SomethingElse", "{}")));
+        var exception = await Should.ThrowAsync<UnroutableMessageException>(
+            async () => await converter.ConvertToInboundMessageAsync(SnsMessage("SomethingElse", "{\"Secret\":\"do-not-log\"}")));
+
+        exception.Message.ShouldContain("subject 'SomethingElse'");
+        exception.Message.ShouldContain("'OrderPlaced'");
+        exception.Message.ShouldContain("'OrderShipped'");
+        exception.Message.ShouldNotContain("do-not-log");
+    }
+
+    [Test]
+    public async Task AMessageWithNoSubjectIsUnroutable()
+    {
+        var converter = CreateMultiTypeConverter();
+        var raw = new Amazon.SQS.Model.Message { Body = "{\"OrderId\":\"order-1\"}" };
+
+        var exception = await Should.ThrowAsync<UnroutableMessageException>(
+            async () => await converter.ConvertToInboundMessageAsync(raw));
+
+        exception.Message.ShouldContain("subject: none");
     }
 
     [Test]
