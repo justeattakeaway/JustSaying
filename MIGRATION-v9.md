@@ -42,7 +42,7 @@ Explicitly typed lambdas need the same treatment — `(Exception ex, Message m) 
 
 ### Batch publishing is renamed to `PublishBatchAsync`
 
-The biggest source-breaking change. Because a `List<T>` is itself an `object`/`class`, a single generic `PublishAsync<T>` would silently bind a collection to the single-message overload. Batch publishing therefore has a distinct verb:
+**Your v8 batch calls still compile, then fail at runtime.** A `List<T>` is itself a `class`, so `PublishAsync(messages)` now binds to the single-message `PublishAsync<TMessage>` and treats the whole list as one message. No publisher is registered for `List<T>`, so the call throws an `InvalidOperationException` that tells you to call `PublishBatchAsync`. The compiler won't find these call sites for you: search your code for `PublishAsync` calls that pass a collection. Batch publishing has its own method name:
 
 ```csharp
 // Before
