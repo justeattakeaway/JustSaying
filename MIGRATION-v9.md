@@ -293,6 +293,11 @@ value is created or the bus is built, naming the registration, instead of as an 
   never set a `MessageGroupId`, so publishing to a FIFO queue or topic always failed.
 - The visibility timeout must be more than zero and at most 12 hours, and the retries before the
   error queue between 1 and 1000 (unless the queue has no error queue).
+- Queue URLs (`QueueDestination.FromUrl`/`FromUri`, `ForQueueUrl`, `WithQueueUrl`) must have an
+  `{account}/{queue}` path, and a `regionName` that contradicts the region in the URL throws.
+  VPC-endpoint, FIPS and legacy (`{region}.queue.amazonaws.com`, `queue.amazonaws.com`) URLs are
+  now accepted; v8 rejected them unless a `regionName` was passed. Topic and queue ARNs must include
+  the region and account, and `TopicDestination.FromArn` rejects a subscription ARN.
 
 On every start, an owned queue that already exists is updated:
 

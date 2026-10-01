@@ -96,6 +96,8 @@ public sealed class QueueDestination
     /// <param name="queueUrl">The queue URL.</param>
     /// <param name="regionName">Optional region name (for example <c>eu-west-1</c>); when omitted, the region is inferred from the URL.</param>
     /// <returns>The <see cref="QueueDestination"/> destination.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="queueUrl"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="queueUrl"/> is not an SQS queue URL, or <paramref name="regionName"/> contradicts the region in it.</exception>
     public static QueueDestination FromUri(Uri queueUrl, string regionName = null) => new() { Address = QueueAddress.FromUri(queueUrl, regionName) };
 
     /// <summary>
@@ -105,6 +107,7 @@ public sealed class QueueDestination
     /// <param name="queueUrl">The queue URL.</param>
     /// <param name="regionName">Optional region name (for example <c>eu-west-1</c>); when omitted, the region is inferred from the URL.</param>
     /// <returns>The <see cref="QueueDestination"/> destination.</returns>
+    /// <exception cref="ArgumentException"><paramref name="queueUrl"/> is not an SQS queue URL, or <paramref name="regionName"/> contradicts the region in it.</exception>
     public static QueueDestination FromUrl(string queueUrl, string regionName = null) => new() { Address = QueueAddress.FromUrl(queueUrl, regionName) };
 
     /// <summary>
@@ -113,6 +116,7 @@ public sealed class QueueDestination
     /// </summary>
     /// <param name="queueArn">The queue ARN.</param>
     /// <returns>The <see cref="QueueDestination"/> destination.</returns>
+    /// <exception cref="ArgumentException"><paramref name="queueArn"/> is not a complete SQS queue ARN.</exception>
     public static QueueDestination FromArn(string queueArn) => new() { Address = QueueAddress.FromArn(queueArn) };
 
     private static void ValidateName(string name, bool hasErrorQueue)
