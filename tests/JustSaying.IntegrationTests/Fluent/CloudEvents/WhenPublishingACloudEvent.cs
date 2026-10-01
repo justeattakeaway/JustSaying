@@ -74,6 +74,56 @@ public class WhenPublishingACloudEvent : IntegrationTestBase
     }
 
     [Test]
+    public async Task Then_A_Subscriber_Without_The_CloudEvents_Serializer_Dead_Letters_It()
+    {
+        // Arrange - a plain System.Text.Json subscriber would read the envelope as an all-default
+        // OrderPlaced; the message must go to the error queue instead of reaching the handler.
+        var handler = Substitute.For<IHandlerAsync<OrderPlaced>>();
+        handler.Handle(Arg.Any<OrderPlaced>()).Returns(true);
+
+        var services = GivenJustSaying()
+            .ConfigureJustSaying(builder => builder
+                .Subscriptions(s => s.ForQueue<OrderPlaced>(sub => sub
+                    .WithQueueName(UniqueName)
+                    .WithReadConfiguration(c =>
+                    {
+                        c.VisibilityTimeout = TimeSpan.FromSeconds(1);
+                        c.RetryCountBeforeSendingToErrorQueue = 1;
+                    }))))
+            .AddSingleton(handler);
+
+        const string cloudEvent =
+            """{"specversion":"1.0","id":"evt-1","source":"/orders","type":"com.example.orders.order.placed","data":{"OrderId":"order-42"}}""";
+
+        await WhenAsync(
+            services,
+            async (_, listener, cancellationToken) =>
+            {
+                await listener.StartAsync(cancellationToken);
+
+                var sqs = CreateClientFactory().GetSqsClient(Region);
+                var queueUrl = (await sqs.GetQueueUrlAsync(UniqueName, cancellationToken)).QueueUrl;
+                var errorQueueUrl = (await sqs.GetQueueUrlAsync($"{UniqueName}_error", cancellationToken)).QueueUrl;
+
+                // Act
+                await sqs.SendMessageAsync(queueUrl, cloudEvent, cancellationToken);
+
+                // Assert
+                List<Message> deadLettered = [];
+                while (deadLettered.Count == 0)
+                {
+                    var received = await sqs.ReceiveMessageAsync(
+                        new ReceiveMessageRequest { QueueUrl = errorQueueUrl, WaitTimeSeconds = 1 },
+                        cancellationToken);
+                    deadLettered.AddRange(received.Messages ?? []);
+                }
+
+                deadLettered.ShouldHaveSingleItem().Body.ShouldBe(cloudEvent);
+                await handler.DidNotReceiveWithAnyArgs().Handle(default);
+            });
+    }
+
+    [Test]
     public async Task Then_The_Wire_Body_Is_A_Structured_CloudEvent()
     {
         // Arrange
