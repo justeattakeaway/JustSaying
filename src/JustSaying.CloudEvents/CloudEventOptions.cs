@@ -46,7 +46,9 @@ public sealed class CloudEventOptions
     /// serialization format, so every plain registration (<c>WithTopic&lt;T&gt;</c>,
     /// <c>ForQueue&lt;T&gt;</c>, …) speaks CloudEvents too — for an all-CloudEvents application. Every
     /// published type must then have a <c>type</c> mapped via <see cref="MapType{TMessage}"/> (an
-    /// unmapped type fails at startup rather than silently publishing plain JSON). The default is
+    /// unmapped type fails at startup rather than silently publishing plain JSON). <see cref="Source"/>
+    /// is only needed to publish, so a consume-only application can leave it unset; without it, the
+    /// first publish fails. The default is
     /// <see langword="false"/>: only the CloudEvents registrations (<c>WithCloudEventTopic&lt;T&gt;</c>,
     /// <c>HandlingCloudEvent&lt;T&gt;</c>, …) speak CloudEvents.
     /// </summary>

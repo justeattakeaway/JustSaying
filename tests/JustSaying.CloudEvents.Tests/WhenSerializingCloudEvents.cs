@@ -75,6 +75,47 @@ public class WhenSerializingCloudEvents
     }
 
     [Test]
+    public async Task Factory_Points_A_Plain_Envelope_Registration_At_The_CloudEvents_Registrations()
+    {
+        // UseAsDefault with ForTopic<CloudEvent<T>>: the error names the payload type, as C# spells it.
+        var options = new CloudEventOptions { Source = new Uri("https://example.com/") }
+            .MapType<PocoOrder>("com.justeattakeaway.orders.pocoorder");
+
+        var factory = new CloudEventSerializationFactory(
+            new SystemTextJsonSerializationFactory(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions),
+            new MessagingConfig().MessageMetadataProvider,
+            options);
+
+        var exception = Assert.Throws<InvalidOperationException>(() => factory.GetSerializer<CloudEvent<PocoOrder>>());
+
+        await Assert.That(exception.Message).Contains("'CloudEvent<PocoOrder>'");
+        await Assert.That(exception.Message).Contains("ForCloudEventTopic<PocoOrder>");
+        await Assert.That(exception.Message).Contains("MapType<PocoOrder>");
+        await Assert.That(exception.Message).DoesNotContain("`1");
+    }
+
+    [Test]
+    public async Task Factory_Needs_No_Source_Until_A_Message_Is_Published()
+    {
+        // UseAsDefault in a consume-only app: the subscription's serializer is built without a source.
+        var options = new CloudEventOptions().MapType<PocoOrder>("com.justeattakeaway.orders.pocoorder");
+
+        var factory = new CloudEventSerializationFactory(
+            new SystemTextJsonSerializationFactory(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions),
+            new MessagingConfig().MessageMetadataProvider,
+            options);
+
+        var serializer = factory.GetSerializer<PocoOrder>();
+
+        var received = serializer.Deserialize(
+            """{"specversion":"1.0","id":"evt-1","source":"/orders","type":"com.justeattakeaway.orders.pocoorder","data":{"OrderId":"poco-1"}}""");
+        await Assert.That(received.OrderId).IsEqualTo("poco-1");
+
+        var exception = Assert.Throws<InvalidOperationException>(() => serializer.Serialize(new PocoOrder { OrderId = "poco-2" }));
+        await Assert.That(exception.Message).Contains("CloudEventOptions.Source");
+    }
+
+    [Test]
     public async Task Factory_Produces_A_Serializer_For_A_Mapped_Type()
     {
         var options = new CloudEventOptions { Source = new Uri("https://example.com/") }

@@ -1,3 +1,4 @@
+using JustSaying.Extensions;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
 
@@ -38,22 +39,31 @@ public sealed class CloudEventSerializationFactory : IMessageBodySerializationFa
     /// <inheritdoc />
     public IMessageBodySerializer<TMessage> GetSerializer<TMessage>() where TMessage : class
     {
-        if (!_options.TryGetCloudEventType(typeof(TMessage), out var type))
+        var messageType = typeof(TMessage);
+        if (messageType.IsGenericType && messageType.GetGenericTypeDefinition() == typeof(CloudEvent<>))
         {
+            // A plain registration of the envelope (ForTopic<CloudEvent<T>>, WithTopic<CloudEvent<T>>) in
+            // an app with UseAsDefault. This factory reads and writes bare payloads, so name the
+            // registrations that handle the envelope, keyed on the payload type.
+            var data = messageType.GetGenericArguments()[0].ToReadableName();
             throw new InvalidOperationException(
-                $"No CloudEvents 'type' is configured for message type '{typeof(TMessage).FullName}'. " +
-                $"Configure one via {nameof(CloudEventOptions)}.{nameof(CloudEventOptions.MapType)}<{typeof(TMessage).Name}>(\"...\").");
+                $"'{messageType.ToReadableName()}' can't use the app-wide CloudEvents serializer, which reads and writes bare payloads. " +
+                $"Register it with ForCloudEventTopic<{data}>(...), HandlingCloudEvent<{data}>(...) or WithCloudEventTopic<{data}>(...) instead, " +
+                $"and map its CloudEvents 'type' with {nameof(CloudEventOptions)}.{nameof(CloudEventOptions.MapType)}<{data}>(\"...\") or at the registration.");
         }
 
-        // This is the app-default path (CloudEvents registered with useAsDefault: true), which serves
-        // publications as well as subscriptions — so require the outbound `source` up front to keep the
-        // failure at startup rather than on first publish.
-        var source = _options.Source
-            ?? throw new InvalidOperationException(
-                $"A CloudEvents 'source' is required; set {nameof(CloudEventOptions)}.{nameof(CloudEventOptions.Source)}.");
+        if (!_options.TryGetCloudEventType(messageType, out var type))
+        {
+            throw new InvalidOperationException(
+                $"No CloudEvents 'type' is configured for message type '{messageType.ToReadableFullName()}'. " +
+                $"Configure one via {nameof(CloudEventOptions)}.{nameof(CloudEventOptions.MapType)}<{messageType.ToReadableName()}>(\"...\").");
+        }
 
+        // This is the app-default path (UseAsDefault), which serves subscriptions as well as
+        // publications. A consumer never needs the `source`, so a missing one fails at the first publish
+        // (in the serializer) rather than here.
         var dataSerializer = _dataSerializerFactory.GetSerializer<TMessage>();
-        return new CloudEventMessageBodySerializer<TMessage>(dataSerializer, _bareMessageMetadataProvider, source, type, _options.DataContentType);
+        return new CloudEventMessageBodySerializer<TMessage>(dataSerializer, _bareMessageMetadataProvider, _options.Source, type, _options.DataContentType);
     }
 
     /// <summary>
@@ -74,10 +84,10 @@ public sealed class CloudEventSerializationFactory : IMessageBodySerializationFa
 
         var resolvedSource = source ?? _options.Source
             ?? throw new InvalidOperationException(
-                $"A CloudEvents 'source' is required to publish '{typeof(T).FullName}' as a bare message. " +
-                $"Pass source: to the WithCloudEventTopic<{typeof(T).Name}>/WithCloudEventQueue<{typeof(T).Name}> registration, " +
+                $"A CloudEvents 'source' is required to publish '{typeof(T).ToReadableFullName()}' as a bare message. " +
+                $"Pass source: to the WithCloudEventTopic<{typeof(T).ToReadableName()}>/WithCloudEventQueue<{typeof(T).ToReadableName()}> registration, " +
                 $"set {nameof(CloudEventOptions)}.{nameof(CloudEventOptions.Source)}, " +
-                $"or publish a CloudEvent<{typeof(T).Name}> with its Source set.");
+                $"or publish a CloudEvent<{typeof(T).ToReadableName()}> with its Source set.");
 
         var dataSerializer = _dataSerializerFactory.GetSerializer<T>();
         return new CloudEventMessageBodySerializer<T>(dataSerializer, _bareMessageMetadataProvider, resolvedSource, type, _options.DataContentType);
@@ -92,9 +102,10 @@ public sealed class CloudEventSerializationFactory : IMessageBodySerializationFa
     /// </summary>
     /// <typeparam name="T">The type of the <c>data</c> payload.</typeparam>
     /// <param name="type">
-    /// The CloudEvents <c>type</c> to write when publishing, or <see langword="null"/> to fall back to
-    /// the type configured via <see cref="CloudEventOptions.MapType{TMessage}"/> (which may
-    /// itself be absent — the value is only needed to publish, not to consume).
+    /// The CloudEvents <c>type</c> this serializer reads and writes, or <see langword="null"/> to fall
+    /// back to the type configured via <see cref="CloudEventOptions.MapType{TMessage}"/>. With a type,
+    /// an event of any other type fails to deserialize; with none at all (it is only needed to publish),
+    /// an event of any type is read.
     /// </param>
     public IMessageBodySerializer<T> GetDataOnlySerializer<T>(string type = null) where T : class
     {
@@ -110,9 +121,10 @@ public sealed class CloudEventSerializationFactory : IMessageBodySerializationFa
     /// </summary>
     /// <typeparam name="T">The type of the <c>data</c> payload.</typeparam>
     /// <param name="type">
-    /// The CloudEvents <c>type</c> to write when publishing. When <see langword="null"/>, falls back to
-    /// the type configured via <see cref="CloudEventOptions.MapType{TMessage}"/> (which may
-    /// itself be absent — the value is only needed to publish, not to consume).
+    /// The CloudEvents <c>type</c> this serializer reads and writes, or <see langword="null"/> to fall
+    /// back to the type configured via <see cref="CloudEventOptions.MapType{TMessage}"/>. With a type,
+    /// an event of any other type fails to deserialize; with none at all (it is only needed to publish),
+    /// an event of any type is read.
     /// </param>
     /// <param name="source">
     /// The default CloudEvents <c>source</c> to write when publishing, or <see langword="null"/> to
@@ -135,9 +147,9 @@ public sealed class CloudEventSerializationFactory : IMessageBodySerializationFa
     internal string GetCloudEventType<T>() where T : class
         => TryGetCloudEventType<T>()
            ?? throw new InvalidOperationException(
-               $"No CloudEvents 'type' is configured for message type '{typeof(T).FullName}'. " +
-               $"Pass it to HandlingCloudEvent<{typeof(T).Name}>(\"...\"), or configure one via " +
-               $"{nameof(CloudEventOptions)}.{nameof(CloudEventOptions.MapType)}<{typeof(T).Name}>(\"...\").");
+               $"No CloudEvents 'type' is configured for message type '{typeof(T).ToReadableFullName()}'. " +
+               $"Pass it to HandlingCloudEvent<{typeof(T).ToReadableName()}>(\"...\"), or configure one via " +
+               $"{nameof(CloudEventOptions)}.{nameof(CloudEventOptions.MapType)}<{typeof(T).ToReadableName()}>(\"...\").");
 
     private string TryGetCloudEventType<T>() where T : class
         => _options.TryGetCloudEventType(typeof(T), out var type) ? type : null;

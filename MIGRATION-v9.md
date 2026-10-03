@@ -463,6 +463,8 @@ services.AddJustSayingCloudEvents(options =>
 });
 ```
 
+`Source` is only needed to publish: a consume-only app can leave it unset, and an app that publishes without one fails at its first publish. A plain registration of the envelope itself (`ForTopic<CloudEvent<T>>`, `WithTopic<CloudEvent<T>>`) isn't supported by the app-wide default and fails at startup; use `ForCloudEventTopic<T>`, `HandlingCloudEvent<T>` or `WithCloudEventTopic<T>`.
+
 The `data` payload is serialized with the app's own `IMessageBodySerializationFactory` (whatever `AddJustSaying` uses for its other messages), so a source-generated `JsonSerializerContext` registered once for Native AOT covers CloudEvents data too, and the data's JSON matches the rest of the app. Set `CloudEventOptions.DataSerializationFactory` to use a different one.
 
 Single-type subscriptions can also override their serializer per registration via `WithMessageBodySerializer(IMessageBodySerializer<T>)`, now available on the `ForTopic<T>`/`ForQueue<T>` builders as well as `ForQueueUrl<T>`/`ForQueueArn<T>`.
