@@ -28,6 +28,15 @@
     -->
     <JustSayingAsyncApiEntryPointTimeoutSeconds Condition=" '$(JustSayingAsyncApiEntryPointTimeoutSeconds)' == '' ">60</JustSayingAsyncApiEntryPointTimeoutSeconds>
     <!--
+      The host environment the application's host is built in to generate the documents. It is
+      'Production' whatever DOTNET_ENVIRONMENT or ASPNETCORE_ENVIRONMENT the build runs with, so the
+      documents do not depend on the machine that builds them. Set it (for example to
+      'Development') when configuration the host needs in order to be built is only in that
+      environment's settings, such as appsettings.Development.json. Every environment writes the
+      same file; to keep documents for several, also vary JustSayingAsyncApiDocumentFileName.
+    -->
+    <JustSayingAsyncApiEnvironment Condition=" '$(JustSayingAsyncApiEnvironment)' == '' ">Production</JustSayingAsyncApiEnvironment>
+    <!--
       Set to 'true' to publish the generated documents with the application. By default they are
       kept out of the publish output, where the Web SDK would otherwise include them as content.
     -->

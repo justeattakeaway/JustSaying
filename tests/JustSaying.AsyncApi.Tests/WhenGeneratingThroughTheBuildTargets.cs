@@ -120,6 +120,41 @@ public class WhenGeneratingThroughTheBuildTargets
     }
 
     [Test]
+    public async Task TheHostIsBuiltInTheConfiguredEnvironment()
+    {
+        using var project = ConsumerProject.Create();
+
+        // The application can only build its host with configuration from appsettings.Development.json.
+        var programPath = Path.Combine(project.Directory, "Program.cs");
+        await File.WriteAllTextAsync(programPath, (await File.ReadAllTextAsync(programPath)).Replace(
+            "var builder = Host.CreateApplicationBuilder(args);",
+            """
+            var builder = Host.CreateApplicationBuilder(args);
+            _ = builder.Configuration["AuditTopicArn"] ?? throw new InvalidOperationException("AuditTopicArn is not configured.");
+            """,
+            StringComparison.Ordinal));
+        await File.WriteAllTextAsync(Path.Combine(project.Directory, "appsettings.Development.json"), """{ "AuditTopicArn": "arn:aws:sns:eu-west-1:000000000000:audit" }""");
+
+        var production = await project.BuildAsync();
+
+        // The tool's error names the environment.
+        await Assert.That(production.ExitCode).IsNotEqualTo(0);
+        await Assert.That(production.Output).Contains("error JSAA004: The entry point of 'Consumer' threw while building the host in the 'Production' environment");
+        await Assert.That(production.Output).Contains("JustSayingAsyncApiEnvironment");
+
+        var development = await project.BuildAsync("-p:JustSayingAsyncApiEnvironment=Development");
+
+        await AssertSucceeded(development);
+        await Assert.That(File.Exists(project.DocumentPath)).IsTrue();
+
+        // A document generated for another environment is out of date, though nothing else changed.
+        var productionAgain = await project.BuildAsync();
+
+        await Assert.That(productionAgain.ExitCode).IsNotEqualTo(0);
+        await Assert.That(productionAgain.Output).Contains("error JSAA004");
+    }
+
+    [Test]
     public async Task TheWebSdkDoesNotPublishTheDocumentUnlessAskedTo()
     {
         using var project = ConsumerProject.Create("Microsoft.NET.Sdk.Web");
@@ -218,6 +253,7 @@ public class WhenGeneratingThroughTheBuildTargets
                     <UseAppHost>false</UseAppHost>
                   </PropertyGroup>
                   <ItemGroup>
+                    <None Update="appsettings*.json" CopyToOutputDirectory="PreserveNewest" />
                     <Reference Include="{appDirectory}JustSaying*.dll;{appDirectory}AWSSDK*.dll;{appDirectory}ByteBard*.dll;{appDirectory}Microsoft.Extensions.*.dll;{appDirectory}System.*.dll"
                                Exclude="{appDirectory}JustSaying.AsyncApi.Tests.App.dll" />
                   </ItemGroup>

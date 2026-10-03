@@ -36,6 +36,7 @@
     <PropertyGroup>
       <!-- Absolute, because the tool resolves relative paths against its working directory, not the project. -->
       <_JustSayingAsyncApiFileListPath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'JustSayingAsyncApi.cache'))</_JustSayingAsyncApiFileListPath>
+      <_JustSayingAsyncApiCommandPath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'JustSayingAsyncApi.command'))</_JustSayingAsyncApiCommandPath>
 
       <!--
         The tool runs the application, so it can only run where the application can: an output
@@ -62,6 +63,28 @@
     </ItemGroup>
     <Delete Files="$(_JustSayingAsyncApiFileListPath)" Condition=" '@(_JustSayingAsyncApiMissingDocument)' != '' " />
 
+    <PropertyGroup>
+      <!-- The SDK sets DOTNET_HOST_PATH to the dotnet executable running the build; 'dotnet' on the PATH may be another installation, or missing. -->
+      <_JustSayingAsyncApiDotNetHost>dotnet</_JustSayingAsyncApiDotNetHost>
+      <_JustSayingAsyncApiDotNetHost Condition=" '$(DOTNET_HOST_PATH)' != '' ">"$(DOTNET_HOST_PATH)"</_JustSayingAsyncApiDotNetHost>
+      <_JustSayingAsyncApiCommand>$(_JustSayingAsyncApiDotNetHost) exec --depsfile "$(ProjectDepsFilePath)" --runtimeconfig "$(ProjectRuntimeConfigFilePath)"</_JustSayingAsyncApiCommand>
+      <_JustSayingAsyncApiCommand Condition=" '$(NuGetPackageRoot)' != '' ">$(_JustSayingAsyncApiCommand) --additionalprobingpath "$(NuGetPackageRoot.TrimEnd('\').TrimEnd('/'))"</_JustSayingAsyncApiCommand>
+      <_JustSayingAsyncApiCommand>$(_JustSayingAsyncApiCommand) "$(_JustSayingAsyncApiToolPath)" --assembly "$(TargetPath)" --output "$(_JustSayingAsyncApiDocumentsDirectory.TrimEnd('\').TrimEnd('/'))" --file-list "$(_JustSayingAsyncApiFileListPath)"</_JustSayingAsyncApiCommand>
+      <_JustSayingAsyncApiCommand Condition=" '$(JustSayingAsyncApiDocumentFileName)' != '' ">$(_JustSayingAsyncApiCommand) --file-name "$(JustSayingAsyncApiDocumentFileName)"</_JustSayingAsyncApiCommand>
+      <_JustSayingAsyncApiCommand Condition=" '$(JustSayingAsyncApiEntryPointTimeoutSeconds)' != '' ">$(_JustSayingAsyncApiCommand) --entry-point-timeout "$(JustSayingAsyncApiEntryPointTimeoutSeconds)"</_JustSayingAsyncApiCommand>
+      <_JustSayingAsyncApiCommand Condition=" '$(JustSayingAsyncApiEnvironment)' != '' ">$(_JustSayingAsyncApiCommand) --environment "$(JustSayingAsyncApiEnvironment)"</_JustSayingAsyncApiCommand>
+    </PropertyGroup>
+
+    <!--
+      How the tool is run is an input too: a document generated for another environment (or file
+      name) is out of date even though nothing else changed. The command is written only when it
+      changes, so that its timestamp records when it last did.
+    -->
+    <WriteLinesToFile File="$(_JustSayingAsyncApiCommandPath)"
+                      Lines="$(_JustSayingAsyncApiCommand)"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="true" />
+
     <ItemGroup>
       <!--
         Everything the generated document can depend on: the application and every assembly it
@@ -72,9 +95,9 @@
       <_JustSayingAsyncApiInput Include="$(TargetPath);$(ProjectDepsFilePath);$(ProjectRuntimeConfigFilePath);$(_JustSayingAsyncApiToolPath)" />
       <_JustSayingAsyncApiInput Include="@(ReferencePath);@(ReferenceCopyLocalPaths)" />
       <_JustSayingAsyncApiInput Include="$(MSBuildProjectDirectory)/appsettings*.json" />
-      <_JustSayingAsyncApiInput Include="$(MSBuildAllProjects)" />
+      <_JustSayingAsyncApiInput Include="$(MSBuildAllProjects);$(_JustSayingAsyncApiCommandPath)" />
 
-      <FileWrites Include="$(_JustSayingAsyncApiFileListPath)" />
+      <FileWrites Include="$(_JustSayingAsyncApiFileListPath);$(_JustSayingAsyncApiCommandPath)" />
     </ItemGroup>
   </Target>
 
@@ -86,17 +109,6 @@
            Text="The JustSaying AsyncAPI generation tool was not found at '$(_JustSayingAsyncApiToolPath)'. The JustSaying.AsyncApi.BuildTools package may be corrupt; try restoring again." />
     <Error Condition=" !Exists('$(ProjectDepsFilePath)') "
            Text="Build-time AsyncAPI generation requires a dependencies file ($(ProjectDepsFilePath)). Do not set GenerateDependencyFile to 'false', or set JustSayingAsyncApiGenerateDocumentsOnBuild to 'false' to disable generation." />
-
-    <PropertyGroup>
-      <!-- The SDK sets DOTNET_HOST_PATH to the dotnet executable running the build; 'dotnet' on the PATH may be another installation, or missing. -->
-      <_JustSayingAsyncApiDotNetHost>dotnet</_JustSayingAsyncApiDotNetHost>
-      <_JustSayingAsyncApiDotNetHost Condition=" '$(DOTNET_HOST_PATH)' != '' ">"$(DOTNET_HOST_PATH)"</_JustSayingAsyncApiDotNetHost>
-      <_JustSayingAsyncApiCommand>$(_JustSayingAsyncApiDotNetHost) exec --depsfile "$(ProjectDepsFilePath)" --runtimeconfig "$(ProjectRuntimeConfigFilePath)"</_JustSayingAsyncApiCommand>
-      <_JustSayingAsyncApiCommand Condition=" '$(NuGetPackageRoot)' != '' ">$(_JustSayingAsyncApiCommand) --additionalprobingpath "$(NuGetPackageRoot.TrimEnd('\').TrimEnd('/'))"</_JustSayingAsyncApiCommand>
-      <_JustSayingAsyncApiCommand>$(_JustSayingAsyncApiCommand) "$(_JustSayingAsyncApiToolPath)" --assembly "$(TargetPath)" --output "$(_JustSayingAsyncApiDocumentsDirectory.TrimEnd('\').TrimEnd('/'))" --file-list "$(_JustSayingAsyncApiFileListPath)"</_JustSayingAsyncApiCommand>
-      <_JustSayingAsyncApiCommand Condition=" '$(JustSayingAsyncApiDocumentFileName)' != '' ">$(_JustSayingAsyncApiCommand) --file-name "$(JustSayingAsyncApiDocumentFileName)"</_JustSayingAsyncApiCommand>
-      <_JustSayingAsyncApiCommand Condition=" '$(JustSayingAsyncApiEntryPointTimeoutSeconds)' != '' ">$(_JustSayingAsyncApiCommand) --entry-point-timeout "$(JustSayingAsyncApiEntryPointTimeoutSeconds)"</_JustSayingAsyncApiCommand>
-    </PropertyGroup>
 
     <!--
       The tool reports its own failures in the canonical MSBuild error format, which Exec

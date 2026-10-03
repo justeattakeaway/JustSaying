@@ -19,6 +19,8 @@ internal static class Program
     private const string ProviderAssemblyName = "JustSaying.AsyncApi";
     private const string DefaultDocumentName = "asyncapi";
     private const string TimeoutPropertyName = "JustSayingAsyncApiEntryPointTimeoutSeconds";
+    private const string EnvironmentPropertyName = "JustSayingAsyncApiEnvironment";
+    private const string DefaultEnvironmentName = "Production";
 
     // The AppContext data name under which the document generator looks for a sink for its warnings
     // (see AsyncApiDocumentGenerator.BuildWarningsDataName). The tool references nothing from the
@@ -34,6 +36,7 @@ internal static class Program
         string? fileListPath = null;
         string? fileName = null;
         string? entryPointTimeout = null;
+        string? environmentName = null;
 
         for (var i = 0; i < args.Length - 1; i++)
         {
@@ -54,12 +57,15 @@ internal static class Program
                 case "--entry-point-timeout":
                     entryPointTimeout = args[++i];
                     break;
+                case "--environment":
+                    environmentName = args[++i];
+                    break;
             }
         }
 
         if (assemblyPath is null || outputDirectory is null)
         {
-            return Error(1, "Usage: JustSaying.AsyncApi.GetDocument --assembly <path> --output <directory> [--file-list <path>] [--file-name <name>] [--entry-point-timeout <seconds>]");
+            return Error(1, "Usage: JustSaying.AsyncApi.GetDocument --assembly <path> --output <directory> [--file-list <path>] [--file-name <name>] [--entry-point-timeout <seconds>] [--environment <name>]");
         }
 
         if (fileName is not null && !Regex.IsMatch(fileName, "^[A-Za-z0-9_.-]+$"))
@@ -77,6 +83,14 @@ internal static class Program
 
             waitTimeout = TimeSpan.FromSeconds(timeoutSeconds);
         }
+
+        // The host is built in the requested environment, or in Production, whatever the environment
+        // of the build itself: the document must not depend on the machine (or shell) that builds it.
+        // The generic host reads DOTNET_ENVIRONMENT and ASP.NET Core also ASPNETCORE_ENVIRONMENT,
+        // which takes precedence, so both are set.
+        environmentName = string.IsNullOrWhiteSpace(environmentName) ? DefaultEnvironmentName : environmentName.Trim();
+        Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", environmentName);
+        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", environmentName);
 
         // The generator's warnings (a publication left out, a payload without a schema) otherwise only
         // reach the application's own logging, which the build shows at normal verbosity at best.
@@ -119,9 +133,10 @@ internal static class Program
             }
 
             return Error(4,
-                $"The entry point of '{assembly.GetName().Name}' threw while building the host: {reason.Message} " +
+                $"The entry point of '{assembly.GetName().Name}' threw while building the host in the '{environmentName}' environment: {reason.Message} " +
                 "The application's Program runs during document generation (its host is built but never started); " +
                 "it must be able to reach the host Build() call at build time. " +
+                $"If configuration it needs is only in another environment's settings (for example appsettings.Development.json), set the {EnvironmentPropertyName} MSBuild property to that environment. " +
                 "Note that the entry point is invoked with the arguments ['--applicationName', '<assembly name>'], " +
                 "and that the entry assembly is 'JustSaying.AsyncApi.GetDocument' while a document is generated.");
         }

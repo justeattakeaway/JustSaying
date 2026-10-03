@@ -136,6 +136,36 @@ public class WhenGeneratingAtBuildTime
         await Assert.That(result.StandardError).Contains("AddJustSayingAsyncApi");
     }
 
+    [Test]
+    public async Task TheHostIsBuiltInProductionWhateverEnvironmentTheBuildRunsIn()
+    {
+        using var outputDirectory = new TemporaryDirectory();
+
+        var result = await RunTool(
+            outputDirectory.Path,
+            ("JUSTSAYING_TESTAPP_REQUIRE_DEVELOPMENT_SETTING", "1"),
+            ("DOTNET_ENVIRONMENT", "Development"));
+
+        await Assert.That(result.ExitCode).IsNotEqualTo(0);
+        await Assert.That(result.StandardError).Contains("error JSAA004");
+        await Assert.That(result.StandardError).Contains("in the 'Production' environment: AuditTopicArn is not configured.");
+        await Assert.That(result.StandardError).Contains("JustSayingAsyncApiEnvironment");
+    }
+
+    [Test]
+    public async Task TheHostIsBuiltInTheRequestedEnvironment()
+    {
+        using var outputDirectory = new TemporaryDirectory();
+
+        var result = await RunTool(
+            outputDirectory.Path,
+            extraArguments: ["--environment", "Development"],
+            ("JUSTSAYING_TESTAPP_REQUIRE_DEVELOPMENT_SETTING", "1"));
+
+        await Assert.That(result.ExitCode).IsEqualTo(0);
+        await Assert.That(File.Exists(Path.Combine(outputDirectory.Path, "asyncapi.json"))).IsTrue();
+    }
+
     private static Task<ToolResult> RunTool(string outputDirectory, params (string Name, string Value)[] environment)
         => RunTool(outputDirectory, extraArguments: [], environment);
 

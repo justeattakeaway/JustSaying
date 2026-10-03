@@ -14,6 +14,12 @@ if (Environment.GetEnvironmentVariable("JUSTSAYING_TESTAPP_BLOCK_STARTUP") == "1
 
 var builder = Host.CreateApplicationBuilder(args);
 
+if (Environment.GetEnvironmentVariable("JUSTSAYING_TESTAPP_REQUIRE_DEVELOPMENT_SETTING") == "1")
+{
+    // Simulates an application whose required configuration is only in appsettings.Development.json.
+    _ = builder.Configuration["AuditTopicArn"] ?? throw new InvalidOperationException("AuditTopicArn is not configured.");
+}
+
 builder.Services.AddJustSaying(config =>
 {
     config.Messaging(x => x.WithRegion("eu-west-1"));
