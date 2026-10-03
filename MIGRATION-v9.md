@@ -370,7 +370,11 @@ value is created or the bus is built, naming the registration, instead of as an 
 - Queue and topic names: only `A-Z a-z 0-9 - _`, at most 256 characters for a topic and 80 for a
   queue *including* the `_error` suffix of its error queue (so at most 74 unless it opts out of an
   error queue). A blank or whitespace name passed to `Named` throws instead of silently falling
-  back to the naming convention.
+  back to the naming convention. The default naming convention can produce a 75 to 80 character
+  queue name from a long message type name, leaving its `_error` queue's name too long for SQS;
+  give the queue a shorter name (`QueueDestination.Named(...)` or `WithQueueName(...)`) or opt out
+  of the error queue (`WithNoErrorQueue()`), as the error says. The convention itself is unchanged,
+  so existing queues keep their names.
 - `.fifo` names throw "FIFO queues are not supported" / "FIFO topics are not supported". JustSaying
   never set a `MessageGroupId`, so publishing to a FIFO queue or topic always failed.
 - The visibility timeout must be more than zero and at most 12 hours, and the retries before the

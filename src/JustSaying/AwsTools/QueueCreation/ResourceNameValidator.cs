@@ -39,7 +39,9 @@ internal static class ResourceNameValidator
 
         if (hasErrorQueue && name.Length + ErrorQueueSuffix.Length > MaximumQueueNameLength)
         {
-            return $"The queue name '{name}' is too long. Its error queue's name ('{name}{ErrorQueueSuffix}') must be at most {MaximumQueueNameLength} characters, so the queue name can be at most {MaximumQueueNameLength - ErrorQueueSuffix.Length}.";
+            // The default naming convention can produce such a name from a long type name, so say how to fix it.
+            return $"The queue name '{name}' is too long. Its error queue's name ('{name}{ErrorQueueSuffix}') must be at most {MaximumQueueNameLength} characters, so the queue name can be at most {MaximumQueueNameLength - ErrorQueueSuffix.Length}. " +
+                   "Give the queue a shorter name with QueueDestination.Named(...) or WithQueueName(...), or opt out of the error queue with WithNoErrorQueue() on its QueueDestination.";
         }
 
         if (name.Length > MaximumQueueNameLength)
