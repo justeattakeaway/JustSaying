@@ -46,7 +46,7 @@ A publication's queue is updated on every start with the settings its destinatio
 ### 6. Mistakes that were silent now throw at startup
 
 * Two publications for the same message type.
-* Two subscriptions for different message types on the same queue. Use a [multi-type queue](/subscriptions/configuration/multi-type-queues) instead.
+* Two subscriptions for different message types on the same queue, or the same subscription registered twice. Use a [multi-type queue](/subscriptions/configuration/multi-type-queues#one-subscription-per-queue) instead, which can subscribe to topics too.
 * A `WithMiddlewareConfiguration` that doesn't add the handler with `UseDefaults<T>` or `UseHandler<T>`.
 * Invalid topic and queue names, including names too long for their `_error` queue and `.fifo` names, and out-of-range settings.
 

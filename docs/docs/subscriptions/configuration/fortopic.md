@@ -71,4 +71,4 @@ x.ForTopic<OrderPlacedEvent>(c => c
 
 For more settings and how they map from v8's `WithReadConfiguration`, see [Subscription Settings](sqsreadconfiguration.md).
 
-A queue can only have one subscription. Two `ForTopic` registrations for *different* message types on the same queue throw when the bus is built; to receive several types on one queue, use a [multi-type queue](multi-type-queues.md). Subscribing one queue to several topics with the *same* message type is allowed.
+A queue can only have one subscription. Two `ForTopic` registrations for *different* message types on the same queue throw when the bus is built; to receive several types on one queue, use a [multi-type queue](multi-type-queues.md), which can subscribe to several topics. Subscribing one queue to several topics with the *same* message type is allowed, but subscribing it twice to the same topic throws.

@@ -48,6 +48,23 @@ x.ForCloudEventTopicData<OrderPlaced>("com.example.order-placed", c => c
 
 An event of another `type`, or one that isn't a valid CloudEvent, fails handling, and is retried and then moved to the error queue.
 
+### Reading events of any `type`
+
+To read every event on a topic as the same payload type, whatever its `type`, give a `ForTopic<T>` subscription a data-only serializer without a `type`, from the `CloudEventSerializationFactory` that `AddJustSayingCloudEvents` registers:
+
+```csharp
+services.AddJustSaying((config, serviceProvider) =>
+{
+    var cloudEvents = serviceProvider.GetRequiredService<CloudEventSerializationFactory>();
+
+    config.Subscriptions(x => x.ForTopic<OrderAudit>(c => c
+        .WithTopicName("order-events")
+        .WithMessageBodySerializer(cloudEvents.GetDataOnlySerializer<OrderAudit>())));
+});
+```
+
+Events are still validated, but any `type` is accepted. Passing a `type` to `GetDataOnlySerializer<T>(type)`, or mapping one with `MapType<T>`, restricts it to that `type`.
+
 ## Multi-type queues
 
 On a [multi-type queue](/subscriptions/configuration/multi-type-queues), `HandlingCloudEventData<T>` and `HandlingCloudEvent<T>` register CloudEvents types, and they can sit alongside JustSaying's own messages:
@@ -90,4 +107,11 @@ x.ForQueue("parcels", q => q
 
 Both reach the same `IHandlerAsync<ParcelShipped>`. Once every consumer is deployed, change the producer from `WithTopic<ParcelShipped>()` to `WithCloudEventTopic<ParcelShipped>("com.example.parcel-shipped")` (or from `WithQueue<T>` to `WithCloudEventQueue<T>`). When it's the only format left on the queue, remove the `Handling<ParcelShipped>()` line.
 
-A single-type subscription such as `ForTopic<T>` reads one format, so it can't accept both: use a multi-type queue for the migration.
+A single-type subscription such as `ForTopic<T>` reads one format, so it can't accept both: use a multi-type queue for the migration, subscribed to the topic the type is published to:
+
+```csharp
+x.ForQueue("parcels", q => q
+    .Handling<ParcelShipped>()
+    .HandlingCloudEventData<ParcelShipped>("com.example.parcel-shipped")
+    .SubscribeToTopic<ParcelShipped>());
+```

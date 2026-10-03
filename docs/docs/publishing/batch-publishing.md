@@ -71,7 +71,7 @@ Both `IMessagePublisher` and `IMessageBatchPublisher` are registered automatical
 
 ## Batches with More Than One Message Type
 
-Messages are routed by their runtime type, so one batch can contain several message types. JustSaying groups the batch by type and publishes each group to its own publication:
+Messages are routed by their runtime type, so one batch can contain several message types. JustSaying groups the batch by the publication each message goes to (its own type's, or [a base type's](/messages/#publishing-to-a-base-type)) and publishes each group to that publication:
 
 ```csharp
 await batchPublisher.PublishBatchAsync<object>(
@@ -81,7 +81,7 @@ await batchPublisher.PublishBatchAsync<object>(
 ]);
 ```
 
-Each group runs through the [publish middleware](middleware.md) registered for its type, with only that group's messages in `PublishContext.Messages`. The groups are published concurrently and share the `PublishBatchMetadata` you pass in.
+Each group runs through the [publish middleware](middleware.md) registered for its publication, with only that group's messages in `PublishContext.Messages`. The groups are published concurrently and share the `PublishBatchMetadata` you pass in.
 
 ## AWS Batch Limits
 

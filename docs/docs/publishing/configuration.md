@@ -94,7 +94,7 @@ For existing queues, the queue publication builder supports `WithQueueExistenceC
 ### Rules
 
 - Each message type can only have one publication. A second registration for the same type throws when the bus is built.
-- Messages are routed by their runtime type, so publishing a derived type uses the publication for that type. See [Message Types](/messages/#publishing-by-runtime-type).
+- Messages are routed by their runtime type: a message goes to the publication for its own type, or else for its closest base class or an interface it implements. See [Message Types](/messages/#publishing-to-a-base-type).
 
 ## Further Reading
 

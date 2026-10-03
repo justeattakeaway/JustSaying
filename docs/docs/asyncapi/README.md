@@ -103,6 +103,7 @@ Payload schemas are generated from the System.Text.Json options each message is 
 
 * **No SNS or SQS bindings.** Filter policies, queue attributes and cross-account topics aren't described, and the envelope a queue's messages arrive in (SNS notification, raw, or JustSaying's queue wrapper) is only explained in its operation's description.
 * **Dynamic topics are left out.** A publication whose topic name is computed per message (`WithTopicName(message => ...)`) has no fixed address, so it's omitted, with a warning.
+* **`asyncapi bundle` fails on recursive types.** A payload type that refers to itself, directly or through other types, is described once in `components/schemas` and referenced with `$ref`, including from within itself. The document is valid AsyncAPI, but the AsyncAPI CLI's `asyncapi bundle` command fails on it with "Circular $ref pointer found". Generated documents only reference themselves, so they don't need bundling; to bundle one with other files, use a bundler that keeps references, such as `redocly bundle`.
 * **Not AOT-compatible.** The package writes documents with ByteBard.AsyncAPI.NET, which isn't annotated for trimming, so a trimmed or [Native AOT](/advanced/native-aot) application that references it gets IL2104 and IL3053 warnings.
 
 Anything left out of the document is logged as a warning, with a code from JSAA101 to JSAA107. See [Build-time generation](build-time.md#warnings-and-errors) for the list.

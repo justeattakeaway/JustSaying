@@ -26,11 +26,46 @@ x.ForQueue(QueueDestination.FromUrl("https://sqs.eu-west-1.amazonaws.com/1111222
     .Handling<InvoicePaid>());
 ```
 
-## Getting messages onto the queue
+An existing queue can use `WithQueueExistenceCheck()` to check that it exists when the bus starts.
 
-Messages can reach the queue from publications that send to it directly, with `WithQueue<T>(QueueDestination.Named("orders"))`, or from SNS topics the queue is subscribed to.
+## Subscribing to topics
 
-A queue can only have one JustSaying subscription, so you can't also use `ForTopic<T>` with the same queue: two subscriptions on one queue would compete for its messages and read each other's as the wrong type, so the bus throws when it's built.
+Messages can reach the queue from publications that send to it directly, with `WithQueue<T>(QueueDestination.Named("orders"))`, or from SNS topics. Subscribe the queue to each topic it should receive from:
+
+```csharp
+x.ForQueue("orders", q => q
+    .Handling<OrderPlaced>()
+    .Handling<OrderCancelled>()
+    .SubscribeToTopic<OrderPlaced>()
+    .SubscribeToTopic(TopicDestination.Named("cancellations"), """{ "region": ["eu"] }"""));
+```
+
+* `SubscribeToTopic<T>()` subscribes to the topic the naming convention names after `T`: the one `ForTopic<T>()` subscribes to, and a `WithTopic<T>()` publication publishes to.
+* `SubscribeToTopic(TopicDestination.Named(name))` subscribes to a topic by name.
+* Both take an optional SNS filter policy as a second argument, and use raw delivery if `WithRawMessageDelivery()` is called.
+
+As with `ForTopic<T>`, on startup each topic is created if it doesn't exist, the queue is subscribed to it, and the queue's access policy allows the topic to send to it. A queue addressed by URL or ARN can't be subscribed to topics, because JustSaying never changes a queue it doesn't own. Topics can't be addressed by ARN or given infrastructure settings here: configure those on the publication.
+
+## One subscription per queue
+
+A queue can only have one JustSaying subscription. Two subscriptions on one queue would compete for its messages and read each other's as the wrong type, so the bus throws when it's built, and the error spells out the multi-type subscription to use instead. A queue is recognised however it's given: by name, or by the URL or ARN of a queue with that name in the same region.
+
+In v8, two `ForTopic` registrations could share a queue. Port them to one multi-type subscription that handles both types and subscribes to both topics:
+
+```csharp
+// v8
+x.ForTopic<OrderPlaced>(t => t.WithQueueName("orders"));
+x.ForTopic<OrderCancelled>(t => t.WithQueueName("orders").WithFilterPolicy(policy));
+
+// v9
+x.ForQueue("orders", q => q
+    .Handling<OrderPlaced>()
+    .Handling<OrderCancelled>()
+    .SubscribeToTopic<OrderPlaced>()
+    .SubscribeToTopic<OrderCancelled>(policy));
+```
+
+Subscribing one queue to several topics with the *same* message type, through several `ForTopic<T>` registrations, is still allowed. Registering the same subscription twice, for example `ForTopic<T>()` twice, throws, because each message could be handled twice.
 
 ## How a message's type is found
 

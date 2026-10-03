@@ -26,7 +26,7 @@ Publish middleware receives a `PublishContext` containing:
 
 Messages can be any class, so `Message` and `Messages` are typed as `object`. Pattern match to read them, for example `if (context.Message is OrderPlacedEvent order) { ... }`.
 
-A batch that contains several message types is split by type, and each group runs through the middleware for its own type, with only that group's messages in `Messages`. The groups run concurrently and share one `PublishBatchMetadata`, so attributes that middleware adds for one group are seen by the others.
+A batch that contains several message types is split by the publication each message goes to, and each group runs through the middleware for that publication, with only that group's messages in `Messages`. The groups run concurrently and share one `PublishBatchMetadata`, so attributes that middleware adds for one group are seen by the others.
 
 ## Global Middleware
 

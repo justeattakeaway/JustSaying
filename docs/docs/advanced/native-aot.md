@@ -35,7 +35,9 @@ services.AddJustSaying(config => { /* ... */ });
 
 ## Startup validation
 
-When reflection-based serialization is off, as it is under Native AOT, a message type that's missing from the context fails when the bus is built, with an `InvalidOperationException` naming the type. So does using the default registration with no context at all. You find out at startup, not at the first publish or receive.
+When reflection-based serialization is off, as it is under Native AOT, a message type that's missing from the context fails when the bus is built, with an `InvalidOperationException` naming the type. So does using the default registration with no context at all. You find out at startup, not at the first publish or receive. The error shows an example context declared with `UseStringEnumConverter = true`, and a registration like the one above.
+
+A publication or subscription for an abstract class or interface also needs the base type configured with `[JsonPolymorphic]` and `[JsonDerivedType]`, and the base type listed in the context; see [Publishing to a base type](/messages/#publishing-to-a-base-type).
 
 ## CloudEvents
 

@@ -101,8 +101,9 @@ A publication and a subscription in the same application that declare *different
 
 Destinations are checked when they're created and when the bus is built, so mistakes fail at startup with the registration named rather than as an AWS error:
 
-* Names may only contain `A-Z`, `a-z`, `0-9`, `-` and `_`. A topic name can be up to 256 characters. A queue name can be up to 80 characters *including* the `_error` suffix of its error queue, so at most 74 unless it has no error queue. A blank name throws rather than falling back to the naming convention.
+* Names may only contain `A-Z`, `a-z`, `0-9`, `-` and `_`. A topic name can be up to 256 characters. A queue name can be up to 80 characters *including* the `_error` suffix of its error queue, so at most 74 unless it has no error queue. A blank name throws rather than falling back to the naming convention. The naming convention can produce a 75 to 80 character queue name from a long message type name, leaving no room for `_error`: the error then suggests naming the queue yourself (`QueueDestination.Named(...)` or `WithQueueName(...)`) or opting out of the error queue with `WithNoErrorQueue()`.
 * FIFO queues and topics (`.fifo` names) aren't supported.
+* `WithNoErrorQueue()` can't be combined with `WithRetriesBeforeErrorQueue(...)` or `WithErrorQueueRetention(...)`, which configure the error queue it opts out of. `WithEncryption` throws for a null or blank key id.
 * Queue URLs must have an `{account}/{queue}` path, and a region name that contradicts the URL throws. Queue and topic ARNs must include the region and account.
 * A resource can only be named once: naming a destination with `Named(...)` and also calling `WithTopicName` or `WithQueueName` on the builder throws, as does naming an existing (ARN or URL) destination.
 * Settings that only make sense for one kind of destination throw for the other. For example, `WithQueueExistenceCheck()` only applies to an existing queue, `WithTopicAddress` only to a topic addressed by ARN, and `WithTopicName(message => ...)` only to an owned topic.

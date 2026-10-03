@@ -39,6 +39,8 @@ services.AddJustSaying(config => config.Messaging(x => x.WithRegion("eu-west-1")
 
 `AddJustSaying` registers its default with `TryAddSingleton`, so a factory registered with `AddSingleton` wins whether it comes before or after `AddJustSaying`.
 
+A publication or subscription for an abstract class or interface needs the type configured for polymorphism with `[JsonPolymorphic]` and `[JsonDerivedType]`, or building the bus throws; see [Publishing to a base type](/messages/#publishing-to-a-base-type).
+
 Every service that reads your messages has to understand what you write, so change the options with care. Use the `System.Text.Json.Serialization` attributes (`[JsonPropertyName]`, `[JsonIgnore]`, `[JsonConverter]`) on message types, not the Newtonsoft.Json ones, which System.Text.Json ignores.
 
 ## Using Newtonsoft.Json

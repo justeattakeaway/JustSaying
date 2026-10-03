@@ -27,7 +27,7 @@ if (!isGeneratingDocument)
 }
 ```
 
-The host's environment comes from the build machine's environment variables (`DOTNET_ENVIRONMENT`, `ASPNETCORE_ENVIRONMENT`), not `launchSettings.json`, so it's usually `Production`. Configuration that only exists in development isn't seen.
+The host is built in the `Production` environment, whatever `DOTNET_ENVIRONMENT` or `ASPNETCORE_ENVIRONMENT` the build runs with, so the document doesn't depend on the machine that builds it. If the host needs configuration that's only in another environment's settings to be built, such as `appsettings.Development.json`, set `JustSayingAsyncApiEnvironment`.
 
 The document is only rewritten when it changes, and generation is skipped when nothing it depends on (the application, its references, `appsettings*.json` and the project files) has changed since the last build.
 
@@ -41,6 +41,7 @@ Generation runs for executable projects targeting .NET 8 or later. It's skipped 
 | `JustSayingAsyncApiDocumentsDirectory` | The project directory | Where the document is written. A relative path is relative to the project. |
 | `JustSayingAsyncApiDocumentFileName` | `asyncapi` | The document's file name, without `.json`. When several projects share a directory, give each its own, for example `$(MSBuildProjectName)`. |
 | `JustSayingAsyncApiEntryPointTimeoutSeconds` | `60` | How long to wait for the entry point to build its host before failing the build. |
+| `JustSayingAsyncApiEnvironment` | `Production` | The host environment to build the host in. Every environment writes the same file, so to keep documents for several, vary `JustSayingAsyncApiDocumentFileName` too. |
 | `JustSayingAsyncApiCopyDocumentsToPublishDirectory` | `false` | Set to `true` to publish the document with the application. By default it's kept out of the publish output, where the Web SDK would otherwise include it. |
 
 ```xml
@@ -90,7 +91,7 @@ When generation fails, the build fails with one of these errors:
 | JSAA001 | The tool was given an invalid argument, such as an invalid file name or timeout. |
 | JSAA002 | The application's assembly couldn't be loaded. |
 | JSAA003 | The entry point doesn't build a host. |
-| JSAA004 | The entry point threw, or didn't build its host in time. |
+| JSAA004 | The entry point threw, or didn't build its host in time. The error names the environment the host was built in. |
 | JSAA005 | The application doesn't reference `JustSaying.AsyncApi`. |
 | JSAA006 | `AddJustSayingAsyncApi()` isn't called. |
 | JSAA007 | The versions of `JustSaying.AsyncApi` and `JustSaying.AsyncApi.BuildTools` don't match. |

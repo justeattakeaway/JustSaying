@@ -51,9 +51,44 @@ await publisher.PublishAsync(message);
 
 This means:
 
-* Register a publication for each type you publish.
 * Each message type can only have one publication. Registering a second one for the same type (for example `WithTopic<Order>()` and `WithQueue<Order>()`) throws when the bus is built.
 * Publishing a type with no publication throws an `InvalidOperationException`. If you pass a collection to `PublishAsync`, the exception tells you to call [`PublishBatchAsync`](/publishing/batch-publishing) instead.
+
+## Publishing to a base type
+
+When there's no publication for a message's own type, it goes to the publication for its closest base class, or else for an interface it implements. If it implements more than one interface with a publication, and no base class has one, publishing throws, naming the interfaces. A publication for the exact type always wins.
+
+The message is serialized as the registered type. With System.Text.Json, a publication for an abstract class or interface needs the base type configured for polymorphism, so that derived types' members and a type discriminator are written; otherwise building the bus throws, saying how to fix it:
+
+```csharp
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "kind")]
+[JsonDerivedType(typeof(StockReserved), "reserved")]
+[JsonDerivedType(typeof(StockReleased), "released")]
+public abstract class WarehouseEvent
+{
+    public string Sku { get; set; }
+}
+
+public sealed class StockReserved : WarehouseEvent
+{
+    public int Quantity { get; set; }
+}
+
+public sealed class StockReleased : WarehouseEvent
+{
+    public string Reason { get; set; }
+}
+
+config.Publications(x => x.WithTopic<WarehouseEvent>());
+config.Subscriptions(x => x.ForTopic<WarehouseEvent>());
+
+// Goes to the 'warehouseevent' topic, with "kind":"reserved" in the body.
+await publisher.PublishAsync(new StockReserved { Sku = "sku-1", Quantity = 2 });
+```
+
+A subscription for the base type receives the derived messages: here an `IHandlerAsync<WarehouseEvent>` is called with a `StockReserved`. Batches can mix derived types, and are grouped by the publication each message goes to.
+
+With Newtonsoft.Json, the runtime type's members are written but no discriminator, so a consumer of the base type can't tell the derived types apart.
 
 ## Naming
 
