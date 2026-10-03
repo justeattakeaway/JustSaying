@@ -14,7 +14,25 @@ Task<bool> RunInnerAsync(
     CancellationToken stoppingToken)
 ```
 
-`HandleMessageContext:` A context object containing the Message, its type, and the queue it was pulled from.
+`HandleMessageContext:` A context object containing the message, its type, and the queue it was pulled from. Messages can be any class, so `context.Message` is typed as `object`: use `context.MessageAs<T>()` to get it as your message type (it returns `null` for a message of another type), or pattern match on it.
+
+```csharp
+public class OrderAuditMiddleware : MiddlewareBase<HandleMessageContext, bool>
+{
+    protected override async Task<bool> RunInnerAsync(
+        HandleMessageContext context,
+        Func<CancellationToken, Task<bool>> func,
+        CancellationToken stoppingToken)
+    {
+        if (context.MessageAs<OrderPlaced>() is { } order)
+        {
+            Console.WriteLine($"Handling order {order.OrderId} from {context.QueueName}");
+        }
+
+        return await func(stoppingToken);
+    }
+}
+```
 
 `Func<CancellationToken, Task<bool>>`: The next middleware in the pipeline that you should call in your implementation.
 

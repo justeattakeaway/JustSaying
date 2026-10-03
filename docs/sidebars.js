@@ -21,7 +21,24 @@ const sidebars = {
       label: 'Introduction',
     },
     'getting-started',
+    'upgrading-to-v9',
     'Configuration',
+    {
+      type: 'category',
+      label: 'Messages',
+      items: [
+        'messages/README',
+        'messages/serialization',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Destinations',
+      items: [
+        'destinations/README',
+        'destinations/startup-behaviour',
+      ],
+    },
     {
       type: 'category',
       label: 'AWS Configuration',
@@ -54,6 +71,7 @@ const sidebars = {
             'subscriptions/configuration/README',
             'subscriptions/configuration/fortopic',
             'subscriptions/configuration/forqueue',
+            'subscriptions/configuration/multi-type-queues',
             'subscriptions/configuration/sqsreadconfiguration',
             'subscriptions/configuration/handler-registration-and-resolution',
           ],

@@ -20,9 +20,13 @@ Publish middleware receives a `PublishContext` containing:
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `Message` | `Message` | The message being published (single publish), or `null` for batch |
-| `Messages` | `IReadOnlyCollection<Message>` | The messages being published (batch publish), or `null` for single |
+| `Message` | `object` | The message being published (single publish), or `null` for batch |
+| `Messages` | `IReadOnlyCollection<object>` | The messages being published (batch publish), or `null` for single |
 | `Metadata` | `PublishMetadata` | The publish metadata — middleware can add message attributes to this |
+
+Messages can be any class, so `Message` and `Messages` are typed as `object`. Pattern match to read them, for example `if (context.Message is OrderPlacedEvent order) { ... }`.
+
+A batch that contains several message types is split by type, and each group runs through the middleware for its own type, with only that group's messages in `Messages`. The groups run concurrently and share one `PublishBatchMetadata`, so attributes that middleware adds for one group are seen by the others.
 
 ## Global Middleware
 
