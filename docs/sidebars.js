@@ -126,6 +126,7 @@ const sidebars = {
         'advanced/dynamic-topics',
         'advanced/compression',
         'advanced/encryption',
+        'advanced/native-aot',
         'advanced/testing',
       ],
     },
