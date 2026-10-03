@@ -24,7 +24,11 @@ public static class SystemTextJsonMessageBodySerializer
     /// </list>
     /// These keep the wire format and binding close to the Newtonsoft.Json defaults used by JustSaying v8.
     /// To keep the same behaviour with a source-generated context, copy these options and set the resolver, for example
-    /// <c>new JsonSerializerOptions(DefaultJsonSerializerOptions) { TypeInfoResolver = MyContext.Default }</c>.
+    /// <c>new JsonSerializerOptions(DefaultJsonSerializerOptions) { TypeInfoResolver = MyContext.Default }</c>, and
+    /// declare the context with <c>[JsonSourceGenerationOptions(UseStringEnumConverter = true)]</c>. The
+    /// <see cref="JsonStringEnumConverter"/> isn't added when dynamic code isn't supported (as under Native AOT), so
+    /// without that setting enums are written as numbers, and the strings that reflection-based (JIT) producers
+    /// send can't be read.
     /// </remarks>
     public static JsonSerializerOptions DefaultJsonSerializerOptions { get; } = CreateDefaultJsonSerializerOptions();
 

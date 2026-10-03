@@ -120,6 +120,9 @@ public sealed class AotRoundTripTests
 
         await Assert.That(exception.Message).Contains(typeof(OrderPlaced).FullName!);
         await Assert.That(exception.Message).Contains(nameof(SystemTextJsonSerializationFactory));
+
+        // Following the example must keep enums as strings, like the JIT default.
+        await Assert.That(exception.Message).Contains("[JsonSourceGenerationOptions(UseStringEnumConverter = true)]");
     }
 
     [Test]

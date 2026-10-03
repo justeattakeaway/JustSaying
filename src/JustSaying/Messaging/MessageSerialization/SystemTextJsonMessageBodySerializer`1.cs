@@ -153,8 +153,9 @@ public sealed class SystemTextJsonMessageBodySerializer<T> : IMessageBodySeriali
         throw new InvalidOperationException(
             $"No System.Text.Json type information is available for message type '{typeof(T)}', and reflection-based serialization is disabled (for example under Native AOT). " +
             $"Add the type to a JsonSerializerContext and register it via {nameof(SystemTextJsonSerializationFactory)}, for example: " +
-            $"[JsonSerializable(typeof({typeof(T).Name}))] partial class MyJsonContext : JsonSerializerContext; then " +
-            $"services.AddSingleton<IMessageBodySerializationFactory>(new {nameof(SystemTextJsonSerializationFactory)}(new JsonSerializerOptions({nameof(SystemTextJsonMessageBodySerializer)}.{nameof(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions)}) {{ TypeInfoResolver = MyJsonContext.Default }})).");
+            $"[JsonSourceGenerationOptions(UseStringEnumConverter = true)] [JsonSerializable(typeof({typeof(T).Name}))] partial class MyJsonContext : JsonSerializerContext; then " +
+            $"services.AddSingleton<IMessageBodySerializationFactory>(new {nameof(SystemTextJsonSerializationFactory)}(new JsonSerializerOptions({nameof(SystemTextJsonMessageBodySerializer)}.{nameof(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions)}) {{ TypeInfoResolver = MyJsonContext.Default }})). " +
+            "UseStringEnumConverter writes enums as strings, like the reflection-based default; without it they're written as numbers, and the strings that JIT services send can't be read.");
     }
 #endif
 }
