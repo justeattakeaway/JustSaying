@@ -111,6 +111,15 @@ const sidebars = {
     },
     {
       type: 'category',
+      label: 'CloudEvents',
+      items: [
+        'cloudevents/README',
+        'cloudevents/publishing',
+        'cloudevents/consuming',
+      ],
+    },
+    {
+      type: 'category',
       label: 'Advanced',
       items: [
         'advanced/README',
