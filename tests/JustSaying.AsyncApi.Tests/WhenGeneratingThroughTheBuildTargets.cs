@@ -137,10 +137,12 @@ public class WhenGeneratingThroughTheBuildTargets
 
         var production = await project.BuildAsync();
 
-        // The tool's error names the environment.
+        // The tool's error names the environment, and is the only error.
         await Assert.That(production.ExitCode).IsNotEqualTo(0);
         await Assert.That(production.Output).Contains("error JSAA004: The entry point of 'Consumer' threw while building the host in the 'Production' environment");
         await Assert.That(production.Output).Contains("JustSayingAsyncApiEnvironment");
+        await Assert.That(production.Output).DoesNotContain("failed with exit code");
+        await Assert.That(production.Output).DoesNotContain("error MSB");
 
         var development = await project.BuildAsync("-p:JustSayingAsyncApiEnvironment=Development");
 
@@ -152,6 +154,17 @@ public class WhenGeneratingThroughTheBuildTargets
 
         await Assert.That(productionAgain.ExitCode).IsNotEqualTo(0);
         await Assert.That(productionAgain.Output).Contains("error JSAA004");
+    }
+
+    [Test]
+    public async Task AFailureTheToolCannotReportIsStillAnError()
+    {
+        using var project = ConsumerProject.Create();
+
+        var result = await project.BuildAsync($"-p:DOTNET_HOST_PATH={Path.Combine(project.Directory, "no-such-dotnet")}");
+
+        await Assert.That(result.ExitCode).IsNotEqualTo(0);
+        await Assert.That(result.Output).Contains("AsyncAPI document generation for 'Consumer' failed with exit code");
     }
 
     [Test]

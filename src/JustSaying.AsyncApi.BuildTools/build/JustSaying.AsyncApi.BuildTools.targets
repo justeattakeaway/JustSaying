@@ -113,15 +113,21 @@
     <!--
       The tool reports its own failures in the canonical MSBuild error format, which Exec
       surfaces as build errors; IgnoreExitCode avoids also dumping the whole command line as a
-      second error. The Error task below catches any failure where the tool could not report.
+      second error. The Error task below reports any failure the tool could not (for example
+      when it could not be started), and only then, so a failure is one error, not two.
     -->
     <Exec Command="$(_JustSayingAsyncApiCommand)"
           WorkingDirectory="$(TargetDir)"
           StandardOutputImportance="normal"
-          IgnoreExitCode="true">
+          IgnoreExitCode="true"
+          ConsoleToMSBuild="true">
       <Output TaskParameter="ExitCode" PropertyName="_JustSayingAsyncApiExitCode" />
+      <Output TaskParameter="ConsoleOutput" ItemName="_JustSayingAsyncApiOutput" />
     </Exec>
-    <Error Condition=" '$(_JustSayingAsyncApiExitCode)' != '0' "
+    <PropertyGroup>
+      <_JustSayingAsyncApiReportedError>@(_JustSayingAsyncApiOutput->Contains(': error JSAA'))</_JustSayingAsyncApiReportedError>
+    </PropertyGroup>
+    <Error Condition=" '$(_JustSayingAsyncApiExitCode)' != '0' AND !$(_JustSayingAsyncApiReportedError.Contains('True')) "
            Text="AsyncAPI document generation for '$(MSBuildProjectName)' failed with exit code $(_JustSayingAsyncApiExitCode). Set JustSayingAsyncApiGenerateDocumentsOnBuild to 'false' to disable build-time generation." />
   </Target>
 
