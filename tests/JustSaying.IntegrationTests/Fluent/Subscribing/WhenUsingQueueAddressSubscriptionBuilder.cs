@@ -1,4 +1,5 @@
 using JustSaying.AwsTools;
+using JustSaying.Fluent;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -142,6 +143,73 @@ public class WhenUsingQueueAddressSubscriptionBuilder : IntegrationTestBase
 
         // Assert
         exception.Message.ShouldBe($"SQS queue '{missingQueueName}' with URL '{missingQueueUri}' does not exist.");
+    }
+
+    [Test]
+    public async Task MultiTypeWithQueueExistenceCheckSucceedsWhenQueueExists()
+    {
+        // Arrange
+        IAwsClientFactory clientFactory = CreateClientFactory();
+        var sqsClient = clientFactory.GetSqsClient(Region);
+        var queueResponse = await sqsClient.CreateQueueAsync(UniqueName);
+
+        var services = GivenJustSaying()
+            .ConfigureJustSaying(builder =>
+                builder.Subscriptions(c => c.ForQueue(
+                    QueueDestination.FromUrl(queueResponse.QueueUrl),
+                    queue => queue.Handling<SimpleMessage>().WithQueueExistenceCheck())))
+            .AddJustSayingHandlers(new[] { new InspectableHandler<SimpleMessage>() });
+
+        // Act + Assert - the queue exists, so starting the listener does not throw.
+        await WhenAsync(
+            services,
+            async (publisher, listener, cancellationToken) =>
+            {
+                await listener.StartAsync(cancellationToken);
+            });
+    }
+
+    [Test]
+    public async Task MultiTypeWithQueueExistenceCheckThrowsWhenQueueDoesNotExist()
+    {
+        // Arrange
+        var missingQueueName = $"{Guid.NewGuid():N}-does-not-exist";
+        var missingQueueArn = $"arn:aws:sqs:{RegionName}:000000000000:{missingQueueName}";
+        var expectedQueueUrl = $"https://sqs.{RegionName}.amazonaws.com/000000000000/{missingQueueName}";
+
+        var services = GivenJustSaying()
+            .ConfigureJustSaying(builder =>
+                builder.Subscriptions(c => c.ForQueue(
+                    QueueDestination.FromArn(missingQueueArn),
+                    queue => queue.Handling<SimpleMessage>().WithQueueExistenceCheck())))
+            .AddJustSayingHandlers(new[] { new InspectableHandler<SimpleMessage>() });
+
+        using var provider = services.BuildServiceProvider();
+        var listener = provider.GetRequiredService<IMessagingBus>();
+
+        // Act
+        var exception = await Should.ThrowAsync<InvalidOperationException>(
+            () => listener.StartAsync(CancellationToken.None));
+
+        // Assert
+        exception.Message.ShouldBe($"SQS queue '{missingQueueName}' with URL '{expectedQueueUrl}' does not exist.");
+    }
+
+    [Test]
+    public void MultiTypeWithQueueExistenceCheckThrowsForAQueueJustSayingOwns()
+    {
+        // Arrange
+        var serviceProvider = GivenJustSaying()
+            .ConfigureJustSaying(builder =>
+                builder.Subscriptions(c => c.ForQueue(UniqueName, queue => queue.Handling<SimpleMessage>().WithQueueExistenceCheck())))
+            .AddJustSayingHandlers(new[] { new InspectableHandler<SimpleMessage>() })
+            .BuildServiceProvider();
+
+        // Act
+        var exception = Should.Throw<InvalidOperationException>(() => serviceProvider.GetRequiredService<IMessagingBus>());
+
+        // Assert
+        exception.Message.ShouldBe("WithQueueExistenceCheck only applies to a pre-existing queue; a queue JustSaying owns is created on startup.");
     }
 
     [Test]

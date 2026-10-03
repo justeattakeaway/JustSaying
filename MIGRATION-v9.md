@@ -539,7 +539,7 @@ s.ForQueue("orders", q => q
     .SubscribeToTopic(TopicDestination.Named("cancellations"), """{ "region": ["eu"] }"""));
 ```
 
-A multi-type queue addressed by URL or ARN can't be subscribed to topics, as JustSaying never changes a queue it doesn't own.
+A multi-type queue addressed by URL or ARN can't be subscribed to topics (JustSaying never changes a queue it doesn't own), but it can use `WithQueueExistenceCheck()`, as a single-type one can.
 
 **Breaking:** a queue can no longer be subscribed to more than once with different types. In v8, `ForQueue<A>()` and `ForQueue<B>()` (or `ForTopic<A>()` and `ForTopic<B>()`) on the same queue name started up fine, but the two subscriptions competed for the queue's messages, so each received some of the other's and deserialized them as the wrong type, with default field values and no error. v9 fails when the bus is built, naming the queue and both types; subscribe once with a multi-type subscription instead, as above, which the error spells out. For two `ForTopic` registrations sharing a queue:
 

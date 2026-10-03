@@ -37,6 +37,7 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
     private readonly List<TopicRegistration> _topics = [];
     private string _subscriptionGroupName;
     private bool _rawMessageDelivery;
+    private bool _checkQueueExistence;
 
     internal MultiTypeQueueSubscriptionBuilder(QueueDestination destination)
     {
@@ -285,6 +286,17 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
         return this;
     }
 
+    /// <summary>
+    /// Checks that the configured SQS queue exists before the bus starts receiving messages. Only
+    /// applicable for a pre-existing queue (a queue JustSaying owns is created on startup).
+    /// </summary>
+    /// <returns>The current <see cref="MultiTypeQueueSubscriptionBuilder"/>.</returns>
+    public MultiTypeQueueSubscriptionBuilder WithQueueExistenceCheck()
+    {
+        _checkQueueExistence = true;
+        return this;
+    }
+
     /// <inheritdoc />
     ISubscriptionBuilder<object> ISubscriptionBuilder<object>.WithMiddlewareConfiguration(Action<HandlerMiddlewareBuilder> middlewareConfiguration)
         => throw new NotSupportedException($"Configure middleware per message type via {nameof(Handling)}<T>(typeName, configure) on a multi-type queue subscription.");
@@ -363,11 +375,30 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
 
             var queue = new QueueAddressQueue(_destination.Address, sqsClient);
             bus.AddSubscribedQueue(SubscribedQueue.Addressed(queue, config.Region, typesByName.Values, isMultiType: true));
+
+            if (_checkQueueExistence)
+            {
+                bus.AddStartupTask(async cancellationToken =>
+                {
+                    if (!await queue.ExistsAsync(cancellationToken).ConfigureAwait(false))
+                    {
+                        throw new InvalidOperationException(
+                            $"SQS queue '{queue.QueueName}' with URL '{queue.Uri}' does not exist.");
+                    }
+                });
+            }
+
             sqsQueue = queue;
             queueName = queue.QueueName;
         }
         else
         {
+            if (_checkQueueExistence)
+            {
+                throw new InvalidOperationException(
+                    $"{nameof(WithQueueExistenceCheck)} only applies to a pre-existing queue; a queue JustSaying owns is created on startup.");
+            }
+
             var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
             queueName = _destination.Name;
 

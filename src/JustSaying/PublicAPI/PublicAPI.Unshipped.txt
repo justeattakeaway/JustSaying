@@ -312,6 +312,7 @@ JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.SubscribeToTopic(JustSaying.
 JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.SubscribeToTopic(JustSaying.Fluent.TopicDestination topic, string filterPolicy) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
 JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.SubscribeToTopic<TMessage>() -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
 JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.SubscribeToTopic<TMessage>(string filterPolicy) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
+JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder.WithQueueExistenceCheck() -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
 JustSaying.Fluent.PublicationsBuilder.WithQueue<T>(JustSaying.Fluent.QueueDestination destination, System.Action<JustSaying.Fluent.QueuePublicationBuilder<T>> configure = null) -> JustSaying.Fluent.PublicationsBuilder
 JustSaying.Fluent.PublicationsBuilder.WithQueueArn<T>(string queueArn, System.Action<JustSaying.Fluent.QueuePublicationBuilder<T>> configure) -> JustSaying.Fluent.PublicationsBuilder
 JustSaying.Fluent.PublicationsBuilder.WithQueueUri<T>(System.Uri queueUrl, System.Action<JustSaying.Fluent.QueuePublicationBuilder<T>> configure) -> JustSaying.Fluent.PublicationsBuilder
