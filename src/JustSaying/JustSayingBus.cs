@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Extensions;
+using JustSaying.Fluent;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
@@ -31,7 +32,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
     private readonly Dictionary<Type, IMessagePublisher> _publishersByType;
     private readonly Dictionary<Type, IMessageBatchPublisher> _batchPublishersByType;
     private readonly Dictionary<Type, PublishMessageMiddleware> _publishMiddlewareByType;
-    private readonly Dictionary<string, (IReadOnlyCollection<Type> MessageTypes, bool IsMultiType)> _subscribedQueues = new(StringComparer.Ordinal);
+    private readonly List<SubscribedQueue> _subscribedQueues = [];
 
     public IMessagingConfig Config { get; }
     public IPublishBatchConfiguration PublishBatchConfiguration { get; }
@@ -146,36 +147,21 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
     /// <summary>
     /// Records the queue a subscription reads from, so that two subscriptions to one queue fail when the bus
     /// is built. Subscriptions sharing a queue compete for its messages, so each would receive the other's
-    /// and deserialize them as the wrong type; that is only safe when both read the same single type (for
-    /// example one queue subscribed to two topics of the same message type).
+    /// and deserialize them as the wrong type; that is only safe when both read the same single type from
+    /// different sources (for example one queue subscribed to two topics of the same message type).
     /// </summary>
-    /// <param name="queue">The queue name (in the bus region) or queue URL.</param>
-    /// <param name="messageTypes">The message types the subscription reads from the queue.</param>
-    /// <param name="isMultiType">Whether the subscription is a multi-type queue subscription.</param>
-    internal void AddSubscribedQueue(string queue, IReadOnlyCollection<Type> messageTypes, bool isMultiType)
+    /// <param name="queue">The queue the subscription reads from.</param>
+    internal void AddSubscribedQueue(SubscribedQueue queue)
     {
-        if (_subscribedQueues.TryGetValue(queue, out var existing))
+        foreach (var existing in _subscribedQueues)
         {
-            if (!isMultiType && !existing.IsMultiType && messageTypes.Single() == existing.MessageTypes.Single())
+            if (queue.IsSameQueueAs(existing) && queue.GetConflictWith(existing) is { } conflict)
             {
-                return;
+                throw new InvalidOperationException(conflict);
             }
-
-            var allTypes = existing.MessageTypes.Concat(messageTypes).Distinct().ToList();
-
-            static string Describe(IReadOnlyCollection<Type> types, bool isMultiType)
-                => isMultiType
-                    ? $"a multi-type subscription ({string.Join(", ", types.Select(type => $"'{type.Name}'"))})"
-                    : $"'{types.Single().Name}'";
-
-            throw new InvalidOperationException(
-                $"The queue '{queue}' is subscribed to more than once: by {Describe(existing.MessageTypes, existing.IsMultiType)} and by {Describe(messageTypes, isMultiType)}. " +
-                "Subscriptions that share a queue compete for its messages, so each would receive the other's and read them as the wrong type. " +
-                "Subscribe to the queue once, handling every type it carries: " +
-                $"ForQueue(\"{queue}\", q => q{string.Concat(allTypes.Select(type => $".Handling<{type.Name}>()"))}).");
         }
 
-        _subscribedQueues[queue] = (messageTypes, isMultiType);
+        _subscribedQueues.Add(queue);
     }
 
     internal void AddStartupTask(Func<CancellationToken, Task> task)

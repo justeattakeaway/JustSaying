@@ -269,6 +269,9 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
         var config = bus.Config;
         var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
 
+        // Whether the topic is the one the naming convention gives T, so a suggested fix can say SubscribeToTopic<T>().
+        var topicByConvention = string.IsNullOrEmpty(subscriptionConfig.TopicName) && TopicNameResolver is null;
+
         if (string.IsNullOrEmpty(subscriptionConfig.TopicName) && TopicNameResolver is not null)
         {
             subscriptionConfig.TopicName = TopicNameResolver(config.TopicNamingConvention);
@@ -284,7 +287,12 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
         subscriptionConfig.SubscriptionGroupName = SubscriptionGroupName ?? subscriptionConfig.QueueName;
         subscriptionConfig.PublishEndpoint = subscriptionConfig.TopicName;
         subscriptionConfig.Validate($"topic subscription for '{typeof(T)}' to topic '{subscriptionConfig.TopicName}' with queue '{subscriptionConfig.QueueName}'");
-        bus.AddSubscribedQueue(subscriptionConfig.QueueName, [typeof(T)], isMultiType: false);
+        bus.AddSubscribedQueue(SubscribedQueue.Owned(
+            region,
+            subscriptionConfig.QueueName,
+            [typeof(T)],
+            isMultiType: false,
+            topics: [new SubscribedTopic(subscriptionConfig.TopicName, TopicSourceAccount, topicByConvention ? typeof(T) : null)]));
 
         var queueWithStartup = creator.EnsureTopicExistsWithQueueSubscribed(
             region,

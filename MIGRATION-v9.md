@@ -529,4 +529,31 @@ A message that no registered type matches (for example a type the producer ships
 
 Raw message delivery strips the SNS envelope, and with it the `Subject`. A multi-type subscription that uses raw delivery and routes only by `Subject` (the default) can never route a message, so it now fails when the bus is built; add a discriminator that reads the type from the body or attributes (such as `CloudEventTypeDiscriminator`) or turn raw delivery off.
 
-**Breaking:** a queue can no longer be subscribed to more than once with different types. In v8, `ForQueue<A>()` and `ForQueue<B>()` (or `ForTopic<A>()` and `ForTopic<B>()`) on the same queue name started up fine, but the two subscriptions competed for the queue's messages, so each received some of the other's and deserialized them as the wrong type, with default field values and no error. v9 fails when the bus is built, naming the queue and both types; subscribe once with a multi-type subscription instead, as above. Subscribing one queue to several topics with the *same* message type is still allowed.
+A multi-type queue can be subscribed to SNS topics. As with `ForTopic<T>()`, on startup each topic is created if it doesn't exist, the queue is subscribed to it, and the queue's policy allows the topic to send to it. `SubscribeToTopic<T>()` subscribes to the topic the naming convention names after `T` (the one `ForTopic<T>()` subscribes to); `SubscribeToTopic(TopicDestination.Named("..."))` subscribes to a topic by name. Both take an optional SNS filter policy, and use raw delivery when `WithRawMessageDelivery()` is called:
+
+```csharp
+s.ForQueue("orders", q => q
+    .Handling<OrderPlaced>()
+    .Handling<OrderCancelled>()
+    .SubscribeToTopic<OrderPlaced>()
+    .SubscribeToTopic(TopicDestination.Named("cancellations"), """{ "region": ["eu"] }"""));
+```
+
+A multi-type queue addressed by URL or ARN can't be subscribed to topics, as JustSaying never changes a queue it doesn't own.
+
+**Breaking:** a queue can no longer be subscribed to more than once with different types. In v8, `ForQueue<A>()` and `ForQueue<B>()` (or `ForTopic<A>()` and `ForTopic<B>()`) on the same queue name started up fine, but the two subscriptions competed for the queue's messages, so each received some of the other's and deserialized them as the wrong type, with default field values and no error. v9 fails when the bus is built, naming the queue and both types; subscribe once with a multi-type subscription instead, as above, which the error spells out. For two `ForTopic` registrations sharing a queue:
+
+```csharp
+// v8
+s.ForTopic<OrderPlaced>(t => t.WithQueueName("orders"));
+s.ForTopic<OrderCancelled>(t => t.WithQueueName("orders").WithFilterPolicy(policy));
+
+// v9
+s.ForQueue("orders", q => q
+    .Handling<OrderPlaced>()
+    .Handling<OrderCancelled>()
+    .SubscribeToTopic<OrderPlaced>()
+    .SubscribeToTopic<OrderCancelled>(policy));
+```
+
+A queue is recognised however it's given: by name, or by a URL or ARN of a queue with that name in the same region (a URL that doesn't say its region, such as a local emulator's, is taken to be in the bus region). Subscribing one queue to several topics with the *same* message type is still allowed; registering the same subscription twice (for example `ForTopic<A>()` twice) now fails, as it could handle each message twice.

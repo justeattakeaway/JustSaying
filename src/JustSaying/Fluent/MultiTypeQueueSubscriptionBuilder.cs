@@ -6,6 +6,7 @@ using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware;
+using JustSaying.Naming;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent;
@@ -33,6 +34,7 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
     private readonly List<IMessageTypeDiscriminator> _discriminators = [];
     private readonly List<IMessageTypeDiscriminator> _packageDiscriminators = [];
     private bool _routesBySubject;
+    private readonly List<TopicRegistration> _topics = [];
     private string _subscriptionGroupName;
     private bool _rawMessageDelivery;
 
@@ -177,6 +179,112 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
         return this;
     }
 
+    /// <summary>
+    /// Subscribes this queue to an SNS topic, as <see cref="SubscriptionsBuilder.ForTopic{T}(TopicDestination)"/>
+    /// does for a single-type queue: on startup the topic is created if it does not exist, the queue is
+    /// subscribed to it, and the queue's policy allows the topic to send to it. Call once for each topic
+    /// the queue carries messages from. The subscription uses raw delivery when
+    /// <see cref="WithRawMessageDelivery"/> is called.
+    /// </summary>
+    /// <param name="topic">The topic, named with <see cref="TopicDestination.Named(string)"/>.</param>
+    /// <returns>The current <see cref="MultiTypeQueueSubscriptionBuilder"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="topic"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">
+    /// <paramref name="topic"/> is named by convention (use <see cref="SubscribeToTopic{TMessage}()"/>),
+    /// addressed by ARN, or configures the topic's infrastructure.
+    /// </exception>
+    public MultiTypeQueueSubscriptionBuilder SubscribeToTopic(TopicDestination topic)
+        => AddTopic(topic, filterPolicy: null);
+
+    /// <summary>
+    /// Subscribes this queue to an SNS topic with a subscription filter policy, so only matching messages
+    /// are delivered to the queue. See <see cref="SubscribeToTopic(TopicDestination)"/>.
+    /// </summary>
+    /// <param name="topic">The topic, named with <see cref="TopicDestination.Named(string)"/>.</param>
+    /// <param name="filterPolicy">The SNS subscription filter policy, as JSON.</param>
+    /// <returns>The current <see cref="MultiTypeQueueSubscriptionBuilder"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="topic"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">
+    /// <paramref name="filterPolicy"/> is <see langword="null"/> or whitespace, or <paramref name="topic"/> is named
+    /// by convention (use <see cref="SubscribeToTopic{TMessage}(string)"/>), addressed by ARN, or configures the
+    /// topic's infrastructure.
+    /// </exception>
+    public MultiTypeQueueSubscriptionBuilder SubscribeToTopic(TopicDestination topic, string filterPolicy)
+    {
+        if (string.IsNullOrWhiteSpace(filterPolicy)) throw new ArgumentException("Parameter cannot be null or whitespace.", nameof(filterPolicy));
+
+        return AddTopic(topic, filterPolicy);
+    }
+
+    /// <summary>
+    /// Subscribes this queue to the SNS topic the topic naming convention names after
+    /// <typeparamref name="TMessage"/>: the topic <see cref="SubscriptionsBuilder.ForTopic{T}()"/>
+    /// subscribes to, and a publication of <typeparamref name="TMessage"/> publishes to by default. On
+    /// startup the topic is created if it does not exist, the queue is subscribed to it, and the queue's
+    /// policy allows the topic to send to it. The subscription uses raw delivery when
+    /// <see cref="WithRawMessageDelivery"/> is called.
+    /// </summary>
+    /// <typeparam name="TMessage">The message type the topic is named after.</typeparam>
+    /// <returns>The current <see cref="MultiTypeQueueSubscriptionBuilder"/>.</returns>
+    public MultiTypeQueueSubscriptionBuilder SubscribeToTopic<TMessage>()
+        where TMessage : class
+        => AddTopic<TMessage>(filterPolicy: null);
+
+    /// <summary>
+    /// Subscribes this queue to the SNS topic the topic naming convention names after
+    /// <typeparamref name="TMessage"/>, with a subscription filter policy, so only matching messages are
+    /// delivered to the queue. See <see cref="SubscribeToTopic{TMessage}()"/>.
+    /// </summary>
+    /// <typeparam name="TMessage">The message type the topic is named after.</typeparam>
+    /// <param name="filterPolicy">The SNS subscription filter policy, as JSON.</param>
+    /// <returns>The current <see cref="MultiTypeQueueSubscriptionBuilder"/>.</returns>
+    /// <exception cref="ArgumentException"><paramref name="filterPolicy"/> is <see langword="null"/> or whitespace.</exception>
+    public MultiTypeQueueSubscriptionBuilder SubscribeToTopic<TMessage>(string filterPolicy)
+        where TMessage : class
+    {
+        if (string.IsNullOrWhiteSpace(filterPolicy)) throw new ArgumentException("Parameter cannot be null or whitespace.", nameof(filterPolicy));
+
+        return AddTopic<TMessage>(filterPolicy);
+    }
+
+    private MultiTypeQueueSubscriptionBuilder AddTopic<TMessage>(string filterPolicy)
+        where TMessage : class
+    {
+        _topics.Add(new TopicRegistration(convention => convention.Apply<TMessage>(null), filterPolicy, typeof(TMessage)));
+        return this;
+    }
+
+    private MultiTypeQueueSubscriptionBuilder AddTopic(TopicDestination topic, string filterPolicy)
+    {
+        if (topic == null) throw new ArgumentNullException(nameof(topic));
+
+        if (topic.IsAddress)
+        {
+            throw new ArgumentException(
+                $"Subscribing a queue to a topic creates the topic if needed, so it cannot target a topic by ARN; use {nameof(TopicDestination)}.{nameof(TopicDestination.Named)}(...).",
+                nameof(topic));
+        }
+
+        if (topic.Name is null)
+        {
+            // The naming convention names a topic after a message type, which a destination alone doesn't have.
+            throw new ArgumentException(
+                $"A topic named by convention needs a message type to name it after: use {nameof(SubscribeToTopic)}<T>() for the topic {nameof(SubscriptionsBuilder.ForTopic)}<T>() subscribes to, or {nameof(TopicDestination)}.{nameof(TopicDestination.Named)}(...).",
+                nameof(topic));
+        }
+
+        if (topic.Infrastructure is not null)
+        {
+            throw new ArgumentException(
+                "A topic subscription does not create the topic's infrastructure configuration; configure it on the publication side.",
+                nameof(topic));
+        }
+
+        var name = topic.Name;
+        _topics.Add(new TopicRegistration(_ => name, filterPolicy, conventionType: null));
+        return this;
+    }
+
     /// <inheritdoc />
     ISubscriptionBuilder<object> ISubscriptionBuilder<object>.WithMiddlewareConfiguration(Action<HandlerMiddlewareBuilder> middlewareConfiguration)
         => throw new NotSupportedException($"Configure middleware per message type via {nameof(Handling)}<T>(typeName, configure) on a multi-type queue subscription.");
@@ -237,44 +345,95 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
                 $"read from the message body or attributes by a discriminator added with {nameof(WithDiscriminator)}(...).");
         }
 
+        var config = bus.Config;
         ISqsQueue sqsQueue;
         string queueName;
         if (_destination.IsAddress)
         {
+            if (_topics.Count > 0)
+            {
+                throw new InvalidOperationException(
+                    $"A queue subscribed to topics is created and subscribed by JustSaying, so it cannot be addressed by URL or ARN; use {nameof(QueueDestination)}.{nameof(QueueDestination.Named)}(...).");
+            }
+
             // A pre-existing queue: never created, so only the read-time settings apply.
             var sqsClient = awsClientFactoryProxy
                 .GetAwsClientFactory()
                 .GetSqsClient(Amazon.RegionEndpoint.GetBySystemName(_destination.Address.RegionName));
 
             var queue = new QueueAddressQueue(_destination.Address, sqsClient);
+            bus.AddSubscribedQueue(SubscribedQueue.Addressed(queue, config.Region, typesByName.Values, isMultiType: true));
             sqsQueue = queue;
             queueName = queue.QueueName;
         }
         else
         {
-            // The queue name is explicit for a multi-type subscription, so no naming convention is applied.
-            var subscriptionConfig = new SqsReadConfiguration(SubscriptionType.PointToPoint)
-            {
-                QueueName = _destination.Name,
-                Tags = _destination.Infrastructure?.Tags ?? new Dictionary<string, string>(StringComparer.Ordinal),
-                RawMessageDelivery = _rawMessageDelivery,
-            };
-
-            _destination.Infrastructure?.Apply(subscriptionConfig);
-
-            subscriptionConfig.SubscriptionGroupName = _subscriptionGroupName ?? subscriptionConfig.QueueName;
-            subscriptionConfig.Validate($"multi-type queue subscription to queue '{subscriptionConfig.QueueName}'");
-
-            var config = bus.Config;
             var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
+            queueName = _destination.Name;
 
-            var queue = creator.EnsureQueueExists(region, subscriptionConfig);
-            bus.AddStartupTask(queue.StartupTask);
-            sqsQueue = queue.Queue;
-            queueName = subscriptionConfig.QueueName;
+            // The queue name is explicit for a multi-type subscription, so no naming convention is applied.
+            SqsReadConfiguration CreateQueueConfiguration(SubscriptionType subscriptionType)
+            {
+                var queueConfig = new SqsReadConfiguration(subscriptionType)
+                {
+                    QueueName = _destination.Name,
+                    Tags = _destination.Infrastructure?.Tags ?? new Dictionary<string, string>(StringComparer.Ordinal),
+                    RawMessageDelivery = _rawMessageDelivery,
+                };
+
+                _destination.Infrastructure?.Apply(queueConfig);
+
+                queueConfig.SubscriptionGroupName = _subscriptionGroupName ?? queueConfig.QueueName;
+                return queueConfig;
+            }
+
+            if (_topics.Count == 0)
+            {
+                var subscriptionConfig = CreateQueueConfiguration(SubscriptionType.PointToPoint);
+                subscriptionConfig.Validate($"multi-type queue subscription to queue '{queueName}'");
+                bus.AddSubscribedQueue(SubscribedQueue.Owned(region, queueName, typesByName.Values, isMultiType: true, topics: []));
+
+                var queue = creator.EnsureQueueExists(region, subscriptionConfig);
+                bus.AddStartupTask(queue.StartupTask);
+                sqsQueue = queue.Queue;
+            }
+            else
+            {
+                // Each topic is subscribed the way a single-type topic subscription subscribes its queue:
+                // the queue (and its error queue) is created if needed, then the topic, the SNS subscription
+                // with its filter policy, and the queue policy allowing the topic to send to the queue.
+                var topicConfigs = new List<SqsReadConfiguration>();
+                var subscribedTopics = new List<SubscribedTopic>();
+                foreach (var topic in _topics)
+                {
+                    var topicConfig = CreateQueueConfiguration(SubscriptionType.ToTopic);
+                    topicConfig.TopicName = topic.ResolveName(config.TopicNamingConvention);
+                    topicConfig.PublishEndpoint = topicConfig.TopicName;
+                    topicConfig.FilterPolicy = topic.FilterPolicy;
+                    topicConfig.Validate($"multi-type queue subscription to queue '{queueName}' from topic '{topicConfig.TopicName}'");
+
+                    var subscribedTopic = new SubscribedTopic(topicConfig.TopicName, null, topic.ConventionType);
+                    if (subscribedTopics.Any(subscribedTopic.IsSameTopicAs))
+                    {
+                        throw new InvalidOperationException(
+                            $"The multi-type queue subscription for '{queueName}' subscribes to the topic '{topicConfig.TopicName}' more than once; subscribe to each topic once.");
+                    }
+
+                    subscribedTopics.Add(subscribedTopic);
+                    topicConfigs.Add(topicConfig);
+                }
+
+                bus.AddSubscribedQueue(SubscribedQueue.Owned(region, queueName, typesByName.Values, isMultiType: true, topics: subscribedTopics));
+
+                sqsQueue = null;
+                foreach (var topicConfig in topicConfigs)
+                {
+                    var queue = creator.EnsureTopicExistsWithQueueSubscribed(region, topicConfig);
+                    bus.AddStartupTask(queue.StartupTask);
+                    sqsQueue ??= queue.Queue;
+                }
+            }
         }
-
-        bus.AddSubscribedQueue(_destination.IsAddress ? sqsQueue.Uri.AbsoluteUri : queueName, typesByName.Values, isMultiType: true);
 
         var serializersByName = new Dictionary<string, IMessageBodySerializer>(StringComparer.Ordinal);
         foreach (var registration in _registrations)
@@ -292,9 +451,19 @@ public sealed class MultiTypeQueueSubscriptionBuilder : ISubscriptionBuilder<obj
         });
 
         logger.LogInformation(
-            "Created multi-type SQS subscriber on queue '{QueueName}' handling {MessageTypeCount} message types.",
+            "Created multi-type SQS subscriber on queue '{QueueName}' handling {MessageTypeCount} message types from {TopicCount} topics.",
             queueName,
-            _registrations.Count);
+            _registrations.Count,
+            _topics.Count);
+    }
+
+    private sealed class TopicRegistration(Func<ITopicNamingConvention, string> resolveName, string filterPolicy, Type conventionType)
+    {
+        public Func<ITopicNamingConvention, string> ResolveName { get; } = resolveName;
+
+        public string FilterPolicy { get; } = filterPolicy;
+
+        public Type ConventionType { get; } = conventionType;
     }
 
     private interface IMessageTypeRegistration

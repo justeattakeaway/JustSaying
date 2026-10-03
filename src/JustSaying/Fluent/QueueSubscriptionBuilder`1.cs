@@ -180,7 +180,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
                 .GetSqsClient(RegionEndpoint.GetBySystemName(_destination.Address.RegionName));
 
             var queue = new QueueAddressQueue(_destination.Address, sqsClient);
-            bus.AddSubscribedQueue(queue.Uri.AbsoluteUri, [typeof(T)], isMultiType: false);
+            bus.AddSubscribedQueue(SubscribedQueue.Addressed(queue, bus.Config.Region, [typeof(T)], isMultiType: false));
 
             if (ShouldCheckQueueExistence)
             {
@@ -227,7 +227,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T> where 
             subscriptionConfig.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
             subscriptionConfig.SubscriptionGroupName = SubscriptionGroupName ?? subscriptionConfig.QueueName;
             subscriptionConfig.Validate($"queue subscription for '{typeof(T)}' to queue '{subscriptionConfig.QueueName}'");
-            bus.AddSubscribedQueue(subscriptionConfig.QueueName, [typeof(T)], isMultiType: false);
+            bus.AddSubscribedQueue(SubscribedQueue.Owned(region, subscriptionConfig.QueueName, [typeof(T)], isMultiType: false, topics: []));
 
             var queue = creator.EnsureQueueExists(region, subscriptionConfig);
             bus.AddStartupTask(queue.StartupTask);

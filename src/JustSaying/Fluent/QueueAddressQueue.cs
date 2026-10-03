@@ -27,6 +27,7 @@ internal sealed class QueueAddressQueue : ISqsQueue
         var accountId = pathSegments[0];
         var resource = pathSegments[1];
         RegionSystemName = region.SystemName;
+        AccountId = accountId;
         QueueName = resource;
         Arn = new Arn { Partition = region.PartitionName, Service = "sqs", Region = region.SystemName, AccountId = accountId, Resource = resource }.ToString();
     }
@@ -38,6 +39,7 @@ internal sealed class QueueAddressQueue : ISqsQueue
 
     public string QueueName { get; }
     public string RegionSystemName { get; }
+    public string AccountId { get; }
     public Uri Uri { get; }
     public string Arn { get; }
 
