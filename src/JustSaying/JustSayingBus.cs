@@ -317,19 +317,23 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
             _publishersByType.TryGetValue(messageType, out var publisher);
         if (!publishersFound)
         {
-            _log.LogError(
-                "Error publishing message. No publishers registered for message type '{MessageType}'.",
-                messageType);
-
             if (messageType != typeof(string) && typeof(IEnumerable).IsAssignableFrom(messageType))
             {
                 // A v8 batch call, PublishAsync(messages), still compiles because a collection is
                 // itself a valid single message, so say what to do instead.
+                const string batchHint =
+                    "To publish each item in a collection as a batch, call " + nameof(PublishBatchAsync) + " instead of " + nameof(PublishAsync) + ".";
+
+                _log.LogError(
+                    "Error publishing message. No publishers registered for message type '{MessageType}'. " + batchHint,
+                    messageType);
                 throw new InvalidOperationException(
-                    $"Error publishing message, no publishers registered for message type '{messageType}'. " +
-                    $"To publish each item in a collection as a batch, call {nameof(PublishBatchAsync)} instead of {nameof(PublishAsync)}.");
+                    $"Error publishing message, no publishers registered for message type '{messageType}'. {batchHint}");
             }
 
+            _log.LogError(
+                "Error publishing message. No publishers registered for message type '{MessageType}'.",
+                messageType);
             throw new InvalidOperationException(
                 $"Error publishing message, no publishers registered for message type '{messageType}'.");
         }
