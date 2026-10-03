@@ -355,14 +355,14 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
 
                 _log.LogError(
                     "Error publishing message. No publishers registered for message type '{MessageType}'. " + batchHint,
-                    messageType);
+                    messageType.ToReadableFullName());
                 throw new InvalidOperationException(
                     $"Error publishing message, no publishers registered for message type '{messageType.ToReadableFullName()}'. {batchHint}");
             }
 
             _log.LogError(
                 "Error publishing message. No publishers registered for message type '{MessageType}'.",
-                messageType);
+                messageType.ToReadableFullName());
             throw new InvalidOperationException(
                 $"Error publishing message, no publishers registered for message type '{messageType.ToReadableFullName()}'.");
         }
