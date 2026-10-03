@@ -55,9 +55,8 @@ In handle middleware, `context.MessageAs<OrderPlaced>()` returns the message typ
 ### Other public API changes
 
 - `IMessagePublisher.PublishAsync` and `IMessageBatchPublisher.PublishBatchAsync` are now generic methods (`PublishAsync<TMessage>(TMessage message, ...) where TMessage : class`). Single-message call sites compile unchanged, and NSubstitute assertions such as `Received().PublishAsync(Arg.Any<Message>(), ...)` still match, but hand-written implementations (for example fake publishers in test suites) must implement the generic signatures.
-- `IMessagingConfig` has a new member, `MessageTypeRegistry`, so your own implementations of the interface must add it. `MessagingConfig` already has it.
 - The `ExactlyOnceMiddleware<T>` constructor has a new `deduplicationKeySelector` parameter (`Func<T, string>`) before `logger`. Prefer `UseExactlyOnce<T>` to constructing it directly.
-- Batch publish middleware runs once per message type in the batch. In v8 a batch ran the middleware once, chosen by the type of the first message, with every message in the context. v9 groups a batch by each message's runtime type and runs each group through the middleware registered for that type, with only that group's messages in `PublishContext.Messages`. The groups run concurrently and share the `PublishBatchMetadata` you passed in, so middleware that writes to the metadata for one group affects the others.
+- Batch publish middleware runs once per message type in the batch. In v8 a batch ran the middleware once, chosen by the type of the first message, with every message in the context. v9 groups a batch by the publication each message resolves to (its runtime type's, or the closest registered base type's) and runs each group through the middleware registered for that publication, with only that group's messages in `PublishContext.Messages`. The groups run concurrently and share the `PublishBatchMetadata` you passed in, so middleware that writes to the metadata for one group affects the others.
 
 ### Batch publishing is renamed to `PublishBatchAsync`
 
