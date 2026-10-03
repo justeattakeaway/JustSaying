@@ -17,6 +17,7 @@ public class WhenPublishingInBatchWithFailedEntries : WhenPublishingTestBase
     private readonly SimpleMessage _first = new();
     private readonly SimpleMessage _second = new();
     private readonly MyMessage _poco = new();
+    private readonly MyMessage _secondPoco = new();
     private readonly FakeLogCollector _logs = new();
 
     private SendMessageBatchRequest _request;
@@ -49,7 +50,11 @@ public class WhenPublishingInBatchWithFailedEntries : WhenPublishingTestBase
                 _request = call.Arg<SendMessageBatchRequest>();
                 return new SendMessageBatchResponse
                 {
-                    Successful = [new SendMessageBatchResultEntry { Id = "0", MessageId = "sqs-0" }],
+                    Successful =
+                    [
+                        new SendMessageBatchResultEntry { Id = "0", MessageId = "sqs-0" },
+                        new SendMessageBatchResultEntry { Id = "3", MessageId = "sqs-3" },
+                    ],
                     Failed =
                     [
                         new BatchResultErrorEntry { Id = "1", Code = "InternalError" },
@@ -60,18 +65,18 @@ public class WhenPublishingInBatchWithFailedEntries : WhenPublishingTestBase
     }
 
     protected override Task WhenAsync()
-        => SystemUnderTest.PublishBatchAsync<object>([_first, _second, _poco], null, CancellationToken.None);
+        => SystemUnderTest.PublishBatchAsync<object>([_first, _second, _poco, _secondPoco], null, CancellationToken.None);
 
     [Test]
     public void EntryIdsArePositionalRatherThanDerivedFromTheMessage()
     {
-        _request.Entries.Select(e => e.Id).ShouldBe(["0", "1", "2"]);
+        _request.Entries.Select(e => e.Id).ShouldBe(["0", "1", "2", "3"]);
     }
 
     [Test]
     public void FailedEntriesAreMappedBackToTheirMessages()
     {
-        _response.SuccessfulMessageIds.ShouldBe(["sqs-0"]);
+        _response.SuccessfulMessageIds.ShouldBe(["sqs-0", "sqs-3"]);
         _response.FailedMessageIds.ShouldBe([_second.Id.ToString(), "2"]);
     }
 
@@ -81,6 +86,15 @@ public class WhenPublishingInBatchWithFailedEntries : WhenPublishingTestBase
         var messages = _logs.GetSnapshot().Select(r => r.Message).ToList();
 
         messages.ShouldContain($"Published message {_first.Id} of type {typeof(SimpleMessage).FullName} to Queue '{Url}'.");
-        messages.ShouldContain(m => m.StartsWith($"Failed to publish message {_second.Id} to Queue", StringComparison.Ordinal));
+        messages.ShouldContain(m => m.StartsWith($"Failed to publish message {_second.Id} (batch entry 1) to Queue", StringComparison.Ordinal));
+    }
+
+    [Test]
+    public void LogsDoNotReportTheEntryIdAsTheIdOfAMessageWithoutOne()
+    {
+        var messages = _logs.GetSnapshot().Select(r => r.Message).ToList();
+
+        messages.ShouldContain($"Published message (no id) of type {typeof(MyMessage).FullName} to Queue '{Url}'.");
+        messages.ShouldContain(m => m.StartsWith("Failed to publish message (no id) (batch entry 2) to Queue", StringComparison.Ordinal));
     }
 }

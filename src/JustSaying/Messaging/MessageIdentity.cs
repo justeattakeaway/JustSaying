@@ -53,4 +53,12 @@ internal static class MessageIdentity
         => GetBatchEntryMessage(messages, entryId) is { } message
             ? GetId(message, metadataProvider) ?? entryId
             : entryId;
+
+    /// <summary>
+    /// Gets the message id to log for a batch result entry: the message's own id, or <c>(no id)</c> when
+    /// it doesn't have one. Unlike <see cref="GetBatchEntryMessageId"/>, this never falls back to the
+    /// entry id, which is the message's position in the request rather than an id of the message.
+    /// </summary>
+    public static string GetBatchEntryMessageLogId(IReadOnlyList<object> messages, string entryId, IMessageMetadataProvider metadataProvider)
+        => (GetBatchEntryMessage(messages, entryId) is { } message ? GetId(message, metadataProvider) : null) ?? "(no id)";
 }

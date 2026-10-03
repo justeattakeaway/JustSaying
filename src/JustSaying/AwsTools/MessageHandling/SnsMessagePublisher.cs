@@ -213,7 +213,7 @@ internal sealed class SnsMessagePublisher(
                         var message = MessageIdentity.GetBatchEntryMessage(chunk, entry.Id);
                         _logger.LogInformation(
                             "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
-                            MessageIdentity.GetBatchEntryMessageId(chunk, entry.Id, _metadataProvider),
+                            MessageIdentity.GetBatchEntryMessageLogId(chunk, entry.Id, _metadataProvider),
                             message?.GetType().FullName,
                             "Topic",
                             request.TopicArn);
@@ -231,8 +231,9 @@ internal sealed class SnsMessagePublisher(
                     foreach (var entry in response.Failed)
                     {
                         _logger.LogError(
-                            "Failed to publish message {MessageId} to {DestinationType} '{MessageDestination}' with error code: {ErrorCode} is error on BatchAPI: {IsBatchAPIError}.",
-                            MessageIdentity.GetBatchEntryMessageId(chunk, entry.Id, _metadataProvider),
+                            "Failed to publish message {MessageId} (batch entry {BatchEntryId}) to {DestinationType} '{MessageDestination}' with error code: {ErrorCode} is error on BatchAPI: {IsBatchAPIError}.",
+                            MessageIdentity.GetBatchEntryMessageLogId(chunk, entry.Id, _metadataProvider),
+                            entry.Id,
                             "Topic",
                             request.TopicArn,
                             entry.Code,
