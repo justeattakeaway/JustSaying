@@ -73,6 +73,39 @@ public class WhenValidatingDestinations
     }
 
     [Test]
+    public void ANullEncryptionIsRejected()
+    {
+        Should.Throw<ArgumentNullException>(() => QueueDestination.Named("orders", q => q.WithEncryption((string)null))).ParamName.ShouldBe("kmsMasterKeyId");
+        Should.Throw<ArgumentNullException>(() => QueueDestination.Named("orders", q => q.WithEncryption((ServerSideEncryption)null))).ParamName.ShouldBe("encryption");
+        Should.Throw<ArgumentNullException>(() => TopicDestination.Named("orders", t => t.WithEncryption((string)null))).ParamName.ShouldBe("kmsMasterKeyId");
+        Should.Throw<ArgumentNullException>(() => TopicDestination.Named("orders", t => t.WithEncryption((ServerSideEncryption)null))).ParamName.ShouldBe("encryption");
+    }
+
+    [Test]
+    [Arguments("")]
+    [Arguments("   ")]
+    public void ABlankKmsMasterKeyIdIsRejected(string kmsMasterKeyId)
+    {
+        Should.Throw<ArgumentException>(() => QueueDestination.Named("orders", q => q.WithEncryption(kmsMasterKeyId))).ParamName.ShouldBe("kmsMasterKeyId");
+        Should.Throw<ArgumentException>(() => TopicDestination.Named("orders", t => t.WithEncryption(kmsMasterKeyId))).ParamName.ShouldBe("kmsMasterKeyId");
+    }
+
+    [Test]
+    public void NoErrorQueueWithRetriesBeforeTheErrorQueueIsRejected()
+    {
+        Should.Throw<InvalidOperationException>(() => QueueDestination.Named("orders", q => q.WithNoErrorQueue().WithRetriesBeforeErrorQueue(3)))
+            .Message.ShouldBe("The queue is configured with both WithNoErrorQueue and WithRetriesBeforeErrorQueue, which configures the error queue it opts out of; remove one of them.");
+        Should.Throw<InvalidOperationException>(() => QueueDestination.ByConvention(q => q.WithRetriesBeforeErrorQueue(3).WithNoErrorQueue()));
+    }
+
+    [Test]
+    public void NoErrorQueueWithAnErrorQueueRetentionIsRejected()
+    {
+        Should.Throw<InvalidOperationException>(() => QueueDestination.Named("orders", q => q.WithNoErrorQueue().WithErrorQueueRetention(TimeSpan.FromDays(1))))
+            .Message.ShouldContain("WithErrorQueueRetention");
+    }
+
+    [Test]
     public void ATopicNameIsLimitedTo256Characters()
     {
         TopicDestination.Named(new string('t', 256)).ShouldNotBeNull();

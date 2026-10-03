@@ -51,9 +51,10 @@ public sealed class TopicInfrastructure
     /// </summary>
     /// <param name="encryption">The server-side encryption to apply when the topic is created.</param>
     /// <returns>The current <see cref="TopicInfrastructure"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="encryption"/> is <see langword="null"/>.</exception>
     public TopicInfrastructure WithEncryption(ServerSideEncryption encryption)
     {
-        Encryption = encryption;
+        Encryption = encryption ?? throw new ArgumentNullException(nameof(encryption));
         return this;
     }
 
@@ -62,6 +63,13 @@ public sealed class TopicInfrastructure
     /// </summary>
     /// <param name="kmsMasterKeyId">The id of the KMS master key to encrypt the topic with.</param>
     /// <returns>The current <see cref="TopicInfrastructure"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="kmsMasterKeyId"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="kmsMasterKeyId"/> is empty or whitespace.</exception>
     public TopicInfrastructure WithEncryption(string kmsMasterKeyId)
-        => WithEncryption(new ServerSideEncryption { KmsMasterKeyId = kmsMasterKeyId });
+    {
+        if (kmsMasterKeyId == null) throw new ArgumentNullException(nameof(kmsMasterKeyId));
+        if (string.IsNullOrWhiteSpace(kmsMasterKeyId)) throw new ArgumentException("A KMS master key id cannot be empty or only whitespace.", nameof(kmsMasterKeyId));
+
+        return WithEncryption(new ServerSideEncryption { KmsMasterKeyId = kmsMasterKeyId });
+    }
 }

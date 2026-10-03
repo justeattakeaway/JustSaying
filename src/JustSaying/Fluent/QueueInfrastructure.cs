@@ -128,9 +128,10 @@ public sealed class QueueInfrastructure
     /// </summary>
     /// <param name="encryption">The server-side encryption to apply when the queue is created.</param>
     /// <returns>The current <see cref="QueueInfrastructure"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="encryption"/> is <see langword="null"/>.</exception>
     public QueueInfrastructure WithEncryption(ServerSideEncryption encryption)
     {
-        Encryption = encryption;
+        Encryption = encryption ?? throw new ArgumentNullException(nameof(encryption));
         return this;
     }
 
@@ -139,8 +140,28 @@ public sealed class QueueInfrastructure
     /// </summary>
     /// <param name="kmsMasterKeyId">The id of the KMS master key to encrypt the queue with.</param>
     /// <returns>The current <see cref="QueueInfrastructure"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="kmsMasterKeyId"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="kmsMasterKeyId"/> is empty or whitespace.</exception>
     public QueueInfrastructure WithEncryption(string kmsMasterKeyId)
-        => WithEncryption(new ServerSideEncryption { KmsMasterKeyId = kmsMasterKeyId });
+    {
+        if (kmsMasterKeyId == null) throw new ArgumentNullException(nameof(kmsMasterKeyId));
+        if (string.IsNullOrWhiteSpace(kmsMasterKeyId)) throw new ArgumentException("A KMS master key id cannot be empty or only whitespace.", nameof(kmsMasterKeyId));
+
+        return WithEncryption(new ServerSideEncryption { KmsMasterKeyId = kmsMasterKeyId });
+    }
+
+    /// <summary>
+    /// Rejects settings that contradict each other, once the configure delegate has run.
+    /// </summary>
+    internal void Validate()
+    {
+        if (ErrorQueueOptOut && (RetriesBeforeErrorQueue is not null || ErrorQueueRetention is not null))
+        {
+            var setting = RetriesBeforeErrorQueue is not null ? nameof(WithRetriesBeforeErrorQueue) : nameof(WithErrorQueueRetention);
+            throw new InvalidOperationException(
+                $"The queue is configured with both {nameof(WithNoErrorQueue)} and {setting}, which configures the error queue it opts out of; remove one of them.");
+        }
+    }
 
     /// <summary>
     /// Applies the configured settings onto an <see cref="SqsBasicConfiguration"/>, leaving its

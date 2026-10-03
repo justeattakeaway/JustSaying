@@ -378,7 +378,11 @@ value is created or the bus is built, naming the registration, instead of as an 
 - `.fifo` names throw "FIFO queues are not supported" / "FIFO topics are not supported". JustSaying
   never set a `MessageGroupId`, so publishing to a FIFO queue or topic always failed.
 - The visibility timeout must be more than zero and at most 12 hours, and the retries before the
-  error queue between 1 and 1000 (unless the queue has no error queue).
+  error queue between 1 and 1000 (unless the queue has no error queue). `WithNoErrorQueue()`
+  combined with `WithRetriesBeforeErrorQueue(...)` or `WithErrorQueueRetention(...)` throws, as
+  they configure the error queue it opts out of.
+- `WithEncryption` on a queue or topic throws for a `null` (`ArgumentNullException`) or blank
+  (`ArgumentException`) KMS key id, rather than failing as an AWS error on startup.
 - Queue URLs (`QueueDestination.FromUrl`/`FromUri`, `ForQueueUrl`, `WithQueueUrl`) must have an
   `{account}/{queue}` path, and a `regionName` that contradicts the region in the URL throws.
   VPC-endpoint, FIPS and legacy (`{region}.queue.amazonaws.com`, `queue.amazonaws.com`) URLs are

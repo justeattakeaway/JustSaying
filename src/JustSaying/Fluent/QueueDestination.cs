@@ -44,12 +44,14 @@ public sealed class QueueDestination
     /// <param name="configure">A delegate to configure the queue's infrastructure.</param>
     /// <returns>The <see cref="QueueDestination"/> destination.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="configure"/> is <see langword="null"/>.</exception>
+    /// <exception cref="InvalidOperationException"><paramref name="configure"/> configures an error queue it also opts out of.</exception>
     public static QueueDestination ByConvention(Action<QueueInfrastructure> configure)
     {
         if (configure == null) throw new ArgumentNullException(nameof(configure));
 
         var infrastructure = new QueueInfrastructure();
         configure(infrastructure);
+        infrastructure.Validate();
 
         return new QueueDestination { Infrastructure = infrastructure };
     }
@@ -75,6 +77,7 @@ public sealed class QueueDestination
     /// <returns>The <see cref="QueueDestination"/> destination.</returns>
     /// <exception cref="ArgumentException"><paramref name="name"/> is not a valid queue name.</exception>
     /// <exception cref="ArgumentNullException"><paramref name="configure"/> is <see langword="null"/>.</exception>
+    /// <exception cref="InvalidOperationException"><paramref name="configure"/> configures an error queue it also opts out of.</exception>
     public static QueueDestination Named(string name, Action<QueueInfrastructure> configure)
     {
         ValidateName(name, hasErrorQueue: false);
@@ -82,6 +85,7 @@ public sealed class QueueDestination
 
         var infrastructure = new QueueInfrastructure();
         configure(infrastructure);
+        infrastructure.Validate();
 
         // The error queue's name only counts towards the length limit once we know there is one.
         ValidateName(name, hasErrorQueue: !infrastructure.ErrorQueueOptOut);
