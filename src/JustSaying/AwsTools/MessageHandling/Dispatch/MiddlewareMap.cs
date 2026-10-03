@@ -74,6 +74,40 @@ public sealed class MiddlewareMap : IInterrogable
         return _middlewares.TryGetValue((queueName, messageType), out var middleware) ? middleware : null;
     }
 
+    /// <summary>
+    /// Gets the middleware to dispatch a message of <paramref name="messageType"/> to on a queue: the one
+    /// registered for that exact type, otherwise the one for its closest base class, otherwise the one for
+    /// the interface it implements. A message deserialized as a derived type (for example by a
+    /// polymorphic serializer for a base type subscription) is then handled by the base type's handler.
+    /// </summary>
+    /// <returns>The middleware, or null if none matches or more than one interface matches.</returns>
+    internal HandleMessageMiddleware GetForMessage(string queueName, Type messageType)
+    {
+        for (var type = messageType; type != null; type = type.BaseType)
+        {
+            if (_middlewares.TryGetValue((queueName, type), out var middleware))
+            {
+                return middleware;
+            }
+        }
+
+        HandleMessageMiddleware match = null;
+        foreach (var entry in _middlewares)
+        {
+            if (entry.Key.queueName == queueName && entry.Key.type.IsInterface && entry.Key.type.IsAssignableFrom(messageType))
+            {
+                if (match != null)
+                {
+                    return null;
+                }
+
+                match = entry.Value;
+            }
+        }
+
+        return match;
+    }
+
     public InterrogationResult Interrogate()
     {
         var middlewares = _middlewares.Select(item =>

@@ -44,7 +44,7 @@ internal sealed class MessageDispatcher : IMessageDispatcher
         }
 
         var messageType = typedMessage.GetType();
-        var middleware = _middlewareMap.Get(messageContext.QueueName, messageType);
+        var middleware = _middlewareMap.GetForMessage(messageContext.QueueName, messageType);
 
         if (middleware == null)
         {
