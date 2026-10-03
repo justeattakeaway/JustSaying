@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 #if NET8_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -37,7 +38,8 @@ public sealed class SystemTextJsonMessageBodySerializer<T> : IMessageBodySeriali
     /// <param name="options">The custom <see cref="JsonSerializerOptions"/> to use for serialization and deserialization.</param>
     /// <exception cref="InvalidOperationException">
     /// Reflection-based serialization is disabled (for example under Native AOT) and <paramref name="options"/> can't
-    /// provide type information for <typeparamref name="T"/>.
+    /// provide type information for <typeparamref name="T"/>; or <typeparamref name="T"/> is an abstract class or
+    /// interface that <paramref name="options"/> don't configure for polymorphism.
     /// </exception>
     public SystemTextJsonMessageBodySerializer(JsonSerializerOptions options)
     {
@@ -51,6 +53,11 @@ public sealed class SystemTextJsonMessageBodySerializer<T> : IMessageBodySeriali
             EnsureTypeInfoIsAvailable(options);
         }
 #endif
+
+        if (typeof(T).IsAbstract || typeof(T).IsInterface)
+        {
+            EnsurePolymorphismIsConfigured(options);
+        }
     }
 
     /// <summary>
@@ -92,6 +99,46 @@ public sealed class SystemTextJsonMessageBodySerializer<T> : IMessageBodySeriali
         return JsonSerializer.Deserialize(messageBody, _options.GetTypeInfo<T>());
 #else
         return JsonSerializer.Deserialize<T>(messageBody, _options);
+#endif
+    }
+
+    private static void EnsurePolymorphismIsConfigured(JsonSerializerOptions options)
+    {
+        // Messages are serialized as T, so for an abstract class or interface only polymorphism configuration writes
+        // the members of derived types (and the discriminator a consumer needs to deserialize them). A custom converter
+        // for T is trusted to handle derived types itself.
+        options ??= new JsonSerializerOptions();
+        var typeInfo = GetTypeInfoResolver(options)?.GetTypeInfo(typeof(T), options);
+        if (typeInfo is not { Kind: JsonTypeInfoKind.Object, PolymorphismOptions: null })
+        {
+            return;
+        }
+
+        throw new InvalidOperationException(
+            $"Message type '{typeof(T)}' is {(typeof(T).IsInterface ? "an interface" : "abstract")}, but System.Text.Json isn't configured to serialize it polymorphically. " +
+            $"Messages are serialized as '{typeof(T).Name}', so members of derived types would be silently dropped, and they couldn't be deserialized. " +
+            $"Add [JsonPolymorphic] and a [JsonDerivedType] for each derived type to '{typeof(T).Name}' (or set {nameof(JsonTypeInfo)}.{nameof(JsonTypeInfo.PolymorphismOptions)} in a custom resolver), " +
+            "or register the publication or subscription for each concrete type instead.");
+    }
+
+    private static IJsonTypeInfoResolver GetTypeInfoResolver(JsonSerializerOptions options)
+    {
+        if (options.TypeInfoResolver is { } resolver)
+        {
+            return resolver;
+        }
+
+#if NET8_0_OR_GREATER
+        if (!JsonSerializer.IsReflectionEnabledByDefault)
+        {
+            return null;
+        }
+
+#pragma warning disable IL2026, IL3050
+        return new DefaultJsonTypeInfoResolver();
+#pragma warning restore IL2026, IL3050
+#else
+        return new DefaultJsonTypeInfoResolver();
 #endif
     }
 

@@ -176,6 +176,25 @@ public class WhenPublishingToABaseTypePublication : IntegrationTestBase
             });
     }
 
+    public abstract class PlainWarehouseEvent
+    {
+        public string Sku { get; set; }
+    }
+
+    [Test]
+    public void Then_A_Base_Type_Not_Configured_For_Polymorphism_Fails_At_Bus_Build()
+    {
+        // Arrange
+        var serviceProvider = GivenSystemTextJson()
+            .ConfigureJustSaying(builder => builder.Publications(pub => pub.WithTopic<PlainWarehouseEvent>()))
+            .BuildServiceProvider();
+
+        // Act and Assert
+        var exception = Should.Throw<InvalidOperationException>(() => serviceProvider.GetRequiredService<IMessagePublisher>());
+        exception.Message.ShouldContain(typeof(PlainWarehouseEvent).ToString());
+        exception.Message.ShouldContain("[JsonPolymorphic]");
+    }
+
     private IServiceCollection GivenSystemTextJson()
         => GivenJustSaying()
             .AddSingleton<IMessageBodySerializationFactory>(

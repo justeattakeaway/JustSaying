@@ -149,6 +149,48 @@ public sealed class AotRoundTripTests
     }
 
     [Test]
+    [Timeout(30_000)]
+    public async Task Derived_Message_Published_To_A_Polymorphic_Base_Type_Is_Received_Under_Native_Aot(CancellationToken cancellationToken)
+    {
+        var bus = new InMemoryAwsBus();
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton<MessageReceivedSignal<WarehouseEvent>>();
+        services.TryAddSingleton<IMessageBodySerializationFactory>(CreateSerializationFactory());
+        services.AddJustSaying(config =>
+        {
+            config.Messaging(x => x.WithRegion("eu-west-1"))
+                  .Client(x => x.WithClientFactory(() => new InMemoryAwsClientFactory(bus)));
+            config.Publications(x => x.WithTopic<WarehouseEvent>());
+            config.Subscriptions(x => x.ForTopic<WarehouseEvent>(sub => sub.WithQueueName("aot-test-warehouse")));
+        });
+        services.AddJustSayingHandler<WarehouseEvent, SignallingHandler<WarehouseEvent>>();
+
+        await using var provider = services.BuildServiceProvider();
+
+        var (publisher, _) = await StartAsync(provider, cancellationToken);
+
+        await publisher.PublishAsync(new StockReserved("sku-1", 2), cancellationToken);
+
+        var received = await provider.GetRequiredService<MessageReceivedSignal<WarehouseEvent>>().Received.Task.WaitAsync(cancellationToken);
+
+        await Assert.That(received).IsEqualTo(new StockReserved("sku-1", 2));
+    }
+
+    [Test]
+    public async Task An_Abstract_Message_Type_Not_Configured_For_Polymorphism_Fails()
+    {
+        var options = new JsonSerializerOptions(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions)
+        {
+            TypeInfoResolver = AotTestSerializerContext.Default,
+        };
+
+        var exception = Assert.Throws<InvalidOperationException>(() => new SystemTextJsonMessageBodySerializer<PlainWarehouseEvent>(options));
+
+        await Assert.That(exception.Message).Contains("[JsonPolymorphic]");
+    }
+
+    [Test]
     public async Task The_Default_Serializer_Without_A_Context_Fails_At_Bus_Build()
     {
         await using var provider = BuildServiceProvider(new InMemoryAwsBus(), serializationFactory: null);
@@ -239,6 +281,17 @@ public enum OrderStatus
 /// </summary>
 public sealed record OrderPlaced(string OrderId, OrderStatus Status);
 
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "kind")]
+[JsonDerivedType(typeof(StockReserved), "reserved")]
+public abstract record WarehouseEvent(string Sku);
+
+public sealed record StockReserved(string Sku, int Quantity) : WarehouseEvent(Sku);
+
+public abstract class PlainWarehouseEvent
+{
+    public string Sku { get; set; }
+}
+
 public sealed class SignallingHandler<T>(MessageReceivedSignal<T> signal) : IHandlerAsync<T>
     where T : class
 {
@@ -277,6 +330,8 @@ public sealed class InMemoryAwsClientFactory(InMemoryAwsBus bus) : IAwsClientFac
 [JsonSourceGenerationOptions(UseStringEnumConverter = true)]
 [JsonSerializable(typeof(TestMessage))]
 [JsonSerializable(typeof(OrderPlaced))]
+[JsonSerializable(typeof(WarehouseEvent))]
+[JsonSerializable(typeof(PlainWarehouseEvent))]
 public sealed partial class AotTestSerializerContext : JsonSerializerContext;
 
 [JsonSerializable(typeof(TestMessage))]
