@@ -20,9 +20,20 @@ public static class AsyncApiServiceCollectionExtensions
     /// <param name="configure">An optional delegate used to configure the <see cref="AsyncApiOptions"/>.</param>
     /// <returns>The same <see cref="IServiceCollection"/>, for chaining.</returns>
     /// <remarks>
+    /// <para>
     /// Documents are written with ByteBard.AsyncAPI.NET, which is not annotated for trimming or
     /// Native AOT, so this package is not marked trim- or AOT-compatible: publishing a trimmed or
     /// Native AOT application that references it produces trim/AOT warnings (IL2104, IL3053).
+    /// </para>
+    /// <para>
+    /// A payload type that refers to itself, directly or through other types, is described once in
+    /// the document's <c>components/schemas</c> and referenced with <c>$ref</c> wherever it appears,
+    /// including within itself; JSON Schema has no other way to describe recursion. The document is
+    /// valid AsyncAPI, but the AsyncAPI CLI's <c>asyncapi bundle</c> command fails on it with
+    /// "Circular $ref pointer found", because it dereferences every <c>$ref</c> and has no option
+    /// not to. Generated documents only reference themselves, so they don't need bundling; to bundle
+    /// one with other files, use a bundler that keeps references, such as <c>redocly bundle</c>.
+    /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="services"/> is <see langword="null"/>.
