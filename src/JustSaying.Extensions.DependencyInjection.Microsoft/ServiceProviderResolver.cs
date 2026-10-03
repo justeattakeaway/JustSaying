@@ -81,19 +81,29 @@ internal sealed class ServiceProviderResolver : IServiceResolver, IHandlerResolv
 
     // A CloudEvents registration decides the handler's message type: HandlingCloudEvent<T> and
     // ForCloudEventTopic<T> deliver the CloudEvent<T> envelope, the ...Data variants the bare T. Name
-    // the alternative when the envelope handler is missing, since the two are easy to mix up. Matched
-    // by name, as this package doesn't reference JustSaying.CloudEvents.
-    private static string GetRegistrationHint(Type messageType)
+    // the alternative when a handler is missing, since the two are easy to mix up. Matched by name, as
+    // this package doesn't reference JustSaying.CloudEvents.
+    private string GetRegistrationHint(Type messageType)
     {
-        if (!messageType.IsGenericType
-            || messageType.GetGenericTypeDefinition().FullName != "JustSaying.CloudEvents.CloudEvent`1")
+        if (messageType.IsGenericType
+            && messageType.GetGenericTypeDefinition().FullName == "JustSaying.CloudEvents.CloudEvent`1")
         {
-            return string.Empty;
+            var data = messageType.GetGenericArguments()[0].ToReadableName();
+            return $" HandlingCloudEvent<{data}> and ForCloudEventTopic<{data}> deliver the envelope and so need an IHandlerAsync<{messageType.ToReadableName()}>; " +
+                   $"to handle just the data with an IHandlerAsync<{data}>, register HandlingCloudEventData<{data}> or ForCloudEventTopicData<{data}> instead.";
         }
 
-        var data = messageType.GetGenericArguments()[0].ToReadableName();
-        return $" HandlingCloudEvent<{data}> and ForCloudEventTopic<{data}> deliver the envelope and so need an IHandlerAsync<{messageType.ToReadableName()}>; " +
-               $"to handle just the data with an IHandlerAsync<{data}>, register HandlingCloudEventData<{data}> or ForCloudEventTopicData<{data}> instead.";
+        // A bare T may be a CloudEvent's data, if the app uses CloudEvents, whose handler was written for
+        // the envelope instead.
+        var cloudEventsFactory = Type.GetType("JustSaying.CloudEvents.CloudEventSerializationFactory, JustSaying.CloudEvents", throwOnError: false);
+        if (cloudEventsFactory is not null && ServiceProvider.GetService(cloudEventsFactory) is not null)
+        {
+            var name = messageType.ToReadableName();
+            return $" If this is a CloudEvents subscription whose handler is an IHandlerAsync<CloudEvent<{name}>>, register it with HandlingCloudEvent<{name}> or ForCloudEventTopic<{name}>, which deliver the envelope; " +
+                   $"HandlingCloudEventData<{name}> and ForCloudEventTopicData<{name}> deliver just the data, to an IHandlerAsync<{name}>.";
+        }
+
+        return string.Empty;
     }
 
     /// <inheritdoc />

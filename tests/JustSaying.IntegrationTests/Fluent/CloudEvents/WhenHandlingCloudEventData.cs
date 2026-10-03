@@ -1,4 +1,5 @@
 using Amazon.SQS.Model;
+using JustSaying.CloudEvents;
 using JustSaying.Fluent;
 using JustSaying.Messaging.MessageHandling;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +20,29 @@ public class WhenHandlingCloudEventData : IntegrationTestBase
     public sealed class OrderPlaced
     {
         public string OrderId { get; set; }
+    }
+
+    [Test]
+    public void Then_A_Missing_Data_Handler_Is_Reported_With_The_Envelope_Alternative()
+    {
+        // Arrange - HandlingCloudEventData<T> needs an IHandlerAsync<T>, but only a handler for the
+        // envelope is registered (the HandlingCloudEvent<T> shape).
+        var services = GivenJustSaying()
+            .ConfigureJustSaying(builder => builder
+                .Subscriptions(s => s.ForQueue(UniqueName, q => q.HandlingCloudEventData<OrderPlaced>(OrderPlacedType))))
+            .AddSingleton(Substitute.For<IHandlerAsync<CloudEvent<OrderPlaced>>>());
+
+        services.AddJustSayingCloudEvents();
+
+        var serviceProvider = services.BuildServiceProvider();
+
+        // Act
+        var exception = Should.Throw<InvalidOperationException>(() => serviceProvider.GetRequiredService<IMessagingBus>());
+
+        // Assert
+        exception.Message.ShouldStartWith($"No handler for message type {typeof(OrderPlaced).FullName} is registered.");
+        exception.Message.ShouldContain("IHandlerAsync<CloudEvent<OrderPlaced>>");
+        exception.Message.ShouldContain("HandlingCloudEvent<OrderPlaced>");
     }
 
     [Test]
