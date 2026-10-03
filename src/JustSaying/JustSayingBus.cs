@@ -155,8 +155,6 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
 
     public void AddMessagePublisher<T>(IMessagePublisher messagePublisher) where T : class
     {
-        EnsurePublishable<T>();
-
         if (Config.PublishFailureReAttempts == 0)
         {
             _log.LogWarning(
@@ -172,8 +170,6 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
 
     public void AddMessageBatchPublisher<T>(IMessageBatchPublisher messageBatchPublisher) where T : class
     {
-        EnsurePublishable<T>();
-
         if (PublishBatchConfiguration.PublishFailureReAttempts == 0)
         {
             _log.LogWarning("You have not set a re-attempt value for batch publish failures. If the publish location is not available you may lose messages.");
@@ -183,18 +179,6 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         if (messageBatchPublisher is IMessagePublisher messagePublisher)
         {
             _publishersByType[typeof(T)] = messagePublisher;
-        }
-    }
-
-    private static void EnsurePublishable<T>()
-    {
-        // Publishing routes each message by its runtime type, which is never an interface or an
-        // abstract class, so a publication registered for one could never be used.
-        if (typeof(T).IsInterface || typeof(T).IsAbstract)
-        {
-            throw new InvalidOperationException(
-                $"Cannot register a publication for message type '{typeof(T).FullName}' because it is {(typeof(T).IsInterface ? "an interface" : "abstract")}. " +
-                "Messages are published to the publication registered for their concrete runtime type, so register a publication for each concrete message type instead.");
         }
     }
 
@@ -285,14 +269,14 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
 
         EnsureStarted();
 
-        var messageType = message.GetType();
-        var middleware = GetPublishMiddlewareForMessage(messageType);
+        var publicationType = GetPublicationTypeForMessage(message.GetType());
+        var middleware = GetPublishMiddlewareForMessage(publicationType);
         if (middleware != null)
         {
             var context = new Messaging.Middleware.PublishContext(message, metadata ?? new PublishMetadata());
             await middleware.RunAsync(context, async ct =>
             {
-                var publisher = GetPublisherForMessage(messageType);
+                var publisher = _publishersByType[publicationType];
                 await PublishAsync(publisher, message, context.Metadata, 0, ct)
                     .ConfigureAwait(false);
                 return true;
@@ -300,12 +284,12 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
             return;
         }
 
-        var pub = GetPublisherForMessage(messageType);
+        var pub = _publishersByType[publicationType];
         await PublishAsync(pub, message, metadata, 0, cancellationToken)
             .ConfigureAwait(false);
     }
 
-    private IMessagePublisher GetPublisherForMessage(Type messageType)
+    private Type GetPublicationTypeForMessage(Type messageType)
     {
         if (_publishersByType.Count == 0)
         {
@@ -313,9 +297,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
             throw new InvalidOperationException("Error publishing message, no publishers registered. Has the bus been started?");
         }
 
-        var publishersFound =
-            _publishersByType.TryGetValue(messageType, out var publisher);
-        if (!publishersFound)
+        if (!TryGetPublicationType(_publishersByType, messageType, out var publicationType))
         {
             if (messageType != typeof(string) && typeof(IEnumerable).IsAssignableFrom(messageType))
             {
@@ -338,7 +320,42 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
                 $"Error publishing message, no publishers registered for message type '{messageType}'.");
         }
 
-        return publisher;
+        return publicationType;
+    }
+
+    /// <summary>
+    /// Finds the message type of the publication to use for a message of <paramref name="messageType"/>:
+    /// the publication registered for that exact type, otherwise the one registered for its closest
+    /// base class, otherwise the one registered for an interface it implements. The message is then
+    /// serialized by that publication's serializer, as the registered type.
+    /// </summary>
+    private static bool TryGetPublicationType<TPublisher>(
+        Dictionary<Type, TPublisher> publishers,
+        Type messageType,
+        out Type publicationType)
+    {
+        for (var type = messageType; type != null; type = type.BaseType)
+        {
+            if (publishers.ContainsKey(type))
+            {
+                publicationType = type;
+                return true;
+            }
+        }
+
+        // Check the registered interfaces rather than asking the message type for its own, so the
+        // lookup doesn't depend on interface metadata that trimming may remove.
+        var interfaces = publishers.Keys.Where(type => type.IsInterface && type.IsAssignableFrom(messageType)).ToList();
+        if (interfaces.Count > 1)
+        {
+            throw new InvalidOperationException(
+                $"Error publishing message of type '{messageType}': it implements more than one interface with a registered publication " +
+                $"({string.Join(", ", interfaces.Select(type => $"'{type}'"))}), so the publication to use is ambiguous. " +
+                $"Register a publication for '{messageType}' or one of its base classes instead.");
+        }
+
+        publicationType = interfaces.Count == 1 ? interfaces[0] : null;
+        return publicationType != null;
     }
 
     private async Task PublishAsync<TMessage>(
@@ -480,11 +497,11 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         }
 
         // Route by each message's runtime type, so a single batch may contain more than one message
-        // type, each fanned out to the publisher registered for it. Middleware is resolved per group
-        // rather than for the batch as a whole, so per-type middleware only ever sees the messages it
-        // was registered for.
+        // type, each fanned out to the publication found for it (see TryGetPublicationType).
+        // Middleware is resolved per publication rather than for the batch as a whole, so per-type
+        // middleware only ever sees the messages it was registered for.
         var tasks = new List<Task>();
-        foreach (var group in messageList.GroupBy(message => message.GetType()))
+        foreach (var group in messageList.GroupBy(message => GetBatchPublicationTypeForMessage(message.GetType())))
         {
             tasks.Add(PublishGroupAsync(group.Key, group.ToList(), metadata, cancellationToken));
         }
@@ -505,7 +522,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
             var context = new Messaging.Middleware.PublishContext(group, metadata ?? new PublishBatchMetadata());
             await middleware.RunAsync(context, async ct =>
             {
-                var publisher = GetBatchPublishersForMessageType(messageType);
+                var publisher = _batchPublishersByType[messageType];
                 await PublishAsync(publisher, group, (PublishBatchMetadata)context.Metadata, 0, messageType, ct)
                     .ConfigureAwait(false);
                 return true;
@@ -513,11 +530,11 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
             return;
         }
 
-        var batchPublisher = GetBatchPublishersForMessageType(messageType);
+        var batchPublisher = _batchPublishersByType[messageType];
         await PublishAsync(batchPublisher, group, metadata, 0, messageType, cancellationToken).ConfigureAwait(false);
     }
 
-    private IMessageBatchPublisher GetBatchPublishersForMessageType(Type messageType)
+    private Type GetBatchPublicationTypeForMessage(Type messageType)
     {
         if (_publishersByType.Count == 0)
         {
@@ -526,13 +543,13 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
             throw new InvalidOperationException(errorMessage);
         }
 
-        if (!_batchPublishersByType.TryGetValue(messageType, out var publisher))
+        if (!TryGetPublicationType(_batchPublishersByType, messageType, out var publicationType))
         {
             _log.LogError("Error publishing message batch. No publishers registered for message type '{MessageType}'.", messageType);
             throw new InvalidOperationException($"Error publishing message batch, no publishers registered for message type '{messageType}'.");
         }
 
-        return publisher;
+        return publicationType;
     }
 
     private PublishMessageMiddleware GetPublishMiddlewareForMessage(Type messageType)

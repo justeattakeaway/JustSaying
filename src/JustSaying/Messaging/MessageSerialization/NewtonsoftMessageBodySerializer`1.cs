@@ -51,9 +51,10 @@ public sealed class NewtonsoftMessageBodySerializer<T> : IMessageBodySerializer<
     /// Newtonsoft.Json always builds its contract from the runtime type, so a derived instance passed as
     /// <typeparamref name="T"/> is serialized with its derived members included. This differs from
     /// <see cref="SystemTextJsonMessageBodySerializer{T}"/>, which serializes the declared type
-    /// <typeparamref name="T"/> and omits derived-only members. In JustSaying's own publish path the two
-    /// coincide, because publishers — and therefore serializers — are resolved by each message's concrete
-    /// runtime type.
+    /// <typeparamref name="T"/> and omits derived-only members unless <typeparamref name="T"/> is configured for
+    /// polymorphism. In JustSaying's own publish path the two only differ when a message is published to a
+    /// publication registered for one of its base classes or interfaces, because no publication is
+    /// registered for its concrete runtime type.
     /// </remarks>
     public string Serialize(T message)
     {

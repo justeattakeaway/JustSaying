@@ -77,11 +77,11 @@ Rename batch calls accordingly. Single-message `PublishAsync` call sites are unc
 
 `IMessageBodySerializer` is now the generic `IMessageBodySerializer<T>` on the public surface (an internal type-erased seam handles the runtime boundary). If you implement a custom serializer or serialization factory, update to the generic signatures. Routing and serialization remain by each message's runtime type, as in v8: a single (or batch) publish of a base-typed instance is still routed to, and serialized by, the publisher registered for its concrete type.
 
-Because of that, `T` is always the concrete published type in JustSaying's own path. If you construct a serializer for a base type yourself, note that the two built-in implementations differ: `SystemTextJsonMessageBodySerializer<T>` serializes the declared type `T` and omits derived-only members, while `NewtonsoftMessageBodySerializer<T>` builds its contract from the runtime type and includes them.
+### Publications for base classes and interfaces receive derived messages
 
-### Publications for interfaces and abstract types are rejected
+In v8 a publication for an abstract class or interface (for example `WithTopic<WarehouseEvent>()`) was never used: publishing a derived message failed with "no publishers registered". v9 falls back to it. When no publication is registered for a message's runtime type, the message goes to the publication for its closest base class, otherwise for an interface it implements (if more than one registered interface matches, publishing throws and names them). A publication for the exact runtime type always wins, so existing registrations behave as before. Batches are grouped by the publication each message resolves to. Subscriptions fall back the same way, so a `ForTopic<WarehouseEvent>()` handler receives the derived messages its serializer returns.
 
-Because publishing routes by runtime type, a publication registered for an interface or an abstract class (for example `WithTopic<IOrderEvent>()`) could never be used: in v8 every publish then failed with "no publishers registered". v9 throws when the publisher is built instead. Register a publication for each concrete message type. Subscriptions to interfaces and abstract types are unchanged.
+The message is serialized as the registered type. With a `[JsonPolymorphic]` base type and the System.Text.Json serializer, the body carries the type discriminator, so a base-type consumer can deserialize it. Without polymorphism configured, `SystemTextJsonMessageBodySerializer<T>` writes only the members of `T`, while `NewtonsoftMessageBodySerializer<T>` writes the runtime type's members but no discriminator.
 
 ## Exactly-once handling requires a stable key for non-`Message` payloads
 

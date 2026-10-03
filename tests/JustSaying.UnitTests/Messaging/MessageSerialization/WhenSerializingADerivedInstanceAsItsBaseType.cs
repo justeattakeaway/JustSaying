@@ -5,9 +5,9 @@ namespace JustSaying.UnitTests.Messaging.MessageSerialization;
 /// <summary>
 /// The two built-in serializers disagree about what a derived instance passed as its base type puts on
 /// the wire: System.Text.Json serializes the declared type, Newtonsoft.Json serializes the runtime type.
-/// JustSaying's own publish path resolves publishers — and therefore serializers — by the concrete
-/// runtime type, so the two coincide there; these tests pin the difference for anyone constructing a
-/// serializer for a base type directly.
+/// JustSaying's own publish path uses the publication — and therefore the serializer — registered for
+/// the concrete runtime type when there is one, so the two only differ for a message published to a
+/// publication registered for its base type; these tests pin that difference.
 /// </summary>
 public class WhenSerializingADerivedInstanceAsItsBaseType
 {
