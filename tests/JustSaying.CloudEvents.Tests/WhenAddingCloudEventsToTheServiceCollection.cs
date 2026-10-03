@@ -14,6 +14,11 @@ public class WhenAddingCloudEventsToTheServiceCollection
         public string OrderId { get; set; }
     }
 
+    private sealed class OrderCancelled : Message
+    {
+        public string OrderId { get; set; }
+    }
+
     [Test]
     public async Task ItRegistersACloudEventSerializationFactoryThatEmitsTheConfiguredType()
     {
@@ -101,6 +106,84 @@ public class WhenAddingCloudEventsToTheServiceCollection
 
         await Assert.That(provider.GetRequiredService<IMessageBodySerializationFactory>())
             .IsTypeOf<SystemTextJsonSerializationFactory>();
+    }
+
+    [Test]
+    public async Task ASecondCallConfiguresTheSameOptions()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<IMessagingConfig>(new MessagingConfig());
+        services.AddJustSayingCloudEvents(options =>
+        {
+            options.Source = new Uri("/first", UriKind.Relative);
+            options.MapType<OrderPlaced>("com.example.orders.order.placed");
+        });
+        services.AddJustSayingCloudEvents(options => options.MapType<OrderCancelled>("com.example.orders.order.cancelled"));
+
+        await using var provider = services.BuildServiceProvider();
+        var factory = provider.GetRequiredService<CloudEventSerializationFactory>();
+
+        // Both calls' type maps apply, and the second call didn't reset the first call's source.
+        using var placed = JsonDocument.Parse(factory.GetSerializer<OrderPlaced>().Serialize(new OrderPlaced { OrderId = "1" }));
+        using var cancelled = JsonDocument.Parse(factory.GetSerializer<OrderCancelled>().Serialize(new OrderCancelled { OrderId = "1" }));
+
+        await Assert.That(placed.RootElement.GetProperty("type").GetString()).IsEqualTo("com.example.orders.order.placed");
+        await Assert.That(cancelled.RootElement.GetProperty("type").GetString()).IsEqualTo("com.example.orders.order.cancelled");
+        await Assert.That(cancelled.RootElement.GetProperty("source").GetString()).IsEqualTo("/first");
+        await Assert.That(services.Count(descriptor => descriptor.ServiceType == typeof(CloudEventSerializationFactory))).IsEqualTo(1);
+    }
+
+    [Test]
+    public async Task ASecondCallCanMakeCloudEventsTheAppWideFactory()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<IMessagingConfig>(new MessagingConfig());
+        services.AddSingleton<IMessageBodySerializationFactory>(new SystemTextJsonSerializationFactory(CamelCase));
+        services.AddJustSayingCloudEvents(options => options.MapType<OrderPlaced>("com.example.orders.order.placed"));
+        services.AddJustSayingCloudEvents(options => options.UseAsDefault = true);
+
+        await using var provider = services.BuildServiceProvider();
+
+        await Assert.That(provider.GetRequiredService<IMessageBodySerializationFactory>())
+            .IsSameReferenceAs(provider.GetRequiredService<CloudEventSerializationFactory>());
+
+        // The data still uses the app's own factory, captured before CloudEvents replaced it.
+        var data = await SerializeDataAsync(services);
+        await Assert.That(data.TryGetProperty("orderId", out _)).IsTrue();
+    }
+
+    [Test]
+    public async Task ASecondCallCannotUndoUseAsDefault()
+    {
+        var services = new ServiceCollection();
+        services.AddJustSayingCloudEvents(options => options.UseAsDefault = true);
+
+        await Assert.That(() => services.AddJustSayingCloudEvents(options => options.UseAsDefault = false))
+            .Throws<InvalidOperationException>()
+            .WithMessageContaining("UseAsDefault");
+    }
+
+    [Test]
+    public async Task UseAsDefaultDoesNotNeedASourceToConsume()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<IMessagingConfig>(new MessagingConfig());
+        services.AddJustSayingCloudEvents(options =>
+        {
+            options.MapType<OrderPlaced>("com.example.orders.order.placed");
+            options.UseAsDefault = true;
+        });
+
+        await using var provider = services.BuildServiceProvider();
+        var serializer = provider.GetRequiredService<IMessageBodySerializationFactory>().GetSerializer<OrderPlaced>();
+
+        var received = serializer.Deserialize(
+            """{"specversion":"1.0","id":"evt-1","source":"/orders","type":"com.example.orders.order.placed","data":{"OrderId":"1"}}""");
+
+        await Assert.That(received.OrderId).IsEqualTo("1");
+        await Assert.That(() => serializer.Serialize(new OrderPlaced { OrderId = "2" }))
+            .Throws<InvalidOperationException>()
+            .WithMessageContaining("'source'");
     }
 
     [Test]

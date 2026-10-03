@@ -25,35 +25,60 @@ public static class CloudEventsServiceCollectionExtensions
     /// An optional delegate used to configure the <see cref="CloudEventOptions"/>. A consume-only
     /// application can omit it entirely and state each message's <c>type</c> at the subscription via
     /// <c>HandlingCloudEvent&lt;T&gt;("...")</c>, since <c>source</c> and the type map are only needed
-    /// when publishing.
+    /// when publishing. When this method is called more than once, every call's delegate configures the
+    /// same options, in call order, so (for example) a library can map its own types alongside the app's.
     /// </param>
     /// <returns>The same <see cref="IServiceCollection"/>, for chaining.</returns>
+    /// <exception cref="InvalidOperationException">
+    /// A later call sets <see cref="CloudEventOptions.UseAsDefault"/> back to <see langword="false"/>.
+    /// </exception>
     public static IServiceCollection AddJustSayingCloudEvents(
         this IServiceCollection services,
         Action<CloudEventOptions> configure = null)
     {
         if (services is null) throw new ArgumentNullException(nameof(services));
 
-        var options = new CloudEventOptions();
+        // A later call configures the options of the first rather than being dropped, so the calls compose.
+        var registration = services
+            .FirstOrDefault(descriptor => descriptor.ServiceType == typeof(CloudEventsRegistration))?
+            .ImplementationInstance as CloudEventsRegistration;
+        var firstCall = registration is null;
+        registration ??= new CloudEventsRegistration();
+
+        var options = registration.Options;
+        var wasDefault = options.UseAsDefault;
         configure?.Invoke(options);
 
-        // The data payload uses the app's own serialization factory by default. With UseAsDefault that
-        // registration is about to be replaced by CloudEvents itself, so capture it first.
-        var appFactory = options.UseAsDefault ? FindSerializationFactory(services) : null;
-
-        services.TryAddSingleton(serviceProvider =>
+        if (wasDefault && !options.UseAsDefault)
         {
-            var config = serviceProvider.GetRequiredService<IMessagingConfig>();
-            var dataSerializerFactory = options.DataSerializationFactory
-                ?? ResolveAppSerializationFactory(serviceProvider, appFactory, options.UseAsDefault);
+            // The app-wide factory has already been replaced, and turning CloudEvents off again for the
+            // plain registrations would leave it to whichever call ran last; say so instead.
+            throw new InvalidOperationException(
+                $"CloudEvents was made the application-wide default by an earlier {nameof(AddJustSayingCloudEvents)} call, " +
+                $"which a later call can't undo; set {nameof(CloudEventOptions)}.{nameof(CloudEventOptions.UseAsDefault)} in one place.");
+        }
 
-            var metadataProvider = (config as MessagingConfig)?.MessageMetadataProvider ?? DefaultMessageMetadataProvider.Instance;
-
-            return new CloudEventSerializationFactory(dataSerializerFactory, metadataProvider, options);
-        });
-
-        if (options.UseAsDefault)
+        if (firstCall)
         {
+            services.AddSingleton(registration);
+            services.TryAddSingleton(serviceProvider =>
+            {
+                var config = serviceProvider.GetRequiredService<IMessagingConfig>();
+                var dataSerializerFactory = options.DataSerializationFactory
+                    ?? ResolveAppSerializationFactory(serviceProvider, registration.AppFactory, options.UseAsDefault);
+
+                var metadataProvider = (config as MessagingConfig)?.MessageMetadataProvider ?? DefaultMessageMetadataProvider.Instance;
+
+                return new CloudEventSerializationFactory(dataSerializerFactory, metadataProvider, options);
+            });
+        }
+
+        if (options.UseAsDefault && !wasDefault)
+        {
+            // The data payload uses the app's own serialization factory by default. That registration is
+            // about to be replaced by CloudEvents itself, so capture it first.
+            registration.AppFactory = FindSerializationFactory(services);
+
             // Replace (rather than TryAdd) so this wins whether it runs before or after AddJustSaying's
             // own TryAdd of the System.Text.Json default — the two calls compose in either order.
             services.Replace(ServiceDescriptor.Singleton<IMessageBodySerializationFactory>(
@@ -61,6 +86,15 @@ public static class CloudEventsServiceCollectionExtensions
         }
 
         return services;
+    }
+
+    // The options shared by every AddJustSayingCloudEvents call, registered so a later call can find them.
+    private sealed class CloudEventsRegistration
+    {
+        public CloudEventOptions Options { get; } = new();
+
+        // The app's own serialization factory, captured before UseAsDefault replaced it.
+        public ServiceDescriptor AppFactory { get; set; }
     }
 
     private static ServiceDescriptor FindSerializationFactory(IServiceCollection services)
