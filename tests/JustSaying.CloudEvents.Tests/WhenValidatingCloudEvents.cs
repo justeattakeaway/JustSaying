@@ -156,4 +156,61 @@ public class WhenValidatingCloudEvents
             .Throws<InvalidOperationException>()
             .WithMessageContaining("both");
     }
+
+    [Test]
+    [Arguments("""{"specversion":"1.0","source":"/orders","type":"com.example.orders.order.placed","data":{"OrderId":"1"}}""", "'id'")]
+    [Arguments("""{"specversion":"1.0","id":"","source":"/orders","type":"com.example.orders.order.placed","data":{"OrderId":"1"}}""", "'id'")]
+    [Arguments("""{"specversion":"1.0","id":"evt-1","type":"com.example.orders.order.placed","data":{"OrderId":"1"}}""", "'source'")]
+    [Arguments("""{"specversion":"1.0","id":"evt-1","source":"http://[bad","type":"com.example.orders.order.placed","data":{"OrderId":"1"}}""", "'source'")]
+    [Arguments("""{"specversion":"1.0","id":"evt-1","source":"/orders","type":"com.example.orders.order.placed","time":"yesterday","data":{"OrderId":"1"}}""", "'time'")]
+    [Arguments("""{"specversion":"1.0","id":"evt-1","source":"/orders","type":"com.example.orders.order.placed","time":"2026-10-01 10:00:00Z","data":{"OrderId":"1"}}""", "'time'")]
+    [Arguments("""{"specversion":"1.0","id":"evt-1","source":"/orders","type":"com.example.orders.order.placed","time":"2016-12-31T23:59:60Z","data":{"OrderId":"1"}}""", "'time'")]
+    public async Task Rejects_An_Event_With_A_Missing_Or_Invalid_Required_Attribute(string body, string attribute)
+    {
+        // The bare-payload reader validates an event exactly as the CloudEvent<T> envelope reader does.
+        await Assert.That(() => { CreateSerializer().Deserialize(body); })
+            .Throws<InvalidOperationException>()
+            .WithMessageContaining(attribute);
+    }
+
+    private static CloudEventSerializationFactory CreateFactory(CloudEventOptions options = null)
+        => new(
+            new SystemTextJsonSerializationFactory(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions),
+            new MessagingConfig().MessageMetadataProvider,
+            options ?? new CloudEventOptions());
+
+    [Test]
+    public async Task A_Data_Only_Serializer_With_No_Type_Reads_An_Event_Of_Any_Type()
+    {
+        // GetDataOnlySerializer<T>() with no type passed or mapped: the type is only needed to publish.
+        var serializer = CreateFactory().GetDataOnlySerializer<PocoOrder>();
+
+        var result = serializer.Deserialize(
+            """{"specversion":"1.0","id":"evt-1","source":"/orders","type":"com.example.anything","data":{"OrderId":"1"}}""");
+
+        await Assert.That(result.OrderId).IsEqualTo("1");
+    }
+
+    [Test]
+    public async Task A_Data_Only_Serializer_With_A_Type_Reads_Only_That_Type()
+    {
+        var serializer = CreateFactory().GetDataOnlySerializer<PocoOrder>(OrderPlacedType);
+
+        var result = serializer.Deserialize(Event(""","data":{"OrderId":"1"}"""));
+
+        await Assert.That(result.OrderId).IsEqualTo("1");
+        await Assert.That(() => { serializer.Deserialize("""{"specversion":"1.0","id":"evt-1","source":"/orders","type":"com.example.anything","data":{"OrderId":"1"}}"""); })
+            .Throws<InvalidOperationException>()
+            .WithMessageContaining("com.example.anything");
+    }
+
+    [Test]
+    public async Task A_Data_Only_Serializer_Takes_Its_Type_From_The_Type_Map()
+    {
+        var serializer = CreateFactory(new CloudEventOptions().MapType<PocoOrder>(OrderPlacedType)).GetDataOnlySerializer<PocoOrder>();
+
+        await Assert.That(serializer.Deserialize(Event(""","data":{"OrderId":"1"}""")).OrderId).IsEqualTo("1");
+        await Assert.That(() => { serializer.Deserialize("""{"specversion":"1.0","id":"evt-1","source":"/orders","type":"com.example.anything","data":{"OrderId":"1"}}"""); })
+            .Throws<InvalidOperationException>();
+    }
 }

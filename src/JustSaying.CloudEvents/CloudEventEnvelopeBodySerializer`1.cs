@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using JustSaying.Extensions;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
 
@@ -55,7 +56,7 @@ public sealed class CloudEventEnvelopeBodySerializer<T> : IMessageBodySerializer
         var type = string.IsNullOrEmpty(message.Type) ? _type : message.Type;
         if (string.IsNullOrEmpty(type))
         {
-            throw new InvalidOperationException($"A CloudEvents 'type' is required to publish; set CloudEvent<T>.Type or configure MapType<{typeof(T).Name}>(...).");
+            throw new InvalidOperationException($"A CloudEvents 'type' is required to publish; set CloudEvent<T>.Type or configure MapType<{typeof(T).ToReadableName()}>(...).");
         }
 
         // An event read from another producer keeps its extensions verbatim, so the names are checked
@@ -119,30 +120,8 @@ public sealed class CloudEventEnvelopeBodySerializer<T> : IMessageBodySerializer
         using var document = JsonDocument.Parse(message);
         var root = document.RootElement;
 
-        if (root.ValueKind != JsonValueKind.Object)
-        {
-            throw new InvalidOperationException("The message is not a structured-mode CloudEvent: expected a JSON object.");
-        }
-
-        var specVersion = GetString(root, "specversion");
-        if (specVersion != CloudEventAttributes.SpecVersion)
-        {
-            throw new InvalidOperationException(
-                $"The CloudEvent has specversion '{specVersion ?? "<missing>"}'; only CloudEvents {CloudEventAttributes.SpecVersion} is supported.");
-        }
-
-        var id = GetRequiredString(root, "id");
-        var source = GetUri(root, "source")
-            ?? throw new InvalidOperationException("The CloudEvent has no valid 'source' attribute, which CloudEvents requires.");
-        var type = GetRequiredString(root, "type");
-
-        if (_type is not null && !string.Equals(type, _type, StringComparison.Ordinal))
-        {
-            throw new InvalidOperationException($"The CloudEvent has type '{type}', but this subscription reads CloudEvents of type '{_type}'.");
-        }
-
-        var dataContentType = GetString(root, "datacontenttype");
-        var payload = DeserializeData(root, dataContentType);
+        var (id, source, type, time) = CloudEventJsonReader.ReadContext(root, _type);
+        var payload = CloudEventJsonReader.ReadData(root, _dataSerializer, typeof(CloudEvent<T>));
 
         Dictionary<string, string> extensions = null;
         foreach (var member in root.EnumerateObject())
@@ -172,78 +151,11 @@ public sealed class CloudEventEnvelopeBodySerializer<T> : IMessageBodySerializer
             id,
             source,
             type,
-            GetTime(root),
-            GetString(root, "subject"),
+            time,
+            CloudEventJsonReader.GetString(root, "subject"),
             extensions,
-            dataContentType,
-            GetUri(root, "dataschema"),
+            CloudEventJsonReader.GetString(root, "datacontenttype"),
+            CloudEventJsonReader.GetUri(root, "dataschema"),
             validateExtensions: false);
-    }
-
-    private T DeserializeData(JsonElement root, string dataContentType)
-    {
-        var hasData = root.TryGetProperty("data", out var data) && data.ValueKind != JsonValueKind.Null;
-        var hasBase64Data = root.TryGetProperty("data_base64", out var base64Data) && base64Data.ValueKind != JsonValueKind.Null;
-
-        if (hasData && hasBase64Data)
-        {
-            throw new InvalidOperationException("The CloudEvent has both 'data' and 'data_base64' members, which CloudEvents forbids.");
-        }
-
-        string dataJson;
-        if (hasData)
-        {
-            dataJson = data.GetRawText();
-        }
-        else if (hasBase64Data)
-        {
-            // Binary data travels base64-encoded; JSON data sent that way is decoded and read like inline
-            // data. Any other media type can't be read into a typed payload.
-            if (base64Data.ValueKind != JsonValueKind.String || !CloudEventAttributes.IsJsonContentType(dataContentType))
-            {
-                throw new InvalidOperationException(
-                    $"The CloudEvent carries 'data_base64' of content type '{dataContentType}'; only JSON data can be read into {typeof(T).Name}.");
-            }
-
-            dataJson = Encoding.UTF8.GetString(base64Data.GetBytesFromBase64());
-        }
-        else
-        {
-            // A data-less event is valid CloudEvents, but CloudEvent<T>.Data is never null, so that a
-            // handler can rely on it; such an event fails handling instead.
-            throw new InvalidOperationException(
-                $"The CloudEvent has no data, but CloudEvent<{typeof(T).Name}> requires a {typeof(T).Name} payload.");
-        }
-
-        return _dataSerializer.Deserialize(dataJson)
-               ?? throw new InvalidOperationException(
-                   $"The CloudEvent's data deserialized to null, but CloudEvent<{typeof(T).Name}> requires a {typeof(T).Name} payload.");
-    }
-
-    private static string GetString(JsonElement root, string name)
-        => root.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
-
-    private static string GetRequiredString(JsonElement root, string name)
-        => GetString(root, name) is { Length: > 0 } value
-            ? value
-            : throw new InvalidOperationException($"The CloudEvent has no '{name}' attribute, which CloudEvents requires.");
-
-    private static Uri GetUri(JsonElement root, string name)
-        => GetString(root, name) is { Length: > 0 } s && Uri.TryCreate(s, UriKind.RelativeOrAbsolute, out var uri) ? uri : null;
-
-    private static DateTimeOffset? GetTime(JsonElement root)
-    {
-        if (!root.TryGetProperty("time", out var value) || value.ValueKind == JsonValueKind.Null)
-        {
-            return null;
-        }
-
-        if (value.ValueKind == JsonValueKind.String && CloudEventAttributes.TryParseTime(value.GetString(), out var time))
-        {
-            return time;
-        }
-
-        throw new InvalidOperationException(
-            $"The CloudEvent's 'time' attribute {value.GetRawText()} is not an RFC 3339 timestamp with a time zone offset.");
     }
 }

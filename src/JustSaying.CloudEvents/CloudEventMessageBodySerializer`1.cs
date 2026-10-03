@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using JustSaying.Extensions;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
 
@@ -15,8 +16,6 @@ namespace JustSaying.CloudEvents;
 /// <typeparam name="TMessage">The type of message to be serialized or deserialized.</typeparam>
 public sealed class CloudEventMessageBodySerializer<TMessage> : IMessageBodySerializer<TMessage>, ISelfDescribingMessageBodySerializer where TMessage : class
 {
-    private const string SpecVersion = "1.0";
-
     private readonly IMessageBodySerializer<TMessage> _dataSerializer;
     private readonly IMessageMetadataProvider _metadataProvider;
     private readonly Uri _source;
@@ -64,9 +63,9 @@ public sealed class CloudEventMessageBodySerializer<TMessage> : IMessageBodySeri
     public string Serialize(TMessage message)
     {
         var source = _source
-            ?? throw new InvalidOperationException($"A CloudEvents 'source' is required to publish '{typeof(TMessage).FullName}'; set CloudEventOptions.Source or pass one at the publication registration.");
+            ?? throw new InvalidOperationException($"A CloudEvents 'source' is required to publish '{typeof(TMessage).ToReadableFullName()}'; set CloudEventOptions.Source or pass one at the publication registration.");
         var type = _type
-            ?? throw new InvalidOperationException($"A CloudEvents 'type' is required to publish '{typeof(TMessage).FullName}'; configure MapType<{typeof(TMessage).Name}>(...) or pass one at the publication registration.");
+            ?? throw new InvalidOperationException($"A CloudEvents 'type' is required to publish '{typeof(TMessage).ToReadableFullName()}'; configure MapType<{typeof(TMessage).ToReadableName()}>(...) or pass one at the publication registration.");
 
         var dataJson = _dataSerializer.Serialize(message);
 
@@ -74,7 +73,7 @@ public sealed class CloudEventMessageBodySerializer<TMessage> : IMessageBodySeri
         using (var writer = new Utf8JsonWriter(stream))
         {
             writer.WriteStartObject();
-            writer.WriteString("specversion", SpecVersion);
+            writer.WriteString("specversion", CloudEventAttributes.SpecVersion);
             // CloudEvents requires a non-empty id; mint one when the payload carries none.
             var id = _metadataProvider.GetId(message);
             writer.WriteString("id", string.IsNullOrEmpty(id) ? Guid.NewGuid().ToString() : id);
@@ -99,8 +98,9 @@ public sealed class CloudEventMessageBodySerializer<TMessage> : IMessageBodySeri
 
     /// <summary>
     /// Deserializes the <c>data</c> payload of a structured-mode CloudEvents JSON envelope into a
-    /// message of type <typeparamref name="TMessage"/>. The event must be a CloudEvents 1.0 event of
-    /// this serializer's <c>type</c> with a non-null <c>data</c>, or a <c>data_base64</c> holding JSON.
+    /// message of type <typeparamref name="TMessage"/>. The event must be a valid CloudEvents 1.0 event
+    /// (validated as for a <see cref="CloudEvent{T}"/>) of this serializer's <c>type</c>, when it has one,
+    /// with a non-null <c>data</c>, or a <c>data_base64</c> holding JSON.
     /// </summary>
     /// <param name="message">The CloudEvents JSON.</param>
     /// <returns>The deserialized message.</returns>
@@ -110,62 +110,8 @@ public sealed class CloudEventMessageBodySerializer<TMessage> : IMessageBodySeri
         using var document = JsonDocument.Parse(message);
         var root = document.RootElement;
 
-        if (root.ValueKind != JsonValueKind.Object)
-        {
-            throw new InvalidOperationException("The CloudEvents payload is not a JSON object.");
-        }
-
-        var specVersion = GetString(root, "specversion");
-        if (specVersion != SpecVersion)
-        {
-            throw new InvalidOperationException(
-                $"The CloudEvent has specversion '{specVersion ?? "<none>"}', but only CloudEvents {SpecVersion} is supported.");
-        }
-
-        var type = GetString(root, "type");
-        if (type != _type)
-        {
-            throw new InvalidOperationException(
-                $"The CloudEvent has type '{type ?? "<none>"}', but this serializer reads '{_type}' events as '{typeof(TMessage).Name}'.");
-        }
-
-        var hasData = root.TryGetProperty("data", out var data);
-        var hasDataBase64 = root.TryGetProperty("data_base64", out var dataBase64);
-
-        if (hasData && hasDataBase64)
-        {
-            throw new InvalidOperationException("The CloudEvent has both 'data' and 'data_base64', which is not allowed.");
-        }
-
-        string dataJson;
-        if (hasData && data.ValueKind != JsonValueKind.Null)
-        {
-            dataJson = data.GetRawText();
-        }
-        else if (hasDataBase64 && dataBase64.ValueKind == JsonValueKind.String)
-        {
-            // Binary data; only JSON can be read into a message, so the content type must be JSON (or absent).
-            var dataContentType = GetString(root, "datacontenttype");
-            if (dataContentType is not null && !JsonMediaType.IsJson(dataContentType))
-            {
-                throw new InvalidOperationException(
-                    $"The CloudEvent's 'data_base64' has datacontenttype '{dataContentType}', but only JSON data can be read as '{typeof(TMessage).Name}'.");
-            }
-
-            dataJson = Encoding.UTF8.GetString(dataBase64.GetBytesFromBase64());
-        }
-        else
-        {
-            throw new InvalidOperationException(
-                $"The CloudEvent of type '{type}' has no data, so it can't be read as '{typeof(TMessage).Name}'.");
-        }
-
-        return _dataSerializer.Deserialize(dataJson)
-            ?? throw new InvalidOperationException($"The CloudEvent of type '{type}' has data that deserialized to null.");
+        // With no type (a consume-only serializer whose type isn't known), an event of any type is read.
+        CloudEventJsonReader.ReadContext(root, _type);
+        return CloudEventJsonReader.ReadData(root, _dataSerializer, typeof(TMessage));
     }
-
-    private static string GetString(JsonElement element, string propertyName)
-        => element.TryGetProperty(propertyName, out var property) && property.ValueKind == JsonValueKind.String
-            ? property.GetString()
-            : null;
 }

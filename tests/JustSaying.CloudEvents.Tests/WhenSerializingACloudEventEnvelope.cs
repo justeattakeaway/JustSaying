@@ -180,7 +180,6 @@ public class WhenSerializingACloudEventEnvelope
     [Arguments("2026-10-01T10:00:00Z", "2026-10-01T10:00:00.0000000+00:00")]
     [Arguments("2026-10-01t10:00:00.123456789z", "2026-10-01T10:00:00.1234567+00:00")]
     [Arguments("2026-10-01T10:00:00+01:00", "2026-10-01T10:00:00.0000000+01:00")]
-    [Arguments("2016-12-31T23:59:60Z", "2017-01-01T00:00:00.0000000+00:00")]
     public async Task An_Rfc3339_Time_Is_Read_With_Its_Offset(string time, string expected)
     {
         var received = CreateSerializer().Deserialize(Event($"\"time\": \"{time}\""));
@@ -192,6 +191,7 @@ public class WhenSerializingACloudEventEnvelope
     [Arguments("2026-10-01T10:00:00")]
     [Arguments("2026-10-01 10:00:00Z")]
     [Arguments("2026-13-01T10:00:00Z")]
+    [Arguments("2016-12-31T23:59:60Z")] // a leap second, which DateTimeOffset can't hold (the CloudEvents SDK rejects it too)
     [Arguments("yesterday")]
     public async Task A_Time_That_Is_Not_Rfc3339_Fails_Rather_Than_Being_Read_In_The_Local_Zone(string time)
     {

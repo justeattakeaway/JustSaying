@@ -45,8 +45,9 @@ internal static class CloudEventAttributes
 
     /// <summary>
     /// Parses an RFC 3339 timestamp. A value without an offset is rejected rather than being read in the
-    /// machine's local time zone. A leap second (<c>:60</c>), which <see cref="DateTimeOffset"/> can't
-    /// represent, is read as the first instant of the next minute.
+    /// machine's local time zone. A leap second (<c>:60</c>) is rejected too, as the CloudEvents SDK for
+    /// .NET does: <see cref="DateTimeOffset"/> can't represent it, and reading it as a neighbouring
+    /// instant would change the event's time.
     /// </summary>
     public static bool TryParseTime(string value, out DateTimeOffset time)
     {
@@ -59,9 +60,6 @@ internal static class CloudEventAttributes
         }
 
         int Part(int group) => int.Parse(match.Groups[group].Value, NumberStyles.None, CultureInfo.InvariantCulture);
-
-        var second = Part(6);
-        var leapSecond = second == 60;
 
         var offset = TimeSpan.Zero;
         if (!match.Groups[8].Success)
@@ -86,14 +84,12 @@ internal static class CloudEventAttributes
 
         try
         {
-            time = new DateTimeOffset(Part(1), Part(2), Part(3), Part(4), Part(5), leapSecond ? 59 : second, offset)
-                .AddTicks(ticks)
-                .AddSeconds(leapSecond ? 1 : 0);
+            time = new DateTimeOffset(Part(1), Part(2), Part(3), Part(4), Part(5), Part(6), offset).AddTicks(ticks);
             return true;
         }
         catch (ArgumentOutOfRangeException)
         {
-            // An impossible date or time (month 13, hour 24, an offset beyond ±14:00).
+            // An impossible date or time (month 13, hour 24, a leap second, an offset beyond ±14:00).
             return false;
         }
     }
