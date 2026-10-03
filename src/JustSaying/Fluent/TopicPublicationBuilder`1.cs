@@ -1,8 +1,8 @@
 using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware;
-using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent;
@@ -13,8 +13,7 @@ namespace JustSaying.Fluent;
 /// <typeparam name="T">
 /// The type of the message.
 /// </typeparam>
-public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
-    where T : Message
+public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T> where T : class
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="TopicPublicationBuilder{T}"/> class.
@@ -40,10 +39,10 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
     private Action<PublishMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
     /// <summary>
-    /// Function that will produce a topic name dynamically from a Message at publish time.
+    /// Function that will produce a topic name dynamically from a message at publish time.
     /// If the topic doesn't exist, it will be created at that point.
     /// </summary>
-    public Func<Message, string> TopicNameCustomizer { get; set; }
+    public Func<T, string> TopicNameCustomizer { get; set; }
 
     /// <summary>
     /// Configures the SNS write configuration.
@@ -153,7 +152,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
     /// <returns>
     /// The current <see cref="TopicPublicationBuilder{T}"/>.
     /// </returns>
-    public TopicPublicationBuilder<T> WithTopicName(Func<Message, string> topicNameCustomizer)
+    public TopicPublicationBuilder<T> WithTopicName(Func<T, string> topicNameCustomizer)
     {
         TopicNameCustomizer = topicNameCustomizer;
         return this;
@@ -187,7 +186,10 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
 
         var writeConfiguration = new SnsWriteConfiguration();
         ConfigureWrites?.Invoke(writeConfiguration);
-        writeConfiguration.CompressionOptions ??= bus.Config.DefaultCompressionOptions;
+        writeConfiguration.CompressionOptions = PublicationCompression.Resolve<T>(
+            writeConfiguration.CompressionOptions,
+            bus.Config.DefaultCompressionOptions,
+            isSelfDescribing: bus.MessageBodySerializerFactory.GetSerializer<T>() is ISelfDescribingMessageBodySerializer);
         CompressionEncodingValidator.ValidateEncoding(bus.CompressionRegistry, writeConfiguration.CompressionOptions);
 
         var client = proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region));
@@ -200,8 +202,12 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
                 loggerFactory,
                 bus);
 
+        // A dynamic topic only builds its publisher on first publish, so create a serializer now so that
+        // one that can't handle T fails at bus build, as it does for a static topic.
+        _ = bus.MessageBodySerializerFactory.GetSerializer<T>();
+
         ITopicPublisher config = TopicNameCustomizer != null
-            ? DynamicPublicationConfiguration.Build<T>(TopicNameCustomizer, BuildConfiguration, loggerFactory)
+            ? DynamicPublicationConfiguration.Build<T>(message => TopicNameCustomizer((T)message), BuildConfiguration, loggerFactory)
             : BuildConfiguration(TopicName);
 
         bus.AddStartupTask(config.StartupTask);

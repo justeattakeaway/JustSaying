@@ -16,6 +16,12 @@ public sealed class LoggingMiddleware(ILoggerFactory loggerFactory) : Middleware
         loggerFactory?.CreateLogger<LoggingMiddleware>()
         ?? throw new ArgumentNullException(nameof(loggerFactory));
 
+    /// <summary>
+    /// Gets or sets the provider used to read the logged message identity. A subscription's pipeline
+    /// sets this to the bus's provider when it is built.
+    /// </summary>
+    internal IMessageMetadataProvider MetadataProvider { get; set; } = DefaultMessageMetadataProvider.Instance;
+
     protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
     {
         using var disposable = _logger.BeginScope(new Dictionary<string, object>()
@@ -42,7 +48,7 @@ public sealed class LoggingMiddleware(ILoggerFactory loggerFactory) : Middleware
                     context.HandledException,
                     MessageTemplate,
                     "Succeeded",
-                    context.Message.Id,
+                    MessageIdentity.GetId(context.Message, MetadataProvider),
                     context.MessageType.FullName,
                     watch.ElapsedMilliseconds);
             }
@@ -52,7 +58,7 @@ public sealed class LoggingMiddleware(ILoggerFactory loggerFactory) : Middleware
                     context.HandledException,
                     MessageTemplate,
                     "Failed",
-                    context.Message.Id,
+                    MessageIdentity.GetId(context.Message, MetadataProvider),
                     context.MessageType.FullName,
                     watch.ElapsedMilliseconds);
             }

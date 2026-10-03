@@ -16,11 +16,11 @@ public class MessagePublisherExtensionsTests
         var batchMetadata = new PublishBatchMetadata();
 
         // Act and Assert
-        (await Should.ThrowAsync<ArgumentNullException>(() => (null as IMessagePublisher).PublishAsync(messages))).ParamName.ShouldBe("publisher");
-        (await Should.ThrowAsync<ArgumentNullException>(() => (null as IMessagePublisher).PublishAsync(messages, CancellationToken.None))).ParamName.ShouldBe("publisher");
+        (await Should.ThrowAsync<ArgumentNullException>(() => (null as IMessagePublisher).PublishBatchAsync(messages))).ParamName.ShouldBe("publisher");
+        (await Should.ThrowAsync<ArgumentNullException>(() => (null as IMessagePublisher).PublishBatchAsync(messages, CancellationToken.None))).ParamName.ShouldBe("publisher");
         (await Should.ThrowAsync<ArgumentNullException>(() => (null as IMessagePublisher).PublishAsync(message, metadata))).ParamName.ShouldBe("publisher");
-        (await Should.ThrowAsync<ArgumentNullException>(() => (null as IMessagePublisher).PublishAsync(messages, batchMetadata))).ParamName.ShouldBe("publisher");
-        (await Should.ThrowAsync<ArgumentNullException>(() => (null as IMessageBatchPublisher).PublishAsync(messages, CancellationToken.None))).ParamName.ShouldBe("publisher");
+        (await Should.ThrowAsync<ArgumentNullException>(() => (null as IMessagePublisher).PublishBatchAsync(messages, batchMetadata))).ParamName.ShouldBe("publisher");
+        (await Should.ThrowAsync<ArgumentNullException>(() => (null as IMessageBatchPublisher).PublishBatchAsync(messages, CancellationToken.None))).ParamName.ShouldBe("publisher");
     }
 
     [Test]
@@ -33,10 +33,10 @@ public class MessagePublisherExtensionsTests
         var cancellationToken = CancellationToken.None;
 
         // Act
-        await publisher.PublishAsync(messages, metadata, cancellationToken);
+        await publisher.PublishBatchAsync(messages, metadata, cancellationToken);
 
         // Assert
-        await publisher.Received(1).PublishAsync(messages, metadata, cancellationToken);
+        await ((IMessageBatchPublisher)publisher).Received(1).PublishBatchAsync(messages, metadata, cancellationToken);
         await publisher.Received(0).PublishAsync(Arg.Any<Message>(), Arg.Any<PublishMetadata>(), Arg.Any<CancellationToken>());
     }
 
@@ -50,7 +50,7 @@ public class MessagePublisherExtensionsTests
         var cancellationToken = CancellationToken.None;
 
         // Act
-        await publisher.PublishAsync(messages, metadata, cancellationToken);
+        await publisher.PublishBatchAsync(messages, metadata, cancellationToken);
 
         // Assert
         await publisher.Received(1).PublishAsync(messages[0], metadata, cancellationToken);
