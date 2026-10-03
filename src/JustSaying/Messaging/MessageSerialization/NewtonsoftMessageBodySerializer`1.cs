@@ -1,4 +1,3 @@
-using JustSaying.Models;
 using Newtonsoft.Json;
 
 namespace JustSaying.Messaging.MessageSerialization;
@@ -6,8 +5,8 @@ namespace JustSaying.Messaging.MessageSerialization;
 /// <summary>
 /// Provides serialization and deserialization functionality for messages of type <typeparamref name="T"/> using Newtonsoft.Json.
 /// </summary>
-/// <typeparam name="T">The type of message to be serialized or deserialized. Must inherit from <see cref="Message"/>.</typeparam>
-public sealed class NewtonsoftMessageBodySerializer<T> : IMessageBodySerializer where T: Message
+/// <typeparam name="T">The type of message to be serialized or deserialized.</typeparam>
+public sealed class NewtonsoftMessageBodySerializer<T> : IMessageBodySerializer<T> where T : class
 {
     private readonly JsonSerializerSettings _settings;
 
@@ -48,7 +47,16 @@ public sealed class NewtonsoftMessageBodySerializer<T> : IMessageBodySerializer 
     /// </summary>
     /// <param name="message">The message to serialize.</param>
     /// <returns>A JSON string representation of the message.</returns>
-    public string Serialize(Message message)
+    /// <remarks>
+    /// Newtonsoft.Json always builds its contract from the runtime type, so a derived instance passed as
+    /// <typeparamref name="T"/> is serialized with its derived members included. This differs from
+    /// <see cref="SystemTextJsonMessageBodySerializer{T}"/>, which serializes the declared type
+    /// <typeparamref name="T"/> and omits derived-only members unless <typeparamref name="T"/> is configured for
+    /// polymorphism. In JustSaying's own publish path the two only differ when a message is published to a
+    /// publication registered for one of its base classes or interfaces, because no publication is
+    /// registered for its concrete runtime type.
+    /// </remarks>
+    public string Serialize(T message)
     {
         return JsonConvert.SerializeObject(message, _settings);
     }
@@ -58,7 +66,7 @@ public sealed class NewtonsoftMessageBodySerializer<T> : IMessageBodySerializer 
     /// </summary>
     /// <param name="message">The JSON string to deserialize.</param>
     /// <returns>A deserialized message of type <typeparamref name="T"/>.</returns>
-    public Message Deserialize(string message)
+    public T Deserialize(string message)
     {
         return JsonConvert.DeserializeObject<T>(message, _settings);
     }
