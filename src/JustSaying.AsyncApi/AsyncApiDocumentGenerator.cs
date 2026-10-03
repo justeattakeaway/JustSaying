@@ -446,10 +446,12 @@ internal sealed class AsyncApiDocumentGenerator
                 // A reader identifies a message by its name, so two different messages under one name
                 // on one destination can't be told apart. The first registered is documented, which
                 // keeps the channel consistent with the operations, and the conflict is reported.
+                // Types that share a wire name often share a simple name too, so they are named in full.
+                string documentedName = FriendlyTypeName(Describe(documented).PayloadType, qualified: true);
                 Warn(
                     DuplicateMessageName,
-                    $"{FriendlyTypeName(Describe(message).PayloadType)} and {FriendlyTypeName(Describe(documented).PayloadType)} are both identified as '{wireName}' on {address}, " +
-                    $"so consumers cannot tell them apart; only {FriendlyTypeName(Describe(documented).PayloadType)} is documented. Give each message on a destination a distinct name.");
+                    $"{FriendlyTypeName(Describe(message).PayloadType, qualified: true)} and {documentedName} are both identified as '{wireName}' on {address}, " +
+                    $"so consumers cannot tell them apart; only {documentedName} is documented. Give each message on a destination a distinct name.");
             }
         }
 
@@ -794,24 +796,39 @@ internal sealed class AsyncApiDocumentGenerator
 
     /// <summary>
     /// Renders a type name for display, expanding closed generics (for example
-    /// <c>Envelope&lt;OrderPlaced&gt;</c> rather than <c>Envelope`1</c>). Wire names are never
+    /// <c>Envelope&lt;OrderPlaced&gt;</c> rather than <c>Envelope`1</c>) and, when
+    /// <paramref name="qualified"/>, naming its namespace and declaring types the way C# does
+    /// (<c>Contracts.Envelope&lt;Contracts.Orders.OrderPlaced&gt;</c>). Wire names are never
     /// derived from this; they stay faithful to the registered logical name.
     /// </summary>
-    private static string FriendlyTypeName(Type type)
+    private static string FriendlyTypeName(Type type, bool qualified = false)
     {
+        string name = WithoutArity(type);
+        if (qualified)
+        {
+            for (var declaringType = type.DeclaringType; declaringType is not null; declaringType = declaringType.DeclaringType)
+            {
+                name = $"{WithoutArity(declaringType)}.{name}";
+            }
+
+            if (!string.IsNullOrEmpty(type.Namespace))
+            {
+                name = $"{type.Namespace}.{name}";
+            }
+        }
+
         if (!type.IsGenericType)
         {
-            return type.Name;
+            return name;
         }
 
-        string name = type.Name;
-        int backtickIndex = name.IndexOf('`');
-        if (backtickIndex > 0)
+        return $"{name}<{string.Join(", ", type.GenericTypeArguments.Select((argument) => FriendlyTypeName(argument, qualified)))}>";
+
+        static string WithoutArity(Type type)
         {
-            name = name.Remove(backtickIndex);
+            int backtickIndex = type.Name.IndexOf('`');
+            return backtickIndex > 0 ? type.Name.Remove(backtickIndex) : type.Name;
         }
-
-        return $"{name}<{string.Join(", ", type.GenericTypeArguments.Select(FriendlyTypeName))}>";
     }
 
     /// <summary>

@@ -98,6 +98,66 @@ public class WhenPartsOfTheDocumentAreOmitted
         await Assert.That(message.Title).IsEqualTo(nameof(OrderPlaced));
     }
 
+    public static class Billing
+    {
+        public sealed class Thing
+        {
+        }
+    }
+
+    public static class Shipping
+    {
+        public sealed class Thing
+        {
+        }
+    }
+
+    public sealed class Envelope<T>
+    {
+        public T Body { get; set; }
+    }
+
+    private static List<string> DuplicateNameWarnings(params MessageTypeMetadata[] messages)
+    {
+        var registry = new MessagingMetadataRegistry();
+        registry.SetRegion("eu-west-1");
+        foreach (var message in messages)
+        {
+            registry.AddPublication(new PublicationMetadata(MessagingDestinationKind.SnsTopic, "things", isDynamic: false, [message]));
+        }
+
+        var logger = new CapturingLogger();
+        new AsyncApiDocumentGenerator(registry, new AsyncApiOptions(), logger: logger).Generate();
+
+        return logger.Warnings;
+    }
+
+    [Test]
+    public async Task TwoMessagesWithOneNameAreNamedInFullInTheWarning()
+    {
+        var warnings = DuplicateNameWarnings(
+            new MessageTypeMetadata(typeof(Billing.Thing), "Thing"),
+            new MessageTypeMetadata(typeof(Shipping.Thing), "Thing"));
+
+        await Assert.That(warnings).Contains(
+            "JustSaying.AsyncApi.Tests.WhenPartsOfTheDocumentAreOmitted.Shipping.Thing and JustSaying.AsyncApi.Tests.WhenPartsOfTheDocumentAreOmitted.Billing.Thing " +
+            "are both identified as 'Thing' on things, so consumers cannot tell them apart; " +
+            "only JustSaying.AsyncApi.Tests.WhenPartsOfTheDocumentAreOmitted.Billing.Thing is documented. Give each message on a destination a distinct name.");
+    }
+
+    [Test]
+    public async Task TwoGenericMessagesWithOneNameAreNamedInFullInTheWarning()
+    {
+        var warnings = DuplicateNameWarnings(
+            new MessageTypeMetadata(typeof(Envelope<Billing.Thing>), "Envelope"),
+            new MessageTypeMetadata(typeof(Envelope<Shipping.Thing>), "Envelope"));
+
+        await Assert.That(warnings).Contains((warning) => warning.StartsWith(
+            "JustSaying.AsyncApi.Tests.WhenPartsOfTheDocumentAreOmitted.Envelope<JustSaying.AsyncApi.Tests.WhenPartsOfTheDocumentAreOmitted.Shipping.Thing> and " +
+            "JustSaying.AsyncApi.Tests.WhenPartsOfTheDocumentAreOmitted.Envelope<JustSaying.AsyncApi.Tests.WhenPartsOfTheDocumentAreOmitted.Billing.Thing> are both identified as 'Envelope'",
+            StringComparison.Ordinal));
+    }
+
     [Test]
     public async Task ANonSystemTextJsonSerializerLogsAWarning()
     {
