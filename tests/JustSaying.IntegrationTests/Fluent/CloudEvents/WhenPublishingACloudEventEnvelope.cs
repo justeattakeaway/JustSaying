@@ -89,6 +89,28 @@ public class WhenPublishingACloudEventEnvelope : IntegrationTestBase
     }
 
     [Test]
+    public async Task Then_Publishing_An_Envelope_Without_A_CloudEvents_Publication_Names_It_Readably()
+    {
+        // Arrange - only a plain publication for the payload type, which doesn't take a CloudEvent<T>.
+        var services = GivenJustSaying()
+            .ConfigureJustSaying(builder => builder
+                .Publications(p => p.WithTopic<OrderPlaced>(t => t.WithTopicName(UniqueName))));
+
+        services.AddJustSayingCloudEvents();
+
+        var publisher = services.BuildServiceProvider().GetRequiredService<IMessagePublisher>();
+        await publisher.StartAsync(CancellationToken.None);
+
+        // Act
+        var exception = await Should.ThrowAsync<InvalidOperationException>(
+            () => publisher.PublishAsync(new CloudEvent<OrderPlaced>(new OrderPlaced(), source: RegistrationSource)));
+
+        // Assert - the C# spelling of the type, not CloudEvent`1[...].
+        exception.Message.ShouldBe(
+            $"Error publishing message, no publishers registered for message type 'JustSaying.CloudEvents.CloudEvent<{typeof(OrderPlaced).FullName}>'.");
+    }
+
+    [Test]
     public void Then_Building_The_Bus_Throws_When_The_Same_Type_Has_Two_Publications()
     {
         // Arrange - a plain topic publication and a CloudEvents publication for the same type.

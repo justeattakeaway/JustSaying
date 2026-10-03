@@ -357,14 +357,14 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
                     "Error publishing message. No publishers registered for message type '{MessageType}'. " + batchHint,
                     messageType);
                 throw new InvalidOperationException(
-                    $"Error publishing message, no publishers registered for message type '{messageType}'. {batchHint}");
+                    $"Error publishing message, no publishers registered for message type '{messageType.ToReadableFullName()}'. {batchHint}");
             }
 
             _log.LogError(
                 "Error publishing message. No publishers registered for message type '{MessageType}'.",
                 messageType);
             throw new InvalidOperationException(
-                $"Error publishing message, no publishers registered for message type '{messageType}'.");
+                $"Error publishing message, no publishers registered for message type '{messageType.ToReadableFullName()}'.");
         }
 
         return publicationType;
@@ -592,8 +592,8 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
 
         if (!TryGetPublicationType(_batchPublishersByType, messageType, out var publicationType))
         {
-            _log.LogError("Error publishing message batch. No publishers registered for message type '{MessageType}'.", messageType);
-            throw new InvalidOperationException($"Error publishing message batch, no publishers registered for message type '{messageType}'.");
+            _log.LogError("Error publishing message batch. No publishers registered for message type '{MessageType}'.", messageType.ToReadableFullName());
+            throw new InvalidOperationException($"Error publishing message batch, no publishers registered for message type '{messageType.ToReadableFullName()}'.");
         }
 
         return publicationType;
