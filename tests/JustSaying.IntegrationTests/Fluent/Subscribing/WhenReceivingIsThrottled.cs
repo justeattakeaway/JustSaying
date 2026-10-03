@@ -38,8 +38,7 @@ public sealed class WhenReceivingIsThrottled : IntegrationTestBase
                         .WithSubscriptionGroup("group", groupConfig =>
                             groupConfig.WithConcurrencyLimit(2))
                         .ForQueue<WaitingMessage>((queue) => queue.WithQueueName(UniqueName)
-                            .WithReadConfiguration(c =>
-                                c.WithSubscriptionGroup("group")))))
+                            .WithSubscriptionGroup("group"))))
             .AddSingleton<IHandlerAsync<WaitingMessage>>(handler);
 
         await WhenAsync(

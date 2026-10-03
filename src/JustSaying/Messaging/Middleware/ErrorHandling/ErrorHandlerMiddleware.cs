@@ -1,3 +1,4 @@
+using JustSaying.Extensions;
 using JustSaying.Messaging.Monitoring;
 
 namespace JustSaying.Messaging.Middleware.ErrorHandling;
@@ -43,7 +44,7 @@ public sealed class ErrorHandlerMiddleware(IMessageMonitor monitor) : Middleware
         {
             _monitor.Handled(context.Message);
             var queueTag = new KeyValuePair<string, object>("messaging.destination.name", context.QueueName);
-            var typeTag = new KeyValuePair<string, object>("messaging.message.type", context.MessageType.FullName);
+            var typeTag = new KeyValuePair<string, object>("messaging.message.type", context.MessageType.ToReadableFullName());
             if (hasError)
             {
                 Monitoring.JustSayingDiagnostics.MessagesProcessed.Add(1,
