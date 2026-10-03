@@ -202,8 +202,14 @@ public class WhenGeneratingThroughTheBuildTargets
             using JustSaying.Messaging.MessageHandling;
             using Microsoft.Extensions.DependencyInjection;
             using Microsoft.Extensions.Hosting;
+            using Microsoft.Extensions.Logging;
 
             var builder = Host.CreateApplicationBuilder(args);
+
+            // This project references the test app's build output directly rather than through NuGet, so it
+            // doesn't get platform-specific runtime assets, and the default Windows event log provider would
+            // throw. A real application references the packages and isn't affected.
+            builder.Logging.ClearProviders();
 
             builder.Services.AddJustSaying(config =>
             {
@@ -333,11 +339,7 @@ public class WhenGeneratingThroughTheBuildTargets
 
             if (removeDotNetFromPath)
             {
-                startInfo.Environment["PATH"] = string.Join(
-                    Path.PathSeparator,
-                    (Environment.GetEnvironmentVariable("PATH") ?? string.Empty)
-                        .Split(Path.PathSeparator)
-                        .Where((directory) => !File.Exists(Path.Combine(directory, "dotnet")) && !File.Exists(Path.Combine(directory, "dotnet.exe"))));
+                startInfo.Environment["PATH"] = PathWithoutUsableDotNet();
             }
 
             startInfo.Environment["MSBUILDDISABLENODEREUSE"] = "1";
@@ -359,6 +361,28 @@ public class WhenGeneratingThroughTheBuildTargets
             }
 
             return new BuildResult(process.ExitCode, await standardOutput + await standardError);
+        }
+
+        private string PathWithoutUsableDotNet()
+        {
+            var path = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
+
+            if (OperatingSystem.IsWindows())
+            {
+                // dotnet.exe lives in its own directory, so drop that directory from the PATH.
+                return string.Join(
+                    Path.PathSeparator,
+                    path.Split(Path.PathSeparator).Where((directory) => !File.Exists(Path.Combine(directory, "dotnet.exe"))));
+            }
+
+            // On Linux dotnet is often linked from /usr/bin, which also holds the shell MSBuild runs commands
+            // with, so the directory can't be dropped. Shadow it with a dotnet that always fails instead.
+            var shadow = System.IO.Directory.CreateDirectory(Path.Combine(Directory, "shadow-path")).FullName;
+            var fakeDotNet = Path.Combine(shadow, "dotnet");
+            File.WriteAllText(fakeDotNet, "#!/bin/sh\necho 'the dotnet on the PATH was used' >&2\nexit 127\n");
+            File.SetUnixFileMode(fakeDotNet, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+
+            return shadow + Path.PathSeparator + path;
         }
 
         private static string DotNetHostPath()
