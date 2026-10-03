@@ -120,6 +120,14 @@ const sidebars = {
     },
     {
       type: 'category',
+      label: 'AsyncAPI',
+      items: [
+        'asyncapi/README',
+        'asyncapi/build-time',
+      ],
+    },
+    {
+      type: 'category',
       label: 'Advanced',
       items: [
         'advanced/README',
