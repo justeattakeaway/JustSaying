@@ -24,7 +24,7 @@ public class SqsReadConfiguration : SqsBasicConfiguration
     public bool RawMessageDelivery { get; set; }
     public string SubscriptionGroupName { get; set; }
 
-    public void ApplyTopicNamingConvention<T>(ITopicNamingConvention namingConvention) where T: Message
+    public void ApplyTopicNamingConvention<T>(ITopicNamingConvention namingConvention)
     {
         TopicName = namingConvention.Apply<T>(TopicName);
     }
@@ -37,6 +37,11 @@ public class SqsReadConfiguration : SqsBasicConfiguration
             {
                 throw new ConfigurationErrorsException(
                     "Invalid configuration. Topic name must be provided.");
+            }
+
+            if (ResourceNameValidator.GetTopicNameError(TopicName) is { } topicNameError)
+            {
+                throw new ConfigurationErrorsException($"Invalid configuration. {topicNameError}");
             }
 
             if (PublishEndpoint == null)

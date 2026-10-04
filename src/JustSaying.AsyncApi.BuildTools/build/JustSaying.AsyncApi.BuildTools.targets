@@ -1,0 +1,157 @@
+<Project>
+  <PropertyGroup>
+    <_JustSayingAsyncApiToolPath>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\tools\net8.0\JustSaying.AsyncApi.GetDocument.dll'))</_JustSayingAsyncApiToolPath>
+    <!--
+      The tool runs with the application's output directory as its working directory, so every
+      path handed to it is made absolute here; a relative documents directory is relative to the
+      project, like any other path in a project file.
+    -->
+    <_JustSayingAsyncApiDocumentsDirectory>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(JustSayingAsyncApiDocumentsDirectory)'))</_JustSayingAsyncApiDocumentsDirectory>
+  </PropertyGroup>
+
+  <!--
+    The generated documents describe the application's contract; they are not part of what it
+    deploys. The Web SDK includes every *.json file in the project as publish content, so the
+    default document (written next to the project file) would otherwise ship with the app.
+  -->
+  <ItemGroup Condition=" '$(JustSayingAsyncApiCopyDocumentsToPublishDirectory)' != 'true' ">
+    <Content Update="$(_JustSayingAsyncApiDocumentsDirectory)$(JustSayingAsyncApiDocumentFileName).json;$(_JustSayingAsyncApiDocumentsDirectory)$(JustSayingAsyncApiDocumentFileName)_*.json"
+             CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
+  <!--
+    Generates the application's AsyncAPI document(s), analogous to
+    Microsoft.Extensions.ApiDescription.Server's build-time OpenAPI generation. The tool runs
+    with the application's deps.json and runtimeconfig.json so the application's assemblies
+    resolve normally; the application's host is built (never started) to collect the configured
+    publications and subscriptions.
+
+    This target can also be invoked directly (dotnet msbuild -t:GenerateJustSayingAsyncApiDocuments),
+    for example when JustSayingAsyncApiGenerateDocumentsOnBuild is 'false'.
+  -->
+  <Target Name="GenerateJustSayingAsyncApiDocuments"
+          DependsOnTargets="_PrepareJustSayingAsyncApiDocuments;_GenerateJustSayingAsyncApiDocuments" />
+
+  <Target Name="_PrepareJustSayingAsyncApiDocuments">
+    <PropertyGroup>
+      <!-- Absolute, because the tool resolves relative paths against its working directory, not the project. -->
+      <_JustSayingAsyncApiFileListPath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'JustSayingAsyncApi.cache'))</_JustSayingAsyncApiFileListPath>
+      <_JustSayingAsyncApiCommandPath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'JustSayingAsyncApi.command'))</_JustSayingAsyncApiCommandPath>
+
+      <!--
+        The tool runs the application, so it can only run where the application can: an output
+        built for another runtime identifier (for example linux-arm64 on an x64 build agent, or
+        linux-x64 on a Mac) cannot be loaded by the SDK's own runtime.
+      -->
+      <_JustSayingAsyncApiSkipReason Condition=" '$(RuntimeIdentifier)' != '' AND '$(NETCoreSdkRuntimeIdentifier)' != '' AND '$(RuntimeIdentifier)' != '$(NETCoreSdkRuntimeIdentifier)' ">the application is built for runtime '$(RuntimeIdentifier)', which cannot run on this machine ('$(NETCoreSdkRuntimeIdentifier)')</_JustSayingAsyncApiSkipReason>
+    </PropertyGroup>
+
+    <Message Importance="high"
+             Condition=" '$(_JustSayingAsyncApiSkipReason)' != '' "
+             Text="Skipping AsyncAPI document generation for '$(MSBuildProjectName)': $(_JustSayingAsyncApiSkipReason). Build without a runtime identifier (or for '$(NETCoreSdkRuntimeIdentifier)') to generate the document, or set JustSayingAsyncApiGenerateDocumentsOnBuild to 'false' to stop generating it on build." />
+
+    <!--
+      The documents generated last time are outputs too: deleting one must bring it back. Their
+      timestamps are deliberately not compared (the tool leaves an unchanged document untouched),
+      so a missing document is detected here and forces generation by removing the file list.
+    -->
+    <ReadLinesFromFile File="$(_JustSayingAsyncApiFileListPath)" Condition=" Exists('$(_JustSayingAsyncApiFileListPath)') ">
+      <Output TaskParameter="Lines" ItemName="_JustSayingAsyncApiPreviousDocument" />
+    </ReadLinesFromFile>
+    <ItemGroup>
+      <_JustSayingAsyncApiMissingDocument Include="@(_JustSayingAsyncApiPreviousDocument)" Condition=" !Exists('%(Identity)') " />
+    </ItemGroup>
+    <Delete Files="$(_JustSayingAsyncApiFileListPath)" Condition=" '@(_JustSayingAsyncApiMissingDocument)' != '' " />
+
+    <PropertyGroup>
+      <!-- The SDK sets DOTNET_HOST_PATH to the dotnet executable running the build; 'dotnet' on the PATH may be another installation, or missing. -->
+      <_JustSayingAsyncApiDotNetHost>dotnet</_JustSayingAsyncApiDotNetHost>
+      <_JustSayingAsyncApiDotNetHost Condition=" '$(DOTNET_HOST_PATH)' != '' ">"$(DOTNET_HOST_PATH)"</_JustSayingAsyncApiDotNetHost>
+      <_JustSayingAsyncApiCommand>$(_JustSayingAsyncApiDotNetHost) exec --depsfile "$(ProjectDepsFilePath)" --runtimeconfig "$(ProjectRuntimeConfigFilePath)"</_JustSayingAsyncApiCommand>
+      <_JustSayingAsyncApiCommand Condition=" '$(NuGetPackageRoot)' != '' ">$(_JustSayingAsyncApiCommand) --additionalprobingpath "$(NuGetPackageRoot.TrimEnd('\').TrimEnd('/'))"</_JustSayingAsyncApiCommand>
+      <_JustSayingAsyncApiCommand>$(_JustSayingAsyncApiCommand) "$(_JustSayingAsyncApiToolPath)" --assembly "$(TargetPath)" --output "$(_JustSayingAsyncApiDocumentsDirectory.TrimEnd('\').TrimEnd('/'))" --file-list "$(_JustSayingAsyncApiFileListPath)"</_JustSayingAsyncApiCommand>
+      <_JustSayingAsyncApiCommand Condition=" '$(JustSayingAsyncApiDocumentFileName)' != '' ">$(_JustSayingAsyncApiCommand) --file-name "$(JustSayingAsyncApiDocumentFileName)"</_JustSayingAsyncApiCommand>
+      <_JustSayingAsyncApiCommand Condition=" '$(JustSayingAsyncApiEntryPointTimeoutSeconds)' != '' ">$(_JustSayingAsyncApiCommand) --entry-point-timeout "$(JustSayingAsyncApiEntryPointTimeoutSeconds)"</_JustSayingAsyncApiCommand>
+      <_JustSayingAsyncApiCommand Condition=" '$(JustSayingAsyncApiEnvironment)' != '' ">$(_JustSayingAsyncApiCommand) --environment "$(JustSayingAsyncApiEnvironment)"</_JustSayingAsyncApiCommand>
+    </PropertyGroup>
+
+    <!--
+      How the tool is run is an input too: a document generated for another environment (or file
+      name) is out of date even though nothing else changed. The command is written only when it
+      changes, so that its timestamp records when it last did.
+    -->
+    <WriteLinesToFile File="$(_JustSayingAsyncApiCommandPath)"
+                      Lines="$(_JustSayingAsyncApiCommand)"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="true" />
+
+    <ItemGroup>
+      <!--
+        Everything the generated document can depend on: the application and every assembly it
+        loads (a referenced project's implementation assembly is a copy-local path; its reference
+        assembly does not change when only a string literal does), the configuration the host
+        reads as it is built, the tool, and the project files that configure generation.
+      -->
+      <_JustSayingAsyncApiInput Include="$(TargetPath);$(ProjectDepsFilePath);$(ProjectRuntimeConfigFilePath);$(_JustSayingAsyncApiToolPath)" />
+      <_JustSayingAsyncApiInput Include="@(ReferencePath);@(ReferenceCopyLocalPaths)" />
+      <_JustSayingAsyncApiInput Include="$(MSBuildProjectDirectory)/appsettings*.json" />
+      <_JustSayingAsyncApiInput Include="$(MSBuildAllProjects);$(_JustSayingAsyncApiCommandPath)" />
+
+      <FileWrites Include="$(_JustSayingAsyncApiFileListPath);$(_JustSayingAsyncApiCommandPath)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_GenerateJustSayingAsyncApiDocuments"
+          Condition=" '$(_JustSayingAsyncApiSkipReason)' == '' "
+          Inputs="@(_JustSayingAsyncApiInput)"
+          Outputs="$(_JustSayingAsyncApiFileListPath)">
+    <Error Condition=" !Exists('$(_JustSayingAsyncApiToolPath)') "
+           Text="The JustSaying AsyncAPI generation tool was not found at '$(_JustSayingAsyncApiToolPath)'. The JustSaying.AsyncApi.BuildTools package may be corrupt; try restoring again." />
+    <Error Condition=" !Exists('$(ProjectDepsFilePath)') "
+           Text="Build-time AsyncAPI generation requires a dependencies file ($(ProjectDepsFilePath)). Do not set GenerateDependencyFile to 'false', or set JustSayingAsyncApiGenerateDocumentsOnBuild to 'false' to disable generation." />
+
+    <!--
+      The tool reports its own failures in the canonical MSBuild error format, which Exec
+      surfaces as build errors; IgnoreExitCode avoids also dumping the whole command line as a
+      second error. The Error task below reports any failure the tool could not (for example
+      when it could not be started), and only then, so a failure is one error, not two.
+    -->
+    <Exec Command="$(_JustSayingAsyncApiCommand)"
+          WorkingDirectory="$(TargetDir)"
+          StandardOutputImportance="normal"
+          IgnoreExitCode="true"
+          ConsoleToMSBuild="true">
+      <Output TaskParameter="ExitCode" PropertyName="_JustSayingAsyncApiExitCode" />
+      <Output TaskParameter="ConsoleOutput" ItemName="_JustSayingAsyncApiOutput" />
+    </Exec>
+    <PropertyGroup>
+      <_JustSayingAsyncApiReportedError>@(_JustSayingAsyncApiOutput->Contains(': error JSAA'))</_JustSayingAsyncApiReportedError>
+    </PropertyGroup>
+    <Error Condition=" '$(_JustSayingAsyncApiExitCode)' != '0' AND !$(_JustSayingAsyncApiReportedError.Contains('True')) "
+           Text="AsyncAPI document generation for '$(MSBuildProjectName)' failed with exit code $(_JustSayingAsyncApiExitCode). Set JustSayingAsyncApiGenerateDocumentsOnBuild to 'false' to disable build-time generation." />
+  </Target>
+
+  <!--
+    Ties generation into every build. Multi-targeted projects are handled by the
+    buildMultiTargeting targets instead (one generation per build, not one per framework), so
+    this hook only applies when the project builds a single target framework. Test projects are
+    executables on modern test frameworks but are never JustSaying applications, so they are
+    excluded.
+
+    'dotnet publish' builds first, but does not generate: the document is part of the source
+    tree that 'dotnet build' keeps up to date, not part of what is published, and publishing is
+    commonly for another runtime (a container or an arm64 host) where the application cannot be
+    run on the build machine.
+  -->
+  <Target Name="_GenerateJustSayingAsyncApiDocumentsAfterBuild"
+          AfterTargets="Build"
+          DependsOnTargets="GenerateJustSayingAsyncApiDocuments"
+          Condition=" '$(JustSayingAsyncApiGenerateDocumentsOnBuild)' == 'true' AND
+                      '$(DesignTimeBuild)' != 'true' AND
+                      '$(IsTestProject)' != 'true' AND
+                      '$(_IsPublishing)' != 'true' AND
+                      '$(TargetFrameworks)' == '' AND
+                      '$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND
+                      $([MSBuild]::VersionGreaterThanOrEquals('$(TargetFrameworkVersion)', '8.0')) AND
+                      '$(OutputType)' == 'Exe' " />
+</Project>

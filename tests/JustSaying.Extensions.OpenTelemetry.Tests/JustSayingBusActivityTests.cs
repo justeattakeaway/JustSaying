@@ -27,6 +27,7 @@ public class JustSayingBusActivityTests
             .Build();
 
         var config = Substitute.For<IMessagingConfig>();
+
         var publisher = Substitute.For<IMessagePublisher>();
         var monitor = Substitute.For<IMessageMonitor>();
         var serializationFactory = Substitute.For<IMessageBodySerializationFactory>();
@@ -49,6 +50,44 @@ public class JustSayingBusActivityTests
         activity.GetTagItem("messaging.operation.type").ShouldBe("send");
         activity.GetTagItem("messaging.message.id").ShouldBe(message.Id.ToString());
         activity.GetTagItem("messaging.message.type").ShouldBe(typeof(SimpleMessage).FullName);
+    }
+
+    public sealed class Envelope<T>
+    {
+        public T Data { get; set; }
+    }
+
+    [Test]
+    public async Task PublishAsync_Names_A_Generic_Message_Type_Readably()
+    {
+        // Arrange
+        var exportedActivities = new List<Activity>();
+
+        using var tracerProvider = Sdk.CreateTracerProviderBuilder()
+            .AddJustSayingInstrumentation()
+            .AddInMemoryExporter(exportedActivities)
+            .Build();
+
+        var config = Substitute.For<IMessagingConfig>();
+
+        var publisher = Substitute.For<IMessagePublisher>();
+        var monitor = Substitute.For<IMessageMonitor>();
+        var serializationFactory = Substitute.For<IMessageBodySerializationFactory>();
+
+        using var bus = new JustSayingBus(config, serializationFactory,
+            NullLoggerFactory.Instance, monitor);
+        bus.AddMessagePublisher<Envelope<SimpleMessage>>(publisher);
+
+        // Act
+        await bus.PublishAsync(new Envelope<SimpleMessage> { Data = new SimpleMessage() }, CancellationToken.None);
+        tracerProvider.ForceFlush();
+
+        // Assert - not the CLR's Envelope`1, nor a type name carrying assembly versions.
+        var activity = exportedActivities.FirstOrDefault(a => a.OperationName.Contains("publish"));
+        activity.ShouldNotBeNull();
+        activity.OperationName.ShouldBe("Envelope<SimpleMessage> publish");
+        activity.GetTagItem("messaging.message.type").ShouldBe(
+            $"{typeof(JustSayingBusActivityTests).FullName}+Envelope<{typeof(SimpleMessage).FullName}>");
     }
 
     [Test]
@@ -111,14 +150,14 @@ public class JustSayingBusActivityTests
             NullLoggerFactory.Instance, monitor);
         bus.AddMessagePublisher<SimpleMessage>(publisher);
 
-        var messages = new List<Message>
+        var messages = new List<SimpleMessage>
         {
             new SimpleMessage { Id = Guid.NewGuid() },
             new SimpleMessage { Id = Guid.NewGuid() }
         };
 
         // Act
-        await bus.PublishAsync(messages, null, CancellationToken.None);
+        await bus.PublishBatchAsync(messages, null, CancellationToken.None);
         tracerProvider.ForceFlush();
 
         // Assert
@@ -148,8 +187,8 @@ public class JustSayingBusActivityTests
         config.PublishFailureBackoff.Returns(TimeSpan.Zero);
 
         var publisher = Substitute.For<IMessagePublisher, IMessageBatchPublisher>();
-        ((IMessageBatchPublisher)publisher).PublishAsync(
-                Arg.Any<IReadOnlyCollection<Message>>(),
+        ((IMessageBatchPublisher)publisher).PublishBatchAsync(
+                Arg.Any<IEnumerable<SimpleMessage>>(),
                 Arg.Any<PublishBatchMetadata>(),
                 Arg.Any<CancellationToken>())
             .Returns(Task.FromException(new InvalidOperationException("Batch publish failed")));
@@ -161,7 +200,7 @@ public class JustSayingBusActivityTests
             NullLoggerFactory.Instance, monitor);
         bus.AddMessagePublisher<SimpleMessage>(publisher);
 
-        var messages = new List<Message>
+        var messages = new List<SimpleMessage>
         {
             new SimpleMessage { Id = Guid.NewGuid() },
             new SimpleMessage { Id = Guid.NewGuid() }
@@ -169,7 +208,7 @@ public class JustSayingBusActivityTests
 
         // Act
         await Should.ThrowAsync<InvalidOperationException>(
-            () => bus.PublishAsync(messages, null, CancellationToken.None));
+            () => bus.PublishBatchAsync(messages, null, CancellationToken.None));
         tracerProvider.ForceFlush();
 
         // Assert

@@ -1,4 +1,5 @@
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.Middleware;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -31,6 +32,7 @@ public class WhenUsingMultipleMiddlewares : IntegrationTestBase
                             pipe.Use<TrackingMiddleware>(); // from DI
                             pipe.Use(() => middleMiddleware); // provide a Func<MiddlewareBase<HandleMessageContext, bool>
                             pipe.Use(innerMiddleware); // Existing instance
+                            pipe.UseDefaults<SimpleMessage>(handler.GetType());
                         })));
 
         await WhenAsync(services,
@@ -44,6 +46,8 @@ public class WhenUsingMultipleMiddlewares : IntegrationTestBase
 
                 await Patiently.AssertThatAsync(OutputHelper,
                     () => callRecord.Count.ShouldBe(6));
+
+                handler.ReceivedMessages.ShouldHaveSingleItem();
             });
 
         string.Join(Environment.NewLine, callRecord)

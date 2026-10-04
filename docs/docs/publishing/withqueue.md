@@ -10,7 +10,7 @@ Publishes messages of type `T` directly to an SQS queue without using SNS. This 
 * An SQS queue will be created for messages of type `T`.
 * An error queue will be created with an `_error` suffix (unless explicitly disabled).
 * The queue name will be determined using the supplied (or default if not) `IQueueNamingConvention`, applied to the message type `T`.
-  * This convention can be overridden using `WithQueueName` in the queue configuration.
+  * This convention can be overridden by passing a [destination](/destinations/) such as `QueueDestination.Named("...")`, or with `WithQueueName` in the queue configuration.
 
 #### Example:
 
@@ -26,34 +26,34 @@ This describes the following infrastructure:
 * An SQS queue of name `processpaymentcommand`
 * An SQS error queue of name `processpaymentcommand_error`
 
-Further configuration options can be defined by passing a configuration lambda to the `WithQueue` method.
+### `WithQueue<T>(QueueDestination destination)`
 
-#### Example with configuration:
+Publishes messages of type `T` to the queue described by a [`QueueDestination`](/destinations/): an owned queue by name or convention, with settings for how it's created, or an existing queue by ARN or URL.
 
 ```csharp
 config.Publications(x =>
 {
-    x.WithQueue<ProcessPaymentCommand>(cfg =>
-    {
-        cfg.WithQueueName("payment-processing-queue");
-    });
+    x.WithQueue<ProcessPaymentCommand>(QueueDestination.Named("payment-processing-queue", q => q
+        .WithMessageRetention(TimeSpan.FromDays(7))
+        .WithEncryption("alias/payments")));
 });
 ```
 
-### `WithQueueArn<T>(string queueArn)`
+The queue is usually read by a subscriber in another service, which owns the rest of its settings. So on startup a publication only sets the settings its destination declares, and leaves everything else on an existing queue alone. See [Infrastructure on Startup](/destinations/startup-behaviour).
 
-Publishes messages of type `T` to an existing SQS queue specified by its ARN (Amazon Resource Name).
+### `WithQueueArn<T>(string queueArn)`, `WithQueueUrl<T>(string queueUrl)`, `WithQueueUri<T>(Uri queueUri)`
 
-#### Example:
+Publishes messages of type `T` to an existing SQS queue specified by its ARN, URL or URI. JustSaying never creates or changes the queue. These are the same as passing `QueueDestination.FromArn`, `QueueDestination.FromUrl` or `QueueDestination.FromUri`.
 
 ```csharp
 config.Publications(x =>
 {
     x.WithQueueArn<ProcessPaymentCommand>("arn:aws:sqs:us-east-1:123456789012:existing-queue");
+    x.WithQueueUrl<RefundPaymentCommand>("https://sqs.us-east-1.amazonaws.com/123456789012/my-queue");
 });
 ```
 
-You can also pass a configuration lambda for existing queues. Use `WithQueueExistenceCheck()` to verify that the queue exists when the bus starts. Note this check requires the `sqs.GetQueueAttributes` permission.
+You can also pass a configuration lambda for existing queues. Use `WithQueueExistenceCheck()` to verify that the queue exists when the bus starts. Note this check requires the `sqs:GetQueueAttributes` permission.
 
 ```csharp
 config.Publications(x =>
@@ -64,64 +64,29 @@ config.Publications(x =>
 });
 ```
 
-### `WithQueueUrl<T>(string queueUrl)`
-
-Publishes messages of type `T` to an existing SQS queue specified by its URL.
-
-#### Example:
-
-```csharp
-config.Publications(x =>
-{
-    x.WithQueueUrl<ProcessPaymentCommand>("https://sqs.us-east-1.amazonaws.com/123456789012/my-queue");
-});
-```
-
-```csharp
-config.Publications(x =>
-{
-    x.WithQueueUrl<ProcessPaymentCommand>(
-        "https://sqs.us-east-1.amazonaws.com/123456789012/my-queue",
-        cfg => cfg.WithQueueExistenceCheck());
-});
-```
-
-### `WithQueueUri<T>(Uri queueUri)`
-
-Publishes messages of type `T` to an existing SQS queue specified by its URI.
-
-#### Example:
-
-```csharp
-config.Publications(x =>
-{
-    x.WithQueueUri<ProcessPaymentCommand>(new Uri("https://sqs.us-east-1.amazonaws.com/123456789012/my-queue"));
-});
-```
-
-```csharp
-config.Publications(x =>
-{
-    x.WithQueueUri<ProcessPaymentCommand>(
-        new Uri("https://sqs.us-east-1.amazonaws.com/123456789012/my-queue"),
-        cfg => cfg.WithQueueExistenceCheck());
-});
-```
-
 ## Configuration Options
 
-When using the configuration lambda with `WithQueue`, the following options are available:
+Every overload takes an optional `Action<QueuePublicationBuilder<T>>`:
 
 #### `WithQueueName(string name)`
 
-Override the naming convention to use a specific queue name.
+Override the naming convention to use a specific queue name. This is the same as using `QueueDestination.Named(name)`, so don't do both.
 
-```csharp
-x.WithQueue<ProcessPaymentCommand>(cfg =>
-{
-    cfg.WithQueueName("custom-payment-queue");
-});
-```
+#### `WithQueueExistenceCheck()`
+
+Verify that an existing SQS queue can be found before the bus starts. If the queue does not exist, startup fails with a clear exception instead of waiting until publish attempts fail. Only applies to an existing queue: a queue JustSaying owns is created on startup.
+
+#### `WithSubject(string subject)`
+
+Set the `Subject` written into the queue message, instead of the message type's name.
+
+#### `WithRawMessages()`
+
+Send the message body as it is, without JustSaying's `{ "Subject": ..., "Message": ... }` wrapper. Use this when the consumer isn't JustSaying. A JustSaying subscriber reading the queue should use `WithRawMessageDelivery()`, so that the body is never mistaken for the wrapper.
+
+#### `WithCompression(PublishCompressionOptions options)`
+
+Compress large message bodies. See [Compression](../advanced/compression.md).
 
 #### `WithMiddlewareConfiguration(Action<PublishMiddlewareBuilder> middlewareConfiguration)`
 
@@ -135,33 +100,6 @@ x.WithQueue<ProcessPaymentCommand>(cfg =>
         m.Use<LoggingPublishMiddleware>();
     });
 });
-```
-
-#### `WithWriteConfiguration(Action<SqsWriteConfigurationBuilder> configure)`
-
-Configure advanced publishing options such as encryption, message retention, and error queues. See [Write Configuration](write-configuration.md) for details.
-
-```csharp
-x.WithQueue<ProcessPaymentCommand>(cfg =>
-{
-    cfg.WithWriteConfiguration(w =>
-    {
-        w.WithEncryption("your-kms-key-id");
-        w.WithMessageRetention(TimeSpan.FromDays(7));
-    });
-});
-```
-
-When using the configuration lambda with `WithQueueArn`, `WithQueueUrl`, or `WithQueueUri`, the following option is available:
-
-#### `WithQueueExistenceCheck()`
-
-Verify that the existing SQS queue can be found before the bus starts. If the queue does not exist, startup fails with a clear exception instead of waiting until publish attempts fail.
-
-```csharp
-x.WithQueueArn<ProcessPaymentCommand>(
-    "arn:aws:sqs:us-east-1:123456789012:existing-queue",
-    cfg => cfg.WithQueueExistenceCheck());
 ```
 
 ## When to Use Queues
@@ -185,14 +123,8 @@ For fan-out scenarios where multiple services need to react to the same message,
 
 ## Error Handling
 
-By default, JustSaying creates an error queue for each publication queue. Messages that fail to process are moved to the error queue for later inspection or reprocessing. You can disable this behavior in the write configuration:
+By default, JustSaying creates an error queue for each publication queue. Messages that fail to process are moved to the error queue for later inspection or reprocessing. You can opt out on the destination:
 
 ```csharp
-x.WithQueue<ProcessPaymentCommand>(cfg =>
-{
-    cfg.WithWriteConfiguration(w =>
-    {
-        w.WithNoErrorQueue();
-    });
-});
+x.WithQueue<ProcessPaymentCommand>(QueueDestination.ByConvention(q => q.WithNoErrorQueue()));
 ```

@@ -25,6 +25,17 @@ internal sealed class TopicAddress
     {
         if (!Arn.IsArn(topicArn) || !Arn.TryParse(topicArn, out var arn)) throw new ArgumentException("Must be a valid ARN.", nameof(topicArn));
         if (!string.Equals(arn.Service, "sns", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("Must be an ARN for an SNS topic.", nameof(topicArn));
+        if (string.IsNullOrEmpty(arn.Region) || string.IsNullOrEmpty(arn.AccountId) || string.IsNullOrEmpty(arn.Resource))
+        {
+            throw new ArgumentException("An SNS topic ARN must include the region, the account id and the topic name.", nameof(topicArn));
+        }
+
+        // A subscription ARN is the topic's ARN with the subscription id appended (arn:aws:sns:{region}:{account}:{topic}:{id}).
+        if (arn.Resource.Contains(":"))
+        {
+            throw new ArgumentException($"Must be an ARN for an SNS topic, but '{topicArn}' is the ARN of a subscription or another SNS resource.", nameof(topicArn));
+        }
+
         return new TopicAddress { TopicArn = topicArn };
     }
 }

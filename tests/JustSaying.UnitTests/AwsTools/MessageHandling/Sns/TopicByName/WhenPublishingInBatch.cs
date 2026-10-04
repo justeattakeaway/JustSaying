@@ -41,7 +41,7 @@ public class WhenPublishingInBatch : WhenPublishingTestBase
             });
         }
 
-        await SystemUnderTest.PublishAsync(messages);
+        await SystemUnderTest.PublishBatchAsync(messages);
     }
 
     [Test]

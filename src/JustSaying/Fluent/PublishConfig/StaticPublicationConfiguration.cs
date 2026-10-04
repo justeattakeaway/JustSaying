@@ -3,7 +3,7 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Compression;
-using JustSaying.Models;
+using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.Logging;
 
 #pragma warning disable CS0618
@@ -25,7 +25,12 @@ internal sealed class StaticPublicationConfiguration(
         SnsWriteConfiguration writeConfiguration,
         IAmazonSimpleNotificationService snsClient,
         ILoggerFactory loggerFactory,
-        JustSayingBus bus) where T : Message
+        JustSayingBus bus,
+        Func<Exception, object, bool> exceptionHandler = null,
+        Func<Exception, IReadOnlyCollection<object>, bool> exceptionBatchHandler = null,
+        IServiceResolver serviceResolver = null,
+        Func<IServiceResolver, IMessageBodySerializer<T>> serializerFactory = null,
+        Func<IMessageTypeRegistry, string> subjectResolver = null) where T : class
     {
         var readConfiguration = new SqsReadConfiguration(SubscriptionType.ToTopic)
         {
@@ -34,17 +39,27 @@ internal sealed class StaticPublicationConfiguration(
 
         readConfiguration.ApplyTopicNamingConvention<T>(bus.Config.TopicNamingConvention);
 
-        var compressionOptions = writeConfiguration.CompressionOptions ?? bus.Config.DefaultCompressionOptions;
-        var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
-        var subjectProvider = bus.Config.MessageSubjectProvider;
-        var subject = writeConfiguration.SubjectSet ? writeConfiguration.Subject : subjectProvider.GetSubjectForType(typeof(T));
+        if (ResourceNameValidator.GetTopicNameError(readConfiguration.TopicName) is { } topicNameError)
+        {
+            throw new ConfigurationErrorsException($"Invalid configuration. {topicNameError} (in the topic publication for '{typeof(T)}')");
+        }
+
+        // Already resolved against the bus default (which self-describing publications don't take).
+        var compressionOptions = writeConfiguration.CompressionOptions;
+        var serializer = (serializerFactory is null
+            ? bus.MessageBodySerializerFactory.GetSerializer<T>()
+            : serializerFactory(serviceResolver)).Erase();
+        var subject = writeConfiguration.SubjectSet
+            ? writeConfiguration.Subject
+            : subjectResolver?.Invoke(bus.MessageTypeRegistry) ?? bus.MessageTypeRegistry.GetLogicalName(typeof(T));
 
         var eventPublisher = new SnsMessagePublisher(
             snsClient,
-            new OutboundMessageConverter(PublishDestinationType.Topic, serializer, new MessageCompressionRegistry([new GzipMessageBodyCompression()]), compressionOptions, subject, writeConfiguration.IsRawMessage),
+            new OutboundMessageConverter(PublishDestinationType.Topic, serializer, bus.CompressionRegistry, compressionOptions, subject, writeConfiguration.IsRawMessage),
             loggerFactory,
-            null,
-            null)
+            exceptionHandler ?? writeConfiguration.HandleException,
+            exceptionBatchHandler,
+            bus.MessageMetadataProvider)
         {
             MessageResponseLogger = bus.Config.MessageResponseLogger,
             MessageBatchResponseLogger = bus.PublishBatchConfiguration?.MessageBatchResponseLogger
