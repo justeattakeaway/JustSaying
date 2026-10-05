@@ -1,6 +1,6 @@
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
-using JustSaying.Models;
+using JustSaying.TestingFramework;
 using NSubstitute;
 
 namespace JustSaying.UnitTests.JustSayingBus;
@@ -18,8 +18,8 @@ public class WhenRegisteringTheSamePublisherTwice : GivenAServiceBus
 
     protected override Task WhenAsync()
     {
-        SystemUnderTest.AddMessagePublisher<Message>(_publisher);
-        SystemUnderTest.AddMessagePublisher<Message>(_publisher);
+        SystemUnderTest.AddMessagePublisher<SimpleMessage>(_publisher);
+        SystemUnderTest.AddMessagePublisher<SimpleMessage>(_publisher);
 
         return Task.CompletedTask;
     }
@@ -38,6 +38,6 @@ public class WhenRegisteringTheSamePublisherTwice : GivenAServiceBus
 
         Dictionary<string, InterrogationResult> publishedTypes = response.Data.PublishedMessageTypes;
 
-        publishedTypes.ShouldContainKey(nameof(Message));
+        publishedTypes.ShouldContainKey(nameof(SimpleMessage));
     }
 }
