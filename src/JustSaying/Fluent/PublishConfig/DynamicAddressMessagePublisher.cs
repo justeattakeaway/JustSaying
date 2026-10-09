@@ -10,7 +10,7 @@ internal sealed class DynamicAddressMessagePublisher(
     string topicArnTemplate,
     Func<string, Message, string> topicAddressCustomizer,
     Func<string, StaticAddressPublicationConfiguration> staticConfigBuilder,
-    ILoggerFactory loggerFactory) : IMessagePublisher, IMessageBatchPublisher
+    ILoggerFactory loggerFactory) : IMessagePublisher, IMessageBatchPublisher, IPreparedBatchPublisher
 {
     private readonly string _topicArnTemplate = topicArnTemplate;
     private readonly ConcurrentDictionary<string, Lazy<StaticAddressPublicationConfiguration>> _publisherConfigurationCache = new();
@@ -47,7 +47,15 @@ internal sealed class DynamicAddressMessagePublisher(
     /// <inheritdoc/>
     public async Task PublishAsync(IEnumerable<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
     {
-        var publisherTask = new List<Task>();
+        var batches = await PrepareAsync([.. messages], metadata, cancellationToken).ConfigureAwait(false);
+
+        await Task.WhenAll(batches.Select(x => x.SendAsync(cancellationToken))).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<PreparedBatch>> PrepareAsync(IReadOnlyCollection<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
+    {
+        var batches = new List<PreparedBatch>();
         foreach (var groupByType in messages.GroupBy(x => x.GetType()))
         {
             foreach (var groupByTopic in groupByType.GroupBy(x => _topicAddressCustomizer(_topicArnTemplate, x)))
@@ -56,11 +64,11 @@ internal sealed class DynamicAddressMessagePublisher(
                 var batch = groupByTopic.ToList();
 
                 var publisherConfig = _publisherConfigurationCache.GetOrAdd(topicArn, CreateLazyPublisherConfig);
-                publisherTask.Add(publisherConfig.Value.BatchPublisher.PublishAsync(batch, metadata, cancellationToken));
+                batches.AddRange(await publisherConfig.Value.BatchPublisher.PrepareBatchesAsync(batch, metadata, cancellationToken).ConfigureAwait(false));
             }
         }
 
-        await Task.WhenAll(publisherTask).ConfigureAwait(false);
+        return batches;
     }
 
     private Lazy<StaticAddressPublicationConfiguration> CreateLazyPublisherConfig(string topicArn)

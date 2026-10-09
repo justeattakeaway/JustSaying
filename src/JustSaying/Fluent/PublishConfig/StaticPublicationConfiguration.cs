@@ -41,7 +41,7 @@ internal sealed class StaticPublicationConfiguration(
 
         var eventPublisher = new SnsMessagePublisher(
             snsClient,
-            new OutboundMessageConverter(PublishDestinationType.Topic, serializer, new MessageCompressionRegistry([new GzipMessageBodyCompression()]), compressionOptions, subject, writeConfiguration.IsRawMessage),
+            new OutboundMessageConverter(PublishDestinationType.Topic, serializer, bus.CompressionRegistry, compressionOptions, subject, writeConfiguration.IsRawMessage, writeConfiguration.EffectiveMaximumMessageSize),
             loggerFactory,
             null,
             null)
@@ -55,7 +55,8 @@ internal sealed class StaticPublicationConfiguration(
             snsClient,
             loggerFactory)
         {
-            Tags = tags
+            Tags = tags,
+            MaximumMessageSize = writeConfiguration.MaximumMessageSize
         };
 
         async Task StartupTask(CancellationToken cancellationToken)
@@ -74,6 +75,8 @@ internal sealed class StaticPublicationConfiguration(
                 .ConfigureAwait(false);
 
             await snsTopic.ApplyTagsAsync(cancellationToken).ConfigureAwait(false);
+
+            await snsTopic.ApplyMaximumMessageSizeAsync(cancellationToken).ConfigureAwait(false);
 
             eventPublisher.Arn = snsTopic.Arn;
 

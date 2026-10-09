@@ -23,6 +23,7 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
     private PublishCompressionOptions _compressionOptions;
     private string _subject;
     private bool _subjectSet;
+    private int? _maximumMessageSize;
 
     /// <summary>
     /// Function that will produce a topic address dynamically from a Message and the original topic
@@ -93,6 +94,34 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
     }
 
     /// <summary>
+    /// Sets the maximum size, in bytes, of a message the topic will accept.
+    /// </summary>
+    /// <param name="maximumMessageSize">The maximum message size, in bytes.</param>
+    /// <returns>The current instance of <see cref="TopicAddressPublicationBuilder{T}"/> for method chaining.</returns>
+    /// <remarks>
+    /// JustSaying does not create or configure a topic it is given the ARN of, so tell it here if the topic
+    /// has had its <c>MaximumMessageSize</c> attribute raised above the SNS default of 256 KiB. The value is
+    /// used as the budget for compression and for packing batches.
+    /// </remarks>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <paramref name="maximumMessageSize"/> is outside the range SNS accepts.
+    /// </exception>
+    public TopicAddressPublicationBuilder<T> WithMaximumMessageSize(int maximumMessageSize)
+    {
+        if (maximumMessageSize < JustSayingConstants.MinimumSnsMessageSize ||
+            maximumMessageSize > JustSayingConstants.MaximumSnsMessageSize)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(maximumMessageSize),
+                maximumMessageSize,
+                $"The maximum message size must be between {JustSayingConstants.MinimumSnsMessageSize} and {JustSayingConstants.MaximumSnsMessageSize} bytes.");
+        }
+
+        _maximumMessageSize = maximumMessageSize;
+        return this;
+    }
+
+    /// <summary>
     /// Configures the address of the topic by calling this function at publish time to determine the topic ARN.
     /// </summary>
     /// <param name="topicAddressCustomizer">Function that will be called at publish time to determine the ARN of the target topic for this <see cref="T"/>.
@@ -143,7 +172,7 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
             => StaticAddressPublicationConfiguration.Build<T>(
                 topicArn,
                 proxy.GetAwsClientFactory(),
-                new OutboundMessageConverter(PublishDestinationType.Topic, serializer, compressionRegistry, compressionOptions, subject, true),
+                new OutboundMessageConverter(PublishDestinationType.Topic, serializer, compressionRegistry, compressionOptions, subject, true, _maximumMessageSize ?? JustSayingConstants.DefaultSnsMaximumMessageSize),
                 loggerFactory,
                 bus,
                 _exceptionHandler,
