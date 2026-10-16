@@ -198,7 +198,7 @@ public class AddressPubSub : IntegrationTestBase
             async (publisher, listener, serviceProvider, cancellationToken) =>
             {
                 // Assert does not throw
-                await publisher.PublishAsync([message], cancellationToken);
+                await publisher.PublishBatchAsync([message], cancellationToken);
             });
     }
 

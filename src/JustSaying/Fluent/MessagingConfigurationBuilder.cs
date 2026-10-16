@@ -30,12 +30,12 @@ public sealed class MessagingConfigurationBuilder
     /// <summary>
     /// Gets or sets the optional value to use for <see cref="IPublishConfiguration.MessageResponseLogger"/>
     /// </summary>
-    private Action<MessageResponse, Message> MessageResponseLogger { get; set; }
+    private Action<MessageResponse, object> MessageResponseLogger { get; set; }
 
     /// <summary>
     /// Gets or sets the optional value to use for <see cref="IPublishBatchConfiguration.MessageBatchResponseLogger"/>
     /// </summary>
-    private Action<MessageBatchResponse, IReadOnlyCollection<Message>> MessageBatchResponseLogger { get; set; }
+    private Action<MessageBatchResponse, IReadOnlyCollection<object>> MessageBatchResponseLogger { get; set; }
 
     /// <summary>
     /// Gets or sets the optional value to use for <see cref="IPublishConfiguration.PublishFailureBackoff"/>
@@ -144,7 +144,7 @@ public sealed class MessagingConfigurationBuilder
     /// <exception cref="ArgumentNullException">
     /// <paramref name="logger"/> is <see langword="null"/>.
     /// </exception>
-    public MessagingConfigurationBuilder WithMessageResponseLogger(Action<MessageResponse, Message> logger)
+    public MessagingConfigurationBuilder WithMessageResponseLogger(Action<MessageResponse, object> logger)
     {
         MessageResponseLogger = logger ?? throw new ArgumentNullException(nameof(logger));
         return this;
@@ -160,7 +160,7 @@ public sealed class MessagingConfigurationBuilder
     /// <exception cref="ArgumentNullException">
     /// <paramref name="logger"/> is <see langword="null"/>.
     /// </exception>
-    public MessagingConfigurationBuilder WithMessageResponseLogger(Action<MessageBatchResponse, IReadOnlyCollection<Message>> logger)
+    public MessagingConfigurationBuilder WithMessageResponseLogger(Action<MessageBatchResponse, IReadOnlyCollection<object>> logger)
     {
         MessageBatchResponseLogger = logger ?? throw new ArgumentNullException(nameof(logger));
         return this;
@@ -395,16 +395,26 @@ public sealed class MessagingConfigurationBuilder
     /// </returns>
     public IPublishBatchConfiguration BuildPublishBatchConfiguration()
     {
-        var config = BusBuilder.ServiceResolver.ResolveService<IPublishBatchConfiguration>();
-
-        if (PublishFailureBackoffForBatch.HasValue)
+        // The resolved configuration can be the same instance as the IMessagingConfig (it is under
+        // Microsoft DI), so start from a copy of it rather than overwrite the single-message settings
+        // with the batch ones.
+        var resolved = BusBuilder.ServiceResolver.ResolveService<IPublishBatchConfiguration>();
+        var config = new PublishBatchConfiguration
         {
-            config.PublishFailureBackoff = PublishFailureBackoffForBatch.Value;
+            PublishFailureReAttempts = resolved.PublishFailureReAttempts,
+            PublishFailureBackoff = resolved.PublishFailureBackoff,
+            MessageBatchResponseLogger = resolved.MessageBatchResponseLogger,
+        };
+
+        // A batch falls back to the single-message settings when it has none of its own.
+        if ((PublishFailureBackoffForBatch ?? PublishFailureBackoff) is { } backoff)
+        {
+            config.PublishFailureBackoff = backoff;
         }
 
-        if (PublishFailureReAttemptsForBatch.HasValue)
+        if ((PublishFailureReAttemptsForBatch ?? PublishFailureReAttempts) is { } reattempts)
         {
-            config.PublishFailureReAttempts = PublishFailureReAttemptsForBatch.Value;
+            config.PublishFailureReAttempts = reattempts;
         }
 
         if (MessageBatchResponseLogger != null)
