@@ -45,7 +45,7 @@ internal sealed class DefaultServiceResolver : IServiceResolver
         }
         else if (desiredType == typeof(IMessageBodySerializationFactory))
         {
-            return new NewtonsoftSerializationFactory();
+            return new SystemTextJsonSerializationFactory(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions);
         }
         else if (desiredType == typeof(MessageCompressionRegistry))
         {

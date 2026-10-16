@@ -11,6 +11,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\JustSaying.TestingFramework\JustSaying.TestingFramework.csproj" />
+    <ProjectReference Include="..\..\src\JustSaying.CloudEvents\JustSaying.CloudEvents.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.AppHost" />
