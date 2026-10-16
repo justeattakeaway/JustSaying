@@ -2,6 +2,7 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Models;
 using JustSaying.Naming;
@@ -15,8 +16,7 @@ namespace JustSaying.Fluent;
 /// <typeparam name="T">
 /// The type of the message.
 /// </typeparam>
-public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
-    where T : Message
+public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T> where T : class
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="TopicSubscriptionBuilder{T}"/> class.
@@ -198,6 +198,7 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         subscriptionConfig.SubscriptionGroupName ??= subscriptionConfig.QueueName;
         subscriptionConfig.PublishEndpoint = subscriptionConfig.TopicName;
         subscriptionConfig.Validate();
+        bus.AddSubscribedQueue(subscriptionConfig.QueueName, [typeof(T)], isMultiType: false);
 
         var queueWithStartup = creator.EnsureTopicExistsWithQueueSubscribed(
             region,
@@ -210,7 +211,7 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         var sqsSource = new SqsSource
         {
             SqsQueue = queueWithStartup.Queue,
-            MessageConverter = new InboundMessageConverter(serializer, compressionRegistry, subscriptionConfig.RawMessageDelivery)
+            MessageConverter = new InboundMessageConverter(serializer.Erase(), compressionRegistry, subscriptionConfig.RawMessageDelivery)
         };
         bus.AddQueue(subscriptionConfig.SubscriptionGroupName, sqsSource);
 
@@ -221,7 +222,7 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
 
         var resolutionContext = new HandlerResolutionContext(subscriptionConfig.QueueName);
         var proposedHandler = handlerResolver.ResolveHandler<T>(resolutionContext) ?? throw new HandlerNotRegisteredWithContainerException($"There is no handler for '{typeof(T)}' messages.");
-        var middlewareBuilder = new HandlerMiddlewareBuilder(handlerResolver, serviceResolver);
+        var middlewareBuilder = new HandlerMiddlewareBuilder(handlerResolver, serviceResolver, typeof(T), bus.MessageMetadataProvider);
         var handlerMiddleware = middlewareBuilder
             .Configure(MiddlewareConfiguration ?? (builder => builder.UseDefaults<T>(proposedHandler.GetType())) )
             .Build();

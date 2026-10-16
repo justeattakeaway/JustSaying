@@ -54,4 +54,52 @@ public class WhenPublishingToAQueueWithRawMessages : IntegrationTestBase
                 });
             });
     }
+
+    [Test]
+    public async Task Then_The_Message_Is_Published_Unwrapped_Using_The_WithRawMessages_Convenience()
+    {
+        // Arrange
+        var handler = new InspectableHandler<SimpleMessage>();
+        var awsClientFactory = new InspectableClientFactory(CreateClientFactory());
+
+        var services = GivenJustSaying()
+            .ConfigureJustSaying((builder) =>
+            {
+                builder.Client((options) => options.WithClientFactory(() => awsClientFactory));
+                builder.WithLoopbackQueueAndPublicationOptions<SimpleMessage>(UniqueName,
+                    c => c.WithRawMessages(),
+                    c => c.WithReadConfiguration(rc => rc.RawMessageDelivery = true));
+            })
+            .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
+
+        string content = Guid.NewGuid().ToString();
+
+        var message = new SimpleMessage
+        {
+            Content = content
+        };
+
+        await WhenAsync(
+            services,
+            async (publisher, listener, cancellationToken) =>
+            {
+                await listener.StartAsync(cancellationToken);
+                await publisher.StartAsync(cancellationToken);
+
+                // Act
+                await publisher.PublishAsync(message, cancellationToken);
+
+                // Assert
+                await Patiently.AssertThatAsync(() =>
+                {
+                    var handledMessage = handler.ReceivedMessages.Where(m => m.Id.ToString() == message.UniqueKey()).ShouldHaveSingleItem();
+                    handledMessage.Content.ShouldBe(content);
+                    var response = awsClientFactory.InspectableSqsClient.ReceiveMessageResponses.Where(r => r.Messages.Count > 0).ShouldHaveSingleItem();
+                    var responseMessage = response.Messages.ShouldHaveSingleItem();
+                    var messageBody = responseMessage.Body;
+                    messageBody.ShouldNotContain("Message");
+                    messageBody.ShouldNotContain("Subject");
+                });
+            });
+    }
 }
