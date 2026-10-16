@@ -5,12 +5,12 @@ namespace JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 
 internal class FakeBodySerializer(string messageBody) : IMessageBodySerializer
 {
-    public string Serialize(Message message) => messageBody;
-    Message IMessageBodySerializer.Deserialize(string message) => throw new NotImplementedException();
+    public string Serialize(object message) => messageBody;
+    object IMessageBodySerializer.Deserialize(string message) => throw new NotImplementedException();
 }
 
 internal class FakeBodyDeserializer(Message messageToReturn) : IMessageBodySerializer
 {
-    string IMessageBodySerializer.Serialize(Message message) =>  throw new NotImplementedException();
-    public Message Deserialize(string message) => messageToReturn;
+    string IMessageBodySerializer.Serialize(object message) =>  throw new NotImplementedException();
+    public object Deserialize(string message) => messageToReturn;
 }

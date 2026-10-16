@@ -141,6 +141,34 @@ public class WhenDispatchingMessage
     }
 
     [InheritsTests]
+    public class AndMessageDeserializesToNull : WhenDispatchingMessage
+    {
+        protected override void Given()
+        {
+            base.Given();
+            _messageBodySerializer.Deserialize(Arg.Any<string>()).Returns((object)null);
+        }
+
+        [Test]
+        public async Task ShouldTreatItAsADeserializationFailure()
+        {
+            _messageMonitor.HandledErrors.ShouldHaveSingleItem();
+            _messageMonitor.HandledMessages.ShouldBeEmpty();
+            await Patiently.AssertThatAsync(OutputHelper, () =>
+            {
+                var logs = _fakeLogCollector.GetSnapshot();
+                logs.ShouldContain(le => le.Level == LogLevel.Error && le.Message.StartsWith("Error deserializing message", StringComparison.Ordinal));
+            });
+        }
+
+        [Test]
+        public void ShouldLeaveMessageOnTheQueue()
+        {
+            _queue.DeleteMessageRequests.ShouldBeEmpty();
+        }
+    }
+
+    [InheritsTests]
     public class AndMessageProcessingSucceeds : WhenDispatchingMessage
     {
         protected override void Given()
