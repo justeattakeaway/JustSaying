@@ -214,7 +214,7 @@ public static class IServiceCollectionExtensions
     /// <paramref name="services"/> is <see langword="null"/>.
     /// </exception>
     public static IServiceCollection AddJustSayingHandler<TMessage, THandler>(this IServiceCollection services)
-        where TMessage : Message
+        where TMessage : class
         where THandler : class, IHandlerAsync<TMessage>
     {
         if (services == null)
@@ -244,7 +244,7 @@ public static class IServiceCollectionExtensions
     public static IServiceCollection AddJustSayingHandlers<TMessage>(
         this IServiceCollection services,
         IEnumerable<IHandlerAsync<TMessage>> handlers)
-        where TMessage : Message
+        where TMessage : class
     {
         if (services == null)
         {

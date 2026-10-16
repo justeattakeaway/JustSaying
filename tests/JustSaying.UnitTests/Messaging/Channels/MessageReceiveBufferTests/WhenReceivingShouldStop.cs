@@ -37,7 +37,7 @@ public class WhenReceivingShouldStop
         var source = new SqsSource
         {
             SqsQueue = _queue,
-            MessageConverter = new InboundMessageConverter(SimpleMessage.Serializer, new MessageCompressionRegistry(), false)
+            MessageConverter = new InboundMessageConverter(SimpleMessage.Serializer.Erase(), new MessageCompressionRegistry(), false)
         };
 
         _messageReceivePauseSignal = new MessageReceivePauseSignal();

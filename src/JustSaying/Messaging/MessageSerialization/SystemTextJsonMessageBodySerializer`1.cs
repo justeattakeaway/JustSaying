@@ -1,13 +1,12 @@
 using System.Text.Json;
-using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageSerialization;
 
 /// <summary>
 /// Provides serialization and deserialization functionality for messages of type <typeparamref name="T"/> using System.Text.Json.
 /// </summary>
-/// <typeparam name="T">The type of message to be serialized or deserialized. Must inherit from <see cref="Message"/>.</typeparam>
-public sealed class SystemTextJsonMessageBodySerializer<T> : IMessageBodySerializer where T: Message
+/// <typeparam name="T">The type of message to be serialized or deserialized.</typeparam>
+public sealed class SystemTextJsonMessageBodySerializer<T> : IMessageBodySerializer<T> where T : class
 {
     private readonly JsonSerializerOptions _options;
 
@@ -31,9 +30,9 @@ public sealed class SystemTextJsonMessageBodySerializer<T> : IMessageBodySeriali
     /// </summary>
     /// <param name="message">The message to serialize.</param>
     /// <returns>A JSON string representation of the message.</returns>
-    public string Serialize(Message message)
+    public string Serialize(T message)
     {
-        return JsonSerializer.Serialize(message, message.GetType(), _options);
+        return JsonSerializer.Serialize(message, _options);
     }
 
     /// <summary>
@@ -41,7 +40,7 @@ public sealed class SystemTextJsonMessageBodySerializer<T> : IMessageBodySeriali
     /// </summary>
     /// <param name="messageBody">The JSON string to deserialize.</param>
     /// <returns>A deserialized message of type <typeparamref name="T"/>.</returns>
-    public Message Deserialize(string messageBody)
+    public T Deserialize(string messageBody)
     {
         return JsonSerializer.Deserialize<T>(messageBody, _options);
     }
