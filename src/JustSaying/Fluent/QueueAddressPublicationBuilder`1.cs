@@ -24,6 +24,7 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
     private bool _subjectSet;
     private bool _isRawMessage;
     private bool _shouldCheckQueueExistence;
+    private int? _maximumMessageSize;
 
     private Action<PublishMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
@@ -67,6 +68,35 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
     public QueueAddressPublicationBuilder<T> WithRawMessages()
     {
         _isRawMessage = true;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the maximum size, in bytes, of a message the queue will accept.
+    /// </summary>
+    /// <param name="maximumMessageSize">The maximum message size, in bytes.</param>
+    /// <returns>The current instance of <see cref="QueueAddressPublicationBuilder{T}"/> for method chaining.</returns>
+    /// <remarks>
+    /// JustSaying does not create or configure a queue it is given the address of, so tell it here if the queue
+    /// has had its <c>MaximumMessageSize</c> attribute set below the SQS default of 1 MiB, which is common for
+    /// queues created by infrastructure tooling that still defaults to 256 KiB. The value is used as the budget
+    /// for compression. It does not affect batching, SQS allows a batch to add up to 1 MiB whatever the queue's limit.
+    /// </remarks>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <paramref name="maximumMessageSize"/> is outside the range SQS accepts.
+    /// </exception>
+    public QueueAddressPublicationBuilder<T> WithMaximumMessageSize(int maximumMessageSize)
+    {
+        if (maximumMessageSize < JustSayingConstants.MinimumSqsMessageSize ||
+            maximumMessageSize > JustSayingConstants.MaximumSqsMessageSize)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(maximumMessageSize),
+                maximumMessageSize,
+                $"The maximum message size must be between {JustSayingConstants.MinimumSqsMessageSize} and {JustSayingConstants.MaximumSqsMessageSize} bytes.");
+        }
+
+        _maximumMessageSize = maximumMessageSize;
         return this;
     }
 
@@ -123,7 +153,7 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
         var eventPublisher = new SqsMessagePublisher(
             _queueAddress.QueueUrl,
             sqsClient,
-            new OutboundMessageConverter(PublishDestinationType.Queue, bus.MessageBodySerializerFactory.GetSerializer<T>(), new MessageCompressionRegistry([new GzipMessageBodyCompression()]), compressionOptions, subject, _isRawMessage),
+            new OutboundMessageConverter(PublishDestinationType.Queue, bus.MessageBodySerializerFactory.GetSerializer<T>(), bus.CompressionRegistry, compressionOptions, subject, _isRawMessage, _maximumMessageSize ?? JustSayingConstants.DefaultSqsMaximumMessageSize),
             loggerFactory)
         {
             MessageResponseLogger = config.MessageResponseLogger
