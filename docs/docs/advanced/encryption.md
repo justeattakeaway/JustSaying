@@ -15,7 +15,7 @@ Use encryption when:
 
 ## Configuration
 
-Configure encryption using `WithWriteConfiguration` for publications:
+Encryption is a setting of the topic or queue, so it's configured on its [destination](/destinations/) with `WithEncryption`. It's applied when JustSaying creates the resource, and added to an existing one on startup.
 
 ### Topic Encryption (SNS)
 
@@ -26,16 +26,8 @@ services.AddJustSaying(config =>
 
     config.Publications(x =>
     {
-        x.WithTopic<SecureOrderEvent>(cfg =>
-        {
-            cfg.WithWriteConfiguration(w =>
-            {
-                w.Encryption = new ServerSideEncryption
-                {
-                    KmsMasterKeyId = "arn:aws:kms:us-east-1:123456789012:key/your-key-id"
-                };
-            });
-        });
+        x.WithTopic<SecureOrderEvent>(TopicDestination.ByConvention(t => t
+            .WithEncryption("arn:aws:kms:us-east-1:123456789012:key/your-key-id")));
     });
 });
 ```
@@ -45,48 +37,44 @@ services.AddJustSaying(config =>
 ```csharp
 config.Publications(x =>
 {
-    x.WithQueue<SecurePaymentCommand>(cfg =>
-    {
-        cfg.WithWriteConfiguration(w =>
-        {
-            w.WithEncryption("your-kms-key-id");
-        });
-    });
+    x.WithQueue<SecurePaymentCommand>(QueueDestination.ByConvention(q => q
+        .WithEncryption("your-kms-key-id")));
 });
 ```
 
+A subscription's queue is configured the same way, through `WithQueue` on `ForTopic`, or the destination of `ForQueue`:
+
+```csharp
+config.Subscriptions(x =>
+{
+    x.ForTopic<SecureOrderEvent>(c => c
+        .WithQueue(QueueDestination.ByConvention(q => q.WithEncryption("alias/my-app-key"))));
+});
+```
+
+A queue's `_error` queue is encrypted with the same key.
+
+Encryption is never removed by JustSaying: a destination without `WithEncryption` leaves an existing queue's or topic's encryption as it is. To decrypt a queue on purpose, change it outside JustSaying. See [Infrastructure on Startup](/destinations/startup-behaviour).
+
 ## KMS Key Specification
 
-You can specify the KMS key in several formats:
-
-### Key ID
+`WithEncryption` takes the KMS key in any of the formats KMS accepts:
 
 ```csharp
-w.WithEncryption("1234abcd-12ab-34cd-56ef-1234567890ab");
+q.WithEncryption("1234abcd-12ab-34cd-56ef-1234567890ab");                                         // Key ID
+q.WithEncryption("arn:aws:kms:us-east-1:123456789012:key/1234abcd-12ab-34cd-56ef-1234567890ab"); // Key ARN
+q.WithEncryption("alias/my-app-key");                                                             // Alias name
+q.WithEncryption("arn:aws:kms:us-east-1:123456789012:alias/my-app-key");                          // Alias ARN
 ```
 
-### Key ARN
+For a queue, the `ServerSideEncryption` overload also sets how long SQS reuses a data key:
 
 ```csharp
-w.Encryption = new ServerSideEncryption
+q.WithEncryption(new ServerSideEncryption
 {
-    KmsMasterKeyId = "arn:aws:kms:us-east-1:123456789012:key/1234abcd-12ab-34cd-56ef-1234567890ab"
-};
-```
-
-### Alias Name
-
-```csharp
-w.WithEncryption("alias/my-app-key");
-```
-
-### Alias ARN
-
-```csharp
-w.Encryption = new ServerSideEncryption
-{
-    KmsMasterKeyId = "arn:aws:kms:us-east-1:123456789012:alias/my-app-key"
-};
+    KmsMasterKeyId = "alias/my-app-key",
+    KmsDataKeyReusePeriod = TimeSpan.FromMinutes(5),
+});
 ```
 
 ## IAM Permissions
@@ -132,17 +120,9 @@ services.AddJustSaying(config =>
 
     config.Publications(x =>
     {
-        x.WithTopic<PatientRecordEvent>(cfg =>
-        {
-            cfg.WithWriteConfiguration(w =>
-            {
-                // Encrypt using KMS
-                w.Encryption = new ServerSideEncryption
-                {
-                    KmsMasterKeyId = configuration["AWS:KMS:KeyId"]
-                };
-            });
-        });
+        // Encrypt using KMS
+        x.WithTopic<PatientRecordEvent>(TopicDestination.ByConvention(t => t
+            .WithEncryption(configuration["AWS:KMS:KeyId"])));
     });
 });
 
@@ -280,12 +260,12 @@ Your IAM role lacks `kms:Decrypt` permission. Add the permission for your KMS ke
 ### Messages not encrypting
 
 Verify:
-1. `Encryption` or `WithEncryption()` is configured on the publication
+1. `WithEncryption()` is configured on the topic or queue's destination
 2. KMS key ID is valid and accessible
 3. IAM role has required permissions
 
 ## See Also
 
 - [AWS IAM](../aws-iam.md) - Required KMS permissions
-- [Write Configuration](../publishing/write-configuration.md) - Complete write configuration options
+- [Destinations](../destinations/) - Topic and queue settings
 - [AWS KMS Documentation](https://docs.aws.amazon.com/kms/) - KMS best practices

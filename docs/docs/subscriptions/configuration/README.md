@@ -19,7 +19,7 @@ services.AddJustSaying((MessagingBusBuilder config) =>
 });
 ```
 
-The `subscriptionConfig` builder provides methods to describe the topology of your messaging setup.
+The `subscriptionConfig` builder provides methods to describe the topology of your messaging setup. Each method can take a [destination](/destinations/) to name the topic or queue and configure how it's created.
 
 ### [ForTopic&lt;T&gt;](/subscriptions/configuration/fortopic)
 
@@ -34,3 +34,11 @@ subscriptionConfig.ForQueueArn<OrderReadyEvent>(
 ```
 
 Use `WithQueueExistenceCheck()` when you want JustSaying to verify an existing queue during bus startup. Note this check requires the `sqs:GetQueueAttributes` permission.
+
+### [ForQueue (multi-type)](/subscriptions/configuration/multi-type-queues)
+
+One queue that carries several message types, each dispatched to its own handler.
+
+### [CloudEvents](/cloudevents/consuming)
+
+`ForCloudEventTopic<T>`, `ForCloudEventTopicData<T>`, `HandlingCloudEvent<T>` and `HandlingCloudEventData<T>` consume CloudEvents, with the `JustSaying.CloudEvents` package.
