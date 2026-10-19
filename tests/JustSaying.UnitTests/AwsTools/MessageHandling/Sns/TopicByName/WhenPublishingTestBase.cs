@@ -1,3 +1,4 @@
+using JustSaying.AwsTools;
 using Amazon.SimpleNotificationService;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
@@ -40,7 +41,8 @@ public abstract class WhenPublishingTestBase
             new MessageCompressionRegistry(),
             new PublishCompressionOptions(),
             subject ?? nameof(SimpleMessage),
-            false);
+            false,
+            JustSayingConstants.DefaultSnsMaximumMessageSize);
     }
 
     protected abstract Task WhenAsync();
