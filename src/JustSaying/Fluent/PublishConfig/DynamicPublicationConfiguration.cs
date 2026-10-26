@@ -1,5 +1,4 @@
 using JustSaying.Messaging;
-using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent;
@@ -11,7 +10,7 @@ internal sealed class DynamicPublicationConfiguration(IMessagePublisher publishe
     public IMessageBatchPublisher BatchPublisher { get; } = batchPublisher;
 
     public static DynamicPublicationConfiguration Build<T>(
-        Func<Message, string> topicNameCustomizer,
+        Func<object, string> topicNameCustomizer,
         Func<string, StaticPublicationConfiguration> staticConfigBuilder,
         ILoggerFactory loggerFactory)
     {

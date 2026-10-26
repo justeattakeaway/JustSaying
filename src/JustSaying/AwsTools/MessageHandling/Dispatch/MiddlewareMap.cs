@@ -1,5 +1,4 @@
 using JustSaying.Messaging.Interrogation;
-using JustSaying.Models;
 using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;
 
 namespace JustSaying.AwsTools.MessageHandling.Dispatch;
@@ -51,7 +50,7 @@ public sealed class MiddlewareMap : IInterrogable
     /// <typeparam name="T">The type of the message to handle on this queue.</typeparam>
     /// <param name="queueName">The queue to register the middleware for.</param>
     /// <param name="middleware">The factory function to create middleware with.</param>
-    public MiddlewareMap Add<T>(string queueName, HandleMessageMiddleware middleware) where T : Message
+    public MiddlewareMap Add<T>(string queueName, HandleMessageMiddleware middleware)
     {
         if (queueName is null) throw new ArgumentNullException(nameof(queueName));
         if (middleware is null) throw new ArgumentNullException(nameof(middleware));
@@ -73,6 +72,40 @@ public sealed class MiddlewareMap : IInterrogable
         if (messageType is null) throw new ArgumentNullException(nameof(messageType));
 
         return _middlewares.TryGetValue((queueName, messageType), out var middleware) ? middleware : null;
+    }
+
+    /// <summary>
+    /// Gets the middleware to dispatch a message of <paramref name="messageType"/> to on a queue: the one
+    /// registered for that exact type, otherwise the one for its closest base class, otherwise the one for
+    /// the interface it implements. A message deserialized as a derived type (for example by a
+    /// polymorphic serializer for a base type subscription) is then handled by the base type's handler.
+    /// </summary>
+    /// <returns>The middleware, or null if none matches or more than one interface matches.</returns>
+    internal HandleMessageMiddleware GetForMessage(string queueName, Type messageType)
+    {
+        for (var type = messageType; type != null; type = type.BaseType)
+        {
+            if (_middlewares.TryGetValue((queueName, type), out var middleware))
+            {
+                return middleware;
+            }
+        }
+
+        HandleMessageMiddleware match = null;
+        foreach (var entry in _middlewares)
+        {
+            if (entry.Key.queueName == queueName && entry.Key.type.IsInterface && entry.Key.type.IsAssignableFrom(messageType))
+            {
+                if (match != null)
+                {
+                    return null;
+                }
+
+                match = entry.Value;
+            }
+        }
+
+        return match;
     }
 
     public InterrogationResult Interrogate()
