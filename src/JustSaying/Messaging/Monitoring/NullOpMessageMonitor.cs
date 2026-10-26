@@ -11,7 +11,7 @@ public class NullOpMessageMonitor : IMessageMonitor
     public void HandleTime(TimeSpan duration) { }
 
     public void IssuePublishingMessage() { }
-    public void Handled(Models.Message message) { }
+    public void Handled(object message) { }
 
     public void IncrementThrottlingStatistic() { }
 

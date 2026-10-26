@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>CloudEvents support for JustSaying.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IsShipping>true</IsShipping>
+    <PackageTags>aws,sns,sqs,cloudevents</PackageTags>
+    <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="JustSaying.CloudEvents.Tests" Key="$(JustSayingKey)" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\JustSaying\JustSaying.csproj" />
+  </ItemGroup>
+  <!--
+    This package ships in lockstep with JustSaying and is coupled to its implementation (and internals), not
+    just its public API, so it must be used with the exact JustSaying version it was built against. NuGet
+    packs a project reference as a minimum version (>= x.y.z); pin it to [x.y.z] instead.
+  -->
+  <Target Name="PinJustSayingPackageVersion" AfterTargets="_GetProjectReferenceVersions">
+    <ItemGroup>
+      <_PinnedProjectReferencesWithVersions Include="@(_ProjectReferencesWithVersions)" Condition=" '%(Filename)' == 'JustSaying' ">
+        <ProjectVersion>[%(_ProjectReferencesWithVersions.ProjectVersion)]</ProjectVersion>
+      </_PinnedProjectReferencesWithVersions>
+      <_ProjectReferencesWithVersions Remove="@(_PinnedProjectReferencesWithVersions)" />
+      <_ProjectReferencesWithVersions Include="@(_PinnedProjectReferencesWithVersions)" />
+    </ItemGroup>
+  </Target>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+  </ItemGroup>
+  <ItemGroup>
+    <AdditionalFiles Include="PublicAPI\PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI\PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <AdditionalFiles Include="PublicAPI\$(TargetFramework)\PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI\$(TargetFramework)\PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+</Project>
