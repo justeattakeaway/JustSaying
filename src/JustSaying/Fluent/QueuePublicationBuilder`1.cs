@@ -3,6 +3,7 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
@@ -15,8 +16,7 @@ namespace JustSaying.Fluent;
 /// <typeparam name="T">
 /// The type of the message published to the queue.
 /// </typeparam>
-public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
-    where T : Message
+public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T> where T : class
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="QueuePublicationBuilder{T}"/> class.
@@ -32,6 +32,8 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
     private string QueueName { get; set; } = string.Empty;
 
     private Action<PublishMiddlewareBuilder> MiddlewareConfiguration { get; set; }
+
+    private bool _isRawMessage;
 
     /// <summary>
     /// Configures the SQS write configuration.
@@ -89,6 +91,19 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
     }
 
     /// <summary>
+    /// Publishes the message body to the queue verbatim, without JustSaying's
+    /// <c>{ "Message", "Subject" }</c> queue envelope.
+    /// </summary>
+    /// <returns>
+    /// The current <see cref="QueuePublicationBuilder{T}"/>.
+    /// </returns>
+    public QueuePublicationBuilder<T> WithRawMessages()
+    {
+        _isRawMessage = true;
+        return this;
+    }
+
+    /// <summary>
     /// Configures the publish middleware pipeline for this publication.
     /// </summary>
     /// <param name="middlewareConfiguration">A delegate to configure the publish middleware pipeline.</param>
@@ -126,14 +141,30 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
         var sqsClient = proxy.GetAwsClientFactory().GetSqsClient(regionEndpoint);
 
         var compressionRegistry = bus.CompressionRegistry;
-        var compressionOptions = writeConfiguration.CompressionOptions;
-        var subjectProvider = bus.Config.MessageSubjectProvider;
-        var subject = subjectProvider.GetSubjectForType(typeof(T));
+        var subject = bus.MessageTypeRegistry.GetLogicalName(typeof(T));
+
+        var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
+        // A self-describing serializer (for example CloudEvents) already carries the message's type
+        // metadata, so the {Message, Subject} queue envelope would just double-wrap it.
+        var isSelfDescribing = serializer is ISelfDescribingMessageBodySerializer;
+        var isRawMessage = _isRawMessage || writeConfiguration.IsRawMessage || isSelfDescribing;
+
+        // Queue publications by name have never taken the bus default compression.
+        var compressionOptions = PublicationCompression.Resolve<T>(writeConfiguration.CompressionOptions, busDefault: null, isSelfDescribing);
+
+        if (isSelfDescribing && !_isRawMessage && !writeConfiguration.IsRawMessage)
+        {
+            logger.LogInformation(
+                "Publishing '{MessageType}' to queue '{QueueName}' without the queue envelope because its serializer is self-describing.",
+                typeof(T),
+                writeConfiguration.QueueName);
+        }
 
         var eventPublisher = new SqsMessagePublisher(
             sqsClient,
-            new OutboundMessageConverter(PublishDestinationType.Queue, bus.MessageBodySerializerFactory.GetSerializer<T>(), compressionRegistry, compressionOptions, subject, writeConfiguration.IsRawMessage),
-            loggerFactory)
+            new OutboundMessageConverter(PublishDestinationType.Queue, serializer.Erase(), compressionRegistry, compressionOptions, subject, isRawMessage),
+            loggerFactory,
+            bus.MessageMetadataProvider)
         {
             MessageResponseLogger = config.MessageResponseLogger,
             MessageBatchResponseLogger = bus.PublishBatchConfiguration?.MessageBatchResponseLogger

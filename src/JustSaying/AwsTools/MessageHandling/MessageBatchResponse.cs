@@ -14,7 +14,9 @@ public class MessageBatchResponse
     public IReadOnlyCollection<string> SuccessfulMessageIds { get; set; }
 
     /// <summary>
-    /// Gets or sets the Ids of the messages that failed to publish.
+    /// Gets or sets the Ids of the messages that failed to publish. A message with no Id of its own
+    /// (one that doesn't derive from <see cref="Models.Message"/>) is identified by its position in
+    /// the batch passed to the response logger.
     /// </summary>
     public IReadOnlyCollection<string> FailedMessageIds { get; set; }
 
