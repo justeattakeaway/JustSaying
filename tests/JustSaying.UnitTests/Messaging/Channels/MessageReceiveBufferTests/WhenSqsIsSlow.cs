@@ -40,7 +40,7 @@ public class WhenSqsIsSlow
         var source = new SqsSource
         {
             SqsQueue = _queue,
-            MessageConverter = new InboundMessageConverter(SimpleMessage.Serializer, new MessageCompressionRegistry(), false)
+            MessageConverter = new InboundMessageConverter(SimpleMessage.Serializer.Erase(), new MessageCompressionRegistry(), false)
         };
 
         var monitor = new TrackingLoggingMonitor(

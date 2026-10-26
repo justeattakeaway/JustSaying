@@ -15,7 +15,7 @@ Compress messages when:
 
 ## Configuration
 
-Configure compression using `WithWriteConfiguration` on topic or queue publications:
+Configure compression using `WithCompression` on topic or queue publications:
 
 ```csharp
 services.AddJustSaying(config =>
@@ -26,18 +26,17 @@ services.AddJustSaying(config =>
     {
         x.WithTopic<LargeDataEvent>(cfg =>
         {
-            cfg.WithWriteConfiguration(w =>
+            cfg.WithCompression(new PublishCompressionOptions
             {
-                w.CompressionOptions = new PublishCompressionOptions
-                {
-                    CompressionEncoding = ContentEncodings.GzipBase64,
-                    MessageLengthThreshold = 100_000 // Compress if > 100KB
-                };
+                CompressionEncoding = ContentEncodings.GzipBase64,
+                MessageLengthThreshold = 100_000 // Compress if > 100KB
             });
         });
     });
 });
 ```
+
+[CloudEvents](/cloudevents/) publications are never compressed, because consumers that don't use JustSaying couldn't read them. Configuring compression on one throws when the bus is built.
 
 ## Compression Options
 
@@ -46,10 +45,10 @@ services.AddJustSaying(config =>
 Specifies the compression algorithm. Currently, only `ContentEncodings.GzipBase64` is supported:
 
 ```csharp
-w.CompressionOptions = new PublishCompressionOptions
+cfg.WithCompression(new PublishCompressionOptions
 {
     CompressionEncoding = ContentEncodings.GzipBase64
-};
+});
 ```
 
 This uses Gzip compression with Base64 encoding for safe transport through SNS/SQS.
@@ -59,11 +58,11 @@ This uses Gzip compression with Base64 encoding for safe transport through SNS/S
 Specifies the minimum message size \(in bytes\) before compression is applied. Messages smaller than this threshold are not compressed.
 
 ```csharp
-w.CompressionOptions = new PublishCompressionOptions
+cfg.WithCompression(new PublishCompressionOptions
 {
     CompressionEncoding = ContentEncodings.GzipBase64,
     MessageLengthThreshold = 50_000 // Only compress messages > 50KB
-};
+});
 ```
 
 **Recommended Thresholds**:
@@ -87,13 +86,10 @@ config.Publications(x =>
 {
     x.WithTopic<OrderDetailsEvent>(cfg =>
     {
-        cfg.WithWriteConfiguration(w =>
+        cfg.WithCompression(new PublishCompressionOptions
         {
-            w.CompressionOptions = new PublishCompressionOptions
-            {
-                CompressionEncoding = ContentEncodings.GzipBase64,
-                MessageLengthThreshold = 100_000
-            };
+            CompressionEncoding = ContentEncodings.GzipBase64,
+            MessageLengthThreshold = 100_000
         });
     });
 });
@@ -197,11 +193,11 @@ Check your `MessageLengthThreshold` setting. Lower thresholds cause more message
 ### Compression not working
 
 Verify:
-1. `CompressionOptions` is configured on the publication
+1. `WithCompression` is configured on the publication
 2. Message size exceeds `MessageLengthThreshold`
 3. Both publisher and subscriber are using compatible JustSaying versions
 
 ## See Also
 
-- [Write Configuration](../publishing/write-configuration.md) - Complete write configuration options
+- [Publication Settings](../publishing/write-configuration.md) - All publish-time settings
 - [Publications Configuration](../publishing/configuration.md) - Basic publication setup

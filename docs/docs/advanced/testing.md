@@ -9,6 +9,8 @@ Testing JustSaying applications requires strategies for both unit testing (mocki
 
 Mock `IMessagePublisher` and `IMessageBatchPublisher` to test application logic without AWS dependencies.
 
+`PublishAsync<TMessage>` and `PublishBatchAsync<TMessage>` are generic methods, so a hand-written fake publisher must implement them generically. Mocking libraries handle this for you: the type argument is inferred from the matcher, as below.
+
 ### Mocking IMessagePublisher
 
 ```csharp
@@ -51,9 +53,10 @@ public async Task PlaceBulkOrders_PublishesBatchOfEvents()
 
     // Assert
     mockBatchPublisher.Verify(
-        x => x.PublishAsync(
+        x => x.PublishBatchAsync(
             It.Is<IEnumerable<OrderPlacedEvent>>(
                 events => events.Count() == 3),
+            It.IsAny<PublishBatchMetadata>(),
             It.IsAny<CancellationToken>()),
         Times.Once);
 }
@@ -369,7 +372,7 @@ public class MyTests
 Create a test handler that captures calls:
 
 ```csharp
-public class CaptureHandler<T> : IHandlerAsync<T> where T : Message
+public class CaptureHandler<T> : IHandlerAsync<T> where T : class
 {
     public List<T> HandledMessages { get; } = new();
 

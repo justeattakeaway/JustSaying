@@ -19,6 +19,10 @@ Secure messages using AWS Key Management Service \(KMS\) server-side encryption.
 
 Use dynamic topic names for multi-tenant scenarios. Route messages to tenant-specific topics based on message content.
 
+### [Native AOT](native-aot.md)
+
+Publish JustSaying applications with Native AOT, using a source-generated `JsonSerializerContext` for message serialization.
+
 ### [Testing](testing.md)
 
 Testing strategies for JustSaying applications including LocalStack integration and mocking approaches.
@@ -30,10 +34,12 @@ Most applications don't need these advanced features. Consider them when:
 - **Compression**: Messages frequently exceed 100KB or you want to optimize AWS costs
 - **Encryption**: You have compliance requirements for data at rest
 - **Dynamic Topics**: You're building multi-tenant systems with tenant isolation
+- **Native AOT**: You want faster startup and a smaller footprint, for example in containers or AWS Lambda
 - **Testing**: You're setting up integration tests or local development environments
 
 ## See Also
 
 - [Publications Configuration](../publishing/configuration.md) - Basic publication setup
-- [Write Configuration](../publishing/write-configuration.md) - Advanced publication options
+- [Publication Settings](../publishing/write-configuration.md) - Advanced publication options
+- [Destinations](../destinations/) - Naming and configuring topics and queues
 - [AWS Configuration](../aws-configuration/) - AWS client and region setup
