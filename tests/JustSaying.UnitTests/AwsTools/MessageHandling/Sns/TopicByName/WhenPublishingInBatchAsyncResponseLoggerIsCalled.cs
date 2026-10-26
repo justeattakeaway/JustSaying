@@ -35,7 +35,7 @@ public class WhenPublishingInBatchAsyncResultLoggerIsCalled : WhenPublishingTest
             MessageBatchResponseLogger = (r, m) =>
             {
                 _response = r;
-                _messages = m;
+                _messages = m.Cast<Message>().ToList();
             }
         };
 
@@ -58,7 +58,7 @@ public class WhenPublishingInBatchAsyncResultLoggerIsCalled : WhenPublishingTest
 
     protected override Task WhenAsync()
     {
-        return SystemUnderTest.PublishAsync(new List<Message> { new SimpleMessage() });
+        return SystemUnderTest.PublishBatchAsync(new List<Message> { new SimpleMessage() });
     }
 
     private Task<PublishBatchResponse> PublishResult(CallInfo arg)

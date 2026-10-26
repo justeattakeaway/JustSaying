@@ -17,17 +17,11 @@ public class WhenAMessageIsPublishedWithCompression : IntegrationTestBase
 
         var services = GivenJustSaying()
             .ConfigureJustSaying((builder) => builder.WithLoopbackTopicAndPublicationOptions<SimpleMessage>(UniqueName,
-                c =>
+                c => c.WithCompression(new PublishCompressionOptions
                 {
-                    c.WithWriteConfiguration(writeConfiguration =>
-                    {
-                        writeConfiguration.CompressionOptions = new PublishCompressionOptions
-                        {
-                            CompressionEncoding = ContentEncodings.GzipBase64,
-                            MessageLengthThreshold = 100
-                        };
-                    });
-                }))
+                    CompressionEncoding = ContentEncodings.GzipBase64,
+                    MessageLengthThreshold = 100
+                })))
             .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 
         var message = new SimpleMessage
