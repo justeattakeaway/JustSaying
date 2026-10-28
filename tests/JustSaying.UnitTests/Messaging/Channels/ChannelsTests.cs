@@ -232,10 +232,13 @@ public class ChannelsTests
         IMessageDispatcher dispatcher = new FakeDispatcher();
         var bus = CreateSubscriptionGroup(queues, dispatcher);
 
+        // Start the bus before arming the timeout: RunAsync returns a completed task for a token
+        // that is already cancelled, so cancelling first races against a slow CI agent.
         var cts = new CancellationTokenSource();
+        var runTask = bus.RunAsync(cts.Token);
         cts.CancelAfter(_timeoutPeriod);
 
-        await Should.ThrowAsync<OperationCanceledException>(() => bus.RunAsync(cts.Token));
+        await Should.ThrowAsync<OperationCanceledException>(() => runTask);
     }
 
 
@@ -277,6 +280,8 @@ public class ChannelsTests
     [Test]
     public async Task Messages_Not_Dispatched_After_Cancellation()
     {
+        const int concurrencyLimit = 4;
+
         var cts = new CancellationTokenSource();
         var firstDispatchReceived = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -288,16 +293,16 @@ public class ChannelsTests
         {
             if (cts.Token.IsCancellationRequested)
             {
-                dispatchedAfterCancelled++;
+                Interlocked.Increment(ref dispatchedAfterCancelled);
             }
             else
             {
-                dispatchedBeforeCancelled++;
+                Interlocked.Increment(ref dispatchedBeforeCancelled);
                 firstDispatchReceived.TrySetResult();
             }
         });
 
-        var bus = CreateSubscriptionGroup(new[] { sqsQueue }, dispatcher);
+        var bus = CreateSubscriptionGroup(new[] { sqsQueue }, dispatcher, concurrencyLimit);
 
         var runTask = bus.RunAsync(cts.Token);
 
@@ -306,11 +311,12 @@ public class ChannelsTests
 
         await Should.ThrowAsync<OperationCanceledException>(() => runTask);
 
-        dispatchedBeforeCancelled.ShouldBeGreaterThan(0);
+        Volatile.Read(ref dispatchedBeforeCancelled).ShouldBeGreaterThan(0);
 
-        // Allow a small number of in-flight dispatches that passed the cancellation
-        // check before Cancel() was observed, but were dispatched after.
-        dispatchedAfterCancelled.ShouldBeLessThanOrEqualTo(2);
+        // Each subscriber checks for cancellation before it dispatches, so one that passed
+        // the check just before Cancel() can still dispatch that message. Every subscriber
+        // then stops, so at most one dispatch per subscriber can race with cancellation.
+        Volatile.Read(ref dispatchedAfterCancelled).ShouldBeLessThanOrEqualTo(concurrencyLimit);
     }
 
     [Test]
@@ -376,9 +382,15 @@ public class ChannelsTests
 
     private ISubscriptionGroup CreateSubscriptionGroup(
         IList<SqsSource> queues,
-        IMessageDispatcher dispatcher)
+        IMessageDispatcher dispatcher,
+        int? concurrencyLimit = null)
     {
         var defaults = new SubscriptionGroupSettingsBuilder();
+
+        if (concurrencyLimit is { } limit)
+        {
+            defaults.WithDefaultConcurrencyLimit(limit);
+        }
 
         var settings = new Dictionary<string, SubscriptionGroupConfigBuilder>
         {
