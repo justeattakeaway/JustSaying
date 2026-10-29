@@ -37,7 +37,7 @@ public class TokenBucketRateLimiterTests
     public async Task WaitAsync_BlocksWhenTokensExhausted()
     {
         const int max = 1;
-        using var limiter = new TokenBucketRateLimiter(max);
+        using var limiter = CreateWithoutAutoReplenish(max);
 
         // Consume the only token
         await limiter.WaitAsync(CancellationToken.None);
@@ -57,12 +57,37 @@ public class TokenBucketRateLimiterTests
         // Consume the token
         await limiter.WaitAsync(CancellationToken.None);
 
-        // Wait for replenishment (slightly over 1 second to allow for timer imprecision)
-        await Task.Delay(TimeSpan.FromMilliseconds(1200));
-
-        // Should succeed now
-        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
+        // The next token only becomes available once the timer replenishes the bucket.
+        // Use a generous timeout so a slow CI agent can't make this fail.
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
         await limiter.WaitAsync(cts.Token);
+
+        stopwatch.Elapsed.ShouldBeGreaterThan(TimeSpan.FromMilliseconds(500));
+    }
+
+    [Test]
+    public async Task Replenish_RestoresConsumedTokensUpToMax()
+    {
+        const int max = 3;
+        using var limiter = CreateWithoutAutoReplenish(max);
+
+        for (int i = 0; i < max; i++)
+        {
+            await limiter.WaitAsync(CancellationToken.None);
+        }
+
+        limiter.Replenish();
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        for (int i = 0; i < max; i++)
+        {
+            await limiter.WaitAsync(cts.Token);
+        }
+
+        using var cts2 = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
+        await Should.ThrowAsync<OperationCanceledException>(
+            () => limiter.WaitAsync(cts2.Token));
     }
 
     [Test]
@@ -103,26 +128,24 @@ public class TokenBucketRateLimiterTests
     public async Task Replenish_DoesNotThrowWhenDisposedDuringReplenishment()
     {
         // Consume a token so replenishment has work to do, then dispose
-        // before the timer fires — exercises the disposed check in Replenish.
-        var limiter = new TokenBucketRateLimiter(1);
+        // before replenishing — exercises the disposed check in Replenish.
+        var limiter = CreateWithoutAutoReplenish(1);
         await limiter.WaitAsync(CancellationToken.None);
         limiter.Dispose();
 
-        // Allow time for any pending timer callback to execute
-        await Task.Delay(TimeSpan.FromMilliseconds(1200));
+        limiter.Replenish();
     }
 
     [Test]
     public async Task Replenish_DoesNotReleaseWhenNoTokensConsumed()
     {
         // All tokens are still available so replenishment should be a no-op
-        using var limiter = new TokenBucketRateLimiter(5);
+        using var limiter = CreateWithoutAutoReplenish(5);
 
-        // Wait for at least one replenish cycle
-        await Task.Delay(TimeSpan.FromMilliseconds(1200));
+        limiter.Replenish();
 
         // All 5 tokens should still be available (not over-released)
-        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
         for (int i = 0; i < 5; i++)
         {
             await limiter.WaitAsync(cts.Token);
@@ -133,4 +156,9 @@ public class TokenBucketRateLimiterTests
         await Should.ThrowAsync<OperationCanceledException>(
             () => limiter.WaitAsync(cts2.Token));
     }
+
+    // The timer never fires, so tests control replenishment by calling Replenish() and
+    // can't be affected by a timer tick landing mid-test on a slow CI agent.
+    private static TokenBucketRateLimiter CreateWithoutAutoReplenish(int maxPerSecond)
+        => new(maxPerSecond, Timeout.InfiniteTimeSpan);
 }

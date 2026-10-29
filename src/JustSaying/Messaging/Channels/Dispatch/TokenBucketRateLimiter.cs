@@ -17,6 +17,16 @@ internal sealed class TokenBucketRateLimiter : IRateLimiter
     /// </summary>
     /// <param name="maxPerSecond">The maximum number of tokens available per second. Must be greater than zero.</param>
     public TokenBucketRateLimiter(int maxPerSecond)
+        : this(maxPerSecond, TimeSpan.FromSeconds(1))
+    {
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="TokenBucketRateLimiter"/> that replenishes on the given period.
+    /// Pass <see cref="Timeout.InfiniteTimeSpan"/> to disable automatic replenishment so that
+    /// tests can drive <see cref="Replenish"/> deterministically.
+    /// </summary>
+    internal TokenBucketRateLimiter(int maxPerSecond, TimeSpan replenishPeriod)
     {
         if (maxPerSecond <= 0)
         {
@@ -25,7 +35,7 @@ internal sealed class TokenBucketRateLimiter : IRateLimiter
 
         _maxTokens = maxPerSecond;
         _semaphore = new SemaphoreSlim(maxPerSecond, maxPerSecond);
-        _replenishTimer = new Timer(Replenish, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
+        _replenishTimer = new Timer(_ => Replenish(), null, replenishPeriod, replenishPeriod);
     }
 
     /// <summary>
@@ -44,7 +54,7 @@ internal sealed class TokenBucketRateLimiter : IRateLimiter
         return _semaphore.WaitAsync(cancellationToken);
     }
 
-    private void Replenish(object state)
+    internal void Replenish()
     {
         if (Volatile.Read(ref _disposed) != 0)
         {
