@@ -39,7 +39,7 @@ public interface IMessageMonitor
     /// Called when each message is handled by a subscriber.
     /// </summary>
     /// <param name="message">The message that was handled.</param>
-    void Handled(JustSaying.Models.Message message);
+    void Handled(object message);
 
     /// <summary>
     /// Called each time a message pipeline is full, and a subscriber must wait until

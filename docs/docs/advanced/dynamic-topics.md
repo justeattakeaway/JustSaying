@@ -26,11 +26,7 @@ services.AddJustSaying(config =>
     {
         x.WithTopic<OrderPlacedEvent>(cfg =>
         {
-            cfg.WithTopicName(msg =>
-            {
-                var order = (OrderPlacedEvent)msg;
-                return $"tenant-{order.TenantId}-orders";
-            });
+            cfg.WithTopicName(order => $"tenant-{order.TenantId}-orders");
         });
     });
 });
@@ -43,7 +39,7 @@ services.AddJustSaying(config =>
 Define messages with tenant information:
 
 ```csharp
-public class OrderPlacedEvent : Message
+public class OrderPlacedEvent
 {
     public string TenantId { get; set; }
     public int OrderId { get; set; }
@@ -60,11 +56,7 @@ config.Publications(x =>
 {
     x.WithTopic<OrderPlacedEvent>(cfg =>
     {
-        cfg.WithTopicName(msg =>
-        {
-            var order = (OrderPlacedEvent)msg;
-            return $"tenant-{order.TenantId}-orders";
-        });
+        cfg.WithTopicName(order => $"tenant-{order.TenantId}-orders");
     });
 });
 ```
@@ -99,14 +91,16 @@ Subscribers can use dynamic topic names as well:
 config.Subscriptions(x =>
 {
     // Subscribe to specific tenant topics
-    x.ForTopic<OrderPlacedEvent>("tenant-acme-orders");
-    x.ForTopic<OrderPlacedEvent>("tenant-contoso-orders");
+    x.ForTopic<OrderPlacedEvent>(TopicDestination.Named("tenant-acme-orders"), c => c.WithQueueName("acme-orders"));
+    x.ForTopic<OrderPlacedEvent>(TopicDestination.Named("tenant-contoso-orders"), c => c.WithQueueName("contoso-orders"));
 });
 
 services.AddJustSayingHandler<OrderPlacedEvent, OrderPlacedEventHandler>();
 ```
 
 For dynamic subscription scenarios, you may need to create separate bus instances per tenant.
+
+Topics named per message have no fixed address, so they're left out of [AsyncAPI documents](/asyncapi/).
 
 ## Performance Considerations
 
@@ -185,34 +179,33 @@ Instead of dynamic topics, use SNS subscription filters:
 
 ```csharp
 // Single topic with message attributes
-await publisher.PublishAsync(message, new PublishMetadata
-{
-    MessageAttributes = new Dictionary<string, MessageAttributeValue>
-    {
-        ["TenantId"] = new MessageAttributeValue { StringValue = "acme" }
-    }
-});
+await publisher.PublishAsync(message, new PublishMetadata()
+    .AddMessageAttribute("TenantId", "acme"));
 ```
 
-Subscribers filter using SNS filter policies. This reduces topic count but requires filter configuration.
+Subscribers filter using SNS filter policies, with `WithFilterPolicy` on `ForTopic`. This reduces topic count but requires filter configuration:
 
-### Queue-Per-Tenant
+```csharp
+x.ForTopic<OrderPlacedEvent>(c => c
+    .WithQueueName("acme-orders")
+    .WithFilterPolicy("""{ "TenantId": ["acme"] }"""));
+```
 
-Use dynamic queue names instead of dynamic topics:
+### Topics Addressed by ARN
+
+For topics that already exist, address them by ARN and compute the ARN per message with `WithTopicAddress`:
 
 ```csharp
 config.Publications(x =>
 {
-    x.WithQueue<OrderCommand>(cfg =>
-    {
-        cfg.WithQueueName(msg =>
-        {
-            var cmd = (OrderCommand)msg;
-            return $"tenant-{cmd.TenantId}-commands";
-        });
-    });
+    x.WithTopic<OrderPlacedEvent>(
+        TopicDestination.FromArn("arn:aws:sns:us-east-1:123456789012:tenant-default-orders"),
+        cfg => cfg.WithTopicAddress((arn, order) =>
+            $"arn:aws:sns:us-east-1:123456789012:tenant-{order.TenantId}-orders"));
 });
 ```
+
+Queue publications don't support per-message names.
 
 ## Complete Example
 
@@ -228,10 +221,8 @@ services.AddJustSaying(config =>
         // Dynamic topic based on tenant
         x.WithTopic<TenantEvent>(cfg =>
         {
-            cfg.WithTopicName(msg =>
+            cfg.WithTopicName(evt =>
             {
-                var evt = (TenantEvent)msg;
-
                 // Validate tenant ID
                 if (string.IsNullOrEmpty(evt.TenantId))
                     throw new ArgumentException("TenantId is required");
@@ -296,5 +287,5 @@ Pre-create topics using infrastructure-as-code to avoid runtime creation overhea
 ## See Also
 
 - [WithTopic](../publishing/withtopic.md) - Topic publication configuration
-- [Write Configuration](../publishing/write-configuration.md) - Advanced publication options
+- [Publication Settings](../publishing/write-configuration.md) - Advanced publication options
 - [Naming Conventions](../messaging-configuration/naming-conventions.md) - Default naming behavior

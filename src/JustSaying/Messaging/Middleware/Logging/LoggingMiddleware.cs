@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using JustSaying.Extensions;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Middleware.Logging;
@@ -15,6 +16,12 @@ public sealed class LoggingMiddleware(ILoggerFactory loggerFactory) : Middleware
     private readonly ILogger<LoggingMiddleware> _logger =
         loggerFactory?.CreateLogger<LoggingMiddleware>()
         ?? throw new ArgumentNullException(nameof(loggerFactory));
+
+    /// <summary>
+    /// Gets or sets the provider used to read the logged message identity. A subscription's pipeline
+    /// sets this to the bus's provider when it is built.
+    /// </summary>
+    internal IMessageMetadataProvider MetadataProvider { get; set; } = DefaultMessageMetadataProvider.Instance;
 
     protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
     {
@@ -42,8 +49,8 @@ public sealed class LoggingMiddleware(ILoggerFactory loggerFactory) : Middleware
                     context.HandledException,
                     MessageTemplate,
                     "Succeeded",
-                    context.Message.Id,
-                    context.MessageType.FullName,
+                    MessageIdentity.GetId(context.Message, MetadataProvider),
+                    context.MessageType.ToReadableFullName(),
                     watch.ElapsedMilliseconds);
             }
             else
@@ -52,8 +59,8 @@ public sealed class LoggingMiddleware(ILoggerFactory loggerFactory) : Middleware
                     context.HandledException,
                     MessageTemplate,
                     "Failed",
-                    context.Message.Id,
-                    context.MessageType.FullName,
+                    MessageIdentity.GetId(context.Message, MetadataProvider),
+                    context.MessageType.ToReadableFullName(),
                     watch.ElapsedMilliseconds);
             }
         }

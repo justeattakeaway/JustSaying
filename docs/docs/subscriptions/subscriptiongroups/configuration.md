@@ -24,19 +24,21 @@ services.AddJustSaying(config =>
 
 ```csharp
 ...
-    config.ForTopic<OrderReadyEvent>(topicConfig =>
+    subscriptionConfig.ForTopic<OrderReadyEvent>(topicConfig =>
     {
-        topicConfig.WithReadConfiguration(readConfig =>
-        {
-            readConfig.WithSubscriptionGroup("orders");
-        });
+        topicConfig.WithSubscriptionGroup("orders");
     });
+
+    subscriptionConfig.ForQueue("order-commands", queueConfig => queueConfig
+        .WithSubscriptionGroup("orders")
+        .Handling<PlaceOrder>()
+        .Handling<CancelOrder>());
 ...
 ```
 
 ## Options
 
-Like with`SqsReadConfiguration`, there are `WithXxx` methods available on `groupConfig` to configure this subscription group.
+There are `WithXxx` methods available on `groupConfig` to configure this subscription group. Defaults for every group can be set with `subscriptionConfig.WithDefaults(...)`, using the equivalent `WithDefaultXxx` methods (for example `WithDefaultConcurrencyLimit`).
 
 #### `WithPrefetch`
 
@@ -54,7 +56,9 @@ Specifies the size of the buffer shared across all queues in this subscription g
 
 Specifies the maximum number of workers that may process messages concurrently from this subscription group. Defaults to `4 * Environment.ProcessorCount`.
 
-#### `WithReceiveMessageWaitTime` 
+Pass `ConcurrencyLimitType.MessagesPerSecond` as a second argument to limit the number of messages handled per second instead: `WithConcurrencyLimit(50, ConcurrencyLimitType.MessagesPerSecond)`.
+
+#### `WithReceiveMessagesWaitTime`
 
 Specifies the long polling duration that the `IMessageReceiveBuffer` will wait for messages to become available from SQS before trying again. Defaults to 20 seconds. Setting this to 0 will disable long polling from SQS, as per [the docs](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-short-and-long-polling.html#sqs-long-polling).
 

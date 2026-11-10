@@ -1,4 +1,3 @@
-using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
 using JustSaying.TestingFramework;
 
@@ -9,25 +8,18 @@ public class WhenUsingTopicSubscriberBuilder
     private readonly TopicSubscriptionBuilder<Order> _sut = new();
 
     [Test]
+    public void ShouldThrowArgumentNullExceptionWhenQueueIsNull()
+    {
+        // Act + Assert
+        Should.Throw<ArgumentNullException>(() => _sut.WithQueue(null));
+    }
+
+    [Test]
     [Arguments("")]
     [Arguments(null)]
-    public void ShouldThrowArgumentExceptionWhenAddingInvalidTag(string actualTagKey)
+    public void ShouldThrowArgumentExceptionWhenQueueInfrastructureTagIsInvalid(string tagKey)
     {
         // Act + Assert
-        Should.Throw<ArgumentException>(() => _sut.WithTag(actualTagKey));
-    }
-
-    [Test]
-    public void ShouldThrowArgumentExceptionWhenWriteConfigurationBuilderIsNull()
-    {
-        // Act + Assert
-        Should.Throw<ArgumentNullException>(() => _sut.WithReadConfiguration((Action<SqsReadConfigurationBuilder>) null));
-    }
-
-    [Test]
-    public void ShouldThrowArgumentExceptionWhenWriteConfigurationIsNull()
-    {
-        // Act + Assert
-        Should.Throw<ArgumentNullException>(() => _sut.WithReadConfiguration((Action<SqsReadConfiguration>) null));
+        Should.Throw<ArgumentException>(() => QueueDestination.ByConvention(q => q.WithTag(tagKey)));
     }
 }

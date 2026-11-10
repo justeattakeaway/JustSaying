@@ -8,14 +8,16 @@ sidebar_position: 2
 
 ### Events
 
-Events inherit the `JustSaying.Models.Message` class, so that we ensure common properties are available on all messages.
+An event can be any class or record:
 
 ```csharp
-public class OrderReadyEvent : Message
+public class OrderReadyEvent
 {
     public int OrderId { get; set; }
 }
 ```
+
+Events can also derive from `JustSaying.Models.Message`, which gives them an `Id` and a `TimeStamp`, but they don't have to. See [Message Types](/messages/).
 
 _Note that events have a maximum serialized size of 256kb_
 
@@ -33,7 +35,7 @@ public class OrderAccepter {
 
     public Task Accept() {
         // do some accepty type things here
-        _publisher.PublishAsync(new OrderAccepted());
+        return _publisher.PublishAsync(new OrderAccepted());
     }
 }
 ```
@@ -52,7 +54,7 @@ public class OrderBulkAccepter {
 
     public async Task AcceptBulk(IEnumerable<Order> orders) {
         var messages = orders.Select(o => new OrderAccepted { OrderId = o.Id });
-        await _batchPublisher.PublishAsync(messages);
+        await _batchPublisher.PublishBatchAsync(messages);
     }
 }
 ```
@@ -63,7 +65,7 @@ Batch publishing automatically splits large batches into multiple requests (AWS 
 
 Handlers should implement the interface `IHandlerAsync<T>` which JustSaying will call when a message of the specified type is received.
 
-**By default, JustSaying will reserve messages it has downloaded for 30 seconds, and messages will be kept in the queue for 4 days. To override these, see the documentation on** [**`SqsReadConfiguration`**](/subscriptions/configuration/sqsreadconfiguration)**.**
+**By default, JustSaying will reserve messages it has downloaded for 30 seconds, and messages will be kept in the queue for 4 days. To override these, see the documentation on** [**destinations**](/destinations/)**.**
 
 ```csharp
 public class OrderReadyEventHandler : IHandlerAsync<OrderReadyEvent>
@@ -132,6 +134,17 @@ public void ConfigureServices(IServiceCollection services)
 ```
 
 Note that the `AddJustSaying` extension method requires installing the [JustSaying.Extensions.DependencyInjection](https://www.nuget.org/packages/JustSaying.Extensions.DependencyInjection.Microsoft) package.
+
+To name a topic or queue yourself, or configure how it's created, pass a [destination](/destinations/):
+
+```csharp
+config.Subscriptions(x =>
+{
+    x.ForTopic<OrderReadyEvent>(c => c
+        .WithQueue(QueueDestination.Named("kitchen-order-ready", q => q
+            .WithVisibilityTimeout(TimeSpan.FromMinutes(1)))));
+});
+```
 
 #### AWS Configuration
 

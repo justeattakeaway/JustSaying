@@ -1,6 +1,5 @@
 using Amazon;
 using Amazon.Runtime;
-using Amazon.Runtime.Credentials;
 using Amazon.SimpleNotificationService;
 using Amazon.SQS;
 
@@ -12,7 +11,9 @@ public class DefaultAwsClientFactory : IAwsClientFactory
 
     public DefaultAwsClientFactory()
     {
-        _credentials = DefaultAWSCredentialsIdentityResolver.GetCredentials();
+        // With no explicit credentials the clients resolve the default credential chain when the
+        // first request is made, so creating clients (and building the bus) works on machines
+        // with no resolvable credentials, such as generating an AsyncAPI document on CI.
     }
 
     public DefaultAwsClientFactory(AWSCredentials customCredentials)
@@ -23,10 +24,14 @@ public class DefaultAwsClientFactory : IAwsClientFactory
     public Uri ServiceUri { get; set; }
 
     public IAmazonSimpleNotificationService GetSnsClient(RegionEndpoint region)
-        => new AmazonSimpleNotificationServiceClient(_credentials, CreateSNSConfig(region));
+        => _credentials is null
+            ? new AmazonSimpleNotificationServiceClient(CreateSNSConfig(region))
+            : new AmazonSimpleNotificationServiceClient(_credentials, CreateSNSConfig(region));
 
     public IAmazonSQS GetSqsClient(RegionEndpoint region)
-        => new AmazonSQSClient(_credentials, CreateSQSConfig(region));
+        => _credentials is null
+            ? new AmazonSQSClient(CreateSQSConfig(region))
+            : new AmazonSQSClient(_credentials, CreateSQSConfig(region));
 
     protected virtual void Configure(AmazonSimpleNotificationServiceConfig config)
     {

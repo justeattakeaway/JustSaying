@@ -14,7 +14,7 @@ The ARN of the topic to which the message is being published.
 
 **Subject**
 
-JustSaying will set this to the type name of the .NET message class - "OrderAccepted", for example.
+JustSaying will set this to the type name of the .NET message class - "OrderAccepted", for example. It can be changed per publication with `WithSubject`, or for every message with an `IMessageSubjectProvider`.
 
 Since a JustSaying _subscriber_ relies on this string to know what type to deserialise the JSON in the Message parameter into, non-JustSaying _publishers_ should restrict this parameter to alphanumeric characters.
 
@@ -24,9 +24,9 @@ Any message attributes that you have chosen to send along with the message.
 
 **Message**
 
-The actual message object, serialised to JSON. It is worth noting that the JSON sent in this parameter becomes a subset of the JSON that will be delivered \(by the SNS service\) to an SQS subscriber. This is described [here](https://docs.aws.amazon.com/sns/latest/dg/sns-sqs-as-subscriber.html) and [here](https://docs.aws.amazon.com/sns/latest/dg/sns-message-and-json-formats.html#http-notification-json).
+The actual message object, serialised to JSON (with System.Text.Json by default; see [Serialization](/messages/serialization)). It is worth noting that the JSON sent in this parameter becomes a subset of the JSON that will be delivered \(by the SNS service\) to an SQS subscriber. This is described [here](https://docs.aws.amazon.com/sns/latest/dg/sns-sqs-as-subscriber.html) and [here](https://docs.aws.amazon.com/sns/latest/dg/sns-message-and-json-formats.html#http-notification-json).
 
-In addition to those properties you will define in your own messages, the following are available to a JustSaying publisher:
+A message can be any class. If it derives from `JustSaying.Models.Message`, the following properties are also available to a JustSaying publisher:
 
 | Property | Type | Description | Populated by default? |
 | :--- | :--- | :--- | :---: |
@@ -39,6 +39,8 @@ In addition to those properties you will define in your own messages, the follow
 | Conversation | string | A string which can be used to correlate multiple messages \(to identify messages belonging to a single operation/customer journey, for example\). | No |
 
 Properties which are not populated will not appear in the message JSON. Enumerations are serialised as strings.
+
+A [CloudEvents](/cloudevents/) publication puts a CloudEvents envelope in this parameter instead.
 
 In summary, suppose we have the following message class:
 
@@ -86,7 +88,7 @@ JustSaying will set this value to be that of the `Delay` property on the `Publis
 
 **MessageBody**
 
-A JSON object containing two properties, `Subject` and `Message`. `Subject`, as with the SNS publisher, will be the type name of the .NET message class. `Message` will be the actual message object, serialised to JSON. The same serialisation applies as for the SNS publisher.
+Unless the publication uses `WithRawMessages()`, a JSON object containing two properties, `Subject` and `Message`. `Subject`, as with the SNS publisher, will be the type name of the .NET message class. `Message` will be the actual message object, serialised to JSON. The same serialisation applies as for the SNS publisher.
 
 As an example, if I create the same OrderAccepted object as before and send that to SQS, then the value of this parameter will be:
 
@@ -98,4 +100,6 @@ As an example, if I create the same OrderAccepted object as before and send that
 ```
 
 This structure is to ensure that messages that are delivered to SQS queues as a result of directly publishing to the queue have the same format as messages delivered to a queue as a result of being subscribed to an SNS topic to which a message was published. So, from the point of view of a subscriber, whether the message was originally delivered to SNS or SQS is not important.
+
+With `WithRawMessages()`, or for a [CloudEvents](/cloudevents/) publication, the message body is sent as it is, without this wrapper.
 

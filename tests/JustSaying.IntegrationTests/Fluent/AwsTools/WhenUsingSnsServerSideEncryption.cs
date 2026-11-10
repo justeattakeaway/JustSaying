@@ -4,6 +4,7 @@ using JustSaying.IntegrationTests;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
+using JustSaying.Fluent;
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools;
 
@@ -22,9 +23,8 @@ public class WhenUsingSnsServerSideEncryption : IntegrationTestBase
         var services = GivenJustSaying()
             .ConfigureJustSaying(
                 (builder) => builder.Publications((options) => options.WithQueue<SimpleMessage>(
-                        (queue) => queue.WithWriteConfiguration(
-                            (config) => config.WithQueueName(UniqueName)))
-                    .WithTopic<SimpleMessage>(topic => topic.WithWriteConfiguration(writeConfig => writeConfig.Encryption = new ServerSideEncryption { KmsMasterKeyId = masterSnsKeyId }))))
+                        (queue) => queue.WithQueueName(UniqueName))
+                    .WithTopic<SimpleMessage>(TopicDestination.ByConvention(topic => topic.WithEncryption(new ServerSideEncryption { KmsMasterKeyId = masterSnsKeyId })))))
             .ConfigureJustSaying(
                 (builder) => builder.Subscriptions((options) => options.ForTopic<SimpleMessage>(topic => topic.WithQueueName(UniqueName))))
             .AddSingleton(handler);

@@ -59,20 +59,24 @@ Provides an extensibility point that allows you to customise how the `Subject` i
 
 Note that if this is changed, any other consumer of messages published by this app will need to use the same provider, or risk losing messages.
 
+#### Serialization
+
+Message bodies are serialized with System.Text.Json by default. To change the options or use Newtonsoft.Json, register an `IMessageBodySerializationFactory`; see [Serialization](/messages/serialization).
+
 #### `WithQueueNamingConvention`/`WithTopicNamingConvention`
 
 Provides a way to customise the way queue and topic names are generated from type names. For more information see the [documentation on naming conventions](/messaging-configuration/naming-conventions).
 
 #### `WithMessageResponseLogger`
 
-Provides a custom logger for message publish responses. Useful for debugging or tracking message publish operations.
+Provides a custom logger for message publish responses. Useful for debugging or tracking message publish operations. Messages can be any class, so the logger receives them as `object`.
 
 ```csharp
 config.Messaging(x =>
 {
-    x.WithMessageResponseLogger((response, message) =>
+    x.WithMessageResponseLogger((MessageResponse response, object message) =>
     {
-        Console.WriteLine($"Published message {message.Id}: {response.MessageId}");
+        Console.WriteLine($"Published {message.GetType().Name}: {response.MessageId}");
     });
 });
 ```
@@ -82,7 +86,7 @@ For batch publishing:
 ```csharp
 config.Messaging(x =>
 {
-    x.WithMessageResponseLogger((batchResponse, messages) =>
+    x.WithMessageResponseLogger((MessageBatchResponse batchResponse, IReadOnlyCollection<object> messages) =>
     {
         Console.WriteLine($"Published {messages.Count} messages");
     });
