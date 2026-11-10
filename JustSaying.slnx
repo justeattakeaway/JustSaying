@@ -61,6 +61,7 @@
     <Project Path="src/JustSaying/JustSaying.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/JustSaying.AotTest/JustSaying.AotTest.csproj" />
     <Project Path="tests/JustSaying.Benchmark/JustSaying.Benchmark.csproj" />
     <Project Path="tests/JustSaying.Extensions.Aws.Tests/JustSaying.Extensions.Aws.Tests.csproj" />
     <Project Path="tests/JustSaying.Extensions.OpenTelemetry.Tests/JustSaying.Extensions.OpenTelemetry.Tests.csproj" />

@@ -5,7 +5,6 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageSerialization;
-using JustSaying.Models;
 
 namespace JustSaying.Messaging;
 
@@ -34,7 +33,7 @@ internal sealed class OutboundMessageConverter : IOutboundMessageConverter
         _isRawMessage = isRawMessage;
     }
 
-    public ValueTask<OutboundMessage> ConvertToOutboundMessageAsync(Message message, PublishMetadata publishMetadata, CancellationToken cancellationToken = default)
+    public ValueTask<OutboundMessage> ConvertToOutboundMessageAsync(object message, PublishMetadata publishMetadata, CancellationToken cancellationToken = default)
     {
         var messageBody = _bodySerializer.Serialize(message);
 

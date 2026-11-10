@@ -13,7 +13,7 @@ public class TrackingLoggingMonitor(ILogger<TrackingLoggingMonitor> logger) : IM
     private readonly ConcurrentBag<TimeSpan> _handledTimes = [];
     private readonly ConcurrentBag<TimeSpan> _handledThrottlingTime = [];
     private readonly ConcurrentBag<TimeSpan> _publishMessageTimes = [];
-    private readonly ConcurrentBag<Models.Message> _handledMessages = [];
+    private readonly ConcurrentBag<object> _handledMessages = [];
     private readonly ConcurrentBag<(TimeSpan duration, string queue, string region)> _receiveMessageTimes = [];
 
     public IReadOnlyCollection<(Type handlerType, Type messageType, TimeSpan duration)> HandlerExecutionTimes => _handlerExecutionTimes;
@@ -22,7 +22,7 @@ public class TrackingLoggingMonitor(ILogger<TrackingLoggingMonitor> logger) : IM
     public IReadOnlyCollection<TimeSpan> HandledTimes => _handledTimes;
     public IReadOnlyCollection<TimeSpan> HandledThrottlingTime => _handledThrottlingTime;
     public IReadOnlyCollection<TimeSpan> PublishMessageTimes => _publishMessageTimes;
-    public IReadOnlyCollection<Models.Message> HandledMessages => _handledMessages;
+    public IReadOnlyCollection<object> HandledMessages => _handledMessages;
     public IReadOnlyCollection<(TimeSpan duration, string queue, string region)> ReceiveMessageTimes => _receiveMessageTimes;
 
     public int IssuesPublishingMessage { get; private set; }
@@ -52,7 +52,7 @@ public class TrackingLoggingMonitor(ILogger<TrackingLoggingMonitor> logger) : IM
         logger.LogInformation("Problem during publish");
     }
 
-    public void Handled(Models.Message message)
+    public void Handled(object message)
     {
         _handledMessages.Add(message);
         logger.LogInformation("Handled message of type {MessageType}", message.GetType());
