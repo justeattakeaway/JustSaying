@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <PublishAot>true</PublishAot>
+    <RootNamespace>JustSaying.AotTest</RootNamespace>
+    <SignAssembly>false</SignAssembly>
+    <NoWarn>$(NoWarn);CA2007</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\JustSaying\JustSaying.csproj" />
+    <ProjectReference Include="..\..\src\JustSaying.Extensions.DependencyInjection.Microsoft\JustSaying.Extensions.DependencyInjection.Microsoft.csproj" />
+  </ItemGroup>
+
+  <!-- The Microsoft.Testing.Platform code-coverage extension is not Native AOT compatible: it is
+       loaded by reflection, which the ilc analysis cannot satisfy, so the published host throws at
+       startup (FileNotFoundException for Microsoft.Testing.Extensions.CodeCoverage). It is pulled in
+       transitively via TUnit, so removing the package reference is not enough - instead drop its
+       self-registration hook (a well-known, stable extension-point GUID) so the AOT-published binary
+       runs the TUnit engine standalone. This project is not in the coverage-reporting test set, so
+       coverage elsewhere is unaffected. -->
+  <ItemGroup>
+    <TestingPlatformBuilderHook Remove="83B7B6C3-DC9C-4F30-8323-A3E1EBA7F65B" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LocalSqsSnsMessaging" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+    <PackageReference Include="TUnit" />
+  </ItemGroup>
+
+</Project>

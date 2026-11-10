@@ -20,7 +20,7 @@ public class WhenBatchPublishingWithMiddleware : GivenAServiceBus
         await SystemUnderTest.StartAsync(cts.Token);
 
         var messages = new List<SimpleMessage> { new(), new(), new() };
-        await SystemUnderTest.PublishAsync(messages, new PublishBatchMetadata(), CancellationToken.None);
+        await SystemUnderTest.PublishBatchAsync(messages, new PublishBatchMetadata(), CancellationToken.None);
     }
 
     [Test]
@@ -34,8 +34,8 @@ public class WhenBatchPublishingWithMiddleware : GivenAServiceBus
     [Test]
     public void BatchPublisherIsCalled()
     {
-        _batchPublisher.Received().PublishAsync(
-            Arg.Any<IEnumerable<Message>>(),
+        _batchPublisher.Received().PublishBatchAsync(
+            Arg.Any<IEnumerable<SimpleMessage>>(),
             Arg.Any<PublishBatchMetadata>(),
             Arg.Any<CancellationToken>());
     }

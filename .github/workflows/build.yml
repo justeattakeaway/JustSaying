@@ -135,6 +135,34 @@ jobs:
           path: ./artifacts/package/release
           if-no-files-found: error
 
+  native-aot:
+    name: native-aot (linux)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@9a946fdbd5fb07b82b2f5a4466058b876ab72bb2 # v5.3.0
+
+      - name: Setup NuGet cache
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.props') }}
+          restore-keys: ${{ runner.os }}-nuget-
+
+      - name: Install Native AOT prerequisites
+        run: sudo apt-get update && sudo apt-get install --yes clang zlib1g-dev
+
+      - name: Publish Native AOT test app
+        run: dotnet publish tests/JustSaying.AotTest/JustSaying.AotTest.csproj --configuration Release --runtime linux-x64 --output "${{ runner.temp }}/native-aot"
+
+      # Running the published native binary executes the TUnit suite under Native AOT
+      # (in-memory via LocalSqsSnsMessaging). A non-zero exit code fails the job.
+      - name: Run Native AOT tests
+        run: "${{ runner.temp }}/native-aot/JustSaying.AotTest"
+
   validate-packages:
     needs: build
     runs-on: ubuntu-latest

@@ -1,0 +1,53 @@
+JustSaying.CloudEvents.CloudEventMessageBodySerializer<TMessage>
+JustSaying.CloudEvents.CloudEventMessageBodySerializer<TMessage>.Deserialize(string message) -> TMessage
+JustSaying.CloudEvents.CloudEventMessageBodySerializer<TMessage>.Serialize(TMessage message) -> string
+JustSaying.CloudEvents.CloudEventOptions
+JustSaying.CloudEvents.CloudEventOptions.CloudEventOptions() -> void
+JustSaying.CloudEvents.CloudEventOptions.DataContentType.get -> string
+JustSaying.CloudEvents.CloudEventOptions.DataContentType.set -> void
+JustSaying.CloudEvents.CloudEventOptions.Source.get -> System.Uri
+JustSaying.CloudEvents.CloudEventOptions.Source.set -> void
+JustSaying.CloudEvents.CloudEventOptions.MapType<TMessage>(string type) -> JustSaying.CloudEvents.CloudEventOptions
+JustSaying.CloudEvents.CloudEventSerializationFactory
+JustSaying.CloudEvents.CloudEventSerializationFactory.GetSerializer<TMessage>() -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<TMessage>
+JustSaying.CloudEvents.CloudEventSerializationFactory.GetEnvelopeSerializer<T>(string type = null, System.Uri source = null) -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<JustSaying.CloudEvents.CloudEvent<T>>
+JustSaying.CloudEvents.CloudEventSerializationFactory.GetDataOnlySerializer<T>(string type = null) -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializer<T>
+JustSaying.CloudEvents.CloudEvent<T>
+JustSaying.CloudEvents.CloudEvent<T>.CloudEvent(T data, string id = null, System.Uri source = null, string type = null, System.DateTimeOffset? time = null, string subject = null, System.Collections.Generic.IReadOnlyDictionary<string, string> extensions = null, string dataContentType = null, System.Uri dataSchema = null) -> void
+JustSaying.CloudEvents.CloudEvent<T>.Data.get -> T
+JustSaying.CloudEvents.CloudEvent<T>.Id.get -> string
+JustSaying.CloudEvents.CloudEvent<T>.Source.get -> System.Uri
+JustSaying.CloudEvents.CloudEvent<T>.Type.get -> string
+JustSaying.CloudEvents.CloudEvent<T>.Time.get -> System.DateTimeOffset?
+JustSaying.CloudEvents.CloudEvent<T>.Subject.get -> string
+JustSaying.CloudEvents.CloudEvent<T>.Extensions.get -> System.Collections.Generic.IReadOnlyDictionary<string, string>
+JustSaying.CloudEvents.CloudEvent<T>.DataContentType.get -> string
+JustSaying.CloudEvents.CloudEvent<T>.DataSchema.get -> System.Uri
+JustSaying.CloudEvents.CloudEventEnvelopeBodySerializer<T>
+JustSaying.CloudEvents.CloudEventEnvelopeBodySerializer<T>.Deserialize(string message) -> JustSaying.CloudEvents.CloudEvent<T>
+JustSaying.CloudEvents.CloudEventEnvelopeBodySerializer<T>.Serialize(JustSaying.CloudEvents.CloudEvent<T> message) -> string
+JustSaying.Fluent.MultiTypeQueueSubscriptionCloudEventExtensions
+static JustSaying.Fluent.MultiTypeQueueSubscriptionCloudEventExtensions.HandlingCloudEvent<T>(this JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder builder, string typeName = null, System.Action<JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder> middlewareConfiguration = null) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
+static JustSaying.Fluent.MultiTypeQueueSubscriptionCloudEventExtensions.HandlingCloudEventData<T>(this JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder builder, string typeName = null, System.Action<JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder> middlewareConfiguration = null) -> JustSaying.Fluent.MultiTypeQueueSubscriptionBuilder
+JustSaying.Fluent.PublicationsBuilderCloudEventExtensions
+static JustSaying.Fluent.PublicationsBuilderCloudEventExtensions.WithCloudEventTopic<T>(this JustSaying.Fluent.PublicationsBuilder publications, string type, System.Uri source = null, string topicName = null, System.Action<JustSaying.Fluent.TopicPublicationBuilder<T>> configure = null) -> JustSaying.Fluent.PublicationsBuilder
+static JustSaying.Fluent.PublicationsBuilderCloudEventExtensions.WithCloudEventQueue<T>(this JustSaying.Fluent.PublicationsBuilder publications, string type, System.Uri source = null, string queueName = null, System.Action<JustSaying.Fluent.QueuePublicationBuilder<T>> configure = null) -> JustSaying.Fluent.PublicationsBuilder
+JustSaying.CloudEvents.CloudEventTypeDiscriminator
+JustSaying.CloudEvents.CloudEventTypeDiscriminator.CloudEventTypeDiscriminator() -> void
+JustSaying.CloudEvents.CloudEventTypeDiscriminator.TryGetMessageTypeName(JustSaying.Messaging.MessageDiscriminationContext context, out string typeName) -> bool
+override JustSaying.CloudEvents.CloudEventTypeDiscriminator.ToString() -> string
+Microsoft.Extensions.DependencyInjection.CloudEventsServiceCollectionExtensions
+static JustSaying.Fluent.PublicationsBuilderCloudEventExtensions.WithCloudEventTopic<T>(this JustSaying.Fluent.PublicationsBuilder publications, JustSaying.Fluent.TopicDestination destination, string type) -> JustSaying.Fluent.PublicationsBuilder
+static JustSaying.Fluent.PublicationsBuilderCloudEventExtensions.WithCloudEventTopic<T>(this JustSaying.Fluent.PublicationsBuilder publications, JustSaying.Fluent.TopicDestination destination, string type, System.Uri source) -> JustSaying.Fluent.PublicationsBuilder
+static JustSaying.Fluent.PublicationsBuilderCloudEventExtensions.WithCloudEventQueue<T>(this JustSaying.Fluent.PublicationsBuilder publications, JustSaying.Fluent.QueueDestination destination, string type) -> JustSaying.Fluent.PublicationsBuilder
+static JustSaying.Fluent.PublicationsBuilderCloudEventExtensions.WithCloudEventQueue<T>(this JustSaying.Fluent.PublicationsBuilder publications, JustSaying.Fluent.QueueDestination destination, string type, System.Uri source) -> JustSaying.Fluent.PublicationsBuilder
+static JustSaying.Fluent.PublicationsBuilderCloudEventExtensions.WithCloudEventTopic<T>(this JustSaying.Fluent.PublicationsBuilder publications, JustSaying.Fluent.TopicDestination destination, string type, System.Uri source, System.Action<JustSaying.Fluent.TopicPublicationBuilder<T>> configure) -> JustSaying.Fluent.PublicationsBuilder
+static JustSaying.Fluent.PublicationsBuilderCloudEventExtensions.WithCloudEventQueue<T>(this JustSaying.Fluent.PublicationsBuilder publications, JustSaying.Fluent.QueueDestination destination, string type, System.Uri source, System.Action<JustSaying.Fluent.QueuePublicationBuilder<T>> configure) -> JustSaying.Fluent.PublicationsBuilder
+JustSaying.Fluent.SubscriptionsBuilderCloudEventExtensions
+static JustSaying.Fluent.SubscriptionsBuilderCloudEventExtensions.ForCloudEventTopic<T>(this JustSaying.Fluent.SubscriptionsBuilder subscriptions, string type, System.Action<JustSaying.Fluent.TopicSubscriptionBuilder<JustSaying.CloudEvents.CloudEvent<T>>> configure = null) -> JustSaying.Fluent.SubscriptionsBuilder
+static JustSaying.Fluent.SubscriptionsBuilderCloudEventExtensions.ForCloudEventTopicData<T>(this JustSaying.Fluent.SubscriptionsBuilder subscriptions, string type, System.Action<JustSaying.Fluent.TopicSubscriptionBuilder<T>> configure = null) -> JustSaying.Fluent.SubscriptionsBuilder
+JustSaying.CloudEvents.CloudEventOptions.DataSerializationFactory.get -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializationFactory
+JustSaying.CloudEvents.CloudEventOptions.DataSerializationFactory.set -> void
+JustSaying.CloudEvents.CloudEventOptions.UseAsDefault.get -> bool
+JustSaying.CloudEvents.CloudEventOptions.UseAsDefault.set -> void
+static Microsoft.Extensions.DependencyInjection.CloudEventsServiceCollectionExtensions.AddJustSayingCloudEvents(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, System.Action<JustSaying.CloudEvents.CloudEventOptions> configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection

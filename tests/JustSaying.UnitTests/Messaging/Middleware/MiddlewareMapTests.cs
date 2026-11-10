@@ -1,4 +1,5 @@
 using JustSaying.AwsTools.MessageHandling.Dispatch;
+using JustSaying.Models;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.AwsTools.MessageHandling;
 using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;
@@ -139,6 +140,67 @@ public class MiddlewareMapTests
 
         var handler2 = map.Get(queue2, typeof(SimpleMessage));
         handler2.ShouldBe(fn2);
+    }
+
+    public interface IOrderEvent;
+
+    public interface IAuditable;
+
+    public class OrderPlaced : SimpleMessage, IOrderEvent, IAuditable;
+
+    [Test]
+    public void GetForMessagePrefersTheExactType()
+    {
+        var map = CreateMiddlewareMap();
+        HandleMessageMiddleware baseMiddleware = new DelegateMessageHandlingMiddleware<SimpleMessage>(m => Task.FromResult(true));
+        HandleMessageMiddleware exactMiddleware = new DelegateMessageHandlingMiddleware<SimpleMessage>(m => Task.FromResult(true));
+        map.Add<Message>("queue", baseMiddleware);
+        map.Add<SimpleMessage>("queue", exactMiddleware);
+
+        map.GetForMessage("queue", typeof(SimpleMessage)).ShouldBe(exactMiddleware);
+    }
+
+    [Test]
+    public void GetForMessageFallsBackToTheClosestBaseClass()
+    {
+        var map = CreateMiddlewareMap();
+        HandleMessageMiddleware messageMiddleware = new DelegateMessageHandlingMiddleware<SimpleMessage>(m => Task.FromResult(true));
+        HandleMessageMiddleware simpleMiddleware = new DelegateMessageHandlingMiddleware<SimpleMessage>(m => Task.FromResult(true));
+        map.Add<IOrderEvent>("queue", new DelegateMessageHandlingMiddleware<SimpleMessage>(m => Task.FromResult(true)));
+        map.Add<Message>("queue", messageMiddleware);
+        map.Add<SimpleMessage>("queue", simpleMiddleware);
+
+        map.GetForMessage("queue", typeof(OrderPlaced)).ShouldBe(simpleMiddleware);
+    }
+
+    [Test]
+    public void GetForMessageFallsBackToAnInterface()
+    {
+        var map = CreateMiddlewareMap();
+        HandleMessageMiddleware middleware = new DelegateMessageHandlingMiddleware<SimpleMessage>(m => Task.FromResult(true));
+        map.Add<IOrderEvent>("queue", middleware);
+
+        map.GetForMessage("queue", typeof(OrderPlaced)).ShouldBe(middleware);
+    }
+
+    [Test]
+    public void GetForMessageReturnsNullWhenMoreThanOneInterfaceMatches()
+    {
+        var map = CreateMiddlewareMap();
+        map.Add<IOrderEvent>("queue", new DelegateMessageHandlingMiddleware<SimpleMessage>(m => Task.FromResult(true)));
+        map.Add<IAuditable>("queue", new DelegateMessageHandlingMiddleware<SimpleMessage>(m => Task.FromResult(true)));
+
+        map.GetForMessage("queue", typeof(OrderPlaced)).ShouldBeNull();
+    }
+
+    [Test]
+    public void GetForMessageOnlyLooksAtTheQueue()
+    {
+        var map = CreateMiddlewareMap();
+        map.Add<Message>("queue1", new DelegateMessageHandlingMiddleware<SimpleMessage>(m => Task.FromResult(true)));
+        map.Add<IOrderEvent>("queue1", new DelegateMessageHandlingMiddleware<SimpleMessage>(m => Task.FromResult(true)));
+
+        map.GetForMessage("queue2", typeof(OrderPlaced)).ShouldBeNull();
     }
 
     private static MiddlewareMap CreateMiddlewareMap()

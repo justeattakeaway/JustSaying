@@ -1,5 +1,4 @@
 using JustSaying.Messaging.MessageSerialization;
-using JustSaying.Models;
 
 namespace JustSaying.Messaging;
 
@@ -23,5 +22,5 @@ internal interface IOutboundMessageConverter
     /// </ul>
     /// The exact behavior may vary based on the destination type and compression options.
     /// </remarks>
-    ValueTask<OutboundMessage> ConvertToOutboundMessageAsync(Message message, PublishMetadata publishMetadata, CancellationToken cancellationToken = default);
+    ValueTask<OutboundMessage> ConvertToOutboundMessageAsync(object message, PublishMetadata publishMetadata, CancellationToken cancellationToken = default);
 }

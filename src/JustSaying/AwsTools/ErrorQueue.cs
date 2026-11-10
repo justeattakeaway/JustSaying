@@ -19,11 +19,15 @@ public class ErrorQueue(
 {
     protected override Dictionary<string, string> GetCreateQueueAttributes(SqsBasicConfiguration queueConfig)
     {
-        return new Dictionary<string, string>
+        var attributes = new Dictionary<string, string>
         {
             { SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD, queueConfig.ErrorQueueRetentionPeriod.AsSecondsString() },
             { SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT, JustSayingConstants.DefaultVisibilityTimeout.AsSecondsString() },
         };
+
+        AddEncryptionAttributes(attributes, queueConfig);
+
+        return attributes;
     }
 
     public override async Task UpdateQueueAttributeAsync(SqsBasicConfiguration queueConfig, CancellationToken cancellationToken)
@@ -33,15 +37,19 @@ public class ErrorQueue(
             return;
         }
 
+        var attributes = new Dictionary<string, string>
+        {
+            {
+                JustSayingConstants.AttributeRetentionPeriod, queueConfig.ErrorQueueRetentionPeriod.AsSecondsString()
+            }
+        };
+
+        AddEncryptionAttributes(attributes, queueConfig);
+
         var request = new SetQueueAttributesRequest
         {
             QueueUrl = Uri.AbsoluteUri,
-            Attributes = new Dictionary<string, string>
-            {
-                {
-                    JustSayingConstants.AttributeRetentionPeriod, queueConfig.ErrorQueueRetentionPeriod.AsSecondsString()
-                }
-            }
+            Attributes = attributes
         };
 
         var response = await Client.SetQueueAttributesAsync(request, cancellationToken).ConfigureAwait(false);
@@ -49,9 +57,25 @@ public class ErrorQueue(
         if (response.HttpStatusCode == HttpStatusCode.OK)
         {
             MessageRetentionPeriod = queueConfig.ErrorQueueRetentionPeriod;
+
+            if (queueConfig.ServerSideEncryption != null)
+            {
+                ServerSideEncryption = queueConfig.ServerSideEncryption;
+            }
         }
     }
 
     protected override bool QueueNeedsUpdating(SqsBasicConfiguration queueConfig)
-        => MessageRetentionPeriod != queueConfig.ErrorQueueRetentionPeriod;
+        => MessageRetentionPeriod != queueConfig.ErrorQueueRetentionPeriod
+           || QueueNeedsUpdatingBecauseOfEncryption(queueConfig);
+
+    // The error queue holds the same messages as its source queue, so it is encrypted the same way.
+    private static void AddEncryptionAttributes(Dictionary<string, string> attributes, SqsBasicConfiguration queueConfig)
+    {
+        if (queueConfig.ServerSideEncryption != null)
+        {
+            attributes.Add(JustSayingConstants.AttributeEncryptionKeyId, queueConfig.ServerSideEncryption.KmsMasterKeyId);
+            attributes.Add(JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId, queueConfig.ServerSideEncryption.KmsDataKeyReusePeriod.AsSecondsString());
+        }
+    }
 }
