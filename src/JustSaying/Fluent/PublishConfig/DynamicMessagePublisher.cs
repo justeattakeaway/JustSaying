@@ -9,7 +9,7 @@ namespace JustSaying.Fluent;
 internal sealed class DynamicMessagePublisher(
     Func<Message, string> topicNameCustomizer,
     Func<string, StaticPublicationConfiguration> staticConfigBuilder,
-    ILoggerFactory loggerFactory) : IMessagePublisher, IMessageBatchPublisher
+    ILoggerFactory loggerFactory) : IMessagePublisher, IMessageBatchPublisher, IPreparedBatchPublisher
 {
     private readonly ConcurrentDictionary<string, Lazy<Task<StaticPublicationConfiguration>>> _publisherConfigurationCache = new();
     private readonly ILogger<DynamicMessagePublisher> _logger = loggerFactory.CreateLogger<DynamicMessagePublisher>();
@@ -46,7 +46,15 @@ internal sealed class DynamicMessagePublisher(
     /// <inheritdoc/>
     public async Task PublishAsync(IEnumerable<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
     {
-        var publisherTask = new List<Task>();
+        var batches = await PrepareAsync([.. messages], metadata, cancellationToken).ConfigureAwait(false);
+
+        await Task.WhenAll(batches.Select(x => x.SendAsync(cancellationToken))).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<PreparedBatch>> PrepareAsync(IReadOnlyCollection<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
+    {
+        var batches = new List<PreparedBatch>();
         foreach (var groupByType in messages.GroupBy(x => x.GetType()))
         {
             foreach (var groupByTopic in groupByType.GroupBy(x => _topicNameCustomizer(x)))
@@ -55,11 +63,11 @@ internal sealed class DynamicMessagePublisher(
                 var batch = groupByTopic.ToList();
                 var publisherConfigTask = _publisherConfigurationCache.GetOrAdd(topicName, _ => CreateLazyPublisherConfig(topicName, cancellationToken)).Value;
                 var publisherConfig = await publisherConfigTask;
-                publisherTask.Add(publisherConfig.BatchPublisher.PublishAsync(batch, metadata, cancellationToken));
+                batches.AddRange(await publisherConfig.BatchPublisher.PrepareBatchesAsync(batch, metadata, cancellationToken).ConfigureAwait(false));
             }
         }
 
-        await Task.WhenAll(publisherTask).ConfigureAwait(false);
+        return batches;
     }
 
     private Dictionary<string, InterrogationResult> GetInterrogationResultForTasks(Func<StaticPublicationConfiguration, InterrogationResult> interrogate) =>

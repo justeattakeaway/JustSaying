@@ -10,6 +10,7 @@ public static class JustSayingConstants
     public const string AttributePolicy = "Policy";
     public const string AttributeEncryptionKeyId = "KmsMasterKeyId";
     public const string AttributeEncryptionKeyReusePeriodSecondId = "KmsDataKeyReusePeriodSeconds";
+    public const string AttributeMaximumMessageSize = "MaximumMessageSize";
 
     /// <summary>
     /// Default visibility timeout for message
@@ -80,4 +81,80 @@ public static class JustSayingConstants
     /// The default value is 10. See https://docs.aws.amazon.com/sns/latest/dg/sns-batch-api-actions.html.
     /// </remarks>
     public static int MaximumSnsBatchSize => 10;
+
+    /// <summary>
+    /// The maximum SQS batch size.
+    /// </summary>
+    /// <remarks>
+    /// The default value is 10. See https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/quotas-messages.html.
+    /// </remarks>
+    public static int MaximumSqsBatchSize => 10;
+
+    /// <summary>
+    /// The maximum size, in bytes, of a message published to an SNS topic that has not had the
+    /// <c>MaximumMessageSize</c> topic attribute set.
+    /// </summary>
+    /// <remarks>
+    /// The default value is 262,144 bytes (256 KiB). A topic can be configured to accept payloads of up to
+    /// <see cref="MaximumSnsMessageSize"/> by setting <see cref="QueueCreation.SnsWriteConfiguration.MaximumMessageSize"/>.
+    /// See https://docs.aws.amazon.com/sns/latest/dg/large-message-payloads.html.
+    /// </remarks>
+    public static int DefaultSnsMaximumMessageSize => 256 * 1024;
+
+    /// <summary>
+    /// The largest value the SNS <c>MaximumMessageSize</c> topic attribute may be set to, in bytes.
+    /// </summary>
+    /// <remarks>
+    /// The value is 1,048,576 bytes (1 MiB).
+    /// </remarks>
+    public static int MaximumSnsMessageSize => 1024 * 1024;
+
+    /// <summary>
+    /// The smallest value the SNS <c>MaximumMessageSize</c> topic attribute may be set to, in bytes.
+    /// </summary>
+    /// <remarks>
+    /// The value is 1,024 bytes (1 KiB).
+    /// </remarks>
+    public static int MinimumSnsMessageSize => 1024;
+
+    /// <summary>
+    /// The maximum size, in bytes, of a message sent to an SQS queue that has not had the
+    /// <c>MaximumMessageSize</c> queue attribute set.
+    /// </summary>
+    /// <remarks>
+    /// The value is 1,048,576 bytes (1 MiB), which has been the SQS default since August 2025. A queue can
+    /// still be configured with a lower limit, see <see cref="QueueCreation.SqsWriteConfiguration.MaximumMessageSize"/>.
+    /// See https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/quotas-messages.html.
+    /// </remarks>
+    public static int DefaultSqsMaximumMessageSize => 1024 * 1024;
+
+    /// <summary>
+    /// The largest value the SQS <c>MaximumMessageSize</c> queue attribute may be set to, in bytes.
+    /// </summary>
+    /// <remarks>
+    /// The value is 1,048,576 bytes (1 MiB).
+    /// </remarks>
+    public static int MaximumSqsMessageSize => 1024 * 1024;
+
+    /// <summary>
+    /// The maximum combined size, in bytes, of all the messages in a single SQS batch request.
+    /// </summary>
+    /// <remarks>
+    /// The value is 1,048,576 bytes (1 MiB), and is not affected by the queue's <c>MaximumMessageSize</c> attribute.
+    /// </remarks>
+    public static int MaximumSqsBatchPayloadSize => 1024 * 1024;
+
+    /// <summary>
+    /// The smallest value the SQS <c>MaximumMessageSize</c> queue attribute may be set to, in bytes.
+    /// </summary>
+    /// <remarks>
+    /// The value is 1,024 bytes (1 KiB).
+    /// </remarks>
+    public static int MinimumSqsMessageSize => 1024;
+
+    /// <summary>
+    /// The amount of headroom, in bytes, left below a destination's maximum message size when deriving
+    /// a default compression threshold.
+    /// </summary>
+    public static int DefaultCompressionHeadroom => 2 * 1024;
 }

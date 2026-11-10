@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
@@ -19,6 +20,15 @@ public sealed class SnsTopicByName(
     public string Arn { get; private set; }
     internal ServerSideEncryption ServerSideEncryption { get; set; }
     public IDictionary<string, string> Tags { get; set; }
+
+    /// <summary>
+    /// Gets or sets the maximum message size, in bytes, to apply to the topic.
+    /// </summary>
+    /// <remarks>
+    /// When <see langword="null"/> the topic's <c>MaximumMessageSize</c> attribute is left alone, so the
+    /// topic keeps whatever it already has (the SNS default being 256 KiB).
+    /// </remarks>
+    internal int? MaximumMessageSize { get; set; }
 
     public async Task EnsurePolicyIsUpdatedAsync(IReadOnlyCollection<string> additionalSubscriberAccounts)
     {
@@ -51,6 +61,61 @@ public sealed class SnsTopicByName(
         await client.TagResourceAsync(tagRequest, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("Added {TagCount} tags to topic {TopicName}", tagRequest.Tags.Count, TopicName);
+    }
+
+    /// <summary>
+    /// Applies the configured <see cref="MaximumMessageSize"/> to the topic, if one is configured and it
+    /// differs from what the topic already has.
+    /// </summary>
+    /// <param name="cancellationToken">The cancellation token to use.</param>
+    /// <remarks>
+    /// SNS only returns the <c>MaximumMessageSize</c> attribute when it has been explicitly set; when it is
+    /// absent the topic is on the default of <see cref="JustSayingConstants.DefaultSnsMaximumMessageSize"/>.
+    /// </remarks>
+    public async Task ApplyMaximumMessageSizeAsync(CancellationToken cancellationToken)
+    {
+        if (MaximumMessageSize is not { } maximumMessageSize)
+        {
+            return;
+        }
+
+        var attributesResponse = await client.GetTopicAttributesAsync(Arn, cancellationToken).ConfigureAwait(false);
+
+        int currentMaximumMessageSize =
+            attributesResponse.Attributes.TryGetValue(JustSayingConstants.AttributeMaximumMessageSize, out var currentValue) &&
+            int.TryParse(currentValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed)
+                ? parsed
+                : JustSayingConstants.DefaultSnsMaximumMessageSize;
+
+        if (currentMaximumMessageSize == maximumMessageSize)
+        {
+            return;
+        }
+
+        var request = new SetTopicAttributesRequest
+        {
+            TopicArn = Arn,
+            AttributeName = JustSayingConstants.AttributeMaximumMessageSize,
+            AttributeValue = maximumMessageSize.ToString(CultureInfo.InvariantCulture)
+        };
+
+        var response = await client.SetTopicAttributesAsync(request, cancellationToken).ConfigureAwait(false);
+
+        if (response.HttpStatusCode == HttpStatusCode.OK)
+        {
+            _logger.LogInformation(
+                "Set maximum message size for topic '{TopicName}' to {MaximumMessageSize} bytes.",
+                TopicName,
+                maximumMessageSize);
+        }
+        else
+        {
+            _logger.LogWarning(
+                "Request to set topic attribute '{TopicAttributeName}' to '{TopicAttributeValue}' failed with status code '{HttpStatusCode}'.",
+                request.AttributeName,
+                request.AttributeValue,
+                response.HttpStatusCode);
+        }
     }
 
     public async Task<bool> ExistsAsync(CancellationToken cancellationToken)

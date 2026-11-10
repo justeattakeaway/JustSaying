@@ -1,3 +1,4 @@
+using JustSaying.AwsTools;
 using Amazon.SQS;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
@@ -39,7 +40,8 @@ public abstract class WhenPublishingTestBase
             new MessageCompressionRegistry(),
             new PublishCompressionOptions(),
             nameof(SimpleMessage),
-            isRawMessage);
+            isRawMessage,
+            JustSayingConstants.DefaultSqsMaximumMessageSize);
     }
 
     protected abstract Task WhenAsync();

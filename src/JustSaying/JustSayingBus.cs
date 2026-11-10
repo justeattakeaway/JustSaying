@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Extensions;
 using JustSaying.Messaging;
@@ -348,7 +349,8 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         {
             var messageType = message.GetType();
 
-            if (attemptCount >= Config.PublishFailureReAttempts)
+            // A message that is too large will be too large every time, so there is nothing to gain from retrying.
+            if (attemptCount >= Config.PublishFailureReAttempts || ex is MessageTooLargeException)
             {
                 _monitor.IssuePublishingMessage();
 
@@ -443,7 +445,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
                 foreach (IGrouping<Type, Message> group in messageList.GroupBy(x => x.GetType()))
                 {
                     IMessageBatchPublisher publisher = GetBatchPublishersForMessageType(group.Key);
-                    tasks.Add(PublishAsync(publisher, [..group], (PublishBatchMetadata)context.Metadata, 0, group.Key, ct));
+                    tasks.Add(PublishAsync(publisher, [..group], (PublishBatchMetadata)context.Metadata, group.Key, ct));
                 }
 
                 await Task.WhenAll(tasks).ConfigureAwait(false);
@@ -456,7 +458,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         foreach (IGrouping<Type, Message> group in messageList.GroupBy(x => x.GetType()))
         {
             IMessageBatchPublisher publisher = GetBatchPublishersForMessageType(group.Key);
-            batchTasks.Add(PublishAsync(publisher, [..group], metadata, 0, group.Key, cancellationToken));
+            batchTasks.Add(PublishAsync(publisher, [..group], metadata, group.Key, cancellationToken));
         }
 
         await Task.WhenAll(batchTasks).ConfigureAwait(false);
@@ -494,102 +496,118 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         IMessageBatchPublisher publisher,
         List<Message> messages,
         PublishBatchMetadata metadata,
-        int attemptCount,
         Type messageType,
         CancellationToken cancellationToken)
     {
-        var batchSize = metadata?.BatchSize ?? 10;
-        batchSize = Math.Min(batchSize, 10);
-        attemptCount++;
+        var activity = JustSayingDiagnostics.ActivitySource.StartActivity(
+            $"{messageType.Name} publish",
+            ActivityKind.Producer);
 
-        var isFirstAttempt = attemptCount == 1;
-        Activity activity = null;
-        Stopwatch publishWatch = null;
-
-        if (isFirstAttempt)
+        if (activity is not null)
         {
-            activity = JustSayingDiagnostics.ActivitySource.StartActivity(
-                $"{messageType.Name} publish",
-                ActivityKind.Producer);
-
-            if (activity is not null)
-            {
-                activity.SetTag("messaging.operation.name", "publish");
-                activity.SetTag("messaging.operation.type", "send");
-                activity.SetTag("messaging.message.type", messageType.FullName);
-                activity.SetTag("messaging.batch.message_count", messages.Count);
-            }
-
-            publishWatch = Stopwatch.StartNew();
+            activity.SetTag("messaging.operation.name", "publish");
+            activity.SetTag("messaging.operation.type", "send");
+            activity.SetTag("messaging.message.type", messageType.FullName);
+            activity.SetTag("messaging.batch.message_count", messages.Count);
         }
+
+        var publishWatch = Stopwatch.StartNew();
 
         try
         {
-            foreach (var chunk in messages.Chunk(batchSize))
+            // The requests are worked out before any of them is made, so that each one can be retried on its
+            // own. Retrying anything larger would publish again whatever had already been accepted.
+            IReadOnlyList<PreparedBatch> batches = null;
+
+            await WithPublishRetriesAsync(
+                async token => batches = await publisher.PrepareBatchesAsync(messages, metadata, token).ConfigureAwait(false),
+                messages.Count,
+                messageType,
+                activity,
+                cancellationToken).ConfigureAwait(false);
+
+            foreach (var batch in batches)
             {
-                try
-                {
-                    using (_monitor.MeasurePublish())
+                await WithPublishRetriesAsync(
+                    async token =>
                     {
-                        await publisher.PublishAsync(chunk, metadata, cancellationToken).ConfigureAwait(false);
-                    }
-
-                    JustSayingDiagnostics.ClientSentMessages.Add(chunk.Length);
-                }
-                catch (Exception ex)
-                {
-                    if (attemptCount >= PublishBatchConfiguration.PublishFailureReAttempts)
-                    {
-                        _monitor.IssuePublishingMessage();
-
-                        if (activity is not null)
+                        using (_monitor.MeasurePublish())
                         {
-                            activity.SetStatus(ActivityStatusCode.Error, ex.Message);
-                            activity.AddEvent(new ActivityEvent("exception",
-                                tags: new ActivityTagsCollection
-                                {
-                                    { "exception.type", ex.GetType().FullName },
-                                    { "exception.message", ex.Message },
-                                    { "exception.stacktrace", ex.ToString() },
-                                }));
+                            await batch.SendAsync(token).ConfigureAwait(false);
                         }
+                    },
+                    batch.Messages.Count,
+                    messageType,
+                    activity,
+                    cancellationToken).ConfigureAwait(false);
 
-                        JustSayingDiagnostics.ClientSentMessages.Add(chunk.Length,
-                            new KeyValuePair<string, object>("error.type", ex.GetType().FullName));
-
-                        _log.LogError(
-                            ex,
-                            "Failed to publish a message batch of type '{MessageType}'. Halting after attempt number {PublishAttemptCount}.",
-                            messageType,
-                            attemptCount);
-
-                        throw;
-                    }
-
-                    _log.LogWarning(
-                        ex,
-                        "Failed to publish a message batch of type '{MessageType}'. Retrying after attempt number {PublishAttemptCount} of {PublishFailureReattempts}.",
-                        messageType,
-                        attemptCount,
-                        PublishBatchConfiguration.PublishFailureReAttempts);
-
-                    var delayForAttempt = TimeSpan.FromMilliseconds(Config.PublishFailureBackoff.TotalMilliseconds * attemptCount);
-                    await Task.Delay(delayForAttempt, cancellationToken).ConfigureAwait(false);
-
-                    await PublishAsync(publisher, messages, metadata, attemptCount, messageType, cancellationToken).ConfigureAwait(false);
-                }
+                JustSayingDiagnostics.ClientSentMessages.Add(batch.Messages.Count);
             }
-
         }
         finally
         {
-            if (isFirstAttempt)
+            publishWatch.Stop();
+            JustSayingDiagnostics.ClientOperationDuration.Record(
+                publishWatch.Elapsed.TotalSeconds,
+                new KeyValuePair<string, object>("messaging.operation.type", "send"));
+            activity?.Dispose();
+        }
+    }
+
+    private async Task WithPublishRetriesAsync(
+        Func<CancellationToken, Task> action,
+        int messageCount,
+        Type messageType,
+        Activity activity,
+        CancellationToken cancellationToken)
+    {
+        for (int attemptCount = 1; ; attemptCount++)
+        {
+            try
             {
-                publishWatch.Stop();
-                JustSayingDiagnostics.ClientOperationDuration.Record(
-                    publishWatch.Elapsed.TotalSeconds,
-                    new KeyValuePair<string, object>("messaging.operation.type", "send"));
-                activity?.Dispose();
+                await action(cancellationToken).ConfigureAwait(false);
+                return;
+            }
+            catch (Exception ex)
+            {
+                // A message that is too large will be too large every time, so there is nothing to gain from retrying.
+                if (attemptCount >= PublishBatchConfiguration.PublishFailureReAttempts || ex is MessageTooLargeException)
+                {
+                    _monitor.IssuePublishingMessage();
+
+                    if (activity is not null)
+                    {
+                        activity.SetStatus(ActivityStatusCode.Error, ex.Message);
+                        activity.AddEvent(new ActivityEvent("exception",
+                            tags: new ActivityTagsCollection
+                            {
+                                { "exception.type", ex.GetType().FullName },
+                                { "exception.message", ex.Message },
+                                { "exception.stacktrace", ex.ToString() },
+                            }));
+                    }
+
+                    JustSayingDiagnostics.ClientSentMessages.Add(messageCount,
+                        new KeyValuePair<string, object>("error.type", ex.GetType().FullName));
+
+                    _log.LogError(
+                        ex,
+                        "Failed to publish a message batch of type '{MessageType}'. Halting after attempt number {PublishAttemptCount}.",
+                        messageType,
+                        attemptCount);
+
+                    throw;
+                }
+
+                _log.LogWarning(
+                    ex,
+                    "Failed to publish a message batch of type '{MessageType}'. Retrying after attempt number {PublishAttemptCount} of {PublishFailureReattempts}.",
+                    messageType,
+                    attemptCount,
+                    PublishBatchConfiguration.PublishFailureReAttempts);
+
+                var delayForAttempt = TimeSpan.FromMilliseconds(Config.PublishFailureBackoff.TotalMilliseconds * attemptCount);
+                await Task.Delay(delayForAttempt, cancellationToken).ConfigureAwait(false);
             }
         }
     }
