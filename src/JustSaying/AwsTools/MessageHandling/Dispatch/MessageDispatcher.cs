@@ -34,7 +34,7 @@ internal sealed class MessageDispatcher : IMessageDispatcher
             return;
         }
 
-        (bool success, Message typedMessage, MessageAttributes attributes) =
+        (bool success, object typedMessage, MessageAttributes attributes) =
             await DeserializeMessage(messageContext, cancellationToken).ConfigureAwait(false);
 
         if (!success)
@@ -44,7 +44,7 @@ internal sealed class MessageDispatcher : IMessageDispatcher
         }
 
         var messageType = typedMessage.GetType();
-        var middleware = _middlewareMap.Get(messageContext.QueueName, messageType);
+        var middleware = _middlewareMap.GetForMessage(messageContext.QueueName, messageType);
 
         if (middleware == null)
         {
@@ -91,7 +91,7 @@ internal sealed class MessageDispatcher : IMessageDispatcher
 
     private static Activity StartConsumerActivity(
         IQueueMessageContext messageContext,
-        Message typedMessage,
+        object typedMessage,
         Type messageType,
         MessageAttributes attributes)
     {
@@ -124,7 +124,7 @@ internal sealed class MessageDispatcher : IMessageDispatcher
         return activity;
     }
 
-    private async Task<(bool success, Message typedMessage, MessageAttributes attributes)>
+    private async Task<(bool success, object typedMessage, MessageAttributes attributes)>
         DeserializeMessage(IQueueMessageContext messageContext, CancellationToken cancellationToken)
     {
         try
@@ -132,6 +132,13 @@ internal sealed class MessageDispatcher : IMessageDispatcher
             _logger.LogDebug("Attempting to deserialize message.");
 
             var (message, attributes) = await messageContext.MessageConverter.ConvertToInboundMessageAsync(messageContext.Message, cancellationToken);
+
+            if (message is null)
+            {
+                // A body of "null" (or a CloudEvent with "data": null) deserializes to nothing to
+                // dispatch, so treat it as a deserialization failure and leave it for redrive.
+                throw new InvalidOperationException("The message body was deserialized to null.");
+            }
 
             return (true, message, attributes);
         }
