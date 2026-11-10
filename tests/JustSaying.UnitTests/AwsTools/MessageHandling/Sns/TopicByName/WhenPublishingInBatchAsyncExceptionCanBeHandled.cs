@@ -40,7 +40,7 @@ public class WhenPublishingInBatchAsyncExceptionCanBeHandled : WhenPublishingTes
     public async Task FailSilently()
     {
         await Should.NotThrowAsync(
-            () => SystemUnderTest.PublishAsync(new List<Message> { new SimpleMessage() }));
+            () => SystemUnderTest.PublishBatchAsync(new List<Message> { new SimpleMessage() }));
     }
 
     private static Task<PublishBatchResponse> ThrowsException(CallInfo callInfo)

@@ -49,7 +49,7 @@ public class WhenThereAreExceptionsInMessageProcessing : BaseSubscriptionGroupTe
 
     private sealed class ThrowingMessageBodySerializer : IMessageBodySerializer
     {
-        public string Serialize(Models.Message message) => throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing");
-        public Models.Message Deserialize(string message) => throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing");
+        public string Serialize(object message) => throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing");
+        public object Deserialize(string message) => throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing");
     }
 }

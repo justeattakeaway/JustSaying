@@ -1,21 +1,20 @@
 using System.Collections.Concurrent;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
-using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent;
 
 internal sealed class DynamicAddressMessagePublisher(
     string topicArnTemplate,
-    Func<string, Message, string> topicAddressCustomizer,
+    Func<string, object, string> topicAddressCustomizer,
     Func<string, StaticAddressPublicationConfiguration> staticConfigBuilder,
     ILoggerFactory loggerFactory) : IMessagePublisher, IMessageBatchPublisher
 {
     private readonly string _topicArnTemplate = topicArnTemplate;
     private readonly ConcurrentDictionary<string, Lazy<StaticAddressPublicationConfiguration>> _publisherConfigurationCache = new();
     private readonly ILogger<DynamicMessagePublisher> _logger = loggerFactory.CreateLogger<DynamicMessagePublisher>();
-    private readonly Func<string, Message, string> _topicAddressCustomizer = topicAddressCustomizer;
+    private readonly Func<string, object, string> _topicAddressCustomizer = topicAddressCustomizer;
     private readonly Func<string, StaticAddressPublicationConfiguration> _staticConfigBuilder = staticConfigBuilder;
 
     /// <inheritdoc/>
@@ -33,7 +32,7 @@ internal sealed class DynamicAddressMessagePublisher(
     public Task StartAsync(CancellationToken stoppingToken) => Task.CompletedTask;
 
     /// <inheritdoc/>
-    public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
+    public async Task PublishAsync<TMessage>(TMessage message, PublishMetadata metadata, CancellationToken cancellationToken) where TMessage : class
     {
         string topicArn = _topicAddressCustomizer(_topicArnTemplate, message);
         var publisherConfig = _publisherConfigurationCache.GetOrAdd(topicArn, CreateLazyPublisherConfig);
@@ -41,23 +40,20 @@ internal sealed class DynamicAddressMessagePublisher(
     }
 
     /// <inheritdoc/>
-    public Task PublishAsync(Message message, CancellationToken cancellationToken)
+    public Task PublishAsync<TMessage>(TMessage message, CancellationToken cancellationToken) where TMessage : class
         => PublishAsync(message, null, cancellationToken);
 
     /// <inheritdoc/>
-    public async Task PublishAsync(IEnumerable<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
+    public async Task PublishBatchAsync<TMessage>(IEnumerable<TMessage> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken) where TMessage : class
     {
         var publisherTask = new List<Task>();
-        foreach (var groupByType in messages.GroupBy(x => x.GetType()))
+        foreach (var groupByTopic in messages.GroupBy(x => _topicAddressCustomizer(_topicArnTemplate, x)))
         {
-            foreach (var groupByTopic in groupByType.GroupBy(x => _topicAddressCustomizer(_topicArnTemplate, x)))
-            {
-                string topicArn = groupByTopic.Key;
-                var batch = groupByTopic.ToList();
+            string topicArn = groupByTopic.Key;
+            var batch = groupByTopic.ToList();
 
-                var publisherConfig = _publisherConfigurationCache.GetOrAdd(topicArn, CreateLazyPublisherConfig);
-                publisherTask.Add(publisherConfig.Value.BatchPublisher.PublishAsync(batch, metadata, cancellationToken));
-            }
+            var publisherConfig = _publisherConfigurationCache.GetOrAdd(topicArn, CreateLazyPublisherConfig);
+            publisherTask.Add(publisherConfig.Value.BatchPublisher.PublishBatchAsync(batch, metadata, cancellationToken));
         }
 
         await Task.WhenAll(publisherTask).ConfigureAwait(false);

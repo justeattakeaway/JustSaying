@@ -13,7 +13,6 @@ namespace JustSaying.Fluent;
 /// The type of the messages to subscribe to.
 /// </typeparam>
 public interface ISubscriptionBuilder<out T>
-    where T : Message
 {
     /// <summary>
     /// Configures the middleware pipeline for this subscription.

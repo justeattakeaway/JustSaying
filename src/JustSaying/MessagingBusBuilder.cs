@@ -219,9 +219,12 @@ public sealed class MessagingBusBuilder
 
         config.Validate();
 
+        // The bus is also the batch publisher (it's what IMessageBatchPublisher resolves to), so it
+        // needs the batch configuration too.
+        var publishBatchConfiguration = MessagingConfig.BuildPublishBatchConfiguration();
         ILoggerFactory loggerFactory = ServiceResolver.ResolveService<ILoggerFactory>();
 
-        JustSayingBus bus = CreateBus(config, loggerFactory);
+        JustSayingBus bus = CreateBus(config, loggerFactory, publishBatchConfiguration);
         IAwsClientFactoryProxy proxy = CreateFactoryProxy();
 
         PublicationsBuilder?.Configure(bus, proxy, loggerFactory, ServiceResolver);

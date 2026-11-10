@@ -114,7 +114,7 @@ public class WhenAMessageIsPublishedToATenantedTopic : IntegrationTestBase
                 await publisher.StartAsync(cancellationToken);
 
                 // Act
-                await publisher.PublishAsync(
+                await publisher.PublishBatchAsync(
                     [
                         CreateMessage("uk"),
                         CreateMessage("uk"),

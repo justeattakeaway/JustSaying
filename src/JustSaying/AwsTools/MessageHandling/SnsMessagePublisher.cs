@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Amazon.Runtime;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
+using JustSaying.Extensions;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.Monitoring;
@@ -15,16 +16,18 @@ internal sealed class SnsMessagePublisher(
     IAmazonSimpleNotificationService client,
     IOutboundMessageConverter messageConverter,
     ILoggerFactory loggerFactory,
-    Func<Exception, Message, bool> handleException,
-    Func<Exception, IReadOnlyCollection<Message>, bool> handleBatchException) : IMessagePublisher, IMessageBatchPublisher, IInterrogable
+    Func<Exception, object, bool> handleException,
+    Func<Exception, IReadOnlyCollection<object>, bool> handleBatchException,
+    IMessageMetadataProvider metadataProvider = null) : IMessagePublisher, IMessageBatchPublisher, IInterrogable
 {
     private readonly IOutboundMessageConverter _messageConverter = messageConverter;
-    private readonly Func<Exception, Message, bool> _handleException = handleException;
-    private readonly Func<Exception, IReadOnlyCollection<Message>, bool> _handleBatchException = handleBatchException;
+    private readonly Func<Exception, object, bool> _handleException = handleException;
+    private readonly Func<Exception, IReadOnlyCollection<object>, bool> _handleBatchException = handleBatchException;
     private readonly IAmazonSimpleNotificationService _client = client;
+    private readonly IMessageMetadataProvider _metadataProvider = metadataProvider ?? DefaultMessageMetadataProvider.Instance;
     private readonly ILogger _logger = loggerFactory.CreateLogger("JustSaying.Publish");
-    public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
-    public Action<MessageBatchResponse, IReadOnlyCollection<Message>> MessageBatchResponseLogger { get; set; }
+    public Action<MessageResponse, object> MessageResponseLogger { get; set; }
+    public Action<MessageBatchResponse, IReadOnlyCollection<object>> MessageBatchResponseLogger { get; set; }
     public string Arn { get; internal set; }
 
     public SnsMessagePublisher(
@@ -32,19 +35,23 @@ internal sealed class SnsMessagePublisher(
         IAmazonSimpleNotificationService client,
         IOutboundMessageConverter messageConverter,
         ILoggerFactory loggerFactory,
-        Func<Exception, Message, bool> handleException,
-        Func<Exception, IReadOnlyCollection<Message>, bool> handleBatchException)
-        : this(client, messageConverter, loggerFactory, handleException, handleBatchException)
+        Func<Exception, object, bool> handleException,
+        Func<Exception, IReadOnlyCollection<object>, bool> handleBatchException,
+        IMessageMetadataProvider metadataProvider = null)
+        : this(client, messageConverter, loggerFactory, handleException, handleBatchException, metadataProvider)
     {
         Arn = topicArn;
     }
 
     public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
-    public Task PublishAsync(Message message, CancellationToken cancellationToken)
+    public Task PublishAsync<TMessage>(TMessage message, CancellationToken cancellationToken) where TMessage : class
         => PublishAsync(message, null, cancellationToken);
 
-    public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
+    public Task PublishAsync<TMessage>(TMessage message, PublishMetadata metadata, CancellationToken cancellationToken) where TMessage : class
+        => PublishObjectAsync(message, metadata, cancellationToken);
+
+    private async Task PublishObjectAsync(object message, PublishMetadata metadata, CancellationToken cancellationToken)
     {
         var request = await BuildPublishRequestAsync(message, metadata);
 
@@ -70,8 +77,8 @@ internal sealed class SnsMessagePublisher(
         {
             _logger.LogInformation(
                 "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
-                message.Id,
-                message.GetType().FullName,
+                MessageIdentity.GetId(message, _metadataProvider),
+                message.GetType().ToReadableFullName(),
                 "Topic",
                 request.TopicArn);
         }
@@ -88,9 +95,9 @@ internal sealed class SnsMessagePublisher(
         }
     }
 
-    private bool ClientExceptionHandler(Exception ex, Message message) => _handleException?.Invoke(ex, message) ?? false;
+    private bool ClientExceptionHandler(Exception ex, object message) => _handleException?.Invoke(ex, message) ?? false;
 
-    private async Task<PublishRequest> BuildPublishRequestAsync(Message message, PublishMetadata metadata)
+    private async Task<PublishRequest> BuildPublishRequestAsync(object message, PublishMetadata metadata)
     {
         var (messageToSend, attributes, subject) = await _messageConverter.ConvertToOutboundMessageAsync(message, metadata);
 
@@ -160,7 +167,10 @@ internal sealed class SnsMessagePublisher(
     }
 
     /// <inheritdoc/>
-    public async Task PublishAsync(IEnumerable<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
+    public Task PublishBatchAsync<TMessage>(IEnumerable<TMessage> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken) where TMessage : class
+        => PublishBatchObjectAsync(messages, metadata, cancellationToken);
+
+    private async Task PublishBatchObjectAsync(IEnumerable<object> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
     {
         int size = metadata?.BatchSize ?? JustSayingConstants.MaximumSnsBatchSize;
         size = Math.Min(size, JustSayingConstants.MaximumSnsBatchSize);
@@ -199,12 +209,13 @@ internal sealed class SnsMessagePublisher(
                         "Topic",
                         request.TopicArn);
 
-                    foreach (var message in response.Successful)
+                    foreach (var entry in response.Successful)
                     {
+                        var message = MessageIdentity.GetBatchEntryMessage(chunk, entry.Id);
                         _logger.LogInformation(
                             "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
-                            message.Id,
-                            message.GetType().FullName,
+                            MessageIdentity.GetBatchEntryMessageLogId(chunk, entry.Id, _metadataProvider),
+                            message?.GetType().ToReadableFullName(),
                             "Topic",
                             request.TopicArn);
                     }
@@ -218,15 +229,16 @@ internal sealed class SnsMessagePublisher(
                         "Topic",
                         request.TopicArn);
 
-                    foreach (var message in response.Failed)
+                    foreach (var entry in response.Failed)
                     {
                         _logger.LogError(
-                            "Failed to publish message {MessageId} to {DestinationType} '{MessageDestination}' with error code: {ErrorCode} is error on BatchAPI: {IsBatchAPIError}.",
-                            message.Id,
+                            "Failed to publish message {MessageId} (batch entry {BatchEntryId}) to {DestinationType} '{MessageDestination}' with error code: {ErrorCode} is error on BatchAPI: {IsBatchAPIError}.",
+                            MessageIdentity.GetBatchEntryMessageLogId(chunk, entry.Id, _metadataProvider),
+                            entry.Id,
                             "Topic",
                             request.TopicArn,
-                            message.Code,
-                            message.SenderFault);
+                            entry.Code,
+                            entry.SenderFault);
                     }
                 }
             }
@@ -236,7 +248,7 @@ internal sealed class SnsMessagePublisher(
                 var responseData = new MessageBatchResponse
                 {
                     SuccessfulMessageIds = response?.Successful?.Select(x => x.MessageId).ToArray(),
-                    FailedMessageIds = response?.Failed?.Select(x => x.Id).ToArray(),
+                    FailedMessageIds = response?.Failed?.Select(x => MessageIdentity.GetBatchEntryMessageId(chunk, x.Id, _metadataProvider)).ToArray(),
                     ResponseMetadata = response?.ResponseMetadata,
                     HttpStatusCode = response?.HttpStatusCode,
                 };
@@ -246,20 +258,20 @@ internal sealed class SnsMessagePublisher(
         }
     }
 
-    private bool ClientExceptionHandler(Exception ex, IReadOnlyCollection<Message> messages)
+    private bool ClientExceptionHandler(Exception ex, IReadOnlyCollection<object> messages)
         => _handleBatchException?.Invoke(ex, messages) ?? false;
 
-    private async Task<PublishBatchRequest> BuildPublishBatchRequestAsync(Message[] messages, PublishMetadata metadata)
+    private async Task<PublishBatchRequest> BuildPublishBatchRequestAsync(object[] messages, PublishMetadata metadata)
     {
         var entries = new List<PublishBatchRequestEntry>(messages.Length);
 
-        foreach (var message in messages)
+        for (int i = 0; i < messages.Length; i++)
         {
-            var (messageToSend, attributes, subject) = await _messageConverter.ConvertToOutboundMessageAsync(message, metadata);
+            var (messageToSend, attributes, subject) = await _messageConverter.ConvertToOutboundMessageAsync(messages[i], metadata);
 
             PublishBatchRequestEntry request = new()
             {
-                Id = message.UniqueKey(),
+                Id = MessageIdentity.GetBatchEntryId(i),
                 Subject = subject,
                 Message = messageToSend,
             };
