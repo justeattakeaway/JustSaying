@@ -36,7 +36,7 @@ public abstract class WhenPublishingTestBase
     internal static OutboundMessageConverter CreateConverter(IMessageBodySerializer serializer = null, string subject = null)
     {
         return new OutboundMessageConverter(PublishDestinationType.Topic,
-            serializer ?? new SystemTextJsonMessageBodySerializer<SimpleMessage>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions),
+            serializer ?? new SystemTextJsonMessageBodySerializer<SimpleMessage>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions).Erase(),
             new MessageCompressionRegistry(),
             new PublishCompressionOptions(),
             subject ?? nameof(SimpleMessage),

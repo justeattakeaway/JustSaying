@@ -69,7 +69,7 @@ public class WhenAMessagesAreBatchPublishedToATopicAddressWithACustomTopicAddres
                 await publisher.StartAsync(cancellationToken);
 
                 var batchPublisher = publisher.ShouldBeAssignableTo<IMessageBatchPublisher>();
-                await batchPublisher.PublishAsync(messages, cancellationToken);
+                await batchPublisher.PublishBatchAsync(messages, cancellationToken);
 
                 // Interrogation has to come after publishing, as per-arn publishers are created on demand
                 var listenerJson = JsonConvert.SerializeObject(listener.Interrogate(), Formatting.Indented);
