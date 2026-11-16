@@ -1,0 +1,63 @@
+JustSaying.AsyncApi.AsyncApiContactOptions
+JustSaying.AsyncApi.AsyncApiContactOptions.AsyncApiContactOptions() -> void
+JustSaying.AsyncApi.AsyncApiContactOptions.Email.get -> string
+JustSaying.AsyncApi.AsyncApiContactOptions.Email.set -> void
+JustSaying.AsyncApi.AsyncApiContactOptions.Name.get -> string
+JustSaying.AsyncApi.AsyncApiContactOptions.Name.set -> void
+JustSaying.AsyncApi.AsyncApiContactOptions.Url.get -> System.Uri
+JustSaying.AsyncApi.AsyncApiContactOptions.Url.set -> void
+JustSaying.AsyncApi.AsyncApiExternalDocsOptions
+JustSaying.AsyncApi.AsyncApiExternalDocsOptions.AsyncApiExternalDocsOptions() -> void
+JustSaying.AsyncApi.AsyncApiExternalDocsOptions.Description.get -> string
+JustSaying.AsyncApi.AsyncApiExternalDocsOptions.Description.set -> void
+JustSaying.AsyncApi.AsyncApiExternalDocsOptions.Url.get -> System.Uri
+JustSaying.AsyncApi.AsyncApiExternalDocsOptions.Url.set -> void
+JustSaying.AsyncApi.AsyncApiLicenseOptions
+JustSaying.AsyncApi.AsyncApiLicenseOptions.AsyncApiLicenseOptions() -> void
+JustSaying.AsyncApi.AsyncApiLicenseOptions.Name.get -> string
+JustSaying.AsyncApi.AsyncApiLicenseOptions.Name.set -> void
+JustSaying.AsyncApi.AsyncApiLicenseOptions.Url.get -> System.Uri
+JustSaying.AsyncApi.AsyncApiLicenseOptions.Url.set -> void
+JustSaying.AsyncApi.AsyncApiOptions
+JustSaying.AsyncApi.AsyncApiOptions.AsyncApiOptions() -> void
+JustSaying.AsyncApi.AsyncApiOptions.Contact.get -> JustSaying.AsyncApi.AsyncApiContactOptions
+JustSaying.AsyncApi.AsyncApiOptions.Contact.set -> void
+JustSaying.AsyncApi.AsyncApiOptions.Description.get -> string
+JustSaying.AsyncApi.AsyncApiOptions.Description.set -> void
+JustSaying.AsyncApi.AsyncApiOptions.ExternalDocs.get -> JustSaying.AsyncApi.AsyncApiExternalDocsOptions
+JustSaying.AsyncApi.AsyncApiOptions.ExternalDocs.set -> void
+JustSaying.AsyncApi.AsyncApiOptions.Id.get -> string
+JustSaying.AsyncApi.AsyncApiOptions.Id.set -> void
+JustSaying.AsyncApi.AsyncApiOptions.License.get -> JustSaying.AsyncApi.AsyncApiLicenseOptions
+JustSaying.AsyncApi.AsyncApiOptions.License.set -> void
+JustSaying.AsyncApi.AsyncApiOptions.PostProcess.get -> System.Action<System.Text.Json.Nodes.JsonObject>
+JustSaying.AsyncApi.AsyncApiOptions.PostProcess.set -> void
+JustSaying.AsyncApi.AsyncApiOptions.SerializerOptions.get -> System.Text.Json.JsonSerializerOptions
+JustSaying.AsyncApi.AsyncApiOptions.SerializerOptions.set -> void
+JustSaying.AsyncApi.AsyncApiOptions.Servers.get -> System.Collections.Generic.IDictionary<string, JustSaying.AsyncApi.AsyncApiServerOptions>
+JustSaying.AsyncApi.AsyncApiOptions.Tags.get -> System.Collections.Generic.IList<JustSaying.AsyncApi.AsyncApiTagOptions>
+JustSaying.AsyncApi.AsyncApiOptions.TermsOfService.get -> System.Uri
+JustSaying.AsyncApi.AsyncApiOptions.TermsOfService.set -> void
+JustSaying.AsyncApi.AsyncApiOptions.Title.get -> string
+JustSaying.AsyncApi.AsyncApiOptions.Title.set -> void
+JustSaying.AsyncApi.AsyncApiOptions.Version.get -> string
+JustSaying.AsyncApi.AsyncApiOptions.Version.set -> void
+JustSaying.AsyncApi.AsyncApiServerOptions
+JustSaying.AsyncApi.AsyncApiServerOptions.AsyncApiServerOptions() -> void
+JustSaying.AsyncApi.AsyncApiServerOptions.Description.get -> string
+JustSaying.AsyncApi.AsyncApiServerOptions.Description.set -> void
+JustSaying.AsyncApi.AsyncApiServerOptions.Host.get -> string
+JustSaying.AsyncApi.AsyncApiServerOptions.Host.set -> void
+JustSaying.AsyncApi.AsyncApiServerOptions.Protocol.get -> string
+JustSaying.AsyncApi.AsyncApiServerOptions.Protocol.set -> void
+JustSaying.AsyncApi.AsyncApiTagOptions
+JustSaying.AsyncApi.AsyncApiTagOptions.AsyncApiTagOptions() -> void
+JustSaying.AsyncApi.AsyncApiTagOptions.Description.get -> string
+JustSaying.AsyncApi.AsyncApiTagOptions.Description.set -> void
+JustSaying.AsyncApi.AsyncApiTagOptions.Name.get -> string
+JustSaying.AsyncApi.AsyncApiTagOptions.Name.set -> void
+JustSaying.AsyncApi.IAsyncApiDocumentProvider
+JustSaying.AsyncApi.IAsyncApiDocumentProvider.GenerateAsync(string documentName, System.IO.TextWriter writer, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task
+JustSaying.AsyncApi.IAsyncApiDocumentProvider.GetDocumentNames() -> System.Collections.Generic.IReadOnlyList<string>
+Microsoft.Extensions.DependencyInjection.AsyncApiServiceCollectionExtensions
+static Microsoft.Extensions.DependencyInjection.AsyncApiServiceCollectionExtensions.AddJustSayingAsyncApi(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, System.Action<JustSaying.AsyncApi.AsyncApiOptions> configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection

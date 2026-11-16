@@ -88,7 +88,7 @@ In this configuration, each of the two subscribers will have a dedicated queue t
         {
             // Creates the SQS queue
             // Creates the SQS to SNS subscription
-            subscription.ForTopic<OrderPlacedEvent>();
+            subscription.ForTopic<OrderPlacedEvent>(c => c.WithQueueName("kitchen_orderplacedevent"));
         });
     }
     // Add a handler responsible for handling the event
@@ -109,7 +109,7 @@ In this configuration, each of the two subscribers will have a dedicated queue t
         {
             // Creates the SQS queue
             // creates the SQS to SNS subscription
-            subscription.ForTopic<OrderPlacedEvent>();
+            subscription.ForTopic<OrderPlacedEvent>(c => c.WithQueueName("marketing_orderplacedevent"));
         });
     }
     // Add a handler responsible for handling the event
