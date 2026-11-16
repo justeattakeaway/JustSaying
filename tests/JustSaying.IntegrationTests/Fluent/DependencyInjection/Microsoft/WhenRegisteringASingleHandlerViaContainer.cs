@@ -65,7 +65,7 @@ public class WhenRegisteringASingleHandlerViaContainer : IntegrationTestBase
                 }
 
                 // Act
-                await publisher.PublishAsync(messages, cancellationToken);
+                await publisher.PublishBatchAsync(messages, cancellationToken);
 
                 //Assert
                 await future.DoneSignal;
