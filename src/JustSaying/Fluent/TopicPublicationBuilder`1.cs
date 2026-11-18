@@ -188,6 +188,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
         var writeConfiguration = new SnsWriteConfiguration();
         ConfigureWrites?.Invoke(writeConfiguration);
         writeConfiguration.CompressionOptions ??= bus.Config.DefaultCompressionOptions;
+        writeConfiguration.Validate();
         CompressionEncodingValidator.ValidateEncoding(bus.CompressionRegistry, writeConfiguration.CompressionOptions);
 
         var client = proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region));

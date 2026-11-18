@@ -5,13 +5,31 @@
 
 Message compression reduces the size of message bodies before publishing, lowering AWS costs and improving throughput. JustSaying supports Gzip compression with Base64 encoding.
 
+## Message size limits
+
+Both services accept payloads of up to 1 MiB, but they get there differently, and that difference drives
+how JustSaying models compression:
+
+| Destination | Maximum message size | Opt-in? |
+|-------------|----------------------|---------|
+| SQS queue | 1 MiB (1,048,576 bytes) by default, can be set lower | No, this is the default |
+| SNS topic | 256 KiB (262,144 bytes) by default, up to 1 MiB | Yes, via the `MaximumMessageSize` topic attribute |
+
+So an SQS queue takes a 1 MiB message with no configuration at all, whereas an SNS topic has to be
+told to. See [Publishing large messages with Amazon SNS](https://docs.aws.amazon.com/sns/latest/dg/large-message-payloads.html).
+
+The one catch with queues is that `MaximumMessageSize` is a per-queue attribute, and a queue that has had
+it set explicitly keeps that value. Queues JustSaying creates never set it, so they get 1 MiB, but some
+infrastructure tooling still defaults it to 256 KiB (Terraform's `max_message_size`, for one). See
+[MaximumMessageSize](#maximummessagesize) for how to tell JustSaying about a queue like that.
+
 ## Why Compress Messages
 
 Compress messages when:
 - Message bodies frequently exceed 100KB
 - You want to reduce AWS SNS/SQS costs
 - Network bandwidth is a concern
-- You're approaching the 256KB SNS message size limit
+- You're approaching the destination's message size limit
 
 ## Configuration
 
@@ -66,10 +84,73 @@ w.CompressionOptions = new PublishCompressionOptions
 };
 ```
 
+This is a question of when compressing is worth the CPU, and is separate from how large a message the
+destination will accept. Leave it unset and JustSaying derives it from the destination's maximum message
+size, leaving 2KB of headroom:
+
+- 254KB for an SNS topic on the default 256KB limit
+- 1022KB for an SQS queue, or for a topic whose `MaximumMessageSize` has been raised to 1 MiB
+
 **Recommended Thresholds**:
 - `50_000` (50KB) - Aggressive compression for cost savings
 - `100_000` (100KB) - Balanced approach for large messages
-- `200_000` (200KB) - Only compress near SNS limit (256KB)
+- unset - Only compress when the message is close to being rejected
+
+A message that is too large for the destination is always compressed, whatever the threshold says. So
+a threshold set above the destination's limit (easily done when one `DefaultCompressionOptions` is shared
+between 1 MiB queues and 256KB topics) won't cause a message that could have been made to fit to be rejected.
+
+The message attributes count towards the size, the same way AWS counts them (name, data type and value,
+whereas the SNS subject does not count). Note that compression only shrinks the body, so a small body with
+large attributes may not compress to anything smaller — JustSaying keeps the uncompressed body when
+compressing would not have helped.
+
+### MaximumMessageSize
+
+Raises the size limit on an SNS topic above the 256KB default. JustSaying applies it as the topic's
+`MaximumMessageSize` attribute when it creates the topic, and uses it as the budget for compression and
+for packing batches:
+
+```csharp
+x.WithTopic<LargeDataEvent>(cfg =>
+{
+    cfg.WithWriteConfiguration(w =>
+    {
+        w.MaximumMessageSize = 1024 * 1024; // 1 MiB
+    });
+});
+```
+
+A topic with this set above 256KB supports only SQS, Amazon Data Firehose and Lambda subscriptions, and
+at most 100 subscriptions in total.
+
+When you publish to a topic by ARN rather than letting JustSaying create it, JustSaying has no way to
+know the topic has been raised, so tell it:
+
+```csharp
+x.WithTopicArn<LargeDataEvent>(topicArn, cfg => cfg.WithMaximumMessageSize(1024 * 1024));
+```
+
+Queues rarely need this, because SQS already defaults to 1 MiB. The exception is a queue whose
+`MaximumMessageSize` attribute has been set lower by whatever created it, where JustSaying would
+otherwise assume 1 MiB and leave messages uncompressed that the queue then rejects. Unlike the topic
+setting this only describes the queue, JustSaying does not apply it as a queue attribute. It also has no
+bearing on batching, SQS lets a batch add up to 1 MiB whatever the queue's own limit is:
+
+```csharp
+x.WithQueue<LargeDataEvent>(cfg =>
+{
+    cfg.WithWriteConfiguration(w =>
+    {
+        w.MaximumMessageSize = 256 * 1024; // 256 KiB
+    });
+});
+
+x.WithQueueArn<LargeDataEvent>(queueArn, cfg => cfg.WithMaximumMessageSize(256 * 1024));
+```
+
+If a message still exceeds the limit after compression, JustSaying throws a `MessageTooLargeException`
+rather than letting AWS reject the publish with an opaque `InvalidParameter` error.
 
 ## How It Works
 
@@ -134,7 +215,7 @@ public class OrderDetailsEventHandler : IHandlerAsync<OrderDetailsEvent>
 
 - **Reduced AWS Costs**: Smaller messages mean lower data transfer and storage costs
 - **Higher Throughput**: More messages can fit within AWS limits
-- **Avoid Size Limits**: Compress large messages to stay under the 256KB SNS limit
+- **Avoid Size Limits**: Compress large messages to stay under the destination's limit
 
 ### Trade-offs
 
