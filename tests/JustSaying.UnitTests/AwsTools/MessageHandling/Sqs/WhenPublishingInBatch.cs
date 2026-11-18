@@ -39,7 +39,7 @@ public class WhenPublishingInBatch : WhenPublishingTestBase
 
     protected override async Task WhenAsync()
     {
-        await SystemUnderTest.PublishAsync(_messages);
+        await SystemUnderTest.PublishBatchAsync(_messages);
     }
 
     [Test]
