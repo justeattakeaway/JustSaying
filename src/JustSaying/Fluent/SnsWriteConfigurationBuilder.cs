@@ -1,5 +1,4 @@
 using JustSaying.AwsTools.QueueCreation;
-using JustSaying.Models;
 
 namespace JustSaying.Fluent;
 
@@ -11,7 +10,7 @@ public sealed class SnsWriteConfigurationBuilder
     /// <summary>
     /// Gets or sets the error callback to use.
     /// </summary>
-    private Func<Exception, Message, bool> Handler { get; set; }
+    private Func<Exception, object, bool> Handler { get; set; }
 
     /// <summary>
     /// Configures an error handler to use.
@@ -23,7 +22,7 @@ public sealed class SnsWriteConfigurationBuilder
     /// <exception cref="ArgumentNullException">
     /// <paramref name="handler"/> is <see langword="null"/>.
     /// </exception>
-    public SnsWriteConfigurationBuilder WithErrorHandler(Func<Exception, Message, bool> handler)
+    public SnsWriteConfigurationBuilder WithErrorHandler(Func<Exception, object, bool> handler)
     {
         Handler = handler ?? throw new ArgumentNullException(nameof(handler));
         return this;
