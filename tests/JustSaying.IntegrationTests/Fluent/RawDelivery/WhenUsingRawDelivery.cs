@@ -19,7 +19,7 @@ public class WhenUsingRawDelivery : IntegrationTestBase
             {
                 builder.Client((options) => options.WithClientFactory(() => awsClientFactory));
                 builder.WithLoopbackTopic<SimpleMessage>(UniqueName,
-                    c => { c.WithReadConfiguration(rc => rc.RawMessageDelivery = true); });
+                    c => c.WithRawMessageDelivery());
             })
             .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 

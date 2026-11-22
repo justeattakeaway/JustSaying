@@ -17,12 +17,15 @@ public class WhenHandlingMultipleTopics : IntegrationTestBase
     [Test]
     public async Task Sqs_Policy_Is_Applied_With_Wildcard()
     {
-        // Arrange
+        // Arrange - one queue subscribed to two topics. Both subscriptions read the same message type,
+        // as two subscriptions of different types can't share a queue.
         var services = GivenJustSaying()
-            .ConfigureJustSaying((builder) => builder.WithLoopbackTopic<TopicA>(UniqueName))
-            .ConfigureJustSaying((builder) => builder.WithLoopbackTopic<TopicB>(UniqueName))
-            .AddJustSayingHandler<TopicA, HandlerA>()
-            .AddJustSayingHandler<TopicB, HandlerB>();
+            .ConfigureJustSaying((builder) => builder.Subscriptions((options) =>
+            {
+                options.ForTopic<TopicA>($"{UniqueName}-a", (subscription) => subscription.WithQueueName(UniqueName));
+                options.ForTopic<TopicA>($"{UniqueName}-b", (subscription) => subscription.WithQueueName(UniqueName));
+            }))
+            .AddJustSayingHandler<TopicA, HandlerA>();
 
         await WhenAsync(
             services,
@@ -48,21 +51,9 @@ public class WhenHandlingMultipleTopics : IntegrationTestBase
     {
     }
 
-    private class TopicB : Message
-    {
-    }
-
     private sealed class HandlerA : IHandlerAsync<TopicA>
     {
         public Task<bool> Handle(TopicA message)
-        {
-            return Task.FromResult(true);
-        }
-    }
-
-    private sealed class HandlerB : IHandlerAsync<TopicB>
-    {
-        public Task<bool> Handle(TopicB message)
         {
             return Task.FromResult(true);
         }

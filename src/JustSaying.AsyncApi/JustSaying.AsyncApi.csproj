@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>AsyncAPI document generation for JustSaying. Documents are written with ByteBard.AsyncAPI.NET, which is not annotated for trimming or Native AOT, so this package is not marked trim- or AOT-compatible: publishing a trimmed or Native AOT application that references it produces trim/AOT warnings (IL2104, IL3053).</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!--
+      ByteBard.AsyncAPI.NET produces trim and AOT warnings (IL2104/IL3053) when an application that
+      references this package is published trimmed or with Native AOT, so this assembly must not
+      claim compatibility, as Directory.Build.props does for every net8.0 project. Its own code is
+      still analyzed.
+    -->
+    <IsAotCompatible>false</IsAotCompatible>
+    <IsTrimmable>false</IsTrimmable>
+    <EnableAotAnalyzer>true</EnableAotAnalyzer>
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <IsShipping>true</IsShipping>
+    <PackageTags>aws,sns,sqs,asyncapi</PackageTags>
+    <TargetFrameworks>net8.0</TargetFrameworks>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="JustSaying.AsyncApi.Tests" Key="$(JustSayingKey)" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\JustSaying\JustSaying.csproj" />
+    <ProjectReference Include="..\JustSaying.CloudEvents\JustSaying.CloudEvents.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="ByteBard.AsyncAPI.NET" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+    <PackageReference Include="System.Text.Json" />
+  </ItemGroup>
+</Project>
