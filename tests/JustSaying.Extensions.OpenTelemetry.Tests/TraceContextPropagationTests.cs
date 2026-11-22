@@ -35,7 +35,8 @@ public class TraceContextPropagationTests
             new MessageCompressionRegistry([]),
             null,
             "TestSubject",
-            false);
+            false,
+            JustSayingConstants.DefaultSnsMaximumMessageSize);
 
         // Act - start an activity to create trace context
         using var parentActivity = JustSayingDiagnostics.ActivitySource.StartActivity("test-publish", ActivityKind.Producer);
@@ -65,7 +66,8 @@ public class TraceContextPropagationTests
             new MessageCompressionRegistry([]),
             null,
             "TestSubject",
-            false);
+            false,
+            JustSayingConstants.DefaultSnsMaximumMessageSize);
 
         // Act
         var message = new SimpleMessage { Id = Guid.NewGuid() };
@@ -95,7 +97,8 @@ public class TraceContextPropagationTests
             new MessageCompressionRegistry([]),
             null,
             "TestSubject",
-            false);
+            false,
+            JustSayingConstants.DefaultSnsMaximumMessageSize);
 
         // Act - start an activity with tracestate set
         using var parentActivity = JustSayingDiagnostics.ActivitySource.StartActivity("test-publish", ActivityKind.Producer);

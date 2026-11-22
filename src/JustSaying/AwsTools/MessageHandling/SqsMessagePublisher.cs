@@ -4,6 +4,7 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 using Message = JustSaying.Models.Message;
@@ -14,7 +15,7 @@ namespace JustSaying.AwsTools.MessageHandling;
 internal sealed class SqsMessagePublisher(
     IAmazonSQS client,
     OutboundMessageConverter messageConverter,
-    ILoggerFactory loggerFactory) : IMessagePublisher, IMessageBatchPublisher
+    ILoggerFactory loggerFactory) : IMessagePublisher, IMessageBatchPublisher, IPreparedBatchPublisher
 {
     private readonly ILogger _logger = loggerFactory.CreateLogger("JustSaying.Publish");
     public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
@@ -161,118 +162,150 @@ internal sealed class SqsMessagePublisher(
     /// <inheritdoc/>
     public async Task PublishAsync(IEnumerable<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
     {
+        foreach (var batch in await PrepareAsync([.. messages], metadata, cancellationToken).ConfigureAwait(false))
+        {
+            await batch.SendAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<PreparedBatch>> PrepareAsync(IReadOnlyCollection<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
+    {
         EnsureQueueUrl();
 
-        int size = metadata?.BatchSize ?? JustSayingConstants.MaximumSnsBatchSize;
-        size = Math.Min(size, JustSayingConstants.MaximumSnsBatchSize);
+        int maxCount = metadata?.BatchSize ?? JustSayingConstants.MaximumSqsBatchSize;
+        maxCount = Math.Min(maxCount, JustSayingConstants.MaximumSqsBatchSize);
+
+        // SQS validates the combined size of every entry in the batch, so the batch has to be packed by
+        // size as well as by count. Unlike SNS the budget is fixed: a queue's MaximumMessageSize only
+        // limits each message, it does not lower what a batch may add up to.
+        int maxBytes = JustSayingConstants.MaximumSqsBatchPayloadSize;
 
         Activity.Current?.SetTag("messaging.system", "aws_sqs");
         Activity.Current?.SetTag("messaging.destination.name", QueueUrl?.AbsoluteUri);
 
-        foreach (var chunk in messages.Chunk(size))
-        {
-            var request = await BuildSendMessageBatchRequestAsync(chunk, metadata);
-
-            SendMessageBatchResponse response;
-            try
-            {
-                response = await client.SendMessageBatchAsync(request, cancellationToken).ConfigureAwait(false);
-            }
-            catch (AmazonServiceException ex)
-            {
-                throw new PublishBatchException(
-                    $"Failed to publish batch of {chunk.Length} messages to SQS. {nameof(request.QueueUrl)}: {request.QueueUrl}",
-                    ex);
-            }
-
-            if (response != null)
-            {
-                using var scope = _logger.BeginScope(new Dictionary<string, string> { ["AwsRequestId"] = response.ResponseMetadata?.RequestId });
-                if (response.Successful is not null && response.Successful.Count > 0 && _logger.IsEnabled(LogLevel.Information))
-                {
-                    _logger.LogInformation(
-                        "Published batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
-                        response.Successful.Count,
-                        "Queue",
-                        request.QueueUrl);
-
-                    foreach (var message in response.Successful)
-                    {
-                        _logger.LogInformation(
-                            "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
-                            message.Id,
-                            message.GetType().FullName,
-                            "Queue",
-                            request.QueueUrl);
-                    }
-                }
-
-                if (response.Failed is not null && response.Failed.Count > 0 && _logger.IsEnabled(LogLevel.Error))
-                {
-                    _logger.LogError(
-                        "Failed to publish batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
-                        response.Failed.Count,
-                        "Queue",
-                        request.QueueUrl);
-
-                    foreach (var message in response.Failed)
-                    {
-                        _logger.LogError(
-                            "Failed to publish message {MessageId} to {DestinationType} '{MessageDestination}' with error code: {ErrorCode} is error on BatchAPI: {IsBatchAPIError}.",
-                            message.Id,
-                            "Queue",
-                            request.QueueUrl,
-                            message.Code,
-                            message.SenderFault);
-                    }
-                }
-            }
-
-            if (MessageBatchResponseLogger != null)
-            {
-                var responseData = new MessageBatchResponse
-                {
-                    SuccessfulMessageIds = response?.Successful?.Select(x => x.MessageId).ToArray(),
-                    FailedMessageIds = response?.Failed?.Select(x => x.Id).ToArray(),
-                    ResponseMetadata = response?.ResponseMetadata,
-                    HttpStatusCode = response?.HttpStatusCode,
-                };
-
-                MessageBatchResponseLogger(responseData, chunk);
-            }
-        }
-    }
-
-    private async Task<SendMessageBatchRequest> BuildSendMessageBatchRequestAsync(Message[] messages, PublishMetadata metadata)
-    {
-        var entries = new List<SendMessageBatchRequestEntry>(messages.Length);
-        int? delaySeconds = metadata?.Delay is { } delay ? (int)delay.TotalSeconds : null;
+        // Every message is converted before anything is sent, so that a message which cannot be
+        // published (one that is too large, say) fails before any of the others have gone out.
+        var converted = new List<(Message Message, OutboundMessage Outbound, int Size)>(messages.Count);
 
         foreach (var message in messages)
         {
-            var (messageBody, attributes, _) = await messageConverter.ConvertToOutboundMessageAsync(message, metadata);
-
-            var entry = new SendMessageBatchRequestEntry
-            {
-                Id = message.UniqueKey(),
-                MessageBody = messageBody
-            };
-
-            AddMessageAttributes(entry, attributes);
-
-            if (delaySeconds is { } value)
-            {
-                entry.DelaySeconds = value;
-            }
-
-            entries.Add(entry);
+            var outbound = await messageConverter.ConvertToOutboundMessageAsync(message, metadata, cancellationToken);
+            converted.Add((message, outbound, MessagePayloadSize.Calculate(outbound.Body, outbound.MessageAttributes)));
         }
 
-        return new SendMessageBatchRequest
+        var batches = new List<PreparedBatch>();
+
+        foreach (var batch in MessagePayloadSize.Pack(converted, static x => x.Size, maxCount, maxBytes))
+        {
+            batches.Add(new PreparedBatch(
+                [.. batch.Select(static x => x.Message)],
+                token => SendBatchAsync(batch, metadata, token)));
+        }
+
+        return batches;
+    }
+
+    private async Task SendBatchAsync(
+        List<(Message Message, OutboundMessage Outbound, int Size)> batch,
+        PublishMetadata metadata,
+        CancellationToken cancellationToken)
+    {
+        IReadOnlyCollection<Message> chunk = [.. batch.Select(static x => x.Message)];
+
+        // The request is built for each attempt, rather than once when the batch was prepared, as a binary
+        // attribute is sent as a stream that should not be relied on to be readable a second time.
+        var request = new SendMessageBatchRequest
         {
             QueueUrl = QueueUrl.AbsoluteUri,
-            Entries = entries,
+            Entries = [.. batch.Select(x => BuildSendMessageBatchEntry(x.Message, x.Outbound, metadata))],
         };
+
+        SendMessageBatchResponse response;
+        try
+        {
+            response = await client.SendMessageBatchAsync(request, cancellationToken).ConfigureAwait(false);
+        }
+        catch (AmazonServiceException ex)
+        {
+            throw new PublishBatchException(
+                $"Failed to publish batch of {chunk.Count} messages to SQS. {nameof(request.QueueUrl)}: {request.QueueUrl}",
+                ex);
+        }
+
+        if (response != null)
+        {
+            using var scope = _logger.BeginScope(new Dictionary<string, string> { ["AwsRequestId"] = response.ResponseMetadata?.RequestId });
+            if (response.Successful is not null && response.Successful.Count > 0 && _logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation(
+                    "Published batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
+                    response.Successful.Count,
+                    "Queue",
+                    request.QueueUrl);
+
+                foreach (var message in response.Successful)
+                {
+                    _logger.LogInformation(
+                        "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
+                        message.Id,
+                        message.GetType().FullName,
+                        "Queue",
+                        request.QueueUrl);
+                }
+            }
+
+            if (response.Failed is not null && response.Failed.Count > 0 && _logger.IsEnabled(LogLevel.Error))
+            {
+                _logger.LogError(
+                    "Failed to publish batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
+                    response.Failed.Count,
+                    "Queue",
+                    request.QueueUrl);
+
+                foreach (var message in response.Failed)
+                {
+                    _logger.LogError(
+                        "Failed to publish message {MessageId} to {DestinationType} '{MessageDestination}' with error code: {ErrorCode} is error on BatchAPI: {IsBatchAPIError}.",
+                        message.Id,
+                        "Queue",
+                        request.QueueUrl,
+                        message.Code,
+                        message.SenderFault);
+                }
+            }
+        }
+
+        if (MessageBatchResponseLogger != null)
+        {
+            var responseData = new MessageBatchResponse
+            {
+                SuccessfulMessageIds = response?.Successful?.Select(x => x.MessageId).ToArray(),
+                FailedMessageIds = response?.Failed?.Select(x => x.Id).ToArray(),
+                ResponseMetadata = response?.ResponseMetadata,
+                HttpStatusCode = response?.HttpStatusCode,
+            };
+
+            MessageBatchResponseLogger(responseData, chunk);
+        }
+    }
+
+    private static SendMessageBatchRequestEntry BuildSendMessageBatchEntry(Message message, OutboundMessage outbound, PublishMetadata metadata)
+    {
+        var entry = new SendMessageBatchRequestEntry
+        {
+            Id = message.UniqueKey(),
+            MessageBody = outbound.Body
+        };
+
+        AddMessageAttributes(entry, outbound.MessageAttributes);
+
+        if (metadata?.Delay is { } delay)
+        {
+            entry.DelaySeconds = (int)delay.TotalSeconds;
+        }
+
+        return entry;
     }
 
     private void EnsureQueueUrl()
