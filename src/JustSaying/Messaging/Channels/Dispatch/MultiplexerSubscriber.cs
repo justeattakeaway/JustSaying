@@ -35,8 +35,26 @@ internal class MultiplexerSubscriber(
                 await rateLimiter.WaitAsync(stoppingToken).ConfigureAwait(false);
             }
 
-            await dispatcher.DispatchMessageAsync(messageContext, stoppingToken)
-                .ConfigureAwait(false);
+            try
+            {
+                await dispatcher.DispatchMessageAsync(messageContext, stoppingToken)
+                    .ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                // One bad message must never stop this subscriber: the message is left on the queue
+                // for its visibility timeout and redrive policy, and we carry on with the next one.
+                logger.LogError(
+                    ex,
+                    "Subscriber {SubscriberId} failed to dispatch message with Id '{MessageId}' from queue '{QueueName}'. The message has been left on the queue.",
+                    subscriberId,
+                    messageContext.Message?.MessageId,
+                    messageContext.QueueName);
+            }
         }
     }
 }

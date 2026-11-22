@@ -6,6 +6,11 @@ namespace JustSaying.AwsTools.QueueCreation;
 
 public class SqsBasicConfiguration
 {
+    // The ranges SQS accepts for a queue's VisibilityTimeout and its redrive policy's maxReceiveCount.
+    private static readonly TimeSpan MaximumVisibilityTimeout = TimeSpan.FromHours(12);
+    private const int MinimumRetryCount = 1;
+    private const int MaximumRetryCount = 1000;
+
     public TimeSpan MessageRetention { get; set; } = JustSayingConstants.DefaultRetentionPeriod;
     public TimeSpan ErrorQueueRetentionPeriod { get; set; } = JustSayingConstants.MaximumRetentionPeriod;
     public TimeSpan VisibilityTimeout { get; set; } = JustSayingConstants.DefaultVisibilityTimeout;
@@ -44,6 +49,20 @@ public class SqsBasicConfiguration
                 $"Invalid configuration. {nameof(DeliveryDelay)} must be between {JustSayingConstants.MinimumDeliveryDelay} and {JustSayingConstants.MaximumDeliveryDelay}.");
         }
 
+        if (VisibilityTimeout <= TimeSpan.Zero ||
+            VisibilityTimeout > MaximumVisibilityTimeout)
+        {
+            throw new ConfigurationErrorsException(
+                $"Invalid configuration. {nameof(VisibilityTimeout)} must be greater than zero and at most {MaximumVisibilityTimeout}.");
+        }
+
+        if (!ErrorQueueOptOut &&
+            (RetryCountBeforeSendingToErrorQueue < MinimumRetryCount || RetryCountBeforeSendingToErrorQueue > MaximumRetryCount))
+        {
+            throw new ConfigurationErrorsException(
+                $"Invalid configuration. {nameof(RetryCountBeforeSendingToErrorQueue)} must be between {MinimumRetryCount} and {MaximumRetryCount}.");
+        }
+
         if (ServerSideEncryption != null)
         {
             if (ServerSideEncryption.KmsDataKeyReusePeriod > TimeSpan.FromHours(24) ||
@@ -59,7 +78,28 @@ public class SqsBasicConfiguration
             throw new ConfigurationErrorsException("Invalid configuration. QueueName must be provided.");
         }
 
+        if (ResourceNameValidator.GetQueueNameError(QueueName, hasErrorQueue: !ErrorQueueOptOut) is { } queueNameError)
+        {
+            throw new ConfigurationErrorsException($"Invalid configuration. {queueNameError}");
+        }
+
         OnValidating();
+    }
+
+    /// <summary>
+    /// Validates the configuration, naming the registration it belongs to in any error.
+    /// </summary>
+    /// <param name="registration">A description of the registration, for example <c>queue subscription for 'Order' to queue 'orders'</c>.</param>
+    internal void Validate(string registration)
+    {
+        try
+        {
+            Validate();
+        }
+        catch (ConfigurationErrorsException ex)
+        {
+            throw new ConfigurationErrorsException($"{ex.Message} (in the {registration})", ex);
+        }
     }
 
     /// <summary>
