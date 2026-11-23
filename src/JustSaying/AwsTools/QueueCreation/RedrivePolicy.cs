@@ -18,8 +18,20 @@ internal sealed class RedrivePolicy
     }
 
     public override string ToString()
-        => JsonSerializer.Serialize(this);
+    {
+#if NET8_0_OR_GREATER
+        return JsonSerializer.Serialize(this, JustSayingSerializationContext.Default.RedrivePolicy);
+#else
+        return JsonSerializer.Serialize(this);
+#endif
+    }
 
     public static RedrivePolicy ConvertFromString(string policy)
-        => JsonSerializer.Deserialize<RedrivePolicy>(policy);
+    {
+#if NET8_0_OR_GREATER
+        return JsonSerializer.Deserialize(policy, JustSayingSerializationContext.Default.RedrivePolicy);
+#else
+        return JsonSerializer.Deserialize<RedrivePolicy>(policy);
+#endif
+    }
 }

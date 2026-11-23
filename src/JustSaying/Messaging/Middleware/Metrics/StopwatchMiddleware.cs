@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using JustSaying.Extensions;
 using JustSaying.Messaging.Monitoring;
 
 // ReSharper disable once CheckNamespace
@@ -33,7 +34,7 @@ public sealed class StopwatchMiddleware(IMessageMonitor monitor, Type handlerTyp
             Monitoring.JustSayingDiagnostics.ProcessDuration.Record(
                 watch.Elapsed.TotalSeconds,
                 new KeyValuePair<string, object>("messaging.destination.name", context.QueueName),
-                new KeyValuePair<string, object>("messaging.message.type", context.MessageType.FullName));
+                new KeyValuePair<string, object>("messaging.message.type", context.MessageType.ToReadableFullName()));
         }
     }
 }

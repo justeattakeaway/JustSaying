@@ -3,7 +3,7 @@
 
 # Batch Publishing
 
-Batch publishing allows you to publish multiple messages in a single AWS API call, reducing latency and improving throughput. Use `IMessageBatchPublisher` to publish batches of messages efficiently.
+Batch publishing allows you to publish multiple messages in a single AWS API call, reducing latency and improving throughput. Call `PublishBatchAsync` on `IMessageBatchPublisher` to publish a batch of messages.
 
 ## When to Use Batch Publishing
 
@@ -13,9 +13,9 @@ Use batch publishing when:
 - You're processing bulk data or bulk operations
 - Throughput is more important than individual message latency
 
-## IMessageBatchPublisher Interface
+## PublishBatchAsync
 
-Inject `IMessageBatchPublisher` instead of `IMessagePublisher` to publish message batches:
+Inject `IMessageBatchPublisher` and call `PublishBatchAsync`:
 
 ```csharp
 public class OrderController : ControllerBase
@@ -37,12 +37,18 @@ public class OrderController : ControllerBase
             Description = order.Description
         }).ToList();
 
-        await _publisher.PublishAsync(messages);
+        await _publisher.PublishBatchAsync(messages);
 
         return Ok();
     }
 }
 ```
+
+:::warning
+Before v9 the batch method was also called `PublishAsync`. A v8 call such as `publisher.PublishAsync(messages)` still compiles against v9, but it now binds to the single-message `PublishAsync<TMessage>` and treats the whole list as one message. No publication exists for `List<T>`, so it throws an `InvalidOperationException` at runtime that tells you to call `PublishBatchAsync`. Search your code for `PublishAsync` calls that pass a collection.
+:::
+
+`PublishBatchAsync` is also available on `IMessagePublisher` as an extension method. If the publisher doesn't support batches, it publishes the messages one at a time.
 
 ## Configuration
 
@@ -63,6 +69,20 @@ services.AddJustSaying(config =>
 
 Both `IMessagePublisher` and `IMessageBatchPublisher` are registered automatically when you call `AddJustSaying`.
 
+## Batches with More Than One Message Type
+
+Messages are routed by their runtime type, so one batch can contain several message types. JustSaying groups the batch by the publication each message goes to (its own type's, or [a base type's](/messages/#publishing-to-a-base-type)) and publishes each group to that publication:
+
+```csharp
+await batchPublisher.PublishBatchAsync<object>(
+[
+    new OrderPlacedEvent { OrderId = 1 },
+    new OrderCancelledEvent { OrderId = 2 },
+]);
+```
+
+Each group runs through the [publish middleware](middleware.md) registered for its publication, with only that group's messages in `PublishContext.Messages`. The groups are published concurrently and share the `PublishBatchMetadata` you pass in.
+
 ## AWS Batch Limits
 
 ### SNS Batch Limits
@@ -75,8 +95,10 @@ var messages = Enumerable.Range(1, 25)
     .Select(i => new OrderPlacedEvent { OrderId = i })
     .ToList();
 
-await publisher.PublishAsync(messages);
+await publisher.PublishBatchAsync(messages);
 ```
+
+Use `PublishBatchMetadata.BatchSize` to send smaller batches.
 
 ### SQS Batch Limits
 
@@ -105,7 +127,7 @@ config.Messaging(x =>
 });
 ```
 
-See [Messaging Configuration](../messaging-configuration/README.md) for more retry options.
+Failures that can't succeed on a retry, such as a message that can't be serialized, aren't retried. See [Messaging Configuration](../messaging-configuration/README.md) for more retry options.
 
 ## Performance Considerations
 
@@ -141,7 +163,7 @@ app.MapPost("api/multi-orders",
         }).ToList();
 
         // Publish batch
-        await publisher.PublishAsync(messages);
+        await publisher.PublishBatchAsync(messages);
 
         app.Logger.LogInformation(
             "Orders {@OrderIds} placed",
@@ -178,7 +200,7 @@ public class OrderService
     public async Task PublishBulkOrders(IEnumerable<OrderPlacedEvent> orders)
     {
         // Multiple messages
-        await _batchPublisher.PublishAsync(orders);
+        await _batchPublisher.PublishBatchAsync(orders);
     }
 }
 ```

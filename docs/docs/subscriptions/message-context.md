@@ -3,7 +3,7 @@
 
 # Message Context
 
-When creating a handler for a message, you provide an `IHandler<T>` implementation that will process the JustSaying message. However, sometimes you want to access the raw SQS message itself, i.e. an [Amazon.SQS.Model.Message](https://docs.aws.amazon.com/sdkfornet/v3/apidocs/items/SQS/TMessage.html) instance. This can be useful for accessing non-domain concepts, such as message attributes like `ApproximateReceiveCount` or the message receipt handle.
+When creating a handler for a message, you provide an `IHandlerAsync<T>` implementation that will process the JustSaying message. However, sometimes you want to access the raw SQS message itself, i.e. an [Amazon.SQS.Model.Message](https://docs.aws.amazon.com/sdkfornet/v3/apidocs/items/SQS/TMessage.html) instance. This can be useful for accessing non-domain concepts, such as message attributes like `ApproximateReceiveCount` or the message receipt handle.
 
 JustSaying allows you to get access to this through the type `MessageContext`, which you can access by injecting an `IMessageContextAccessor` into your handler.
 
@@ -25,9 +25,9 @@ public class OrderReadyEventHandler : IHandlerAsync<OrderReadyEvent>
     public async Task<bool> Handle(OrderReadyEvent message)
     {
         // This is the AWS SDK Message instance.
-        var message = _contextAccessor.Context.Message;
+        var sqsMessage = _contextAccessor.MessageContext.Message;
 
-        if (message.Attributes.TryGetValue("ApproximateReceiveCount", out var approximateReceiveCount))
+        if (sqsMessage.Attributes.TryGetValue("ApproximateReceiveCount", out var approximateReceiveCount))
         {
             _logger.LogInformation("ApproximateReceiveCount: {ApproximateReceiveCount}", approximateReceiveCount);
         }
