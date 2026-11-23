@@ -37,7 +37,7 @@ public class WhenRegisteringMessageHandlers : GivenAServiceBus
         SystemUnderTest.AddQueue(typeof(Message).FullName, new SqsSource
         {
             SqsQueue = _queue,
-            MessageConverter = new InboundMessageConverter(new SystemTextJsonMessageBodySerializer<Message>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions), new MessageCompressionRegistry(), false)
+            MessageConverter = new InboundMessageConverter(new SystemTextJsonMessageBodySerializer<Message>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions).Erase(), new MessageCompressionRegistry(), false)
         });
         SystemUnderTest.AddMessageMiddleware<Message>(_queue.QueueName, _futureHandler1);
         SystemUnderTest.AddMessageMiddleware<Message2>(_queue.QueueName, _futureHandler2);

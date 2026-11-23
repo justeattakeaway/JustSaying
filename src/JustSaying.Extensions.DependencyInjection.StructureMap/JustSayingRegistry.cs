@@ -1,6 +1,7 @@
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
+using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageHandling;
